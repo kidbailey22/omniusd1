@@ -3068,9 +3068,47 @@ function AuthScreen({onBack, supabase}){
         setLoading(false);
         return;
       }
+      // Auto-login after signup
+      const loginRes=await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`,{
+        method:"POST",
+        headers:{"Content-Type":"application/json","apikey":SUPABASE_KEY},
+        body:JSON.stringify({email,password}),
+      });
+      const loginData=await loginRes.json();
+      if(loginData.access_token){
+        localStorage.setItem("omniusd_session",JSON.stringify(loginData));
+        // Create profile immediately with paid tier
+        const paidTier=localStorage.getItem("omniusd_paid_tier")||"starter";
+        const userId=loginData.user?.id;
+        if(userId){
+          const TIER_COLORS={starter:"#ffd166",pro:"#00e5ff",elite:"#ff6bff"};
+          const TIER_LABELS={starter:"Starter",pro:"Pro",elite:"Elite"};
+          await fetch(`${SUPABASE_URL}/rest/v1/profiles`,{
+            method:"POST",
+            headers:{
+              "Content-Type":"application/json",
+              "apikey":SUPABASE_KEY,
+              "Authorization":`Bearer ${loginData.access_token}`,
+              "Prefer":"resolution=merge-duplicates",
+            },
+            body:JSON.stringify({
+              id:userId,
+              email,
+              tier:paidTier,
+              tier_label:TIER_LABELS[paidTier]||"Starter",
+              tier_color:TIER_COLORS[paidTier]||"#ffd166",
+              default_instrument:"XAUUSD",
+              is_paid:true,
+              updated_at:new Date().toISOString(),
+            }),
+          });
+        }
+        window.location.reload();
+      } else {
+        setSuccess("Account created! Check your email to confirm, then log in.");
+        setTab("login");
+      }
       setLoading(false);
-      setSuccess("Account created! Check your email for a confirmation link, then log in.");
-      setTab("login");
     }catch(e){
       setError("Connection error: "+e.message);
       setLoading(false);
