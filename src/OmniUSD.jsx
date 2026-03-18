@@ -278,9 +278,9 @@ Keep it under 200 words. Respond in plain text, no JSON, no markdown headers.`;
 const DEV_MODE = false;
 
 const TIER_CONFIG = {
-  starter: { label:"Starter", price:"$29/mo", instruments:["XAUUSD","BTCUSD"],         dailyCap:3,  color:"#ffd166" },
-  pro:     { label:"Pro",     price:"$39/mo", instruments:["XAUUSD","BTCUSD","NAS100","US30"], dailyCap:5,  color:"#00e5ff" },
-  elite:   { label:"Elite",   price:"$59/mo", instruments:["XAUUSD","BTCUSD","NAS100","US30","USOIL","GBPUSD"], dailyCap:10, color:"#ff6bff" },
+  starter: { label:"Starter", price:"$29/mo", priceId:"price_1TCPQoEIHuTqoOi9n3oejBYy", instruments:["XAUUSD","BTCUSD"],         dailyCap:3,  color:"#ffd166" },
+  pro:     { label:"Pro",     price:"$39/mo", priceId:"price_1TCPRLEIHuTqoOi9uVChc1LE", instruments:["XAUUSD","BTCUSD","NAS100","US30"], dailyCap:5,  color:"#00e5ff" },
+  elite:   { label:"Elite",   price:"$59/mo", priceId:"price_1TCPRpEIHuTqoOi9xA9MIiH7", instruments:["XAUUSD","BTCUSD","NAS100","US30","USOIL","GBPUSD"], dailyCap:10, color:"#ff6bff" },
 };
 
 // Current user tier — hardcoded for now, will come from Stripe/auth later
@@ -400,6 +400,17 @@ export default function OmniUSD(){
   useEffect(()=>{
     async function init(){
       try{
+        // Check for Stripe payment return
+        const params=new URLSearchParams(window.location.search);
+        const payment=params.get("payment");
+        const tierFromStripe=params.get("tier");
+        if(payment==="success"&&tierFromStripe){
+          // Store tier from successful payment
+          localStorage.setItem("omniusd_paid_tier", tierFromStripe);
+          // Clean URL
+          window.history.replaceState({},document.title,"/");
+        }
+
         const raw=localStorage.getItem("omniusd_session");
         if(raw){
           const session=JSON.parse(raw);
@@ -825,14 +836,58 @@ function sessionLocalTime(startUTC,endUTC,iana){
 
 function Onboarding({onSelect}){
   // Step order: 1=Plan, 2=Market, 3=Session, 4=Confirm
-  const [step,setStep]=useState(1);
-  const [selectedTier,setSelectedTier]=useState(null); // no pre-selection — user must choose
+  const [step,setStep]=useState(()=>{
+    // If returning from Stripe with success, skip to step 2
+    const params=new URLSearchParams(window.location.search);
+    if(params.get("session_id")) return 2;
+    return 1;
+  });
+  const [selectedTier,setSelectedTier]=useState(()=>{
+    // Restore tier from URL param after Stripe redirect
+    const params=new URLSearchParams(window.location.search);
+    return params.get("tier")||null;
+  });
   const [instrument,setInstrument]=useState(null); // set from dashboard preferences, not onboarding
   const [session,setSession]=useState(null);
   const [tzObj,setTzObj]=useState(null);
   const [tzSearch,setTzSearch]=useState("");
   const [tzDetecting,setTzDetecting]=useState(false);
   const [showCommit,setShowCommit]=useState(false);
+  const [checkoutLoading,setCheckoutLoading]=useState(false);
+  const [checkoutError,setCheckoutError]=useState(null);
+
+  async function handleCheckout(){
+    if(!selectedTier) return;
+    setCheckoutLoading(true);
+    setCheckoutError(null);
+    try{
+      const session=JSON.parse(localStorage.getItem("omniusd_session")||"{}");
+      const userId=session?.user?.id||session?.user_id||"";
+      const email=session?.user?.email||session?.email||"";
+      const tierCfg=TIER_CONFIG[selectedTier];
+      const res=await fetch("/api/create-checkout",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          priceId:tierCfg.priceId,
+          userId,
+          email,
+          tier:selectedTier,
+        }),
+      });
+      const data=await res.json();
+      if(!res.ok||data.error){
+        setCheckoutError(data.error||"Checkout failed. Please try again.");
+        setCheckoutLoading(false);
+        return;
+      }
+      // Redirect to Stripe Checkout
+      window.location.href=data.url;
+    }catch(e){
+      setCheckoutError("Connection error. Please try again.");
+      setCheckoutLoading(false);
+    }
+  }
   const [mode,setMode]=useState("standard");
   const [anime,setAnime]=useState(null);
   const [deepOpen,setDeepOpen]=useState(false);
@@ -872,19 +927,21 @@ function Onboarding({onSelect}){
   const totalSteps=stepList.length; // 2 steps
   const displayStep=step;
 
-  // finish() called on step 4
+  // finish() called on step 3 (Commit)
   function finish(){
-    const tierCfg = TIER_CONFIG[selectedTier]||TIER_CONFIG.starter;
-    // defaultInstrument: first instrument in the user's tier (e.g. XAUUSD for all tiers)
-    // session: saved exactly as chosen in onboarding (NY/LONDON/ASIAN/ALL)
+    // Use paid tier from Stripe if available, fallback to selected
+    const paidTier=localStorage.getItem("omniusd_paid_tier")||selectedTier||"starter";
+    const tierCfg = TIER_CONFIG[paidTier]||TIER_CONFIG.starter;
     const defaultInstrument = tierCfg.instruments[0]||"XAUUSD";
     const base={
-      session,                      // e.g. "NY" — used by dashboard to preselect session
-      defaultInstrument,            // e.g. "XAUUSD" — used by dashboard to preselect instrument
-      tier:selectedTier,
+      session,
+      defaultInstrument,
+      tier:paidTier,
       tierLabel:tierCfg.label,
       tierColor:tierCfg.color,
     };
+    // Clear paid tier from localStorage
+    localStorage.removeItem("omniusd_paid_tier");
     onSelect({mode:"standard",emoji:"◈",color:"#00e5ff",label:"Standard",...base,tz:tzObj||null});
   }
 
@@ -1014,18 +1071,24 @@ function Onboarding({onSelect}){
                       <span style={{color:t.color}}>✓</span>
                       <span>{t.label} — {t.price}/month</span>
                     </div>
+                    {checkoutError&&(
+                      <div style={{fontSize:12,color:"#ff8080",background:"rgba(255,107,107,0.08)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:8,padding:"8px 14px",textAlign:"center"}}>
+                        {checkoutError}
+                      </div>
+                    )}
                     <button
-                      onClick={()=>{
-                        // Brief pause so the user sees their selection land before the screen changes
-                        setTimeout(()=>setStep(2), 320); // goes straight to confirm
-                      }}
+                      onClick={handleCheckout}
+                      disabled={checkoutLoading}
                       className="ob-btn-primary"
-                      style={{background:"linear-gradient(135deg,#ff6bff,#7b2fff)",border:"none",
-                        color:"#fff",padding:"17px 52px",borderRadius:13,fontSize:15,fontWeight:900,
-                        letterSpacing:"0.12em",fontFamily:"inherit",cursor:"pointer",
-                        boxShadow:"0 4px 28px rgba(255,107,255,0.22)",transition:"all 0.2s"}}>
-                      CONTINUE →
+                      style={{background:checkoutLoading?"rgba(255,255,255,0.06)":"linear-gradient(135deg,#ff6bff,#7b2fff)",border:"none",
+                        color:checkoutLoading?"var(--t-muted4)":"#fff",padding:"17px 52px",borderRadius:13,fontSize:15,fontWeight:900,
+                        letterSpacing:"0.12em",fontFamily:"inherit",cursor:checkoutLoading?"not-allowed":"pointer",
+                        boxShadow:checkoutLoading?"none":"0 4px 28px rgba(255,107,255,0.22)",transition:"all 0.2s"}}>
+                      {checkoutLoading?"Setting up checkout...":"CONTINUE TO PAYMENT →"}
                     </button>
+                    <div style={{fontSize:11,color:"var(--t-muted4)",fontFamily:"monospace"}}>
+                      Paid plans start at $29/month · Secure checkout via Stripe
+                    </div>
                   </div>
                 );
               })()}
@@ -1993,7 +2056,7 @@ function SessionPlan({result,instrument,images,profile,onReset,T=DARK}){
                 color:isActive?"#7fff6b":isSkip?"var(--t-muted3)":"#ffd166"}}>
                 {isSkip?"No active setup — observe only"
                  :isActive?`${grade} Setup`
-                 :`Setup developing`}
+                 :`${grade}-grade ${bias.toLowerCase()} setup developing`}
               </span>
               {/* Bias pill — hide on PASS */}
               {!isSkip&&(
@@ -2013,11 +2076,13 @@ function SessionPlan({result,instrument,images,profile,onReset,T=DARK}){
           </div>
           {/* Only show confidence/BRC phase chips for active setups */}
           {!isSkip&&(
+            <>
             <div style={{display:"flex",gap:10,flexWrap:"wrap",flexShrink:0}}>
               {pd.confidence&&(
                 <div style={{textAlign:"center",padding:"8px 14px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:8}}>
-                  <div style={{fontSize:10,color:"var(--t-muted4)",letterSpacing:"0.1em",marginBottom:3}}>CONFIDENCE</div>
+                  <div style={{fontSize:10,color:"var(--t-muted4)",letterSpacing:"0.1em",marginBottom:3}}>ANALYSIS CONFIDENCE</div>
                   <div style={{fontSize:17,fontWeight:900,color:"#ffd166"}}>{pd.confidence}</div>
+                  <div style={{fontSize:9,color:"var(--t-muted4)",marginTop:3,fontWeight:500}}>how clear the read is</div>
                 </div>
               )}
               {pd.icc_phase&&(
@@ -2027,34 +2092,18 @@ function SessionPlan({result,instrument,images,profile,onReset,T=DARK}){
                 </div>
               )}
             </div>
+            {pd.confidence&&(
+              <div style={{fontSize:11,color:"var(--t-muted4)",marginTop:10,fontWeight:500,lineHeight:1.5,maxWidth:420}}>
+                <span style={{color:"var(--t-muted3)",fontWeight:700}}>Grade</span> = setup quality based on timeframe alignment.{" "}
+                <span style={{color:"var(--t-muted3)",fontWeight:700}}>Confidence</span> = how clearly the charts support this read.
+              </div>
+            )}
+            </>
           )}
         </div>
       </div>
 
       {/* Trigger conditions — for B/C/SKIP */}
-
-      {/* ── LIVE CHART — always visible ── */}
-      {!isSkip&&(
-        <div style={{display:"flex",alignItems:"center",gap:10,
-          padding:"10px 16px",marginBottom:12,
-          background:"rgba(127,255,107,0.04)",
-          border:"1px solid rgba(127,255,107,0.2)",
-          borderRadius:10}}>
-          <div style={{flex:1,display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
-            <span style={{fontSize:11,fontWeight:900,color:"#7fff6b",letterSpacing:"0.06em"}}>LIVE CHART</span>
-            <span style={{fontSize:9,color:"#7fff6b",background:"rgba(127,255,107,0.12)",border:"1px solid rgba(127,255,107,0.3)",padding:"2px 8px",borderRadius:4,fontWeight:700}}>{tvSym}</span>
-            <span style={{fontSize:9,color:"#7fff6b",background:"rgba(127,255,107,0.12)",border:"1px solid rgba(127,255,107,0.3)",padding:"2px 8px",borderRadius:4,fontWeight:700}}>{tvInterval}M</span>
-            <span style={{fontSize:10,color:"var(--t-muted4)",fontWeight:500}}>via TradingView · opens in new tab</span>
-          </div>
-          <a href={tvUrl} target="_blank" rel="noopener noreferrer"
-            style={{background:"rgba(127,255,107,0.1)",border:"1px solid rgba(127,255,107,0.3)",
-              borderRadius:7,padding:"7px 18px",fontFamily:"inherit",
-              fontSize:11,fontWeight:900,color:"#7fff6b",letterSpacing:"0.06em",
-              textDecoration:"none",whiteSpace:"nowrap"}}>
-            Open Live Chart →
-          </a>
-        </div>
-      )}
 
       {/* ── CURRENT STATE SUMMARY ── */}
       {(()=>{
@@ -2310,7 +2359,7 @@ function SessionPlan({result,instrument,images,profile,onReset,T=DARK}){
                     border:`1px solid ${allChecked?"rgba(0,229,255,0.35)":"rgba(255,255,255,0.08)"}`,
                     borderRadius:8,padding:"8px 18px",cursor:allChecked?"pointer":"not-allowed",fontFamily:"inherit",
                     fontSize:12,fontWeight:900,color:allChecked?"#00e5ff":"var(--t-muted4)",letterSpacing:"0.08em",transition:"all 0.2s"}}>
-                  {allChecked?"✓ 30M CLOSE CONFIRMED — PHASE 1 COMPLETE":"✗ Complete all 3 confirmations above"}
+                  {allChecked?"✓ 30M CLOSE CONFIRMED — PHASE 1 COMPLETE":"Waiting for all 3 confirmations"}
                 </button>
               </div>
             </div>
