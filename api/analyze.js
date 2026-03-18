@@ -1,3 +1,12 @@
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '20mb',
+    },
+  },
+  maxDuration: 60,
+};
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -6,18 +15,11 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  // Try multiple ways to get the key
-  const apiKey = process.env.ANTHROPIC_API_KEY 
-    || process.env['ANTHROPIC_API_KEY']
-    || '';
+  const apiKey = process.env.ANTHROPIC_API_KEY || '';
 
-  if (!apiKey || apiKey.trim() === '') {
-    // Return all env var names (not values) for debugging
-    const envKeys = Object.keys(process.env).filter(k => !k.includes('PATH') && !k.includes('HOME'));
+  if (!apiKey.trim()) {
     return res.status(500).json({
-      error: { 
-        message: 'API key not found. Available env vars: ' + envKeys.join(', ')
-      }
+      error: { message: 'ANTHROPIC_API_KEY not configured on server.' }
     });
   }
 
