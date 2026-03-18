@@ -12,9 +12,7 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  if (!STRIPE_SECRET) {
-    return res.status(500).json({ error: 'Stripe not configured on server.' });
-  }
+  if (!STRIPE_SECRET) return res.status(500).json({ error: 'Stripe not configured on server.' });
 
   const { priceId, tier, email } = req.body;
   if (!priceId) return res.status(400).json({ error: 'Missing priceId' });
@@ -27,7 +25,8 @@ export default async function handler(req, res) {
       'mode': 'subscription',
       'line_items[0][price]': priceId,
       'line_items[0][quantity]': '1',
-      'success_url': `${baseUrl}/?payment=success&tier=${tier}&session_id={CHECKOUT_SESSION_ID}`,
+      'metadata[tier]': tier || 'starter',
+      'success_url': `${baseUrl}/?payment=success&tier=${tier}`,
       'cancel_url': `${baseUrl}/?payment=cancel`,
     });
 
