@@ -405,9 +405,14 @@ export default function OmniUSD(){
         const payment=params.get("payment");
         const tierFromStripe=params.get("tier");
         if(payment==="success"&&tierFromStripe){
-          // Store tier from successful payment
           localStorage.setItem("omniusd_paid_tier", tierFromStripe);
-          // Clean URL
+          window.history.replaceState({},document.title,"/");
+          // Send to auth to create/login account
+          setView("auth");
+          setReady(true);
+          return;
+        }
+        if(payment==="cancel"){
           window.history.replaceState({},document.title,"/");
         }
 
@@ -517,7 +522,13 @@ export default function OmniUSD(){
   );
 
   // ── LANDING ──
-  if(view==="landing") return <LandingPage onEnterApp={()=>setView("auth")}/>;
+  if(view==="landing") return <LandingPage 
+    onEnterApp={()=>setView("pricing")} 
+    onLogin={()=>setView("auth")}
+  />;
+
+  // ── PRICING — pick plan then go to Stripe ──
+  if(view==="pricing") return <PricingPage onBack={()=>setView("landing")} onPaid={()=>setView("auth")}/>;
 
   // ── AUTH ──
   if(view==="auth"&&!authUser) return <AuthScreen onBack={()=>setView("landing")} supabase={supabase}/>;
@@ -3221,9 +3232,162 @@ function AuthScreen({onBack, supabase}){
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// PRICING PAGE — standalone plan picker, goes straight to Stripe
+// ═══════════════════════════════════════════════════════════════════════════
+function PricingPage({onBack, onPaid}){
+  const [selected,setSelected]=useState(null);
+  const [loading,setLoading]=useState(false);
+  const [error,setError]=useState(null);
+
+  const plans=[
+    {key:"starter", label:"Starter", price:"$29", period:"/month", color:"#ffd166",
+     instruments:["XAUUSD","BTCUSD"],
+     features:["Full BRC 3-phase execution tracker","Session-aware guidance","AI session plans"],
+     priceId:TIER_CONFIG.starter.priceId, popular:false},
+    {key:"pro",     label:"Pro",     price:"$39", period:"/month", color:"#00e5ff",
+     instruments:["XAUUSD","BTCUSD","NAS100","US30"],
+     features:["Full BRC 3-phase execution tracker","Session-aware guidance","AI session plans","Priority access to new features"],
+     priceId:TIER_CONFIG.pro.priceId, popular:true},
+    {key:"elite",   label:"Elite",   price:"$59", period:"/month", color:"#ff6bff",
+     instruments:["XAUUSD","BTCUSD","NAS100","US30","USOIL","GBPUSD"],
+     features:["Full BRC 3-phase execution tracker","Session-aware guidance","AI session plans","Early access to all new features"],
+     priceId:TIER_CONFIG.elite.priceId, popular:false},
+  ];
+
+  async function handleCheckout(){
+    if(!selected){setError("Select a plan to continue.");return;}
+    setLoading(true);setError(null);
+    try{
+      const plan=plans.find(p=>p.key===selected);
+      const res=await fetch("/api/create-checkout",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          priceId:plan.priceId,
+          tier:selected,
+          successUrl:`https://omniusd.pro/?payment=success&tier=${selected}&session_id={CHECKOUT_SESSION_ID}`,
+          cancelUrl:`https://omniusd.pro/?payment=cancel`,
+        }),
+      });
+      const data=await res.json();
+      if(!res.ok||data.error){setError(data.error||"Checkout failed.");setLoading(false);return;}
+      window.location.href=data.url;
+    }catch(e){
+      setError("Connection error. Please try again.");
+      setLoading(false);
+    }
+  }
+
+  return(
+    <div style={{minHeight:"100vh",background:"#130d22",color:"#f4f0ff",fontFamily:"'Syne',sans-serif",position:"relative",overflowX:"hidden"}}>
+      <div style={{position:"fixed",inset:0,backgroundImage:"linear-gradient(rgba(255,107,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,107,255,0.025) 1px,transparent 1px)",backgroundSize:"48px 48px",pointerEvents:"none"}}/>
+      <div style={{position:"fixed",width:500,height:500,borderRadius:"50%",background:"#7b2fff",top:-150,left:"50%",transform:"translateX(-50%)",filter:"blur(120px)",opacity:0.12,pointerEvents:"none"}}/>
+
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap');`}</style>
+
+      {/* Nav */}
+      <nav style={{position:"fixed",top:0,left:0,right:0,zIndex:100,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 32px",height:64,background:"rgba(19,13,34,0.9)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(255,107,255,0.1)"}}>
+        <button onClick={onBack} style={{display:"flex",alignItems:"center",gap:8,background:"none",border:"none",cursor:"pointer",fontFamily:"inherit"}}>
+          <span style={{fontSize:20,color:"#ff6bff"}}>◈</span>
+          <span style={{fontFamily:"'Space Mono',monospace",fontSize:15,fontWeight:700,letterSpacing:"0.1em",background:"linear-gradient(90deg,#ff6bff,#00e5ff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>OmniUSD</span>
+        </button>
+        <button onClick={onBack} style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,color:"#8878aa",background:"none",border:"none",cursor:"pointer"}}>
+          ← Back
+        </button>
+      </nav>
+
+      {/* Content */}
+      <div style={{position:"relative",zIndex:1,maxWidth:1000,margin:"0 auto",padding:"100px 24px 80px"}}>
+        <div style={{textAlign:"center",marginBottom:52}}>
+          <div style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,letterSpacing:"0.22em",color:"#ff6bff",marginBottom:16}}>CHOOSE YOUR PLAN</div>
+          <h1 style={{fontFamily:"'Syne',sans-serif",fontSize:"clamp(32px,5vw,52px)",fontWeight:800,lineHeight:1.1,letterSpacing:"-0.02em",marginBottom:12}}>
+            Select your access level
+          </h1>
+          <p style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"#8878aa",lineHeight:1.7,maxWidth:480,margin:"0 auto"}}>
+            Every plan includes the BRC execution tracker, session-aware guidance, and AI session plans.
+          </p>
+        </div>
+
+        {/* Plan cards */}
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:16,marginBottom:32}}>
+          {plans.map(p=>{
+            const isSel=selected===p.key;
+            return(
+              <div key={p.key} onClick={()=>setSelected(p.key)}
+                style={{position:"relative",cursor:"pointer",
+                  background:isSel?`${p.color}0e`:"rgba(255,255,255,0.03)",
+                  border:`${isSel?"2":"1"}px solid ${isSel?p.color+"80":"rgba(255,255,255,0.08)"}`,
+                  borderRadius:16,padding:"32px 28px",
+                  transition:"all 0.2s",
+                  transform:isSel?"translateY(-3px)":"none",
+                  boxShadow:isSel?`0 8px 40px ${p.color}18`:undefined}}>
+                {p.popular&&(
+                  <div style={{position:"absolute",top:-12,left:"50%",transform:"translateX(-50%)",
+                    fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,letterSpacing:"0.12em",
+                    color:"#0d0718",background:"#ff6bff",padding:"3px 14px",borderRadius:100,whiteSpace:"nowrap"}}>
+                    MOST POPULAR
+                  </div>
+                )}
+                {isSel&&(
+                  <div style={{position:"absolute",top:14,right:14,width:22,height:22,borderRadius:"50%",
+                    background:p.color,display:"flex",alignItems:"center",justifyContent:"center",
+                    fontSize:11,color:"#0d0718",fontWeight:900}}>✓</div>
+                )}
+                <div style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,letterSpacing:"0.16em",color:p.color,marginBottom:12}}>{p.label.toUpperCase()}</div>
+                <div style={{fontFamily:"'Syne',sans-serif",fontSize:40,fontWeight:800,color:p.color,lineHeight:1,marginBottom:4}}>{p.price}</div>
+                <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"#8878aa",marginBottom:20}}>{p.period}</div>
+                <div style={{height:1,background:"rgba(255,255,255,0.07)",marginBottom:18}}/>
+                <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:0}}>
+                  {p.instruments.map(ins=>(
+                    <div key={ins} style={{display:"flex",alignItems:"center",gap:8,fontFamily:"'Space Mono',monospace",fontSize:11,color:"#ccc4e8"}}>
+                      <span style={{color:"#7fff6b",fontWeight:900}}>✓</span>{ins}
+                    </div>
+                  ))}
+                  {p.features.map(f=>(
+                    <div key={f} style={{display:"flex",alignItems:"center",gap:8,fontFamily:"'Space Mono',monospace",fontSize:11,color:"#8878aa"}}>
+                      <span style={{color:"#8878aa"}}>·</span>{f}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Error */}
+        {error&&(
+          <div style={{textAlign:"center",marginBottom:16,fontFamily:"'Space Mono',monospace",fontSize:12,color:"#ff8080",
+            background:"rgba(255,107,107,0.08)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:8,padding:"10px"}}>
+            {error}
+          </div>
+        )}
+
+        {/* CTA */}
+        <div style={{textAlign:"center"}}>
+          <button onClick={handleCheckout} disabled={loading||!selected}
+            style={{fontFamily:"'Space Mono',monospace",fontSize:14,fontWeight:700,letterSpacing:"0.12em",
+              color:(!selected||loading)?"#8878aa":"#0d0718",
+              background:(!selected||loading)?"rgba(255,255,255,0.06)":"linear-gradient(135deg,#ff6bff,#7b2fff)",
+              border:"none",padding:"17px 52px",borderRadius:12,cursor:(!selected||loading)?"not-allowed":"pointer",
+              boxShadow:selected&&!loading?"0 4px 28px rgba(255,107,255,0.25)":"none",
+              transition:"all 0.2s",marginBottom:14}}>
+            {loading?"Setting up checkout..."
+              :!selected?"Select a plan above"
+              :"CONTINUE TO PAYMENT →"}
+          </button>
+          <div style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"#8878aa"}}>
+            Paid plans start at $29/month · Secure checkout via Stripe · Cancel anytime
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // LANDING PAGE
 // ═══════════════════════════════════════════════════════════════════════════
-function LandingPage({onEnterApp}){
+function LandingPage({onEnterApp, onLogin}){
   const [hoveredPlan,setHoveredPlan]=useState(null);
   const plans=[
     {tier:"STARTER",color:"#ffd166",price:"$29",instruments:["XAUUSD","BTCUSD"],popular:false},
@@ -3268,7 +3432,7 @@ function LandingPage({onEnterApp}){
           <span style={{fontFamily:"'Space Mono',monospace",fontSize:16,fontWeight:700,letterSpacing:"0.12em",background:"linear-gradient(90deg,#ff6bff,#00e5ff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>OmniUSD</span>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
-          <button onClick={onEnterApp} style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,letterSpacing:"0.1em",color:"var(--muted,#ccc4e8)",background:"none",border:"none",cursor:"pointer",padding:"8px 14px"}}>LOG IN</button>
+          <button onClick={onLogin||onEnterApp} style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,letterSpacing:"0.1em",color:"var(--muted,#ccc4e8)",background:"none",border:"none",cursor:"pointer",padding:"8px 14px"}}>LOG IN</button>
           <button onClick={onEnterApp}
             style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,letterSpacing:"0.1em",color:"#130d22",background:"#ff6bff",border:"none",padding:"9px 18px",borderRadius:6,cursor:"pointer",transition:"all 0.2s"}}>
             CREATE ACCOUNT
