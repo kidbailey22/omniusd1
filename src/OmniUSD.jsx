@@ -407,8 +407,7 @@ export default function OmniUSD(){
         if(payment==="success"&&tierFromStripe){
           localStorage.setItem("omniusd_paid_tier", tierFromStripe);
           window.history.replaceState({},document.title,"/");
-          // Send to auth to create/login account
-          setView("auth");
+          setView("payment_success");
           setReady(true);
           return;
         }
@@ -527,8 +526,28 @@ export default function OmniUSD(){
     onLogin={()=>setView("auth")}
   />;
 
-  // ── PRICING — pick plan then go to Stripe ──
+  // ── PRICING ──
   if(view==="pricing") return <PricingPage onBack={()=>setView("landing")} onPaid={()=>setView("auth")}/>;
+
+  // ── PAYMENT SUCCESS ──
+  if(view==="payment_success") return (
+    <div style={{minHeight:"100vh",background:"#130d22",display:"flex",alignItems:"center",justifyContent:"center",padding:"24px",fontFamily:"'Syne',sans-serif"}}>
+      <div style={{maxWidth:480,textAlign:"center"}}>
+        <div style={{fontSize:64,marginBottom:24}}>✅</div>
+        <h1 style={{fontSize:32,fontWeight:800,color:"#f4f0ff",marginBottom:12,letterSpacing:"-0.02em"}}>Payment confirmed!</h1>
+        <p style={{fontFamily:"monospace",fontSize:14,color:"#8878aa",lineHeight:1.7,marginBottom:32}}>
+          Your access is ready. Create your password below to enter your dashboard.
+        </p>
+        <button onClick={()=>setView("auth")}
+          style={{fontFamily:"monospace",fontSize:14,fontWeight:700,letterSpacing:"0.1em",
+            color:"#0d0718",background:"linear-gradient(135deg,#ff6bff,#7b2fff)",
+            border:"none",padding:"15px 40px",borderRadius:10,cursor:"pointer",
+            boxShadow:"0 4px 28px rgba(255,107,255,0.25)"}}>
+          SET UP MY ACCOUNT →
+        </button>
+      </div>
+    </div>
+  );
 
   // ── AUTH ──
   if(view==="auth"&&!authUser) return <AuthScreen onBack={()=>setView("landing")} supabase={supabase}/>;
@@ -850,15 +869,15 @@ function sessionLocalTime(startUTC,endUTC,iana){
 function Onboarding({onSelect}){
   // Step order: 1=Plan, 2=Market, 3=Session, 4=Confirm
   const [step,setStep]=useState(()=>{
-    // If returning from Stripe with success, skip to step 2
+    // If paid tier exists in localStorage, skip plan selection
+    if(localStorage.getItem("omniusd_paid_tier")) return 2;
     const params=new URLSearchParams(window.location.search);
     if(params.get("session_id")) return 2;
     return 1;
   });
   const [selectedTier,setSelectedTier]=useState(()=>{
-    // Restore tier from URL param after Stripe redirect
-    const params=new URLSearchParams(window.location.search);
-    return params.get("tier")||null;
+    // Use paid tier from Stripe if available
+    return localStorage.getItem("omniusd_paid_tier")||null;
   });
   const [instrument,setInstrument]=useState(null); // set from dashboard preferences, not onboarding
   const [session,setSession]=useState(null);
