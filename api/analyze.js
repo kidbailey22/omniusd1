@@ -6,11 +6,18 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  // Try multiple ways to get the key
+  const apiKey = process.env.ANTHROPIC_API_KEY 
+    || process.env['ANTHROPIC_API_KEY']
+    || '';
 
-  if (!apiKey) {
+  if (!apiKey || apiKey.trim() === '') {
+    // Return all env var names (not values) for debugging
+    const envKeys = Object.keys(process.env).filter(k => !k.includes('PATH') && !k.includes('HOME'));
     return res.status(500).json({
-      error: { message: 'ANTHROPIC_API_KEY not configured on server. Check Vercel environment variables.' }
+      error: { 
+        message: 'API key not found. Available env vars: ' + envKeys.join(', ')
+      }
     });
   }
 
@@ -19,7 +26,7 @@ export default async function handler(req, res) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey,
+        'x-api-key': apiKey.trim(),
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify(req.body),
