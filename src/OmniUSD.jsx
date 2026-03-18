@@ -523,7 +523,7 @@ export default function OmniUSD(){
   // ── LANDING ──
   if(view==="landing") return <LandingPage 
     onEnterApp={()=>setView("pricing")} 
-    onLogin={()=>setView("auth")}
+    onLogin={()=>setView("auth_login")}
   />;
 
   // ── PRICING ──
@@ -550,7 +550,7 @@ export default function OmniUSD(){
   );
 
   // ── AUTH ──
-  if(view==="auth"&&!authUser) return <AuthScreen onBack={()=>setView("landing")} supabase={supabase}/>;
+  if((view==="auth"||view==="auth_login")&&!authUser) return <AuthScreen onBack={()=>setView("landing")} supabase={supabase} initialTab={view==="auth_login"?"login":"signup"}/>;
 
   // ── ONBOARDING ──
   if(!profile)return <Onboarding onSelect={selectProfile} theme={T}/>;
@@ -3043,8 +3043,9 @@ const LIGHT={
 // ═══════════════════════════════════════════════════════════════════════════
 // AUTH SCREEN — Sign Up / Log In
 // ═══════════════════════════════════════════════════════════════════════════
-function AuthScreen({onBack, supabase}){
-  const [tab,setTab]=useState("signup"); // "signup" | "login" | "reset"
+function AuthScreen({onBack, supabase, initialTab="signup"}){
+  const [tab,setTab]=useState(initialTab);
+  const loginOnly=initialTab==="login"; // "signup" | "login" | "reset"
   const [email,setEmail]=useState("");
   const [password,setPassword]=useState("");
   const [loading,setLoading]=useState(false);
@@ -3192,8 +3193,8 @@ function AuthScreen({onBack, supabase}){
         {/* Card */}
         <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,107,255,0.15)",borderRadius:16,padding:"32px 28px"}}>
 
-          {/* Tabs */}
-          {tab!=="reset"&&(
+          {/* Tabs — only show when both options available */}
+          {!loginOnly&&(
             <div style={{display:"flex",gap:4,marginBottom:24,background:"rgba(255,255,255,0.04)",padding:4,borderRadius:10}}>
               {["signup","login"].map(t=>(
                 <button key={t} onClick={()=>{setTab(t);setError(null);setSuccess(null);}}
