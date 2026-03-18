@@ -3120,10 +3120,15 @@ function AuthScreen({onBack, supabase}){
             <span style={{fontFamily:"monospace",fontSize:18,fontWeight:700,letterSpacing:"0.12em",background:"linear-gradient(90deg,#ff6bff,#00e5ff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>OmniUSD</span>
           </button>
           <div style={{fontSize:22,fontWeight:800,color:"#f4f0ff",marginBottom:6,letterSpacing:"-0.01em"}}>
-            {tab==="reset"?"Reset your password":tab==="signup"?"Create your account":"Welcome back"}
+            {tab==="reset"?"Reset your password":tab==="signup"?"Almost done.":"Welcome back"}
           </div>
           <div style={{fontSize:13,color:"#8878aa",fontFamily:"monospace"}}>
-            {tab==="signup"?"Start with onboarding after you sign up.":tab==="login"?"Sign in to continue to your dashboard.":"We'll send a reset link to your email."}
+            {tab==="signup"
+              ? (localStorage.getItem("omniusd_paid_tier")
+                  ? "Payment confirmed. Create your password to access your dashboard."
+                  : "Create your account to get started.")
+              : tab==="login"?"Sign in to continue to your dashboard."
+              :"We'll send a reset link to your email."}
           </div>
         </div>
 
@@ -3198,7 +3203,7 @@ function AuthScreen({onBack, supabase}){
               cursor:loading?"not-allowed":"pointer",
               boxShadow:loading?"none":"0 4px 28px rgba(255,107,255,0.22)",transition:"all 0.2s",marginBottom:16}}>
             {loading?"Please wait..."
-              :tab==="signup"?"CREATE ACCOUNT →"
+              :tab==="signup"?"CREATE PASSWORD & ENTER →"
               :tab==="login"?"SIGN IN →"
               :"SEND RESET EMAIL →"}
           </button>
