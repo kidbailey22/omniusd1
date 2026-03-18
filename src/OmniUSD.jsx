@@ -442,7 +442,7 @@ export default function OmniUSD(){
       );
       if(res.ok){
         const data=await res.json();
-        if(data&&data.id){
+        if(data&&data.id&&data.is_paid){
           setProfile({
             mode:"standard",emoji:"◈",color:"#00e5ff",label:"Standard",
             tier:data.tier||"starter",
@@ -451,9 +451,10 @@ export default function OmniUSD(){
             defaultInstrument:data.default_instrument||"XAUUSD",
             session:data.session||null,
             tz:data.tz?JSON.parse(data.tz):null,
+            isPaid:true,
           });
         }
-        // No row = new user, needs onboarding — profile stays null
+        // No row, or is_paid=false = needs onboarding/payment — profile stays null
       }
     }catch(e){console.error("loadProfile error",e);}
   }
@@ -479,6 +480,7 @@ export default function OmniUSD(){
             default_instrument:p.defaultInstrument||"XAUUSD",
             session:p.session||null,
             tz:p.tz?JSON.stringify(p.tz):null,
+            is_paid:true,
             updated_at:new Date().toISOString(),
           }),
         });
