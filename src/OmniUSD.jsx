@@ -1851,7 +1851,7 @@ function SessionPlan({result,instrument,images,profile,onReset,T=DARK}){
   const isActive= grade==="A+"||grade==="A";
   const isDev = grade==="B"||grade==="C";
 
-  const [tradeState,setTradeState]=useState(isActive?"ARMED_T1":"PRECHECK");
+  const [tradeState,setTradeState]=useState((isActive||isDev)?"ARMED_T1":"PRECHECK");
   const [showTracker,setShowTracker]=useState(false);
   const [showAlt,setShowAlt]=useState(false);
   const [showAlerts,setShowAlerts]=useState(false);
@@ -2033,15 +2033,39 @@ function SessionPlan({result,instrument,images,profile,onReset,T=DARK}){
 
       {/* Trigger conditions — for B/C/SKIP */}
 
+      {/* ── LIVE CHART — always visible ── */}
+      {!isSkip&&(
+        <div style={{display:"flex",alignItems:"center",gap:10,
+          padding:"10px 16px",marginBottom:12,
+          background:"rgba(127,255,107,0.04)",
+          border:"1px solid rgba(127,255,107,0.2)",
+          borderRadius:10}}>
+          <div style={{flex:1,display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+            <span style={{fontSize:11,fontWeight:900,color:"#7fff6b",letterSpacing:"0.06em"}}>LIVE CHART</span>
+            <span style={{fontSize:9,color:"#7fff6b",background:"rgba(127,255,107,0.12)",border:"1px solid rgba(127,255,107,0.3)",padding:"2px 8px",borderRadius:4,fontWeight:700}}>{tvSym}</span>
+            <span style={{fontSize:9,color:"#7fff6b",background:"rgba(127,255,107,0.12)",border:"1px solid rgba(127,255,107,0.3)",padding:"2px 8px",borderRadius:4,fontWeight:700}}>{tvInterval}M</span>
+            <span style={{fontSize:10,color:"var(--t-muted4)",fontWeight:500}}>via TradingView · opens in new tab</span>
+          </div>
+          <a href={tvUrl} target="_blank" rel="noopener noreferrer"
+            style={{background:"rgba(127,255,107,0.1)",border:"1px solid rgba(127,255,107,0.3)",
+              borderRadius:7,padding:"7px 18px",fontFamily:"inherit",
+              fontSize:11,fontWeight:900,color:"#7fff6b",letterSpacing:"0.06em",
+              textDecoration:"none",whiteSpace:"nowrap"}}>
+            Open Live Chart →
+          </a>
+        </div>
+      )}
+
       {/* ── CURRENT STATE SUMMARY ── */}
       {(()=>{
         const stateConfig={
+          PRECHECK:  {label:`Setup developing — watch for ${dirWord} break ${dirWord} ${triggerLevel}`, color:"#ffd166", dot:true},
           ARMED_T1:{
             label: isSkip ? "Observe only — no active setup this session"
                   : isDev  ? `Setup developing — waiting for confirmed break ${dirWord} ${triggerLevel}`
                   : `Waiting for 30M close ${dirWord} ${triggerLevel}`,
             color: isSkip?"var(--t-muted3)": isDev?"#ffd166":"#00e5ff",
-            dot: !isSkip && !isDev,
+            dot: !isSkip,
           },
           ARMED_T2:  {label:`Retest forming at ${retestZone} — do not enter yet`,  color:"#ffd166", dot:true},
           EXECUTABLE:{label:"Execution ready — place your limit order now",          color:"#7fff6b", dot:true},
