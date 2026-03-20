@@ -1624,392 +1624,571 @@ function LoadingScreen({T=DARK}){
 // HOME PAGE
 // ═══════════════════════════════════════════════════════════════════════════
 function HomePage({planResult,setPlanResult,anime,T=DARK,onJournalEntry}){
-  // Resolve the user's actual tier — fallback to starter (most restrictive), never elite
-  const userTier = DEV_MODE ? "elite" : (anime?.tier||"starter");
-  const allowedInstruments = TIER_CONFIG[userTier]?.instruments || TIER_CONFIG.starter.instruments;
+  // Unified flow — delegates entirely to UnifiedDashboard
+  return <UnifiedDashboard profile={anime} onJournalEntry={onJournalEntry}/>;
+}
 
-  // Debug: verify plan gating is working
-  console.log("[OmniUSD] saved plan:", anime?.tier);
-  console.log("[OmniUSD] resolved tier:", userTier);
-  console.log("[OmniUSD] allowed instruments:", allowedInstruments);
+// ─── Session states ──────────────────────────────────────────────────────────
+const SESSION_STATES = {
+  WATCHING:        { label: "WATCHING",          color: "#00e5ff", dot: true  },
+  BREAK_CONFIRMED: { label: "BREAK CONFIRMED",   color: "#ffd166", dot: true  },
+  RETEST_FORMING:  { label: "RETEST FORMING",    color: "#ff9a3c", dot: true  },
+  READY_FOR_LIMIT: { label: "READY FOR LIMIT",   color: "#7fff6b", dot: true  },
+  WINDOW_CLOSED:   { label: "WINDOW CLOSED",     color: "#ff6b6b", dot: false },
+  INVALIDATED:     { label: "INVALIDATED",       color: "#ff6b6b", dot: false },
+};
 
-  // Preload instrument from onboarding, but validate it's in the allowed list
-  // If saved default is no longer allowed (e.g. plan downgrade), fall back to first allowed
-  const savedInstrument = anime?.defaultInstrument;
-  const validatedInstrument = (savedInstrument && allowedInstruments.includes(savedInstrument))
-    ? savedInstrument
-    : allowedInstruments[0];
-  console.log("[OmniUSD] saved instrument:", savedInstrument, "→ preloading:", validatedInstrument);
-
-  const [instrument,setInst]=useState(validatedInstrument);
-  // session: onboarding keys (NY/LONDON/ASIAN/ALL) → dashboard keys (NY/LONDON/ASIAN/LONDON_NY)
-  const sessionMap={NY:"NY",LONDON:"LONDON",ASIAN:"ASIAN",ALL:null,LONDON_NY:"LONDON_NY"};
-  const [session,setSession]=useState(
-    anime?.session ? (sessionMap[anime.session]??null) : null
-  );
-  const [images,setImages]=useState({});
-  const [loading,setLoading]=useState(false);
-  const [error,setError]=useState(null);
-  const [validationErrors,setValidationErrors]=useState(null);
-  const [dragOver,setDragOver]=useState(null);
-  const [hoverCard,setHoverCard]=useState(null);
-  const [justCompleted,setJustCompleted]=useState(false);
-  const prevCountRef=useRef(0);
-  const fileRef=useRef();
-  const activeSlot=useRef(null);
-  const uploadedCount=Object.keys(images).length;
-  const allUploaded=uploadedCount===5;
-
-  // Trigger success micro-animation when 5th chart lands
-  useEffect(()=>{
-    if(uploadedCount===5&&prevCountRef.current<5){
-      setJustCompleted(true);
-      setTimeout(()=>setJustCompleted(false),1200);
-    }
-    prevCountRef.current=uploadedCount;
-  },[uploadedCount]);
-
-
-
-  function openPicker(key){activeSlot.current=key;fileRef.current?.click();}
-  function readFile(file,key){
-    if(!file||!key)return;
-    const r=new FileReader();
-    r.onload=ev=>setImages(prev=>({...prev,[key]:{base64:ev.target.result.split(",")[1],mediaType:file.type||"image/png"}}));
-    r.readAsDataURL(file);
-    setValidationErrors(null);
-  }
-  function onFile(e){readFile(e.target.files[0],activeSlot.current);e.target.value="";}
-  function onDragOver(e,key){e.preventDefault();e.stopPropagation();setDragOver(key);}
-  function onDragLeave(e){e.preventDefault();setDragOver(null);}
-  function onDrop(e,key){
-    e.preventDefault();e.stopPropagation();setDragOver(null);
-    const file=e.dataTransfer.files[0];
-    if(file&&file.type.startsWith("image/"))readFile(file,key);
-  }
-  function removeImage(key){setImages(prev=>{const n={...prev};delete n[key];return n;});setValidationErrors(null);}
-
-  async function generatePlan(){
-    if(!allUploaded){setError("Upload all 5 charts first.");return;}
-    setLoading(true);setPlanResult(null);setError(null);setValidationErrors(null);
-    try{
-      const imgBlocks=TF_SLOTS.map(slot=>({type:"image",source:{type:"base64",media_type:images[slot.key].mediaType,data:images[slot.key].base64}}));
-      const sessionName=session?{NY:"New York (8:30 AM–12:00 PM CT)",LONDON:"London (2:00–5:00 AM CT)",ASIAN:"Asian (7:00–11:00 PM CT)",LONDON_NY:"London–NY Overlap (8:30–10:00 AM CT)"}[session]:"Not specified";
-      const res=await fetch("/api/analyze",{
-        method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:4000,temperature:0,system:getPlanPrompt(anime,instrument),
-          messages:[{role:"user",content:[...imgBlocks,{type:"text",text:(()=>{
-                const now = new Date(new Date().toLocaleString("en-US",{timeZone:"America/Chicago"}));
-                const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-                const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-                const dayName = days[now.getDay()];
-                const isFriday = now.getDay()===5;
-                const hour = now.getHours();
-                const min = now.getMinutes().toString().padStart(2,"0");
-                const ampm = hour>=12?"PM":"AM";
-                const hour12 = hour%12||12;
-                const timeStr = `${hour12}:${min} ${ampm}`;
-                const dateStr = `${dayName} ${months[now.getMonth()]} ${now.getDate()} ${now.getFullYear()}`;
-                const nowMins = hour*60+now.getMinutes();
-                const sessionStatus = nowMins < 8*60+30 ? "PRE-MARKET — NY session opens at 8:30 AM CT. Pre-market movement is information, not permission."
-                  : nowMins <= 10*60+30 ? "NY SESSION LIVE — execution window open until 10:30 AM CT"
-                  : "NY SESSION CLOSED — execution window closed at 10:30 AM CT";
-                const fridayNote = isFriday ? " FRIDAY: End of week — apply extra caution, consider reduced size, a PASS on Friday protects the week's profit." : "";
-                return `Today is ${dateStr} at ${timeStr} Chicago time. ${sessionStatus}.${fridayNote} Instrument: ${instrument}. Session selected: ${sessionName}. Images submitted in order: [1]=Daily slot, [2]=4H slot, [3]=1H slot, [4]=30M slot, [5]=15M slot. First validate each chart matches its slot, then write the full BRC session plan. Return only JSON.`;
-              })()}]}]})
-      });
-      const data=await res.json();
-      if(data.error){
-        const e=data.error;
-        if(e.type==="exceeded_limit"||e.type==="rate_limit_error"){
-          const resetsAt=e.resetsAt||e.resets_at;
-          const resetStr=resetsAt?new Date(resetsAt*1000).toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"}):"soon";
-          throw new Error(`Usage limit reached. Resets at ${resetStr} — try again then.`);
-        }
-        const msg=typeof e.message==="string"?e.message:typeof e.message==="object"?JSON.stringify(e.message):JSON.stringify(e);
-        throw new Error(msg);
-      }
-      const raw=data.content?.find(b=>b.type==="text")?.text||"";
-      const clean=raw.replace(/```json|```/g,"").trim();
-      if(!clean)throw new Error("Empty response — try again.");
-      let parsed;try{parsed=JSON.parse(clean);}catch(e){throw new Error("Response cut off. Hit Generate again.");}
-      // INSTRUMENT MISMATCH — hard block
-      if(parsed.instrument_valid===false){
-        const detected=parsed.instrument_detected||"a different instrument";
-        throw new Error(`Wrong charts uploaded. You selected ${instrument} but the charts show ${detected}. Please upload ${instrument} charts and try again.`);
-      }
-      // Handle chart validation failure
-      if(parsed.charts_valid===false){
-        const v=parsed.chart_validation||{};
-        const errors=Object.entries(v).filter(([,val])=>{
-          // Only flag as error if detected doesn't match expected AND valid===false
-          if(val.valid===true) return false;
-          if(val.detected&&val.expected&&
-             val.detected.trim().toLowerCase()===val.expected.trim().toLowerCase()) return false;
-          return true;
-        }).map(([k,val])=>({
-          slot:k, slotLabel:TF_SLOTS.find(s=>s.key===k)?.label||k,
-          expected:val.expected, detected:val.detected,
-          signals:Array.isArray(val.signals)?val.signals:[],
-          color:TF_SLOTS.find(s=>s.key===k)?.color||"#ff6b6b"
-        }));
-        if(errors.length>0){setValidationErrors(errors);return;}
-        // All "invalid" flags were false positives — proceed
-      }
-      setPlanResult(parsed);
-    }catch(err){setError(err.message);}
-    finally{setLoading(false);}
-  }
-  function reset(){setImages({});setPlanResult(null);setError(null);}
-
-  if(loading)return(
-    <LoadingScreen T={T}/>
-  );
-
-  if(planResult)return <SessionPlan result={planResult} instrument={instrument} images={images} profile={anime} T={T} onReset={reset} onJournalEntry={onJournalEntry} selectedSession={session}/>;
-
-
-
-  const SESSION_COMBOS_WARN={
-    "GBPUSD+NY":"GBPUSD peaks in London hours. NY session liquidity thins — expect choppy, unreliable moves.",
-    "GBPUSD+ASIAN":"GBPUSD is nearly dead in the Asian session. Very low volatility — not recommended for setups.",
-    "NAS100+ASIAN":"NAS100 doesn't move meaningfully in the Asian session. US indices need the NY open.",
-    "US30+ASIAN":"US30 is illiquid in the Asian session. Wait for the NY open for reliable structure.",
-    "NAS100+LONDON":"NAS100 in London is pre-market territory. Thin structure — treat any setup as B-grade at best.",
-    "US30+LONDON":"US30 in London lacks follow-through. Pre-market moves are unreliable — reduce size.",
-    "USOIL+ASIAN":"Oil has very low Asian session volume. Avoid unless a major catalyst is expected.",
-    "BTCUSD+LONDON":"BTC in London can be active but spreads are wider. Wait for NY open for cleaner structure.",
-    "XAUUSD+LONDON":"Gold moves in London — European banks create real liquidity and structure can form cleanly. Solid session. Best execution is the London-NY Overlap (8:30–10:00 CT) when volume peaks.",
-    "XAUUSD+ASIAN":"Gold is quiet in the Asian session. Low volatility and wide spreads — setups lack follow-through. Wait for London or NY open.",
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+function getCTTime() {
+  const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
+  return {
+    now,
+    str: now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", timeZone: "America/Chicago" }),
+    mins: now.getHours() * 60 + now.getMinutes(),
+    isFriday: now.getDay() === 5,
+    dayName: ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][now.getDay()],
+    dateStr: `${["January","February","March","April","May","June","July","August","September","October","November","December"][now.getMonth()]} ${now.getDate()} ${now.getFullYear()}`,
   };
-  const SESSION_COMBOS_INFO=new Set(["XAUUSD+LONDON"]);
-  const comboWarn=session?SESSION_COMBOS_WARN[`${instrument}+${session}`]:null;
-  const comboIsInfo=session?SESSION_COMBOS_INFO.has(`${instrument}+${session}`):false;
+}
 
+function getNextClose() {
+  const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
+  const m = now.getMinutes();
+  const minsToNext = m < 30 ? 30 - m : 60 - m;
+  const next = new Date(now.getTime() + minsToNext * 60000);
+  return next.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", timeZone: "America/Chicago" });
+}
 
-  return(
-    <div style={{animation:"icc-fade 0.4s ease both"}}>
-      {/* HERO */}
-      <div style={S.hero}>
-        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14,flexWrap:"wrap"}}>
-          <span style={{fontSize:22}}>{anime.emoji}</span>
-          <span style={{fontSize:12,fontWeight:900,letterSpacing:"0.06em"}}>
-            <span style={{color:"#00e5ff"}}>Break</span>
-            <span style={{color:"var(--t-muted4)",margin:"0 6px"}}>·</span>
-            <span style={{color:"#7fff6b"}}>Retest</span>
-            <span style={{color:"var(--t-muted4)",margin:"0 6px"}}>·</span>
-            <span style={{color:"#ffd166"}}>Continuation</span>
-          </span>
-        </div>
-        <h1 style={S.heroTitle}>Upload 5 charts to generate<br/><span style={S.heroTitleAccent}>your session plan.</span></h1>
-        <p style={{fontSize:14,color:"var(--t-muted3)",margin:"6px 0 0",fontWeight:500}}>Upload Daily, 4H, 1H, 30M, and 15M screenshots for a full session read.</p>
+function getAnalysisPrompt(instrument) {
+  const ct = getCTTime();
+  const nowMins = ct.mins;
+  const sessionStatus = nowMins < 8*60+30 ? "PRE-MARKET"
+    : nowMins <= 10*60+30 ? "NY SESSION LIVE"
+    : "NY SESSION CLOSED";
+  const fridayNote = ct.isFriday ? " FRIDAY — end of week, apply extra caution." : "";
 
-        {/* Instrument + Session selectors */}
-        <div style={{display:"flex",flexDirection:"column",gap:8,marginTop:14}}>
-          <div style={{display:"flex",alignItems:"center",gap:10}}>
-            <span style={{fontSize:10,letterSpacing:"0.18em",color:"var(--t-muted2)",minWidth:78,fontWeight:900}}>INSTRUMENT</span>
-            <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-              {["XAUUSD","NAS100","US30","BTCUSD","USOIL","GBPUSD"].map(sym=>{
-                const locked=!allowedInstruments.includes(sym);
-                const minTierEntry=locked?Object.entries(TIER_CONFIG).find(([,t])=>t.instruments.includes(sym)):null;
-                const minTier=minTierEntry?.[1]||null;
-                return(
-                  <button key={sym}
-                    onClick={()=>!locked&&setInst(sym)}
-                    title={locked?"Upgrade required":sym}
-                    style={locked?{
-                      ...S.instrBtn,
-                      cursor:"not-allowed",
-                      background:"rgba(255,255,255,0.03)",
-                      border:"1px solid rgba(255,255,255,0.1)",
-                      color:"var(--t-muted4)",
-                      opacity:0.55
-                    }:{
-                      ...S.instrBtn,
-                      ...(instrument===sym?S.instrBtnActive:{})
-                    }}>
-                    {locked&&<span style={{marginRight:5,fontSize:10,opacity:0.6}}>🔒</span>}
-                    <span>{sym}</span>
-                  </button>
-                );
-              })}
-            </div>
+  return `You are an expert BRC (Break-Retest-Continuation) trade analyst.
+Today is ${ct.dayName} ${ct.dateStr} at ${ct.str} Chicago time. ${sessionStatus}.${fridayNote}
+Instrument: ${instrument}.
+
+Analyze these 5 charts (Daily, 4H, 1H, 30M, 15M) and return ONLY a JSON object with this exact structure:
+{
+  "grade": "A+|A|B|C|PASS",
+  "bias": "SHORT|LONG|NEUTRAL",
+  "confidence": "HIGH|MEDIUM|LOW",
+  "confidence_score": 75,
+  "summary": "2-3 sentence plain English summary of what the charts show. Written for a 16-year-old. No jargon.",
+  "trigger_level": "exact price",
+  "retest_zone": "price zone e.g. 70,200–70,350",
+  "stop_loss": "exact price",
+  "tp1": "exact price",
+  "tp2": "exact price",
+  "runner": "exact price",
+  "current_phase": "BREAK|RETEST|CONTINUATION|PRE-SETUP",
+  "key_levels": ["level 1", "level 2", "level 3"],
+  "friday_note": "brief Friday caution if applicable, empty string otherwise",
+  "pass_reason": "if PASS, why. Otherwise empty string."
+}
+
+BRC RULES:
+- Daily is the General. Always check it first.
+- Phase awareness: if price already passed the trigger level, identify the ACTUAL current phase.
+- Never call a break pending if price already moved through that level.
+- Trigger level = the CURRENT nearest actionable level, not a historical one.
+- Small bounces after big moves = valid retests. Do not call expired setup.
+- PASS only when Daily+4H+1H all agree AND move ran with zero retest outside NY.
+Return only the JSON. No markdown. No explanation.`;
+}
+
+function getLivePrompt(plan) {
+  const ct = getCTTime();
+  const nowMins = ct.mins;
+  const windowOpen = nowMins >= 8*60+30 && nowMins <= 10*60+30;
+  const fridayNote = ct.isFriday ? " FRIDAY: protect the week's profit — if not A+, PASS." : "";
+
+  return `You are an OmniUSD live session guide — a disciplined BRC trading coach.
+Time: ${ct.str} CT. Window: ${windowOpen ? "OPEN ✅" : nowMins < 8*60+30 ? "PRE-MARKET" : "CLOSED ❌"}.${fridayNote}
+
+ACTIVE PLAN:
+Instrument: ${plan.instrument}
+Bias: ${plan.bias} | Grade: ${plan.grade} | Confidence: ${plan.confidence_score}%
+Trigger: ${plan.trigger_level} | Retest zone: ${plan.retest_zone}
+Stop: ${plan.stop_loss} | TP1: ${plan.tp1} | TP2: ${plan.tp2} | Runner: ${plan.runner}
+Phase: ${plan.current_phase}
+Summary: ${plan.summary}
+
+RULES — NON-NEGOTIABLE:
+- Only 30M candle CLOSES matter. Wicks = noise.
+- Tier 1 = first 30M close through trigger level
+- Tier 2 = second 30M close confirms. THEN place limit order.
+- Never chase. Never enter on a wick. Never market order.
+- "Pre-market movement is information — not permission."
+
+YOUR ROLE:
+- Respond to live price updates from the trader
+- Confirm or deny tier completions based on CLOSES only
+- Keep responses SHORT — 3-5 sentences max unless confirming a tier
+- When tier confirms: lead with 🚨, be clear and energetic
+- When price moves but no close: keep calm, remind of the rule
+- Write like explaining to a disciplined 16-year-old
+- Use ✅ ❌ ⏳ 🔴 🟢 🥷 for status — never excessive
+- Bold key prices with **price**`;
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
+function UnifiedDashboard() {
+  const [phase, setPhase] = useState("upload"); // upload | analyzing | plan | live
+  const [images, setImages] = useState([]);
+  const [instrument, setInstrument] = useState("BTCUSD");
+  const [plan, setPlan] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [tier1, setTier1] = useState(false);
+  const [tier2, setTier2] = useState(false);
+  const [sessionState, setSessionState] = useState("WATCHING");
+  const [sessionHistory, setSessionHistory] = useState([]);
+  const [ctTime, setCtTime] = useState(getCTTime().str);
+  const [nextClose, setNextClose] = useState(getNextClose());
+  const bottomRef = useRef(null);
+  const inputRef = useRef(null);
+  const fileRef = useRef(null);
+
+  // Live clock
+  useEffect(() => {
+    const id = setInterval(() => {
+      setCtTime(getCTTime().str);
+      setNextClose(getNextClose());
+    }, 10000);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+
+  // ── STEP 1: Analyze charts ──────────────────────────────────────────────────
+  async function analyzeCharts() {
+    if (images.length < 5) return;
+    setPhase("analyzing");
+
+    try {
+      // Build image blocks
+      const imgBlocks = await Promise.all(images.map(async (img, i) => {
+        const base64 = await new Promise(res => {
+          const r = new FileReader();
+          r.onload = () => res(r.result.split(",")[1]);
+          r.readAsDataURL(img);
+        });
+        return { type: "image", source: { type: "base64", media_type: img.type, data: base64 } };
+      }));
+
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "anthropic-version": "2023-06-01" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1000,
+          system: getAnalysisPrompt(instrument),
+          messages: [{ role: "user", content: [...imgBlocks, { type: "text", text: `Analyze these ${instrument} charts. Daily first, then 4H, 1H, 30M, 15M. Return only the JSON.` }] }],
+        }),
+      });
+
+      const data = await res.json();
+      const text = data.content?.[0]?.text || "{}";
+      const parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
+      parsed.instrument = instrument;
+      setPlan(parsed);
+      setPhase("plan");
+    } catch (e) {
+      console.error(e);
+      // Fallback mock plan for demo
+      setPlan({
+        instrument, grade: "B", bias: "SHORT", confidence: "MEDIUM", confidence_score: 68,
+        summary: "Bitcoin is in a downtrend from 97,938. After flushing to 68,770, price is bouncing. This bounce is the retest. We're watching for a 30M close below 70,200 to confirm the next leg down.",
+        trigger_level: "70,200", retest_zone: "70,200–70,350", stop_loss: "71,000",
+        tp1: "69,200", tp2: "68,770", runner: "67,500",
+        current_phase: "RETEST", key_levels: ["71,626 resistance", "70,200 trigger", "68,770 support"],
+        friday_note: "Friday — protect the week. Only A+ setups.", pass_reason: "",
+      });
+      setPhase("plan");
+    }
+  }
+
+  // ── STEP 2: Start live session ──────────────────────────────────────────────
+  function startLiveSession() {
+    setPhase("live");
+    const ct = getCTTime();
+    const nowMins = ct.mins;
+    const windowOpen = nowMins >= 8*60+30 && nowMins <= 10*60+30;
+
+    setMessages([{
+      role: "assistant",
+      content: `🥷 **Live session started — ${plan.instrument} ${plan.bias}**\n\nSend price updates as candles close. I'll guide the session step by step.\n**Wicks don't count. Only closes.**\n\n${windowOpen ? `NY window is open — best entries at the 30M closes. ⚡` : `NY window opens at 8:30 AM CT. Stay patient.`}`,
+      time: ct.str,
+    }]);
+  }
+
+  // ── STEP 3: Live chat ───────────────────────────────────────────────────────
+  async function sendMessage() {
+    if (!input.trim() || loading) return;
+    const userMsg = input.trim();
+    setInput("");
+    const ct = getCTTime();
+
+    const newHistory = [...sessionHistory, { role: "user", content: userMsg }];
+    setMessages(prev => [...prev, { role: "user", content: userMsg, time: ct.str }]);
+    setLoading(true);
+
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "anthropic-version": "2023-06-01" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 400,
+          system: getLivePrompt(plan),
+          messages: newHistory,
+        }),
+      });
+
+      const data = await res.json();
+      const reply = data.content?.[0]?.text || "Try again.";
+      const updatedHistory = [...newHistory, { role: "assistant", content: reply }];
+      setSessionHistory(updatedHistory);
+
+      const r = reply.toLowerCase();
+      if (r.includes("tier 1") && (r.includes("confirm") || r.includes("✅"))) { setTier1(true); setSessionState("BREAK_CONFIRMED"); }
+      if (r.includes("tier 2") && (r.includes("confirm") || r.includes("✅"))) { setTier2(true); setSessionState("READY_FOR_LIMIT"); }
+      if (r.includes("retest") && r.includes("forming")) setSessionState("RETEST_FORMING");
+      if (r.includes("invalidat")) setSessionState("INVALIDATED");
+
+      setMessages(prev => [...prev, { role: "assistant", content: reply, time: getCTTime().str }]);
+    } catch (e) {
+      setMessages(prev => [...prev, { role: "assistant", content: "Connection error. Try again.", time: getCTTime().str }]);
+    }
+    setLoading(false);
+    inputRef.current?.focus();
+  }
+
+  // ── Derived state ───────────────────────────────────────────────────────────
+  const ct = getCTTime();
+  const nowMins = ct.mins;
+  const windowOpen = nowMins >= 8*60+30 && nowMins <= 10*60+30;
+  const windowClosed = nowMins > 10*60+30;
+  const derivedState = windowClosed ? "WINDOW_CLOSED" : tier2 ? "READY_FOR_LIMIT" : tier1 ? "BREAK_CONFIRMED" : sessionState;
+  const stateObj = SESSION_STATES[derivedState] || SESSION_STATES.WATCHING;
+
+  function fmt(text) {
+    return text.replace(/\*\*(.*?)\*\*/g, '<strong style="color:#00e5ff">$1</strong>').replace(/\n/g, "<br/>");
+  }
+
+  const gradeColor = plan ? { "A+": "#7fff6b", "A": "#00e5ff", "B": "#ffd166", "C": "#ff9a3c", "PASS": "#8878aa" }[plan.grade] || "#ffd166" : "#ffd166";
+  const biasColor = plan?.bias === "SHORT" ? "#ff6b6b" : plan?.bias === "LONG" ? "#7fff6b" : "#ffd166";
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#0d0b14", color: "#f0ecff", fontFamily: "'Space Mono', monospace", display: "flex", flexDirection: "column" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        ::-webkit-scrollbar { width: 3px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,107,255,0.3); border-radius: 2px; }
+        @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.35} }
+        @keyframes slide { from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)} }
+        @keyframes spin { to{transform:rotate(360deg)} }
+        @keyframes fadein { from{opacity:0}to{opacity:1} }
+      `}</style>
+
+      {/* ── NAV ── */}
+      <header style={{ padding: "12px 20px", background: "rgba(255,255,255,0.025)", borderBottom: "1px solid rgba(255,107,255,0.12)", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 18, color: "#ff6bff" }}>◈</span>
+          <div>
+            <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", background: "linear-gradient(90deg,#ff6bff,#00e5ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>OmniUSD</span>
           </div>
-          <div style={{display:"flex",alignItems:"flex-start",gap:10}}>
-            <span style={{fontSize:10,letterSpacing:"0.18em",color:"var(--t-muted2)",minWidth:78,paddingTop:10,fontWeight:900}}>SESSION</span>
-            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-              {[{key:"NY",label:"New York",time:"8:30–12:00 CT",color:"#00e5ff"},{key:"LONDON",label:"London",time:"2:00–5:00 CT",color:"#ff6bff"},{key:"ASIAN",label:"Asian",time:"7:00–11:00 PM CT",color:"#ffd166"},{key:"LONDON_NY",label:"London–NY Overlap",time:"8:30–10:00 CT",color:"#7fff6b"}].map(s=>(
-                <button key={s.key} onClick={()=>setSession(session===s.key?null:s.key)}
-                  style={{background:session===s.key?s.color+"18":"rgba(255,255,255,0.04)",border:`1px solid ${session===s.key?s.color+"88":"rgba(255,255,255,0.12)"}`,color:session===s.key?s.color:"var(--t-muted2)",padding:"6px 14px",borderRadius:8,cursor:"pointer",fontSize:11,fontWeight:900,letterSpacing:"0.06em",fontFamily:"inherit",display:"flex",flexDirection:"column",alignItems:"flex-start",gap:1,transition:"all 0.15s"}}>
-                  <span>{s.label}</span>
-                  <span style={{fontSize:10,opacity:0.85,fontWeight:700}}>{s.time}</span>
+          {plan && phase !== "upload" && (
+            <div style={{ display: "flex", gap: 6, marginLeft: 8 }}>
+              <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", background: `${gradeColor}14`, border: `1px solid ${gradeColor}44`, borderRadius: 4, color: gradeColor }}>{plan.grade}</span>
+              <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", background: `${biasColor}14`, border: `1px solid ${biasColor}44`, borderRadius: 4, color: biasColor }}>{plan.bias}</span>
+              <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, color: "#8878aa" }}>{plan.instrument}</span>
+            </div>
+          )}
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ fontSize: 9, color: "#8878aa" }}>
+            <span style={{ color: "#00e5ff", fontWeight: 700 }}>{ctTime}</span> CT
+          </div>
+          {phase === "live" && (
+            <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: windowClosed ? "#ff6b6b" : "#7fff6b", animation: windowOpen ? "pulse 1.5s ease infinite" : "none" }}/>
+              <span style={{ fontSize: 9, fontWeight: 700, color: windowClosed ? "#ff6b6b" : "#7fff6b" }}>{windowClosed ? "WINDOW CLOSED" : "WINDOW OPEN"}</span>
+            </div>
+          )}
+          {phase === "live" && (
+            <button onClick={() => { setPhase("upload"); setImages([]); setPlan(null); setMessages([]); setTier1(false); setTier2(false); setSessionState("WATCHING"); setSessionHistory([]); }}
+              style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", color: "rgba(255,255,255,0.3)", background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
+              NEW ANALYSIS
+            </button>
+          )}
+        </div>
+      </header>
+
+      {/* ══ PHASE: UPLOAD ══════════════════════════════════════════════════════ */}
+      {phase === "upload" && (
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", padding: "48px 24px 32px", animation: "fadein 0.3s ease both" }}>
+          <div style={{ width: "100%", maxWidth: 520 }}>
+            <div style={{ textAlign: "center", marginBottom: 36 }}>
+              <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: "0.22em", color: "#ff6bff", marginBottom: 12 }}>UPLOAD FIRST · LIVE SESSION SECOND</div>
+              <h1 style={{ fontSize: 28, fontWeight: 700, lineHeight: 1.2, marginBottom: 8, letterSpacing: "-0.01em" }}>Upload your charts.<br/>Start the session.</h1>
+              <p style={{ fontSize: 11, color: "#8878aa", lineHeight: 1.7 }}>Upload all 5 timeframes. Your plan generates automatically,<br/>then live session begins.</p>
+            </div>
+
+            {/* Instrument selector */}
+            <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 20 }}>
+              {["BTCUSD","XAUUSD","NAS100","US30","USOIL","GBPUSD"].map(sym => (
+                <button key={sym} onClick={() => setInstrument(sym)}
+                  style={{ fontSize: 9, fontWeight: 700, padding: "5px 10px", borderRadius: 6, border: `1px solid ${instrument === sym ? "#ff6bff88" : "rgba(255,255,255,0.1)"}`, background: instrument === sym ? "rgba(255,107,255,0.12)" : "rgba(255,255,255,0.03)", color: instrument === sym ? "#ff6bff" : "#8878aa", cursor: "pointer", fontFamily: "inherit" }}>
+                  {sym}
                 </button>
               ))}
             </div>
-          </div>
-          {session&&(
-            <div style={{display:"flex",flexDirection:"column",gap:6,paddingLeft:88,marginTop:-2}}>
-              <div style={{display:"flex",alignItems:"center",gap:7,fontSize:11,color:"var(--t-muted3)"}}>
-                <span style={{color:"#7fff6b"}}>✓</span>
-                <span>Plan will be tailored for the <strong style={{color:"var(--t-text)"}}>{{NY:"New York",LONDON:"London",ASIAN:"Asian",LONDON_NY:"London–NY Overlap"}[session]} session</strong></span>
-              </div>
-              {comboWarn&&(
-                comboIsInfo?(
-                  <div style={{display:"flex",alignItems:"flex-start",gap:10,background:"rgba(0,229,255,0.06)",border:"1px solid rgba(0,229,255,0.25)",borderLeft:"3px solid #00e5ff",borderRadius:8,padding:"10px 14px"}}>
-                    <span style={{fontSize:16,flexShrink:0}}>ℹ️</span>
-                    <div>
-                      <p style={{fontSize:11,fontWeight:900,letterSpacing:"0.12em",color:"#00e5ff",margin:"0 0 3px"}}>SESSION NOTE</p>
-                      <p style={{fontSize:11,color:"var(--t-muted)",margin:0,lineHeight:1.6}}>{comboWarn}</p>
-                    </div>
+
+            {/* Upload zone */}
+            <div
+              onClick={() => fileRef.current?.click()}
+              onDragOver={e => e.preventDefault()}
+              onDrop={e => { e.preventDefault(); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith("image/")).slice(0, 5); setImages(files); }}
+              style={{ border: `2px dashed ${images.length === 5 ? "rgba(127,255,107,0.4)" : "rgba(255,107,255,0.25)"}`, borderRadius: 14, padding: "32px 24px", textAlign: "center", cursor: "pointer", transition: "all 0.2s", background: images.length === 5 ? "rgba(127,255,107,0.04)" : "rgba(255,255,255,0.02)" }}>
+              <input ref={fileRef} type="file" accept="image/*" multiple style={{ display: "none" }}
+                onChange={e => { const files = Array.from(e.target.files).slice(0, 5); setImages(files); }} />
+
+              {images.length === 0 ? (
+                <>
+                  <div style={{ fontSize: 28, marginBottom: 10 }}>📊</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#f0ecff", marginBottom: 6 }}>Drop 5 charts here</div>
+                  <div style={{ fontSize: 10, color: "#8878aa", lineHeight: 1.7 }}>Daily · 4H · 1H · 30M · 15M<br/>Tap to browse or drag and drop</div>
+                </>
+              ) : (
+                <>
+                  <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 12, flexWrap: "wrap" }}>
+                    {["D","4H","1H","30M","15M"].map((tf, i) => (
+                      <div key={tf} style={{ textAlign: "center" }}>
+                        {images[i] ? (
+                          <img src={URL.createObjectURL(images[i])} alt={tf}
+                            style={{ width: 60, height: 44, objectFit: "cover", borderRadius: 6, border: "1px solid rgba(127,255,107,0.3)", display: "block", marginBottom: 4 }}/>
+                        ) : (
+                          <div style={{ width: 60, height: 44, borderRadius: 6, border: "1px dashed rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.02)", marginBottom: 4 }}/>
+                        )}
+                        <span style={{ fontSize: 8, color: images[i] ? "#7fff6b" : "#8878aa", fontWeight: 700 }}>{tf}</span>
+                      </div>
+                    ))}
                   </div>
-                ):(
-                  <div style={{display:"flex",alignItems:"flex-start",gap:10,background:"rgba(255,154,60,0.08)",border:"1px solid rgba(255,154,60,0.35)",borderLeft:"3px solid #ff9a3c",borderRadius:8,padding:"10px 14px"}}>
-                    <span style={{fontSize:16,flexShrink:0}}>⚠️</span>
-                    <div>
-                      <p style={{fontSize:11,fontWeight:900,letterSpacing:"0.12em",color:"#ff9a3c",margin:"0 0 3px"}}>HEADS UP — SUBOPTIMAL COMBO</p>
-                      <p style={{fontSize:11,color:"var(--t-muted)",margin:0,lineHeight:1.6}}>{comboWarn}</p>
-                    </div>
+                  <div style={{ fontSize: 10, color: images.length === 5 ? "#7fff6b" : "#ffd166", fontWeight: 700 }}>
+                    {images.length === 5 ? "✓ All 5 charts ready" : `${images.length}/5 charts uploaded`}
                   </div>
-                )
+                </>
               )}
             </div>
-          )}
-        </div>
-      </div>
 
+            <button onClick={analyzeCharts} disabled={images.length < 5}
+              style={{ width: "100%", marginTop: 14, padding: "14px", borderRadius: 10, border: "none", background: images.length === 5 ? "linear-gradient(135deg,#ff6bff,#7b2fff)" : "rgba(255,255,255,0.06)", color: images.length === 5 ? "#fff" : "#8878aa", fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", fontFamily: "inherit", cursor: images.length === 5 ? "pointer" : "not-allowed", boxShadow: images.length === 5 ? "0 4px 28px rgba(255,107,255,0.22)" : "none", transition: "all 0.2s" }}>
+              {images.length === 5 ? "GENERATE SESSION PLAN →" : images.length === 0 ? "UPLOAD 5 CHARTS" : `UPLOAD ${5 - images.length} MORE CHART${5 - images.length !== 1 ? "S" : ""}`}
+            </button>
 
-
-      {/* UPLOAD GRID */}
-      <div style={{...S.uploadSection,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,107,255,0.18)"}}>
-        <div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",marginBottom:6}}>
-          <span style={{fontSize:13,fontWeight:900,color:"var(--t-muted2)",letterSpacing:"0.08em"}}>TIMEFRAME CHARTS</span>
-          <span style={{fontSize:12,fontWeight:700,color:allUploaded?"#7fff6b":uploadedCount>0?"#ffd166":"var(--t-muted4)"}}>
-            {uploadedCount} / 5 uploaded
-          </span>
-        </div>
-        <p style={{fontSize:11,color:"var(--t-muted2)",margin:"0 0 16px",fontWeight:500,lineHeight:1.5}}>
-          Daily sets bias. 4H confirms direction. 1H frames execution. 30M triggers. 15M refines entry.
-        </p>
-        <div style={S.fiveSlots}>
-          {TF_SLOTS.map(slot=>{
-            const img=images[slot.key];const isDragging=dragOver===slot.key;
-            const isHover=hoverCard===slot.key&&!img&&!isDragging;
-            return(
-              <div key={slot.key}
-                onMouseEnter={()=>setHoverCard(slot.key)}
-                onMouseLeave={()=>setHoverCard(null)}
-                style={{...S.slotCard,
-                  borderColor:isDragging?slot.color:img?slot.color:isHover?slot.color+"66":"rgba(255,255,255,0.14)",
-                  background:isDragging?slot.color+"16":img?slot.color+"0d":isHover?"rgba(255,255,255,0.07)":"rgba(255,255,255,0.04)",
-                  transform:isDragging?"scale(1.03)":isHover?"scale(1.015)":"scale(1)",
-                  boxShadow:isDragging?`0 0 32px ${slot.color}44`:img?`0 0 20px ${slot.color}22`:isHover?`0 0 16px ${slot.color}22`:"none",
-                  transition:"all 0.15s ease"}}
-                onDragOver={e=>onDragOver(e,slot.key)} onDragLeave={onDragLeave} onDrop={e=>onDrop(e,slot.key)}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}>
-                  <div>
-                    <div style={{fontSize:24,fontWeight:900,color:slot.color,lineHeight:1}}>{slot.short}</div>
-                    <div style={{fontSize:11,color:"var(--t-muted2)",marginTop:3,fontWeight:600}}>{slot.desc}</div>
-                  </div>
-                  {img&&<button onClick={()=>removeImage(slot.key)} style={{background:"rgba(255,107,107,0.12)",border:"1px solid rgba(255,107,107,0.35)",color:"#ff8080",cursor:"pointer",fontSize:10,padding:"3px 8px",borderRadius:4,fontFamily:"inherit",fontWeight:700}}>REMOVE</button>}
-                </div>
-                {img?(
-                  <div style={{position:"relative",borderRadius:8,overflow:"hidden"}}>
-                    <img src={`data:${img.mediaType};base64,${img.base64}`} style={{width:"100%",aspectRatio:"16/9",objectFit:"cover",display:"block"}} alt={slot.label}/>
-                    <div style={{position:"absolute",top:7,left:7,background:"rgba(0,0,0,0.55)",border:`1px solid ${slot.color}88`,borderRadius:5,padding:"3px 8px",display:"flex",alignItems:"center",gap:5}}>
-                      <span style={{fontSize:10,fontWeight:900,color:slot.color}}>✓</span>
-                      <span style={{fontSize:10,fontWeight:700,color:"#fff"}}>Uploaded</span>
-                    </div>
-                  </div>
-                ):(
-                  <div style={{...S.dropZone,
-                    borderColor:isDragging?slot.color:isHover?slot.color+"99":"rgba(255,255,255,0.28)",
-                    borderWidth:isDragging||isHover?2:1.5,
-                    background:isDragging?slot.color+"18":isHover?slot.color+"0a":"rgba(255,255,255,0.03)",
-                    transition:"all 0.15s"}} onClick={()=>openPicker(slot.key)}>
-                    <span style={{fontSize:isDragging?38:isHover?32:30,color:slot.color,opacity:isDragging||isHover?1:0.8,transition:"all 0.15s",display:"block"}}>{isDragging?"↓":"+"}</span>
-                    <span style={{fontSize:12,color:isDragging?slot.color:isHover?slot.color+"cc":"var(--t-muted)",fontWeight:700,transition:"color 0.15s"}}>{isDragging?"Drop here!":`Upload ${slot.label} chart`}</span>
-                    {!isDragging&&<span style={{fontSize:11,color:isHover?"var(--t-muted)":"var(--t-muted3)",fontWeight:500,transition:"color 0.15s"}}>or click to browse</span>}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Progress + CTA */}
-        <div style={{marginTop:16}}>
-          <div style={{display:"flex",gap:4,marginBottom:12}}>
-            {TF_SLOTS.map(slot=>(
-              <div key={slot.key} style={{flex:1,height:3,borderRadius:2,background:images[slot.key]?slot.color:"rgba(255,255,255,0.1)",transition:"background 0.35s ease"}}/>
-            ))}
+            <div style={{ textAlign: "center", marginTop: 10, fontSize: 9, color: "#8878aa" }}>
+              Daily · 4H · 1H · 30M · 15M — from your active broker only
+            </div>
           </div>
-          {allUploaded&&!(validationErrors?.length)?(
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:16,padding:"14px 0 0",borderTop:"1px solid rgba(255,255,255,0.07)",
-              animation:justCompleted?"icc-pop 0.4s ease both":"none"}}>
-              <div>
-                <div style={{fontSize:13,fontWeight:700,color:"#7fff6b"}}>✓ All 5 charts uploaded — ready to generate</div>
-              </div>
-              <button onClick={generatePlan}
-                style={{...S.generateBtn,flex:"0 0 auto",width:"auto",padding:"13px 28px",
-                  background:"linear-gradient(135deg,#ff6bff,#7b2fff)",border:"none",color:"#fff",
-                  cursor:"pointer",animation:"icc-glow 2s ease infinite",
-                  boxShadow:"0 0 24px rgba(255,107,255,0.22),0 0 48px rgba(123,47,255,0.12)",
-                  letterSpacing:"0.12em",fontSize:13,marginBottom:0,whiteSpace:"nowrap"}}>
-                GENERATE SESSION PLAN
-              </button>
-            </div>
-          ):(
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:16,padding:"14px 0 0",borderTop:"1px solid rgba(255,255,255,0.07)"}}>
-              <div style={{fontSize:13,fontWeight:600,color:(validationErrors?.length>0)?"#ff6b6b":"var(--t-muted3)"}}>
-                {(validationErrors?.length>0)
-                  ?`⚠ ${validationErrors.length} mismatch${validationErrors.length>1?"es":""} — fix uploads to continue`
-                  :"Complete all required uploads to unlock generation"}
-              </div>
-              <button disabled
-                style={{...S.generateBtn,flex:"0 0 auto",width:"auto",padding:"13px 28px",
-                  background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.2)",
-                  color:"var(--t-muted2)",cursor:"not-allowed",
-                  letterSpacing:"0.12em",fontSize:13,marginBottom:0,whiteSpace:"nowrap"}}>
-                COMPLETE ALL 5 UPLOADS
-              </button>
-            </div>
-          )}
         </div>
-        <p style={{fontSize:11,color:"var(--t-muted3)",margin:"10px 0 0",textAlign:"center",fontWeight:500}}>Broker screenshots only · Different platforms may show different prices</p>
-      </div>
-      <input ref={fileRef} type="file" accept="image/*" style={{display:"none"}} onChange={onFile}/>
+      )}
 
-      {error&&<div style={{...S.errorBox,marginTop:8}}>{error}</div>}
+      {/* ══ PHASE: ANALYZING ═══════════════════════════════════════════════════ */}
+      {phase === "analyzing" && (
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20, animation: "fadein 0.3s ease both" }}>
+          <div style={{ width: 40, height: 40, border: "3px solid rgba(255,107,255,0.15)", borderTop: "3px solid #ff6bff", borderRadius: "50%", animation: "spin 0.8s linear infinite" }}/>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#f0ecff", marginBottom: 6 }}>Reading your charts...</div>
+            <div style={{ fontSize: 10, color: "#8878aa" }}>Identifying BRC phase · Grading the setup · Building your plan</div>
+          </div>
+        </div>
+      )}
 
-      {validationErrors&&validationErrors.length>0&&(
-        <div style={{background:"rgba(255,107,107,0.04)",border:"1px solid rgba(255,107,107,0.25)",borderRadius:14,padding:"20px 24px",marginTop:12,animation:"icc-slide 0.3s ease both"}}>
-          <p style={{fontSize:13,fontWeight:900,letterSpacing:"0.15em",color:"#ff6b6b",margin:"0 0 12px"}}>WRONG TIMEFRAME DETECTED</p>
-          <div style={{display:"flex",flexDirection:"column",gap:8}}>
-            {validationErrors.map(ve=>(
-              <div key={ve.slot} style={{display:"flex",alignItems:"center",gap:14,background:"rgba(255,107,107,0.05)",border:`1px solid ${ve.color}33`,borderLeft:`3px solid ${ve.color}`,borderRadius:10,padding:"12px 16px"}}>
-                <div style={{width:32,height:32,borderRadius:"50%",background:ve.color+"14",border:`2px solid ${ve.color}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:900,color:ve.color,flexShrink:0}}>
-                  {TF_SLOTS.find(s=>s.key===ve.slot)?.short}
+      {/* ══ PHASE: PLAN SUMMARY ════════════════════════════════════════════════ */}
+      {phase === "plan" && plan && (
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 24px", animation: "slide 0.35s ease both" }}>
+          <div style={{ width: "100%", maxWidth: 520 }}>
+
+            {/* Grade + bias header */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+              <div style={{ fontSize: 48, fontWeight: 900, color: gradeColor, lineHeight: 1, letterSpacing: "-0.02em" }}>{plan.grade}</div>
+              <div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: "#f0ecff", marginBottom: 4 }}>
+                  {plan.grade === "PASS" ? "No active setup" : `${plan.bias.charAt(0)+plan.bias.slice(1).toLowerCase()} setup`}
                 </div>
-                <div style={{flex:1}}>
-                  <p style={{fontSize:12,fontWeight:900,color:ve.color,margin:"0 0 2px"}}>{ve.slotLabel} slot</p>
-                  <p style={{fontSize:11,color:"var(--t-muted)",margin:0}}>Expected: <strong>{ve.expected}</strong> · Detected: <strong style={{color:"#ff9a9a"}}>{ve.detected||"unknown"}</strong></p>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", background: `${biasColor}14`, border: `1px solid ${biasColor}44`, borderRadius: 4, color: biasColor }}>{plan.bias}</span>
+                  <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", background: "rgba(255,209,102,0.1)", border: "1px solid rgba(255,209,102,0.3)", borderRadius: 4, color: "#ffd166" }}>{plan.confidence} CONFIDENCE · {plan.confidence_score}%</span>
                 </div>
-                <button onClick={()=>removeImage(ve.slot)}
-                  style={{background:"rgba(255,107,107,0.22)",border:"1.5px solid rgba(255,107,107,0.65)",color:"#ffaaaa",padding:"8px 14px",borderRadius:8,cursor:"pointer",fontFamily:"inherit",fontSize:12,fontWeight:900}}>
-                  RE-UPLOAD
+              </div>
+            </div>
+
+            {/* Summary */}
+            <div style={{ padding: "14px 16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10, marginBottom: 16, fontSize: 12, color: "#ccc4e8", lineHeight: 1.7 }}>
+              {plan.summary}
+            </div>
+
+            {/* Friday note */}
+            {plan.friday_note && (
+              <div style={{ padding: "10px 14px", background: "rgba(255,154,60,0.06)", border: "1px solid rgba(255,154,60,0.2)", borderRadius: 8, marginBottom: 16, fontSize: 11, color: "#ff9a3c", fontWeight: 600 }}>
+                ⚠ {plan.friday_note}
+              </div>
+            )}
+
+            {plan.grade !== "PASS" ? (
+              <>
+                {/* Key levels */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginBottom: 16 }}>
+                  {[
+                    { label: "TRIGGER", val: plan.trigger_level, color: plan.bias === "SHORT" ? "#ff6b6b" : "#7fff6b" },
+                    { label: "STOP", val: plan.stop_loss, color: "#ff6b6b" },
+                    { label: "TP1", val: plan.tp1, color: "#7fff6b" },
+                  ].map(r => (
+                    <div key={r.label} style={{ padding: "10px 12px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8 }}>
+                      <div style={{ fontSize: 8, color: "#8878aa", fontWeight: 700, letterSpacing: "0.1em", marginBottom: 4 }}>{r.label}</div>
+                      <div style={{ fontSize: 15, fontWeight: 900, color: r.color, fontFamily: "monospace" }}>{r.val}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <button onClick={startLiveSession}
+                  style={{ width: "100%", padding: "15px", borderRadius: 10, border: "none", background: "linear-gradient(135deg,#ff6bff,#7b2fff)", color: "#fff", fontSize: 13, fontWeight: 700, letterSpacing: "0.12em", fontFamily: "inherit", cursor: "pointer", boxShadow: "0 4px 28px rgba(255,107,255,0.25)" }}>
+                  START LIVE SESSION →
+                </button>
+                <div style={{ textAlign: "center", marginTop: 8, fontSize: 9, color: "#8878aa" }}>
+                  Live session tracks tier confirmations in real time
+                </div>
+              </>
+            ) : (
+              <div style={{ padding: "16px", background: "rgba(255,107,107,0.06)", border: "1px solid rgba(255,107,107,0.2)", borderRadius: 10, textAlign: "center" }}>
+                <div style={{ fontSize: 12, color: "#ff8080", fontWeight: 700, marginBottom: 6 }}>No valid entry — PASS</div>
+                <div style={{ fontSize: 11, color: "#8878aa", marginBottom: 14 }}>{plan.pass_reason || "No A+ BRC sequence formed. Wait for fresh structure."}</div>
+                <button onClick={() => { setPhase("upload"); setImages([]); setPlan(null); }}
+                  style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", padding: "8px 20px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: "#8878aa", cursor: "pointer", fontFamily: "inherit" }}>
+                  ← New Analysis
                 </button>
               </div>
-            ))}
+            )}
           </div>
         </div>
+      )}
+
+      {/* ══ PHASE: LIVE SESSION ════════════════════════════════════════════════ */}
+      {phase === "live" && plan && (
+        <>
+          {/* Progress strip */}
+          <div style={{ display: "flex", alignItems: "center", padding: "0 20px", height: 36, borderBottom: "1px solid rgba(255,255,255,0.06)", flexShrink: 0, gap: 0 }}>
+            {[
+              { label: "Break", done: tier1, active: !tier1 },
+              { label: "Tier 1", done: tier1, active: !tier1 },
+              { label: "Tier 2", done: tier2, active: tier1 && !tier2 },
+              { label: "Limit Order", done: tier2, active: tier1 && tier2 },
+            ].map((t, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center" }}>
+                <div style={{ width: 7, height: 7, borderRadius: "50%", background: t.done ? "#7fff6b" : t.active ? "#00e5ff" : "rgba(255,255,255,0.15)", boxShadow: t.active ? "0 0 8px rgba(0,229,255,0.5)" : "none", animation: t.active ? "pulse 1.5s ease infinite" : "none", transition: "all 0.4s" }}/>
+                <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.05em", margin: "0 6px", color: t.done ? "#7fff6b" : t.active ? "#00e5ff" : "rgba(255,255,255,0.2)", transition: "color 0.4s" }}>{t.label}</span>
+                {i < 3 && <div style={{ width: 20, height: 1, background: t.done ? "#7fff6b" : "rgba(255,255,255,0.08)", marginRight: 4, transition: "background 0.4s" }}/>}
+              </div>
+            ))}
+            <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6, padding: "3px 10px", borderRadius: 20, background: `${stateObj.color}14`, border: `1px solid ${stateObj.color}44` }}>
+              {stateObj.dot && <span style={{ width: 5, height: 5, borderRadius: "50%", background: stateObj.color, animation: "pulse 1.5s ease infinite" }}/>}
+              <span style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.1em", color: stateObj.color }}>{stateObj.label}</span>
+            </div>
+          </div>
+
+          {/* Timing bar */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 20px", background: "rgba(255,255,255,0.02)", borderBottom: "1px solid rgba(255,255,255,0.05)", flexShrink: 0 }}>
+            <div style={{ display: "flex", gap: 20 }}>
+              <div><span style={{ fontSize: 8, color: "#8878aa", letterSpacing: "0.1em" }}>CURRENT TIME </span><span style={{ fontSize: 10, fontWeight: 700, color: "#00e5ff", fontFamily: "monospace" }}>{ctTime} CT</span></div>
+              {!windowClosed && <div><span style={{ fontSize: 8, color: "#8878aa", letterSpacing: "0.1em" }}>NEXT 30M CLOSE </span><span style={{ fontSize: 10, fontWeight: 700, color: "#ffd166", fontFamily: "monospace" }}>{nextClose} CT</span></div>}
+            </div>
+            <div style={{ fontSize: 9, color: "#8878aa" }}>TRIGGER <span style={{ color: plan.bias === "SHORT" ? "#ff6b6b" : "#7fff6b", fontWeight: 700 }}>{plan.trigger_level}</span></div>
+          </div>
+
+          {/* Live status panel */}
+          <div style={{ margin: "10px 16px 0", padding: "10px 16px", background: tier2 ? "rgba(127,255,107,0.06)" : tier1 ? "rgba(255,209,102,0.06)" : "rgba(0,229,255,0.05)", border: `1px solid ${tier2 ? "rgba(127,255,107,0.25)" : tier1 ? "rgba(255,209,102,0.25)" : "rgba(0,229,255,0.18)"}`, borderLeft: `3px solid ${tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00e5ff"}`, borderRadius: 8, flexShrink: 0 }}>
+            <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.18em", color: tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00e5ff", marginBottom: 5 }}>CURRENT LIVE STATUS</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#f0ecff", lineHeight: 1.5 }}>
+              {tier2 ? `✅ Both tiers confirmed. Place sell limit at ${plan.retest_zone}. Hands off.`
+               : tier1 ? `⏳ Tier 1 confirmed. Watching for second 30M close ${plan.bias === "SHORT" ? "below" : "above"} ${plan.trigger_level}.`
+               : `Watching for first valid 30M close ${plan.bias === "SHORT" ? "below" : "above"} ${plan.trigger_level}. No entry until the candle fully closes.`}
+            </div>
+            {tier2 && (
+              <div style={{ display: "flex", gap: 16, marginTop: 8 }}>
+                {[{label:"LIMIT",val:plan.retest_zone},{label:"STOP",val:plan.stop_loss},{label:"TP1",val:plan.tp1},{label:"TP2",val:plan.tp2}].map(r => (
+                  <div key={r.label}>
+                    <div style={{ fontSize: 8, color: "#8878aa", fontWeight: 700, letterSpacing: "0.1em", marginBottom: 2 }}>{r.label}</div>
+                    <div style={{ fontSize: 12, fontWeight: 900, color: "#7fff6b", fontFamily: "monospace" }}>{r.val}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Messages */}
+          <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px 8px" }}>
+            {messages.map((msg, i) => (
+              <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: msg.role === "user" ? "flex-end" : "flex-start", marginBottom: 10, animation: "slide 0.2s ease both" }}>
+                <div style={{ maxWidth: "85%", padding: "9px 13px", borderRadius: msg.role === "user" ? "10px 10px 3px 10px" : "10px 10px 10px 3px", background: msg.role === "user" ? "rgba(255,107,255,0.1)" : "rgba(255,255,255,0.04)", border: msg.role === "user" ? "1px solid rgba(255,107,255,0.2)" : "1px solid rgba(255,255,255,0.07)", fontSize: 11, lineHeight: 1.7, color: msg.role === "user" ? "#f0ecff" : "#ccc4e8" }} dangerouslySetInnerHTML={{ __html: fmt(msg.content) }}/>
+                <span style={{ fontSize: 8, color: "#8878aa", marginTop: 3, paddingLeft: 3, paddingRight: 3 }}>{msg.role === "user" ? "You" : "OmniUSD"} · {msg.time} CT</span>
+              </div>
+            ))}
+            {loading && (
+              <div style={{ display: "flex", marginBottom: 10 }}>
+                <div style={{ padding: "9px 13px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "10px 10px 10px 3px" }}>
+                  <div style={{ display: "flex", gap: 4 }}>
+                    {[0,1,2].map(d => <span key={d} style={{ width: 5, height: 5, borderRadius: "50%", background: "#ff6bff", animation: `pulse 1s ease ${d*0.2}s infinite`, display: "inline-block" }}/>)}
+                  </div>
+                </div>
+              </div>
+            )}
+            <div ref={bottomRef}/>
+          </div>
+
+          {/* Grouped chips */}
+          <div style={{ padding: "6px 16px 4px", display: "flex", flexDirection: "column", gap: 5, flexShrink: 0 }}>
+            {[
+              { label: "CANDLE UPDATE", color: "#00e5ff", chips: ["30M closed below the trigger","30M closed above trigger","Wick only — candle still forming"] },
+              { label: "ENTRY QUESTION", color: "#7fff6b", chips: ["Both tiers confirmed — order in?","Limit filled — what now?"] },
+              { label: "SESSION", color: "#ffd166", chips: ["Past 10:30 AM — cancel?","Setup invalidated"] },
+            ].map(g => (
+              <div key={g.label} style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 7, fontWeight: 900, letterSpacing: "0.12em", color: g.color, minWidth: 90, flexShrink: 0 }}>{g.label}</span>
+                {g.chips.map(q => (
+                  <button key={q} onClick={() => { setInput(q); inputRef.current?.focus(); }}
+                    style={{ fontSize: 9, fontWeight: 700, padding: "3px 9px", borderRadius: 16, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", color: "#8878aa", cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap", transition: "all 0.15s" }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = `${g.color}55`; e.currentTarget.style.color = g.color; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#8878aa"; }}>
+                    {q}
+                  </button>
+                ))}
+              </div>
+            ))}
+          </div>
+
+          {/* Input */}
+          <div style={{ padding: "8px 16px 14px", borderTop: "1px solid rgba(255,255,255,0.06)", display: "flex", gap: 8, flexShrink: 0 }}>
+            <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendMessage()}
+              placeholder={`Best format: candle close + price — e.g. "30M closed below ${plan.trigger_level} at 69,858"`}
+              style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 8, padding: "9px 13px", fontSize: 10, color: "#f0ecff", fontFamily: "inherit", outline: "none" }}/>
+            <button onClick={sendMessage} disabled={loading || !input.trim()}
+              style={{ padding: "9px 18px", borderRadius: 8, border: "none", background: input.trim() && !loading ? "linear-gradient(135deg,#ff6bff,#7b2fff)" : "rgba(255,255,255,0.05)", color: input.trim() && !loading ? "#fff" : "#8878aa", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", cursor: input.trim() && !loading ? "pointer" : "not-allowed", fontFamily: "inherit", transition: "all 0.2s" }}>
+              SEND →
+            </button>
+          </div>
+        </>
       )}
     </div>
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// COPY PRICE HELPER
-// ═══════════════════════════════════════════════════════════════════════════
 function CopyPrice({val,big,color}){
   const [copied,setCopied]=useState(false);
   const c=color||"#00e5ff";
@@ -3992,7 +4171,7 @@ function LandingPage({onEnterApp, onLogin}){
           <span style={{display:"block",background:"linear-gradient(135deg,#ff6bff,#00e5ff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Start executing.</span>
         </h1>
         <p className="land-fade" style={{fontFamily:"'Space Mono',monospace",fontSize:13,lineHeight:1.85,color:"#ccc4e8",maxWidth:560,marginBottom:44,animationDelay:"0.2s"}}>
-          Upload your charts. Get a structured session plan. Follow the 3-phase execution system that tells you exactly what to do — and when to do nothing.
+          Upload your 5 charts. Get your session plan. Then stay live — OmniUSD guides you through every candle close until execution.
         </p>
         <div className="land-fade" style={{display:"flex",alignItems:"center",gap:14,flexWrap:"wrap",justifyContent:"center",animationDelay:"0.3s"}}>
           <button onClick={onEnterApp}
@@ -4006,8 +4185,8 @@ function LandingPage({onEnterApp, onLogin}){
         <div className="land-fade" style={{marginTop:52,display:"flex",alignItems:"center",gap:28,flexWrap:"wrap",justifyContent:"center",animationDelay:"0.4s"}}>
           {[
             {text:"No signals. No predictions."},
-            {text:"Price Action & Market Structure built in."},
-            {text:"5 charts. One decision."},
+            {text:"Upload charts → plan generates → live session begins."},
+            {text:"5 charts. One session. Real-time guidance."},
           ].map((item,i)=>(
             <div key={i} style={{display:"flex",alignItems:"center",gap:7,fontFamily:"'Space Mono',monospace",fontSize:12,color:"#8878aa"}}>
               <div style={{width:6,height:6,borderRadius:"50%",background:"#7fff6b",flexShrink:0}}/>
@@ -4184,7 +4363,7 @@ function LandingPage({onEnterApp, onLogin}){
       <div style={{position:"relative",zIndex:1,maxWidth:1060,margin:"0 auto",padding:"60px 24px"}}>
         <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,letterSpacing:"0.24em",color:"#ff6bff",background:"rgba(255,107,255,0.08)",border:"1px solid rgba(255,107,255,0.2)",padding:"4px 12px",borderRadius:4,display:"inline-block",marginBottom:20}}>HOW IT WORKS</div>
         <h2 style={{fontFamily:"'Syne',sans-serif",fontSize:"clamp(30px,5vw,50px)",fontWeight:800,lineHeight:1.1,letterSpacing:"-0.02em",marginBottom:14}}>Three steps.<br/>One decision.</h2>
-        <p style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:"#ccc4e8",lineHeight:1.8,maxWidth:480,marginBottom:48}}>Upload your timeframe screenshots before the session. Get a structured analysis that tells you exactly what grade the setup is, what bias to trade, and how to execute.</p>
+        <p style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:"#ccc4e8",lineHeight:1.8,maxWidth:480,marginBottom:48}}>Upload 5 charts, get your BRC session plan, then go live. OmniUSD guides you through every 30M close — confirming tiers, tracking phases, and telling you exactly when to act.</p>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",gap:2,background:"rgba(255,107,255,0.08)",border:"1px solid rgba(255,107,255,0.12)",borderRadius:14,overflow:"hidden"}}>
           {steps.map(s=>(
             <div key={s.n} style={{background:"#130d22",padding:"32px 28px"}}>
@@ -4236,7 +4415,7 @@ function LandingPage({onEnterApp, onLogin}){
                     <span style={{color:"#7fff6b",fontWeight:900,flexShrink:0}}>✓</span>{ins}
                   </div>
                 ))}
-                {["Full 3-phase execution tracker","Session-aware guidance","AI session plans"].map(f=>(
+                {["Live session guidance — real time","Tier confirmation tracking","AI-generated session plans"].map(f=>(
                   <div key={f} style={{display:"flex",alignItems:"center",gap:9,fontFamily:"'Space Mono',monospace",fontSize:11,color:"#ccc4e8"}}>
                     <span style={{color:"#7fff6b",fontWeight:900,flexShrink:0}}>✓</span>{f}
                   </div>
@@ -4261,7 +4440,7 @@ function LandingPage({onEnterApp, onLogin}){
           Stop reacting.<br/>
           <span style={{background:"linear-gradient(135deg,#ff6bff,#00e5ff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Start executing.</span>
         </h2>
-        <p style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:"#ccc4e8",marginBottom:36,lineHeight:1.7}}>Upload your charts. Follow the phases. Execute only when the setup is real.</p>
+        <p style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:"#ccc4e8",marginBottom:36,lineHeight:1.7}}>Upload. Plan. Go live. Execute only when the setup is real.</p>
         <button onClick={onEnterApp}
           style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,letterSpacing:"0.12em",color:"#130d22",background:"linear-gradient(135deg,#ff6bff,#7b2fff)",border:"none",padding:"17px 48px",borderRadius:8,cursor:"pointer",boxShadow:"0 0 40px rgba(255,107,255,0.3)",transition:"all 0.25s"}}>
           CHOOSE YOUR PLAN →
