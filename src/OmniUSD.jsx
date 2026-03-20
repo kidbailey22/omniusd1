@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 
+
 // ─── Supabase (fetch-based client — no external library needed) ─────────────
 const SUPABASE_URL = "https://bwvbsomzldouymsldpsu.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3dmJzb216bGRvdXltc2xkcHN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4MDAwOTksImV4cCI6MjA4OTM3NjA5OX0.FxXLEaCIPTlbZSyYOcqtsKNyURmQzK50XzkVjgt-2Ik";
@@ -156,6 +157,7 @@ function getPlanPrompt(profile, instrument="this instrument"){
 
 EXECUTION WINDOW: NY Session 8:30 AM–12:00 PM CT. Best entries: 9:00 AM or 9:30 AM 30M candle closes.
 Pre-market = scouting only. NY open = execution window.
+CRITICAL RULE: "Pre-market movement is information — not permission." A move that ran before NY open is NOT a tradeable setup. Do not grade alignment on a move that has already happened without a proper retest forming.
 
 BRC METHODOLOGY — NON-NEGOTIABLE RULES:
 - Daily is the GENERAL. NEVER trade against it for A+ setups.
@@ -172,6 +174,87 @@ BRC METHODOLOGY — NON-NEGOTIABLE RULES:
 - Stop Tight = better R:R. Stop Wide = safer for volatile markets. Both must give at least 1R to TP1.
 - TP1 >= 1R minimum. TP2 = next liquidity target. Runner = full structure target.
 - MANTRA: "The 15-minute warning gets me ready. The 30-minute close puts me in the trade. No 30-minute close, no trade."
+
+UNDERSTANDING BRC SEQUENCES — READ EVERY TIME:
+
+STEP 1 — THE DAILY IS THE GENERAL. CHECK IT FIRST. ALWAYS.
+Daily BEARISH = you look for SHORT setups only.
+Daily BULLISH = you look for LONG setups only.
+This never changes. Everything else follows from this.
+
+STEP 2 — IDENTIFY THE BRC SEQUENCE CORRECTLY:
+A large move in the Daily's direction IS NOT an expired setup.
+It is the BREAK — Step 1 of the BRC sequence. 
+
+After a large break move, you look for:
+- A bounce or consolidation = the RETEST (Step 2)
+- Even a small bounce of $100–$500 qualifies as a retest
+- A 30M candle close in the break direction after the retest = CONTINUATION (Step 3) = YOUR ENTRY
+
+REAL EXAMPLE — BTCUSD MARCH 18, 2026 (A+ TRADE):
+Daily: BEARISH from $97,938. General says SHORT.
+$76,012 = liquidity grab / failed breakout. Institutions rejected price hard.
+Flush from $76,012 → $71,723 = the BREAK ✅
+Dead cat bounce $71,723 → $71,878 = the RETEST ✅ (only $155 bounce — still valid)
+9:30 AM 30M close at $71,655 (new low below $71,723) = TIER 1 CONTINUATION ✅
+10:00 AM 30M close at $71,400 = TIER 2 CONTINUATION ✅
+Sell limit placed at $71,723–$71,900 retest zone = CORRECT ENTRY
+This was an A+ setup. NOT an expired setup. NOT a PASS.
+
+STEP 3 — LIQUIDITY GRABS ARE THE SETUP, NOT THE PROBLEM:
+When price spikes above a key level then violently rejects = liquidity grab.
+The spike itself IS the Break in reverse — institutions grabbed liquidity then reversed.
+The correction after the spike = the Retest forming.
+The 30M close in the reversal direction = your Continuation entry.
+NEVER call PASS on a liquidity grab reversal setup.
+
+STEP 4 — THE ONLY TIME TO CALL EXPIRED SETUP:
+ONLY call PASS for expired setup when ALL of these are true:
+1. The Daily, 4H, AND 1H are all pointing the same direction
+2. AND price ran a huge distance in that direction
+3. AND there was ZERO retest — not even a small bounce
+4. AND the entire move happened outside the NY session window (e.g. Asian session news crash)
+Even then, if a retest is currently forming during NY session — do NOT call PASS. Grade the setup.
+
+STEP 5 — SMALL BOUNCES ARE VALID RETESTS:
+A retest does NOT need to be a full 50% pullback.
+A bounce of even $100–$300 after a $4,000 move qualifies as a retest.
+Price pulling back to the break level and holding qualifies as a retest.
+Do not require a large retest to validate the BRC sequence.
+
+PHASE AWARENESS — THIS IS STEP ONE. DO IT BEFORE ANYTHING ELSE.
+
+FIRST: Read the most recent candle on the 30M chart. Write down the current price. This is your anchor.
+
+SECOND: Identify the most recent significant structural level — the last major break level, swing high rejection, or key support/resistance.
+
+THIRD: Compare current price to that level. This tells you the phase.
+
+PHASE DETECTION RULES:
+- Current price BELOW the break level = Break already happened → you are in RETEST or CONTINUATION phase
+- Current price ABOVE the break level = Break already happened to the upside → same logic reversed
+- Current price AT or near the break level = Break may be forming → watch for 30M close
+
+DO NOT anchor to levels from previous sessions. Read the current chart fresh every time.
+The break level is always relative to WHERE PRICE IS RIGHT NOW — not where it was yesterday.
+
+REAL EXAMPLE (March 20 BTCUSD):
+Chart shows: High 76,012 → Low 68,770 → Current price 70,604 (bouncing)
+The break DOWN already ran from 76,012 to 68,770. That is the Break.
+Current bounce 68,770 → 70,604 = the Retest forming.
+DO NOT say "wait for break below 71,723" — that level was broken 2 days ago.
+Correct read: RETEST phase. Watch for 30M close back below 70,000–70,200 for continuation short.
+
+REAL EXAMPLE (March 18 BTCUSD):
+Chart shows: High 76,012 → flush to 71,723 → tiny bounce to 71,878 → current 71,878
+Break: 76,012 → 71,723 ✅
+Retest: bounce to 71,878 (only $155 — still valid) ✅  
+Trigger: 30M close below 71,723 = Tier 1 confirmation ✅
+Correct read: CONTINUATION phase. Grade A+.
+
+NEVER describe a break as "pending" or "waiting" if current price has already passed that level.
+The icc_phase field must reflect the ACTUAL current phase based on today's chart — not historical levels.
+The break_trigger_level must be a CURRENT, ACTIONABLE level — not a level price blew through days ago.
 
 CHART VALIDATION — CRITICAL FIRST:
 Images submitted in order: [1]=Daily, [2]=4H, [3]=1H, [4]=30M, [5]=15M. Selected instrument: ${instrument}.
@@ -206,6 +289,17 @@ CRITICAL: Always reference the OPERATIONAL range (match the levels in critical_l
 - why.session_timing: current session + preferred execution window
 - why.momentum: 30M directional state
 
+PLAIN ENGLISH BREAKDOWN — REQUIRED ON EVERY RESPONSE:
+You must always include a "plain_english" object in your JSON. Write this like you are explaining the market to a smart 16-year-old who understands trading basics but not jargon. Use simple words. Be direct. No filler.
+
+plain_english fields:
+- structure: "What is the market doing right now?" — describe price action in simple terms. Example: "Gold has been making lower highs and lower lows all day. It broke below 4,650 and hasn't come back up. The trend is clearly down."
+- brc_phase: "Where are we in the Break-Retest-Continuation sequence?" — Example: "We're still waiting for the Break. Price needs to close a 30-minute candle below 4,602 before anything happens."
+- key_levels: "What prices matter most right now?" — list 2-3 levels with one sentence each explaining why. Example: "4,650 — this was support, now it's resistance. 4,500 — big round number, first place price might bounce."
+- trade_plan: "What's the actual plan?" — write it like giving instructions to a friend. Example: "We're looking short. Wait for a 30-minute candle to close below 4,602. Don't enter on the wick — wait for the full candle close. If it closes below, set your limit order at the retest zone around 4,620."
+- verdict: "Should we trade this or not — and exactly why?" — one clear paragraph. Example: "This is a PASS. The big move already happened before New York opened. You missed the entry. Chasing a short after a $460 drop is gambling, not trading. Sit on your hands and wait for a fresh setup tomorrow."
+- psychological_rule: Always end with exactly this: "Once entered, hands off. Trust the system. Pre-market movement is information — not permission."
+
 FIELD SEPARATION — NON-NEGOTIABLE:
 Market structure fields contain PRICES ONLY — never session text, never rules, never conditions:
 - break_trigger_level: single price or zone e.g. "5,035" or "5,030–5,040" — NOTHING ELSE
@@ -230,7 +324,7 @@ CRITICAL LEVELS — all four must stay within the SAME operational framework (no
 CRITICAL RULE — every operational sentence must include exact price or zone.
 
 Respond ONLY with a JSON object, no markdown, no backticks:
-{"charts_valid":true,"instrument_valid":true,"instrument_detected":"string","chart_validation":{"daily":{"expected":"Daily","detected":"string","signals":[],"valid":true},"h4":{"expected":"4H","detected":"string","signals":[],"valid":true},"h1":{"expected":"1H","detected":"string","signals":[],"valid":true},"m30":{"expected":"30M","detected":"string","signals":[],"valid":true},"m15":{"expected":"15M","detected":"string","signals":[],"valid":true}},"primary_decision":{"bias":"SHORT|LONG|NEUTRAL","status":"VALID|WAITING|INVALIDATED","confidence":"HIGH|MEDIUM|LOW","confidence_reason":"string","grade":"A+|A|B|C|PASS"},"execution_plan":{"direction":"LONG|SHORT|NEUTRAL","break_trigger_level":"price only","retest_zone":"price or zone only","retest_confirmation_rule":"text rule only — no prices","session_restriction":"text only — when to trade","entry":"price or zone only","confirmation_trigger":"price only","stop_tight":"price only","stop_wide":"price only","tp1":"price only","tp2":"price only","runner":"price only","risk_reward":"string","size":"FULL SIZE|HALF SIZE|QUARTER SIZE"},"invalidation":"string","bias_levels":{"trigger_levels":"string","invalidation_levels":"string","acceleration_levels":"string"},"why":{"structure":"string","liquidity":"string","htf_alignment":"string","session_timing":"string","momentum":"string"},"icc_phase":"BREAK|RETEST|CONTINUATION|PRE-SETUP","alignment":"FULL ALIGN|COOKING|MISALIGNED|COUNTER-TREND ONLY","timeframe_reads":{"daily":{"bias":"BULLISH|BEARISH|NEUTRAL","structure":"string","key_level":"string"},"h4":{"bias":"BULLISH|BEARISH|NEUTRAL","structure":"string","key_level":"string"},"h1":{"bias":"BULLISH|BEARISH|NEUTRAL","structure":"string","key_level":"string"},"m30":{"bias":"BULLISH|BEARISH|NEUTRAL","structure":"string","key_level":"string"},"m15":{"bias":"BULLISH|BEARISH|NEUTRAL","structure":"string","key_level":"string"}},"secondary_plan":{"condition":"string","direction":"LONG|SHORT|NONE","entry":"price only","stop":"price only","tp1":"price only","tp2":"price only","runner":"price only","size":"FULL SIZE|HALF SIZE|QUARTER SIZE","warning":"string"},"critical_levels":{"long_trigger":"price only","short_trigger":"price only","major_support":"price only","major_resistance":"price only"},"trigger_conditions":{"long_trigger":"string","short_trigger":"string","risk_state":"string"}}`;
+{"charts_valid":true,"instrument_valid":true,"instrument_detected":"string","chart_validation":{"daily":{"expected":"Daily","detected":"string","signals":[],"valid":true},"h4":{"expected":"4H","detected":"string","signals":[],"valid":true},"h1":{"expected":"1H","detected":"string","signals":[],"valid":true},"m30":{"expected":"30M","detected":"string","signals":[],"valid":true},"m15":{"expected":"15M","detected":"string","signals":[],"valid":true}},"primary_decision":{"bias":"SHORT|LONG|NEUTRAL","status":"VALID|WAITING|INVALIDATED","confidence":"HIGH|MEDIUM|LOW","confidence_reason":"string","grade":"A+|A|B|C|PASS"},"execution_plan":{"direction":"LONG|SHORT|NEUTRAL","break_trigger_level":"price only","retest_zone":"price or zone only","retest_confirmation_rule":"text rule only — no prices","session_restriction":"text only — when to trade","entry":"price or zone only","confirmation_trigger":"price only","stop_tight":"price only","stop_wide":"price only","tp1":"price only","tp2":"price only","runner":"price only","risk_reward":"string","size":"FULL SIZE|HALF SIZE|QUARTER SIZE"},"invalidation":"string","bias_levels":{"trigger_levels":"string","invalidation_levels":"string","acceleration_levels":"string"},"why":{"structure":"string","liquidity":"string","htf_alignment":"string","session_timing":"string","momentum":"string"},"icc_phase":"BREAK|RETEST|CONTINUATION|PRE-SETUP","alignment":"FULL ALIGN|COOKING|MISALIGNED|COUNTER-TREND ONLY","timeframe_reads":{"daily":{"bias":"BULLISH|BEARISH|NEUTRAL","structure":"string","key_level":"string"},"h4":{"bias":"BULLISH|BEARISH|NEUTRAL","structure":"string","key_level":"string"},"h1":{"bias":"BULLISH|BEARISH|NEUTRAL","structure":"string","key_level":"string"},"m30":{"bias":"BULLISH|BEARISH|NEUTRAL","structure":"string","key_level":"string"},"m15":{"bias":"BULLISH|BEARISH|NEUTRAL","structure":"string","key_level":"string"}},"secondary_plan":{"condition":"string","direction":"LONG|SHORT|NONE","entry":"price only","stop":"price only","tp1":"price only","tp2":"price only","runner":"price only","size":"FULL SIZE|HALF SIZE|QUARTER SIZE","warning":"string"},"critical_levels":{"long_trigger":"price only","short_trigger":"price only","major_support":"price only","major_resistance":"price only"},"trigger_conditions":{"long_trigger":"string","short_trigger":"string","risk_state":"string"},"plain_english":{"structure":"string","brc_phase":"string","key_levels":"string","trade_plan":"string","verdict":"string","psychological_rule":"Once entered, hands off. Trust the system. Pre-market movement is information — not permission."}}`;
 }
 
 
@@ -395,6 +489,9 @@ export default function OmniUSD(){
   const [view,setView]=useState("landing");      // "landing"|"auth"|"app"
   const [page,setPage]=useState("home");
   const [planResult,setPlanResult]=useState(null);
+  const [journal,setJournal]=useState(()=>{
+    try{return JSON.parse(localStorage.getItem("omniusd_journal")||"[]");}catch{return[];}
+  });
   const T=DARK;
 
   useEffect(()=>{
@@ -563,9 +660,24 @@ export default function OmniUSD(){
       <div style={S.gridBg}/>
       <header style={S.nav}>
         <button onClick={()=>{setPage("home");setPlanResult(null);}} style={S.navLogo}>
-          <span style={S.logoGem}>◈</span>
-          <span style={S.logoWord}>Omni</span><span style={S.logoWord2}>USD</span>
+          ◈
+          <span style={{display:"inline-flex"}}><span style={S.logoWord}>Omni</span><span style={S.logoWord2}>USD</span></span>
         </button>
+        {/* Nav tabs */}
+        <div style={{display:"flex",gap:4,position:"absolute",left:"50%",transform:"translateX(-50%)"}}>
+          {[
+            {id:"home",label:"Dashboard"},
+            {id:"journal",label:journal.length>0?"Journal ("+journal.length+")":"Journal"},
+          ].map(tab=>(
+            <button key={tab.id} onClick={()=>setPage(tab.id)}
+              style={{fontFamily:"inherit",fontSize:11,fontWeight:700,letterSpacing:"0.06em",
+                padding:"5px 16px",borderRadius:8,border:"none",cursor:"pointer",
+                background:page===tab.id?"rgba(255,107,255,0.15)":"none",
+                color:page===tab.id?"#ff6bff":"var(--t-muted4)"}}>
+              {tab.label}
+            </button>
+          ))}
+        </div>
         <div style={S.navRight}>
           {/* Sign out */}
           <button onClick={signOut}
@@ -589,7 +701,15 @@ export default function OmniUSD(){
         </div>
       </header>
       <main style={S.main}>
-        {page==="home" && <HomePage planResult={planResult} setPlanResult={setPlanResult} anime={profile} T={T}/>}
+        {page==="home" && <HomePage planResult={planResult} setPlanResult={setPlanResult} anime={profile} T={T} onJournalEntry={(entry)=>{
+          const newJournal=[{...entry,id:Date.now(),outcome:null},...journal];
+          setJournal(newJournal);
+          localStorage.setItem("omniusd_journal",JSON.stringify(newJournal));
+        }}/>}
+        {page==="journal" && <JournalPage journal={journal} onUpdate={(updated)=>{
+          setJournal(updated);
+          localStorage.setItem("omniusd_journal",JSON.stringify(updated));
+        }} T={T}/>}
       </main>
       <footer style={{...S.footer, borderTop:`1px solid ${T.border}`}}>
         <span style={{color:T.subtext}}>© 2026 OmniUSD · AI-powered trading analysis</span>
@@ -1494,7 +1614,7 @@ function LoadingScreen({T=DARK}){
 // ═══════════════════════════════════════════════════════════════════════════
 // HOME PAGE
 // ═══════════════════════════════════════════════════════════════════════════
-function HomePage({planResult,setPlanResult,anime,T=DARK}){
+function HomePage({planResult,setPlanResult,anime,T=DARK,onJournalEntry}){
   // Resolve the user's actual tier — fallback to starter (most restrictive), never elite
   const userTier = DEV_MODE ? "elite" : (anime?.tier||"starter");
   const allowedInstruments = TIER_CONFIG[userTier]?.instruments || TIER_CONFIG.starter.instruments;
@@ -1520,7 +1640,6 @@ function HomePage({planResult,setPlanResult,anime,T=DARK}){
   );
   const [images,setImages]=useState({});
   const [loading,setLoading]=useState(false);
-  const [chartAge,setChartAge]=useState(null); // null = not selected yet
   const [error,setError]=useState(null);
   const [validationErrors,setValidationErrors]=useState(null);
   const [dragOver,setDragOver]=useState(null);
@@ -1620,7 +1739,7 @@ function HomePage({planResult,setPlanResult,anime,T=DARK}){
     <LoadingScreen T={T}/>
   );
 
-  if(planResult)return <SessionPlan result={planResult} instrument={instrument} images={images} profile={anime} T={T} onReset={reset}/>;
+  if(planResult)return <SessionPlan result={planResult} instrument={instrument} images={images} profile={anime} T={T} onReset={reset} onJournalEntry={onJournalEntry} selectedSession={session}/>;
 
 
 
@@ -1731,61 +1850,7 @@ function HomePage({planResult,setPlanResult,anime,T=DARK}){
         </div>
       </div>
 
-      {/* CHART TIMESTAMP */}
-      <div style={{marginBottom:12,display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
-        <span style={{fontSize:11,fontWeight:900,color:"var(--t-muted3)",letterSpacing:"0.1em",flexShrink:0}}>CHART AGE</span>
-        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-          {[
-            {key:"fresh",   label:"Just now",           sub:"< 30 min",   color:"#7fff6b"},
-            {key:"recent",  label:"Within 1 hour",      sub:"30–60 min",  color:"#7fff6b"},
-            {key:"aging",   label:"1–4 hours ago",      sub:"Borderline", color:"#ffd166"},
-            {key:"stale",   label:"Older than 4 hours", sub:"Stale",      color:"#ff6b6b"},
-          ].map(opt=>{
-            const isSel=chartAge===opt.key;
-            return(
-              <button key={opt.key} onClick={()=>setChartAge(opt.key)}
-                style={{background:isSel?opt.color+"18":"rgba(255,255,255,0.04)",
-                  border:`1px solid ${isSel?opt.color+"55":"rgba(255,255,255,0.1)"}`,
-                  borderRadius:8,padding:"5px 12px",cursor:"pointer",fontFamily:"inherit",
-                  display:"flex",flexDirection:"column",alignItems:"flex-start",gap:1,
-                  transition:"all 0.15s"}}>
-                <span style={{fontSize:11,fontWeight:900,color:isSel?opt.color:"var(--t-muted2)"}}>{opt.label}</span>
-                <span style={{fontSize:9,color:isSel?opt.color+"cc":"var(--t-muted4)",fontWeight:500}}>{opt.sub}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
 
-      {/* Stale chart warnings */}
-      {chartAge==="aging"&&(
-        <div style={{display:"flex",alignItems:"flex-start",gap:10,
-          background:"rgba(255,209,102,0.06)",border:"1px solid rgba(255,209,102,0.25)",
-          borderLeft:"3px solid #ffd166",borderRadius:8,padding:"10px 14px",marginBottom:12,
-          animation:"icc-slide 0.2s ease both"}}>
-          <span style={{fontSize:16,flexShrink:0}}>⚠️</span>
-          <div>
-            <p style={{fontSize:12,fontWeight:900,color:"#ffd166",margin:"0 0 3px",letterSpacing:"0.06em"}}>CHARTS MAY BE BORDERLINE STALE</p>
-            <p style={{fontSize:11,color:"var(--t-muted2)",margin:0,lineHeight:1.55}}>
-              BRC analysis is most reliable on charts taken within 1 hour of your session open. Levels from 1–4 hours ago may still be valid, but verify that structure hasn't shifted before executing.
-            </p>
-          </div>
-        </div>
-      )}
-      {chartAge==="stale"&&(
-        <div style={{display:"flex",alignItems:"flex-start",gap:10,
-          background:"rgba(255,107,107,0.06)",border:"1px solid rgba(255,107,107,0.3)",
-          borderLeft:"3px solid #ff6b6b",borderRadius:8,padding:"10px 14px",marginBottom:12,
-          animation:"icc-slide 0.2s ease both"}}>
-          <span style={{fontSize:16,flexShrink:0}}>🚫</span>
-          <div>
-            <p style={{fontSize:12,fontWeight:900,color:"#ff6b6b",margin:"0 0 3px",letterSpacing:"0.06em"}}>CHARTS ARE STALE — DO NOT TRADE THIS PLAN</p>
-            <p style={{fontSize:11,color:"var(--t-muted2)",margin:0,lineHeight:1.55}}>
-              These charts are more than 4 hours old. Market structure has likely shifted. Upload fresh charts taken within 1 hour of your session open before generating a plan.
-            </p>
-          </div>
-        </div>
-      )}
 
       {/* UPLOAD GRID */}
       <div style={{...S.uploadSection,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,107,255,0.18)"}}>
@@ -1937,10 +2002,11 @@ function CopyPrice({val,big,color}){
 // ═══════════════════════════════════════════════════════════════════════════
 // SESSION PLAN
 // ═══════════════════════════════════════════════════════════════════════════
-function SessionPlan({result,instrument,images,profile,onReset,T=DARK}){
+function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,selectedSession,T=DARK}){
   const pd    = result.primary_decision||{};
   const ep    = result.execution_plan||{};
   const why   = result.why||{};
+  const pe    = result.plain_english||{};
   const grade = pd.grade||"PASS";
   const isSkip= grade==="PASS";
   const isActive= grade==="A+"||grade==="A";
@@ -1949,6 +2015,7 @@ function SessionPlan({result,instrument,images,profile,onReset,T=DARK}){
   const [tradeState,setTradeState]=useState((isActive||isDev)?"ARMED_T1":"PRECHECK");
   const [showTracker,setShowTracker]=useState(false);
   const [showAlt,setShowAlt]=useState(false);
+  const [showPE,setShowPE]=useState(false);
   const [showAlerts,setShowAlerts]=useState(false);
   const [showChart,setShowChart]=useState(false);
   const [checks,setChecks]=useState({closed:false,level:false,open:false});
@@ -1972,7 +2039,7 @@ function SessionPlan({result,instrument,images,profile,onReset,T=DARK}){
   const stateColors={PRECHECK:"#ffd166",ARMED_T1:"#00e5ff",ARMED_T2:"#00e5ff",EXECUTABLE:"#7fff6b",IN_TRADE:"#ff6bff",INVALIDATED:"#ff6b6b",COMPLETE:"#7fff6b"};
   const stateLabels={PRECHECK:"Waiting for trigger",ARMED_T1:"⚡ Tier 1 — Watching",ARMED_T2:"⏱ Tier 2 — Timer running",EXECUTABLE:"✅ Ready to execute",IN_TRADE:"📈 In trade",INVALIDATED:"🚫 Invalidated",COMPLETE:"✓ Complete"};
 
-  const session=profile?.session||null;
+  const session=selectedSession||profile?.session||null;
   const SESSION_CONTEXT={
     NY:{
       p1_note:"NY session has strong volume. The 30M close will be decisive. Wait for the full candle — do not jump on the wick.",
@@ -2087,7 +2154,7 @@ function SessionPlan({result,instrument,images,profile,onReset,T=DARK}){
               <span style={{fontSize:isSkip?13:18,fontWeight:isSkip?600:900,lineHeight:1.2,
                 color:isActive?"#7fff6b":isSkip?"var(--t-muted3)":"#ffd166"}}>
                 {isSkip?"No active setup — observe only"
-                 :isActive?`${grade} Setup`
+                 :isActive?`${bias.charAt(0)+bias.slice(1).toLowerCase()} setup`
                  :`${grade}-grade ${bias.toLowerCase()} setup developing`}
               </span>
               {/* Bias pill — hide on PASS */}
@@ -2125,9 +2192,9 @@ function SessionPlan({result,instrument,images,profile,onReset,T=DARK}){
               )}
             </div>
             {pd.confidence&&(
-              <div style={{fontSize:11,color:"var(--t-muted4)",marginTop:10,fontWeight:500,lineHeight:1.5,maxWidth:420}}>
-                <span style={{color:"var(--t-muted3)",fontWeight:700}}>Grade</span> = setup quality based on timeframe alignment.{" "}
-                <span style={{color:"var(--t-muted3)",fontWeight:700}}>Confidence</span> = how clearly the charts support this read.
+              <div style={{fontSize:12,color:"var(--t-muted3)",marginTop:10,fontWeight:500,lineHeight:1.6,maxWidth:420}}>
+                <span style={{color:"var(--t-text)",fontWeight:700}}>Grade</span> = setup quality based on timeframe alignment.{" "}
+                <span style={{color:"var(--t-text)",fontWeight:700}}>Confidence</span> = how clearly the charts support this read.
               </div>
             )}
             </>
@@ -2139,11 +2206,16 @@ function SessionPlan({result,instrument,images,profile,onReset,T=DARK}){
 
       {/* ── CURRENT STATE SUMMARY ── */}
       {(()=>{
+        // Check if execution window is closed (after 10:30 AM CT)
+        const nowCT = new Date(new Date().toLocaleString("en-US",{timeZone:"America/Chicago"}));
+        const nowMins = nowCT.getHours()*60+nowCT.getMinutes();
+        const windowClosed = (session==="NY"||session==="LONDON_NY")&&nowMins>10*60+30;
+
         const stateConfig={
-          PRECHECK:  {label:`Setup developing — watch for ${dirWord} break ${dirWord} ${triggerLevel}`, color:"#ffd166", dot:true},
+          PRECHECK:  {label:`Waiting for ${dirWord} break — watching ${triggerLevel}`, color:"#ffd166", dot:true},
           ARMED_T1:{
-            label: isSkip ? "Observe only — no active setup this session"
-                  : isDev  ? `Setup developing — waiting for confirmed break ${dirWord} ${triggerLevel}`
+            label: isSkip ? `No valid entry — watching ${triggerLevel} trigger`
+                  : isDev  ? `${grade}-grade ${bias.toLowerCase()} setup developing`
                   : `Waiting for 30M close ${dirWord} ${triggerLevel}`,
             color: isSkip?"var(--t-muted3)": isDev?"#ffd166":"#00e5ff",
             dot: !isSkip,
@@ -2154,18 +2226,29 @@ function SessionPlan({result,instrument,images,profile,onReset,T=DARK}){
           INVALIDATED:{label:"Setup invalidated — no trade taken",                   color:"#ff6b6b", dot:false},
           COMPLETE:  {label:"Session complete",                                       color:"#7fff6b", dot:false},
         };
-        const cfg=stateConfig[tradeState]||{label:"Analyzing...",color:"var(--t-muted3)",dot:false};
+        const cfg=stateConfig[tradeState]||{
+          label: tradeState==="ARMED_T2"?"Waiting for retest"
+               : tradeState==="EXECUTABLE"?"Ready to execute"
+               : isDev?"Waiting for break confirmation"
+               :"Analyzing...",
+          color:"#ffd166",dot:true};
+
+        // Override if execution window closed
+        const activeCfg = windowClosed&&["PRECHECK","ARMED_T1","ARMED_T2"].includes(tradeState)
+          ? {label:"Execution window closed — wait for next session", color:"#ff6b6b", dot:false}
+          : cfg;
+
         return(
           <div style={{display:"flex",alignItems:"center",gap:8,
             padding:"9px 16px",marginBottom:16,
             background:"rgba(255,255,255,0.03)",
-            border:`1px solid ${cfg.color}28`,
-            borderLeft:`3px solid ${cfg.color}`,
+            border:`1px solid ${activeCfg.color}28`,
+            borderLeft:`3px solid ${activeCfg.color}`,
             borderRadius:8}}>
-            {cfg.dot&&<span style={{width:7,height:7,borderRadius:"50%",flexShrink:0,background:cfg.color,animation:"icc-pulse 1.5s ease infinite"}}/>}
-            <span style={{fontSize:12,fontWeight:700,color:cfg.color,letterSpacing:"0.02em"}}>
+            {activeCfg.dot&&<span style={{width:7,height:7,borderRadius:"50%",flexShrink:0,background:activeCfg.color,animation:"icc-pulse 1.5s ease infinite"}}/>}
+            <span style={{fontSize:12,fontWeight:700,color:activeCfg.color,letterSpacing:"0.02em"}}>
               <span style={{color:"var(--t-muted4)",fontWeight:500,marginRight:6}}>Current state:</span>
-              {cfg.label}
+              {activeCfg.label}
             </span>
           </div>
         );
@@ -2173,30 +2256,50 @@ function SessionPlan({result,instrument,images,profile,onReset,T=DARK}){
       {isSkip?(
         /* ── PASS / SCOUT STATE ── */
         <div style={{background:"rgba(255,107,107,0.04)",border:"1px solid rgba(255,107,107,0.15)",borderRadius:16,padding:"20px 24px",marginBottom:12}}>
-          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}>
-            <span style={{fontSize:9,letterSpacing:"0.2em",color:"#ff6b6b",background:"rgba(255,107,107,0.1)",padding:"3px 10px",borderRadius:4,border:"1px solid rgba(255,107,107,0.2)",fontWeight:900}}>NO ACTIVE SETUP</span>
+
+          {/* ── SECTION 1: WHY IT'S A PASS ── */}
+          <div style={{marginBottom:18}}>
+            <div style={{fontSize:9,fontWeight:900,letterSpacing:"0.18em",color:"#ff6b6b",marginBottom:10}}>WHY THIS IS A PASS</div>
+            <div style={{display:"flex",flexDirection:"column",gap:7}}>
+              {[
+                pd.confidence_reason||"No valid BRC sequence has formed during the NY execution window.",
+                "Timeframe alignment alone is not a trade signal — all three phases (Break · Retest · Continuation) must complete.",
+              ].map((text,i)=>(
+                <div key={i} style={{display:"flex",gap:10,alignItems:"flex-start"}}>
+                  <span style={{fontSize:11,color:"#ff6b6b",flexShrink:0,marginTop:2,fontWeight:900}}>—</span>
+                  <span style={{fontSize:13,color:"var(--t-muted2)",fontWeight:500,lineHeight:1.6}}>{text}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Scout guidance */}
-          <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
-            {[
-              {icon:"🚫", text:"No active setup right now."},
-              {icon:"🕐", text:"Market is outside the preferred execution window."},
-              {icon:"⏳", text:"Stay flat and wait for NY session confirmation."},
-              {icon:"📍", text:"Setup activates only if key trigger levels break during a valid session window."},
-            ].map((item,i)=>(
-              <div key={i} style={{display:"flex",gap:10,alignItems:"flex-start"}}>
-                <span style={{fontSize:14,flexShrink:0,marginTop:1}}>{item.icon}</span>
-                <span style={{fontSize:13,color:"var(--t-muted2)",fontWeight:500,lineHeight:1.55}}>{item.text}</span>
-              </div>
-            ))}
+          <div style={{height:1,background:"rgba(255,255,255,0.06)",marginBottom:18}}/>
+
+          {/* ── SECTION 2: WHAT TO DO NOW ── */}
+          <div style={{marginBottom:18}}>
+            <div style={{fontSize:9,fontWeight:900,letterSpacing:"0.18em",color:"var(--t-muted4)",marginBottom:10}}>WHAT TO DO NOW</div>
+            <div style={{display:"flex",flexDirection:"column",gap:7}}>
+              {[
+                "Stay flat. Do not enter in either direction.",
+                "Keep your charts open. Do not close the session.",
+                "Watch the live chart below for a fresh break forming.",
+              ].map((text,i)=>(
+                <div key={i} style={{display:"flex",gap:10,alignItems:"flex-start"}}>
+                  <span style={{fontSize:11,color:"#7fff6b",flexShrink:0,marginTop:2,fontWeight:900}}>·</span>
+                  <span style={{fontSize:13,color:"var(--t-muted2)",fontWeight:500,lineHeight:1.6}}>{text}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Critical levels — passive reference only */}
-          {(cl.long_trigger||cl.short_trigger||cl.major_support||cl.major_resistance)&&(
-            <div style={{marginBottom:14}}>
-              <p style={{fontSize:10,fontWeight:900,letterSpacing:"0.16em",color:"var(--t-muted4)",margin:"0 0 8px"}}>KEY LEVELS TO WATCH</p>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:7}}>
+          <div style={{height:1,background:"rgba(255,255,255,0.06)",marginBottom:18}}/>
+
+          {/* ── SECTION 3: WHAT TO WATCH NEXT ── */}
+          <div style={{marginBottom:18}}>
+            <div style={{fontSize:9,fontWeight:900,letterSpacing:"0.18em",color:"var(--t-muted4)",marginBottom:10}}>WHAT TO WATCH NEXT</div>
+            {/* Key levels */}
+            {(cl.long_trigger||cl.short_trigger||cl.major_support||cl.major_resistance)&&(
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:7,marginBottom:12}}>
                 {[
                   {label:"Long Trigger",  val:cl.long_trigger,  color:"#7fff6b"},
                   {label:"Short Trigger", val:cl.short_trigger, color:"#ff6b6b"},
@@ -2209,13 +2312,25 @@ function SessionPlan({result,instrument,images,profile,onReset,T=DARK}){
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+            )}
+            {/* Alt scenario */}
+            {hasAlt&&(
+              <div style={{padding:"10px 14px",background:"rgba(255,209,102,0.05)",border:"1px solid rgba(255,209,102,0.2)",borderRadius:8,marginBottom:10}}>
+                <div style={{fontSize:9,fontWeight:900,letterSpacing:"0.14em",color:"#ffd166",marginBottom:4}}>ALTERNATE SETUP ACTIVATES ONLY IF:</div>
+                <span style={{fontSize:12,color:"var(--t-muted2)",fontWeight:500,lineHeight:1.6}}>{altCondition}</span>
+              </div>
+            )}
+            {tc.risk_state&&(
+              <div style={{padding:"8px 12px",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:7}}>
+                <span style={{fontSize:11,color:"var(--t-muted3)",fontWeight:500}}>{tc.risk_state}</span>
+              </div>
+            )}
+          </div>
 
-          {/* Live chart — optional, passive */}
+          {/* Live chart */}
           <div style={{display:"flex",alignItems:"center",gap:10,
             padding:"8px 12px",background:"rgba(255,255,255,0.03)",
-            border:"1px solid rgba(255,255,255,0.06)",borderRadius:7,marginBottom:14}}>
+            border:"1px solid rgba(255,255,255,0.06)",borderRadius:7}}>
             <div style={{flex:1,display:"flex",alignItems:"center",gap:7}}>
               <span style={{fontSize:10,color:"var(--t-muted3)",fontWeight:600}}>Live chart</span>
               <span style={{fontSize:9,color:"var(--t-muted4)",background:"rgba(255,255,255,0.05)",padding:"2px 6px",borderRadius:3}}>{tvSym}</span>
@@ -2226,20 +2341,6 @@ function SessionPlan({result,instrument,images,profile,onReset,T=DARK}){
               Open Chart →
             </a>
           </div>
-
-          {/* Alt scenario unlock condition — if present */}
-          {hasAlt&&(
-            <div style={{padding:"8px 12px",background:"rgba(255,209,102,0.04)",border:"1px solid rgba(255,209,102,0.15)",borderRadius:7,marginBottom:14}}>
-              <span style={{fontSize:10,fontWeight:700,color:"#ffd166"}}>Alt scenario unlocks if: </span>
-              <span style={{fontSize:11,color:"var(--t-muted2)",fontWeight:500}}>{altCondition}</span>
-            </div>
-          )}
-
-          {tc.risk_state&&(
-            <div style={{padding:"8px 12px",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:7,marginBottom:14}}>
-              <span style={{fontSize:11,color:"var(--t-muted3)",fontWeight:500}}>{tc.risk_state}</span>
-            </div>
-          )}
           <button onClick={onReset} style={{...S.resetBtn}}>← Upload new charts</button>
         </div>
       ):(isActive||isDev)&&(
@@ -2294,7 +2395,7 @@ function SessionPlan({result,instrument,images,profile,onReset,T=DARK}){
                   <div style={{fontSize:13,color:"var(--t-muted)",fontWeight:500,marginBottom:6}}>
                     Wait for 30M candle to fully close <strong>{dirWord}</strong> <strong style={{color:"#00e5ff"}}>{triggerLevel}</strong>
                   </div>
-                  <div style={{padding:"8px 12px",background:"rgba(0,229,255,0.06)",border:"1px solid rgba(0,229,255,0.15)",borderLeft:"3px solid #00e5ff",borderRadius:6,marginBottom:8}}>
+                  <div style={{padding:"10px 14px",background:"rgba(0,229,255,0.06)",border:"1px solid rgba(0,229,255,0.15)",borderLeft:"3px solid #00e5ff",borderRadius:8,marginBottom:10}}>
                     <span style={{fontSize:11,color:"#00e5ff",fontWeight:700}}>⚠ Do NOT enter yet. The break is step 1 of 3.</span>
                     {sctx?.p1_note&&(
                       session==="ASIAN"?(
@@ -2306,14 +2407,96 @@ function SessionPlan({result,instrument,images,profile,onReset,T=DARK}){
                       )
                     )}
                   </div>
-                  {(session==="NY"||session==="LONDON_NY"||!session)&&(
-                    <div style={{padding:"8px 12px",background:"rgba(255,209,102,0.05)",border:"1px solid rgba(255,209,102,0.2)",borderLeft:"3px solid #ffd166",borderRadius:6,marginBottom:8}}>
-                      <p style={{fontSize:10,fontWeight:900,color:"#ffd166",margin:"0 0 5px",letterSpacing:"0.1em"}}>30M CANDLE CLOSE WINDOWS</p>
+                  {(session==="NY"||session==="LONDON_NY")&&(()=>{
+                    // Get current Chicago time
+                    const nowCT = new Date(new Date().toLocaleString("en-US",{timeZone:"America/Chicago"}));
+                    const nowH = nowCT.getHours();
+                    const nowM = nowCT.getMinutes();
+                    const nowMins = nowH*60+nowM; // minutes since midnight CT
+
+                    // Window definitions — time in CT minutes since midnight
+                    const windows=[
+                      {time:"9:00 AM CT",  mins:9*60,   label:"First valid close — watch for break",    isCutoff:false},
+                      {time:"9:30 AM CT",  mins:9*60+30, label:"Second window — most reliable",          isCutoff:false},
+                      {time:"10:00 AM CT", mins:10*60,  label:"Last high-quality window",               isCutoff:false},
+                      {time:"10:30 AM CT", mins:10*60+30,label:"Cutoff — setup dead after this",         isCutoff:true},
+                    ];
+
+                    // Find next upcoming window (within next 30 min)
+                    const nextIdx = windows.findIndex(w=>w.mins > nowMins);
+                    const allPast = nextIdx === -1;
+                    const executionClosed = nowMins > 10*60+30;
+
+                    return(
+                    <div style={{padding:"8px 12px",background:"rgba(255,209,102,0.05)",border:"1px solid rgba(255,209,102,0.2)",borderLeft:"3px solid #ffd166",borderRadius:8,marginBottom:10}}>
+                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
+                        <p style={{fontSize:10,fontWeight:900,color:"#ffd166",margin:0,letterSpacing:"0.1em"}}>30M CANDLE CLOSE WINDOWS</p>
+                        {executionClosed
+                          ? <span style={{fontSize:9,fontWeight:900,color:"#ff6b6b",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.3)",padding:"2px 8px",borderRadius:4,letterSpacing:"0.08em"}}>WINDOW CLOSED</span>
+                          : <span style={{fontSize:9,fontWeight:700,color:"#00e5ff",fontFamily:"monospace"}}>{nowCT.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",timeZone:"America/Chicago"})} CT</span>
+                        }
+                      </div>
+                      <div style={{display:"flex",flexDirection:"column",gap:5}}>
+                        {windows.map((r,i)=>{
+                          const isPast = r.mins < nowMins;
+                          const isNext = i === nextIdx;
+                          const isLast = i === windows.length-1;
+                          return(
+                            <div key={r.time} style={{display:"flex",gap:10,alignItems:"center",
+                              padding:"4px 8px",borderRadius:5,
+                              background:isNext?"rgba(0,229,255,0.06)":isPast?"transparent":"transparent",
+                              border:isNext?"1px solid rgba(0,229,255,0.2)":"1px solid transparent",
+                              opacity:isPast?0.62:1,
+                              transition:"all 0.2s"}}>
+                              <span style={{fontSize:10,fontFamily:"monospace",fontWeight:900,
+                                minWidth:84,flexShrink:0,
+                                color:isPast?"var(--t-muted4)":isNext?"#00e5ff":isLast?"#ff8080":"#ffd166"}}>
+                                {r.time}
+                              </span>
+                              <span style={{fontSize:10,fontWeight:isNext?700:400,
+                                color:isPast?"var(--t-muted4)":isNext?"#00e5ff":isLast?"#ff8080":"var(--t-muted2)",
+                                flex:1}}>
+                                {isPast?"completed":r.label}
+                              </span>
+                              {isPast&&<span style={{fontSize:9,color:"var(--t-muted4)"}}>✓</span>}
+                              {isNext&&!executionClosed&&<span style={{fontSize:9,fontWeight:900,color:"#00e5ff",letterSpacing:"0.06em",flexShrink:0}}>NEXT</span>}
+                              {isLast&&isNext&&<span style={{fontSize:9,fontWeight:900,color:"#ff8080",letterSpacing:"0.06em",flexShrink:0}}>FINAL</span>}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {executionClosed&&(
+                        <div style={{marginTop:8,padding:"5px 8px",background:"rgba(255,107,107,0.08)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:5}}>
+                          <span style={{fontSize:10,color:"#ff8080",fontWeight:700}}>Execution window closed at 10:30 AM CT. No new entries. Wait for tomorrow's session.</span>
+                        </div>
+                      )}
+                    </div>
+                    );
+                  })()}
+                  {session==="ASIAN"&&(
+                    <div style={{padding:"8px 12px",background:"rgba(255,154,60,0.05)",border:"1px solid rgba(255,154,60,0.2)",borderLeft:"3px solid #ff9a3c",borderRadius:8,marginBottom:10}}>
+                      <p style={{fontSize:10,fontWeight:900,color:"#ff9a3c",margin:"0 0 6px",letterSpacing:"0.1em"}}>ASIAN SESSION CANDLE WINDOWS</p>
                       <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                        {[{time:"9:00 AM CT",label:"First valid close — watch for break"},{time:"9:30 AM CT",label:"Second window — most reliable"},{time:"10:00 AM CT",label:"Last high-quality window"},{time:"10:30 AM CT",label:"Cutoff — setup dead after this"}].map(r=>(
+                        {[{time:"7:00 PM CT",label:"Session open — first watch"},{time:"8:00 PM CT",label:"First valid 30M close"},{time:"9:00 PM CT",label:"Best quality window"},{time:"11:00 PM CT",label:"Cutoff — session closes"}].map(r=>(
                           <div key={r.time} style={{display:"flex",gap:10,alignItems:"baseline"}}>
-                            <span style={{fontSize:11,fontWeight:900,color:"#ffd166",minWidth:80,flexShrink:0}}>{r.time}</span>
-                            <span style={{fontSize:11,color:r.time==="10:30 AM CT"?"#ff8080":"var(--t-muted2)",fontWeight:r.time==="10:30 AM CT"?700:400}}>{r.label}</span>
+                            <span style={{fontSize:10,fontFamily:"monospace",fontWeight:900,color:"#ff9a3c",minWidth:90,flexShrink:0}}>{r.time}</span>
+                            <span style={{fontSize:10,color:"var(--t-muted2)",fontWeight:400}}>{r.label}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{marginTop:8,padding:"5px 8px",background:"rgba(255,154,60,0.08)",border:"1px solid rgba(255,154,60,0.2)",borderRadius:5}}>
+                        <span style={{fontSize:10,color:"#ff9a3c",fontWeight:700}}>⚠ Asian session = reduced size. Half position recommended.</span>
+                      </div>
+                    </div>
+                  )}
+                  {session==="LONDON"&&(
+                    <div style={{padding:"8px 12px",background:"rgba(255,107,255,0.05)",border:"1px solid rgba(255,107,255,0.2)",borderLeft:"3px solid #ff6bff",borderRadius:8,marginBottom:10}}>
+                      <p style={{fontSize:10,fontWeight:900,color:"#ff6bff",margin:"0 0 6px",letterSpacing:"0.1em"}}>LONDON SESSION CANDLE WINDOWS</p>
+                      <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                        {[{time:"2:00 AM CT",label:"Session open — first watch"},{time:"3:00 AM CT",label:"First valid 30M close"},{time:"4:00 AM CT",label:"Best quality window"},{time:"5:00 AM CT",label:"Cutoff — session closes"}].map(r=>(
+                          <div key={r.time} style={{display:"flex",gap:10,alignItems:"baseline"}}>
+                            <span style={{fontSize:10,fontFamily:"monospace",fontWeight:900,color:"#ff6bff",minWidth:90,flexShrink:0}}>{r.time}</span>
+                            <span style={{fontSize:10,color:"var(--t-muted2)",fontWeight:400}}>{r.label}</span>
                           </div>
                         ))}
                       </div>
@@ -2385,6 +2568,10 @@ function SessionPlan({result,instrument,images,profile,onReset,T=DARK}){
                     </div>
                   ))}
                 </div>
+                {/* Helper text */}
+                <p style={{fontSize:11,color:"var(--t-muted4)",margin:"0 0 10px",lineHeight:1.6,fontWeight:500,fontStyle:"italic"}}>
+                  Waiting for price to return to the broken level before Phase 2 unlocks.
+                </p>
                 <button onClick={()=>{if(allChecked){advanceTo("ARMED_T2");setT1Time(Date.now());}}} disabled={!allChecked}
                   style={{alignSelf:"flex-start",
                     background:allChecked?"rgba(0,229,255,0.1)":"rgba(255,255,255,0.03)",
@@ -2557,7 +2744,20 @@ function SessionPlan({result,instrument,images,profile,onReset,T=DARK}){
                         </div>
                       )}
                       <div style={{display:"flex",gap:8}}>
-                        <button onClick={()=>advanceTo("IN_TRADE")}
+                        <button onClick={()=>{
+                            advanceTo("IN_TRADE");
+                            if(onJournalEntry) onJournalEntry({
+                              date: new Date().toISOString(),
+                              instrument,
+                              direction: ep.direction||pd.bias||"—",
+                              grade: pd.grade||"—",
+                              entry: ep.entry||"—",
+                              stop: ep.stop_tight||ep.stop_wide||"—",
+                              tp1: ep.tp1||"—",
+                              session: profile?.session||"—",
+                              bias: pd.bias||"—",
+                            });
+                          }}
                           style={{...S.generateBtn,alignSelf:"flex-start",padding:"9px 20px",fontSize:12,
                             background:"rgba(127,255,107,0.12)",border:"1px solid rgba(127,255,107,0.35)",
                             color:"#7fff6b",letterSpacing:"0.08em",boxShadow:"none"}}>
@@ -2599,16 +2799,62 @@ function SessionPlan({result,instrument,images,profile,onReset,T=DARK}){
 
 
 
+      {/* Plain English Breakdown */}
+      {(pe.structure||pe.verdict)&&(
+        <div style={{marginBottom:16}}>
+          <button onClick={()=>setShowPE(o=>!o)}
+            style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",
+              background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",
+              borderRadius:showPE?"8px 8px 0 0":8,padding:"9px 14px",cursor:"pointer",
+              fontFamily:"inherit",transition:"all 0.2s"}}>
+            <div style={{display:"flex",alignItems:"center",gap:8}}>
+              <span style={{fontSize:11,fontWeight:700,color:"var(--t-muted3)",letterSpacing:"0.04em"}}>📖 Plain English Breakdown</span>
+              <span style={{fontSize:10,color:"var(--t-muted4)",fontWeight:400}}>Simple explanation — no jargon</span>
+            </div>
+            <span style={{fontSize:9,color:"var(--t-muted4)",transform:showPE?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s",display:"inline-block"}}>▼</span>
+          </button>
+          {showPE&&(
+            <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",
+              borderTop:"none",borderRadius:"0 0 12px 12px",padding:"16px 18px",
+              animation:"icc-slide 0.25s ease both"}}>
+              {[
+                {label:"MARKET STRUCTURE & BRC PHASES",value:pe.structure},
+                {label:"WHERE WE ARE IN THE BRC SEQUENCE",value:pe.brc_phase},
+                {label:"KEY LEVELS",value:pe.key_levels},
+                {label:"TRADE PLAN",value:pe.trade_plan},
+                {label:"FINAL VERDICT",value:pe.verdict},
+              ].filter(r=>r.value).map((row,i)=>(
+                <div key={i} style={{marginBottom:i<4?14:0}}>
+                  <div style={{fontSize:9,fontWeight:900,letterSpacing:"0.16em",color:"var(--t-muted4)",marginBottom:5}}>{row.label}</div>
+                  <p style={{fontSize:13,color:"var(--t-muted2)",margin:0,lineHeight:1.7,fontWeight:500}}>{row.value}</p>
+                </div>
+              ))}
+              {pe.psychological_rule&&(
+                <div style={{marginTop:14,padding:"10px 14px",background:"rgba(255,107,255,0.06)",
+                  border:"1px solid rgba(255,107,255,0.15)",borderRadius:8}}>
+                  <p style={{fontSize:12,color:"#ff6bff",margin:0,fontWeight:700,fontStyle:"italic",lineHeight:1.6}}>
+                    "{pe.psychological_rule}"
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Alt scenario */}
       {hasAlt&&(
         <div style={{marginBottom:16}}>
           <button onClick={()=>setShowAlt(o=>!o)}
-            style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:showAlt?"8px 8px 0 0":8,padding:"9px 14px",cursor:"pointer",fontFamily:"inherit",transition:"all 0.2s"}}>
+            style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",
+              background:showAlt?"rgba(255,209,102,0.05)":"rgba(255,209,102,0.03)",
+              border:`1px solid ${showAlt?"rgba(255,209,102,0.25)":"rgba(255,209,102,0.12)"}`,
+              borderRadius:showAlt?"8px 8px 0 0":8,padding:"11px 16px",cursor:"pointer",fontFamily:"inherit",transition:"all 0.2s"}}>
             <div style={{display:"flex",alignItems:"center",gap:8}}>
-              <span style={{fontSize:11,fontWeight:700,color:"var(--t-muted3)",letterSpacing:"0.04em"}}>Alt Scenario</span>
-              <span style={{fontSize:10,color:"var(--t-muted4)",fontWeight:400}}>if: {altCondition}</span>
+              <span style={{fontSize:10,fontWeight:900,color:"#ffd166",letterSpacing:"0.1em"}}>ALT SCENARIO</span>
+              <span style={{fontSize:11,color:"var(--t-muted3)",fontWeight:500}}>if: {altCondition}</span>
             </div>
-            <span style={{fontSize:9,color:"var(--t-muted4)",transform:showAlt?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s",display:"inline-block"}}>▼</span>
+            <span style={{fontSize:9,color:"#ffd166",transform:showAlt?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s",display:"inline-block"}}>▼</span>
           </button>
           {showAlt&&(
             <div style={{background:"rgba(255,209,102,0.04)",border:"1px solid rgba(255,209,102,0.15)",borderTop:"none",borderRadius:"0 0 12px 12px",padding:"16px 18px",animation:"icc-slide 0.25s ease both"}}>
@@ -2866,28 +3112,6 @@ function MindsetLibrary({anime}){
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// JOURNAL
-// ═══════════════════════════════════════════════════════════════════════════
-
-function JournalPage(){
-  const [fi,setFi]=useState("ALL");const [fr,setFr]=useState("ALL");
-  const rows=SAMPLE_TRADES.filter(t=>(fi==="ALL"||t.instrument===fi)&&(fr==="ALL"||t.result===fr));
-  return(
-    <div style={{animation:"icc-fade 0.3s ease both"}}>
-      <div style={{marginBottom:24}}>
-        <h2 style={{fontSize:24,fontWeight:900,color:"var(--t-text)",letterSpacing:"0.08em",margin:"0 0 6px"}}>Trade Journal</h2>
-        <p style={{fontSize:12,color:"var(--t-muted)",margin:0}}>{SAMPLE_TRADES.length} trades · Win Rate {winRate}% · Total P&L +${totalPnl.toFixed(1)}</p>
-      </div>
-      <div style={{display:"flex",flexWrap:"wrap",gap:16,alignItems:"center",marginBottom:20}}>
-        <Filters label="Instrument" opts={["ALL","XAUUSD","NAS100","US30","BTCUSD","USOIL","GBPUSD"]} val={fi} set={setFi}/>
-        <Filters label="Result" opts={["ALL","WIN","LOSS"]} val={fr} set={setFr}/>
-        <span style={{marginLeft:"auto",fontSize:12,color:"var(--t-muted)"}}>{rows.length} showing</span>
-      </div>
-      <TradeTable trades={rows}/>
-    </div>
-  );
-}
-
 // ═══════════════════════════════════════════════════════════════════════════
 // SHARED COMPONENTS
 // ═══════════════════════════════════════════════════════════════════════════
@@ -3043,6 +3267,229 @@ const LIGHT={
 // ═══════════════════════════════════════════════════════════════════════════
 // AUTH SCREEN — Sign Up / Log In
 // ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════
+// JOURNAL PAGE
+// ═══════════════════════════════════════════════════════════════════════════
+function JournalPage({journal, onUpdate, T=DARK}){
+  const wins=journal.filter(t=>t.outcome==="WIN").length;
+  const losses=journal.filter(t=>t.outcome==="LOSS").length;
+  const be=journal.filter(t=>t.outcome==="BE").length;
+  const pending=journal.filter(t=>!t.outcome).length;
+  const total=wins+losses+be;
+  const winRate=total>0?Math.round((wins/total)*100):0;
+  const gradeRank={"A+":4,"A":3,"B":2,"C":1};
+  const gradedTrades=journal.filter(t=>t.grade&&gradeRank[t.grade]);
+  const avgGradeNum=gradedTrades.length>0
+    ?gradedTrades.reduce((acc,t)=>acc+(gradeRank[t.grade]||0),0)/gradedTrades.length
+    :0;
+  const avgGradeLabel=avgGradeNum>=3.5?"A+"
+    :avgGradeNum>=2.5?"A"
+    :avgGradeNum>=1.5?"B"
+    :avgGradeNum>0?"C":"—";
+  const avgGradeColor={"A+":"#7fff6b","A":"#00e5ff","B":"#ffd166","C":"#ff9a3c","—":"#8878aa"}[avgGradeLabel];
+
+  const gradeColors={"A+":"#7fff6b","A":"#00e5ff","B":"#ffd166","C":"#ff9a3c","PASS":"#8878aa"};
+  const outcomeColors={WIN:"#7fff6b",LOSS:"#ff6b6b",BE:"#ffd166"};
+
+  function setOutcome(id, outcome){
+    const updated=journal.map(t=>t.id===id?{...t,outcome}:t);
+    onUpdate(updated);
+  }
+
+  function deleteEntry(id){
+    const updated=journal.filter(t=>t.id!==id);
+    onUpdate(updated);
+  }
+
+  return(
+    <div style={{maxWidth:860,margin:"0 auto",padding:"32px 24px 0"}}>
+
+      {/* Page header */}
+      <div style={{marginBottom:28}}>
+        <h1 style={{fontSize:28,fontWeight:900,color:"var(--t-text)",letterSpacing:"-0.01em",margin:"0 0 6px"}}>Execution Journal</h1>
+        <p style={{fontFamily:"monospace",fontSize:12,color:"var(--t-muted4)",margin:0,letterSpacing:"0.04em"}}>The system only works if you log it.</p>
+      </div>
+
+      {/* Stats bar — 3 primary + 4 secondary */}
+      <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:28}}>
+        {/* Primary row */}
+        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
+          {/* WIN RATE — softened for small samples */}
+          <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:10,padding:"16px 18px"}}>
+            <div style={{fontSize:9,fontWeight:900,letterSpacing:"0.16em",color:"var(--t-muted4)",marginBottom:8}}>WIN RATE</div>
+            {total<5?(
+              <div>
+                <div style={{fontSize:30,fontWeight:900,color:total===0?"#8878aa":"#7fff6b",fontFamily:"monospace",letterSpacing:"-0.02em"}}>{total===0?"—":`${winRate}%`}</div>
+                {total>0&&<div style={{fontSize:9,color:"var(--t-muted4)",fontWeight:600,marginTop:3,fontFamily:"monospace"}}>small sample · {total} trade{total!==1?"s":""}</div>}
+              </div>
+            ):(
+              <div style={{fontSize:30,fontWeight:900,color:"#7fff6b",fontFamily:"monospace",letterSpacing:"-0.02em"}}>{winRate}%</div>
+            )}
+          </div>
+          {/* RECORD */}
+          <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:10,padding:"16px 18px"}}>
+            <div style={{fontSize:9,fontWeight:900,letterSpacing:"0.16em",color:"var(--t-muted4)",marginBottom:8}}>RECORD</div>
+            <div style={{fontSize:30,fontWeight:900,color:"#00e5ff",fontFamily:"monospace",letterSpacing:"-0.02em"}}>{wins}-{losses}{be>0?"-"+be:""}</div>
+            {total<5&&total>0&&<div style={{fontSize:9,color:"var(--t-muted4)",fontWeight:600,marginTop:3,fontFamily:"monospace"}}>need 5+ trades for reliable data</div>}
+          </div>
+          {/* AVG GRADE */}
+          <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:10,padding:"16px 18px"}}>
+            <div style={{fontSize:9,fontWeight:900,letterSpacing:"0.16em",color:"var(--t-muted4)",marginBottom:8}}>AVG GRADE</div>
+            <div style={{fontSize:30,fontWeight:900,color:avgGradeColor,fontFamily:"monospace",letterSpacing:"-0.02em"}}>{avgGradeLabel}</div>
+            {gradedTrades.length>0&&<div style={{fontSize:9,color:"var(--t-muted4)",fontWeight:600,marginTop:3,fontFamily:"monospace"}}>{gradedTrades.length} trade{gradedTrades.length!==1?"s":""} logged</div>}
+          </div>
+        </div>
+        {/* Secondary row */}
+        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10}}>
+          {[
+            {label:"WINS",value:wins,color:"#7fff6b"},
+            {label:"LOSSES",value:losses,color:"#ff6b6b"},
+            {label:"BREAK EVEN",value:be,color:"#ffd166"},
+            {label:"PENDING",value:pending,color:"#8878aa"},
+          ].map(s=>(
+            <div key={s.label} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:"10px 14px"}}>
+              <div style={{fontSize:9,fontWeight:900,letterSpacing:"0.16em",color:"var(--t-muted4)",marginBottom:6}}>{s.label}</div>
+              <div style={{fontSize:22,fontWeight:900,color:s.color,fontFamily:"monospace"}}>{s.value}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Grade breakdown */}
+      {total>0&&(
+        <div style={{display:"flex",gap:8,marginBottom:24,flexWrap:"wrap"}}>
+          {["A+","A","B","C"].map(g=>{
+            const count=journal.filter(t=>t.grade===g&&t.outcome).length;
+            if(!count)return null;
+            return(
+              <div key={g} style={{padding:"4px 12px",background:`${gradeColors[g]}14`,border:`1px solid ${gradeColors[g]}44`,borderRadius:8,fontSize:11,fontWeight:700,color:gradeColors[g]}}>
+                {g} setups logged: {count}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Journal entries */}
+      {journal.length===0?(
+        <div style={{padding:"40px 0 0"}}>
+          <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:12,padding:"28px 24px",textAlign:"center"}}>
+            <div style={{fontSize:28,marginBottom:12}}>📓</div>
+            <div style={{fontSize:15,fontWeight:900,color:"var(--t-muted3)",marginBottom:6}}>No trades logged yet</div>
+            <div style={{fontSize:12,color:"var(--t-muted4)",fontFamily:"monospace",lineHeight:1.7}}>
+              Complete Phase 3 and click <strong style={{color:"#7fff6b"}}>LIMIT ORDER ACTIVE</strong><br/>
+              to automatically log your next trade here.
+            </div>
+          </div>
+        </div>
+      ):(
+        <div style={{display:"flex",flexDirection:"column",gap:10}}>
+          {journal.map(trade=>(
+            <div key={trade.id}
+              style={{background:"rgba(255,255,255,0.03)",
+                border:`1px solid ${trade.outcome?outcomeColors[trade.outcome]+"33":"rgba(255,255,255,0.07)"}`,
+                borderLeft:`3px solid ${trade.outcome?outcomeColors[trade.outcome]:"rgba(255,255,255,0.15)"}`,
+                borderRadius:12,padding:"16px 20px"}}>
+
+              <div style={{display:"flex",alignItems:"flex-start",gap:12,flexWrap:"wrap"}}>
+
+                {/* Left — trade info */}
+                <div style={{flex:1,minWidth:200}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,flexWrap:"wrap"}}>
+                    <span style={{fontSize:13,fontWeight:900,color:"var(--t-text)"}}>{trade.instrument}</span>
+                    <span style={{fontSize:11,fontWeight:700,padding:"2px 8px",borderRadius:4,
+                      background:trade.direction==="LONG"?"rgba(127,255,107,0.12)":"rgba(255,107,107,0.12)",
+                      color:trade.direction==="LONG"?"#7fff6b":"#ff6b6b"}}>
+                      {trade.direction}
+                    </span>
+                    <span style={{fontSize:11,fontWeight:700,padding:"2px 8px",borderRadius:4,
+                      background:`${gradeColors[trade.grade]||"#8878aa"}14`,
+                      color:gradeColors[trade.grade]||"#8878aa"}}>
+                      {trade.grade}
+                    </span>
+                    <span style={{fontSize:10,color:"var(--t-muted4)",fontFamily:"monospace"}}>
+                      {new Date(trade.date).toLocaleDateString("en-US",{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})}
+                    </span>
+                  </div>
+                  <div style={{display:"flex",gap:16,flexWrap:"wrap"}}>
+                    {[{label:"Entry",val:trade.entry},{label:"Stop",val:trade.stop},{label:"TP1",val:trade.tp1},{label:"Session",val:trade.session}].map(f=>(
+                      <div key={f.label}>
+                        <div style={{fontSize:9,color:"var(--t-muted4)",fontWeight:700,letterSpacing:"0.1em",marginBottom:2}}>{f.label}</div>
+                        <div style={{fontSize:12,fontWeight:700,color:"var(--t-muted)",fontFamily:"monospace"}}>{f.val||"—"}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Right — outcome selector */}
+                <div style={{display:"flex",flexDirection:"column",gap:6,alignItems:"flex-end"}}>
+                  {!trade.outcome?(
+                    <>
+                      <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.1em",color:"var(--t-muted4)",marginBottom:2}}>OUTCOME</div>
+                      <div style={{display:"flex",gap:6}}>
+                        {["WIN","LOSS","BE"].map(o=>(
+                          <button key={o} onClick={()=>setOutcome(trade.id,o)}
+                            style={{fontFamily:"inherit",fontSize:11,fontWeight:900,letterSpacing:"0.08em",
+                              padding:"6px 14px",borderRadius:7,cursor:"pointer",border:"none",
+                              background:o==="WIN"?"rgba(127,255,107,0.12)":o==="LOSS"?"rgba(255,107,107,0.12)":"rgba(255,209,102,0.12)",
+                              color:o==="WIN"?"#7fff6b":o==="LOSS"?"#ff6b6b":"#ffd166"}}>
+                            {o}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  ):(
+                    <div style={{display:"flex",alignItems:"center",gap:8}}>
+                      <span style={{fontSize:16,fontWeight:900,color:outcomeColors[trade.outcome]}}>{trade.outcome}</span>
+                      <button onClick={()=>setOutcome(trade.id,null)}
+                        style={{fontSize:11,fontWeight:700,letterSpacing:"0.06em",
+                          color:"var(--t-muted3)",
+                          background:"rgba(255,255,255,0.06)",
+                          border:"1px solid rgba(255,255,255,0.14)",
+                          borderRadius:7,padding:"5px 12px",
+                          cursor:"pointer",fontFamily:"inherit",
+                          transition:"all 0.15s"}}
+                        onMouseEnter={e=>{e.currentTarget.style.background="rgba(255,255,255,0.1)";e.currentTarget.style.color="var(--t-text)";}}
+                        onMouseLeave={e=>{e.currentTarget.style.background="rgba(255,255,255,0.06)";e.currentTarget.style.color="var(--t-muted3)";}}>
+                        ✎ Edit
+                      </button>
+                    </div>
+                  )}
+                  <button onClick={()=>deleteEntry(trade.id)}
+                    title="Delete trade"
+                    style={{fontSize:12,color:"rgba(255,255,255,0.2)",
+                      background:"rgba(255,255,255,0.04)",
+                      border:"1px solid rgba(255,255,255,0.08)",
+                      borderRadius:7,padding:"5px 8px",
+                      cursor:"pointer",lineHeight:1,
+                      transition:"all 0.15s"}}
+                    onMouseEnter={e=>{e.currentTarget.style.color="rgba(255,107,107,0.7)";e.currentTarget.style.background="rgba(255,107,107,0.08)";e.currentTarget.style.borderColor="rgba(255,107,107,0.25)";}}
+                    onMouseLeave={e=>{e.currentTarget.style.color="rgba(255,255,255,0.2)";e.currentTarget.style.background="rgba(255,255,255,0.04)";e.currentTarget.style.borderColor="rgba(255,255,255,0.08)";}}>
+                    🗑
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Coaching nudge — always visible at bottom */}
+      {journal.length>0&&(
+        <div style={{marginTop:16,padding:"16px 20px",
+          background:"rgba(255,255,255,0.02)",
+          border:"1px solid rgba(255,255,255,0.05)",
+          borderRadius:10,display:"flex",alignItems:"center",gap:12}}>
+          <span style={{fontSize:16}}>📈</span>
+          <span style={{fontSize:11,color:"var(--t-muted4)",fontFamily:"monospace",lineHeight:1.6}}>
+            Complete Phase 3 and click <strong style={{color:"#7fff6b"}}>LIMIT ORDER ACTIVE</strong> to log your next trade automatically.
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function AuthScreen({onBack, supabase, initialTab="signup"}){
   const [tab,setTab]=useState(initialTab);
   const loginOnly=initialTab==="login"; // "signup" | "login" | "reset"
@@ -3174,7 +3621,7 @@ function AuthScreen({onBack, supabase, initialTab="signup"}){
         {/* Logo */}
         <div style={{textAlign:"center",marginBottom:40}}>
           <button onClick={onBack} style={{background:"none",border:"none",cursor:"pointer",fontFamily:"inherit",display:"inline-flex",alignItems:"center",gap:8,marginBottom:16}}>
-            <span style={{fontSize:24,color:"#ff6bff"}}>◈</span>
+            ◈
             <span style={{fontFamily:"monospace",fontSize:18,fontWeight:700,letterSpacing:"0.12em",background:"linear-gradient(90deg,#ff6bff,#00e5ff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>OmniUSD</span>
           </button>
           <div style={{fontSize:22,fontWeight:800,color:"#f4f0ff",marginBottom:6,letterSpacing:"-0.01em"}}>
@@ -3351,7 +3798,7 @@ function PricingPage({onBack, onPaid}){
       {/* Nav */}
       <nav style={{position:"fixed",top:0,left:0,right:0,zIndex:100,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 32px",height:64,background:"rgba(19,13,34,0.9)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(255,107,255,0.1)"}}>
         <button onClick={onBack} style={{display:"flex",alignItems:"center",gap:8,background:"none",border:"none",cursor:"pointer",fontFamily:"inherit"}}>
-          <span style={{fontSize:20,color:"#ff6bff"}}>◈</span>
+          ◈
           <span style={{fontFamily:"'Space Mono',monospace",fontSize:15,fontWeight:700,letterSpacing:"0.1em",background:"linear-gradient(90deg,#ff6bff,#00e5ff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>OmniUSD</span>
         </button>
         <button onClick={onBack} style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,color:"#8878aa",background:"none",border:"none",cursor:"pointer"}}>
