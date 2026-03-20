@@ -663,6 +663,18 @@ export default function OmniUSD(){
 
   const chipLabel = profile.tierLabel || "Starter";
 
+  // ── HOME = Unified Dashboard — full screen, bypasses old wrapper ──
+  if(page==="home") return <UnifiedDashboard
+    profile={profile}
+    onJournalEntry={(entry)=>{
+      const newJournal=[{...entry,id:Date.now(),outcome:null},...journal];
+      setJournal(newJournal);
+      localStorage.setItem("omniusd_journal",JSON.stringify(newJournal));
+    }}
+    onOpenJournal={()=>setPage("journal")}
+    onSignOut={signOut}
+  />;
+
   return(
     <div style={{...S.root, background:T.bg, color:T.text}}>
       <ThemeInjector T={T}/>
@@ -1736,7 +1748,7 @@ YOUR ROLE:
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-function UnifiedDashboard() {
+function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
   const [phase, setPhase] = useState("upload"); // upload | analyzing | plan | live
   const [images, setImages] = useState([]);
   const [instrument, setInstrument] = useState("BTCUSD");
@@ -1916,6 +1928,12 @@ function UnifiedDashboard() {
           <div style={{ fontSize: 9, color: "#8878aa" }}>
             <span style={{ color: "#00e5ff", fontWeight: 700 }}>{ctTime}</span> CT
           </div>
+          {onOpenJournal && (
+            <button onClick={onOpenJournal}
+              style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", color: "var(--t-muted4,#8878aa)", background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
+              Journal
+            </button>
+          )}
           {phase === "live" && (
             <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: windowClosed ? "#ff6b6b" : "#7fff6b", animation: windowOpen ? "pulse 1.5s ease infinite" : "none" }}/>
@@ -1926,6 +1944,12 @@ function UnifiedDashboard() {
             <button onClick={() => { setPhase("upload"); setImages([]); setPlan(null); setMessages([]); setTier1(false); setTier2(false); setSessionState("WATCHING"); setSessionHistory([]); }}
               style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", color: "rgba(255,255,255,0.3)", background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
               NEW ANALYSIS
+            </button>
+          )}
+          {onSignOut && (
+            <button onClick={onSignOut}
+              style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", color: "rgba(255,255,255,0.25)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", padding: "4px 6px" }}>
+              Sign out
             </button>
           )}
         </div>
