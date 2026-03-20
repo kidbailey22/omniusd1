@@ -256,6 +256,15 @@ NEVER describe a break as "pending" or "waiting" if current price has already pa
 The icc_phase field must reflect the ACTUAL current phase based on today's chart — not historical levels.
 The break_trigger_level must be a CURRENT, ACTIONABLE level — not a level price blew through days ago.
 
+CRITICAL — ALL FIELDS MUST BE CONSISTENT:
+The break_trigger_level, the execution_plan entry zone, and the plain_english trade_plan MUST all reference the SAME price level.
+They cannot contradict each other. If plain_english says "wait for close below 70,200" then break_trigger_level must also be 70,200.
+If price is at 70,600 and the session low was 68,770:
+→ break_trigger_level = 70,200 (current actionable trigger)
+→ NOT 68,770 (that level is history — price is $1,800 above it)
+→ NOT 76,012 (that was the original break — it ran days ago)
+The trigger level is always the NEAREST price that, if broken by a 30M close, confirms the next move.
+
 CHART VALIDATION — CRITICAL FIRST:
 Images submitted in order: [1]=Daily, [2]=4H, [3]=1H, [4]=30M, [5]=15M. Selected instrument: ${instrument}.
 
@@ -1689,7 +1698,25 @@ function HomePage({planResult,setPlanResult,anime,T=DARK,onJournalEntry}){
       const res=await fetch("/api/analyze",{
         method:"POST",headers:{"Content-Type":"application/json"},
         body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:4000,temperature:0,system:getPlanPrompt(anime,instrument),
-          messages:[{role:"user",content:[...imgBlocks,{type:"text",text:`Instrument: ${instrument}. Session: ${sessionName}. Images submitted in order: [1]=Daily slot, [2]=4H slot, [3]=1H slot, [4]=30M slot, [5]=15M slot. First validate each chart matches its slot, then write the full BRC session plan. Return only JSON.`}]}]})
+          messages:[{role:"user",content:[...imgBlocks,{type:"text",text:(()=>{
+                const now = new Date(new Date().toLocaleString("en-US",{timeZone:"America/Chicago"}));
+                const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+                const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+                const dayName = days[now.getDay()];
+                const isFriday = now.getDay()===5;
+                const hour = now.getHours();
+                const min = now.getMinutes().toString().padStart(2,"0");
+                const ampm = hour>=12?"PM":"AM";
+                const hour12 = hour%12||12;
+                const timeStr = `${hour12}:${min} ${ampm}`;
+                const dateStr = `${dayName} ${months[now.getMonth()]} ${now.getDate()} ${now.getFullYear()}`;
+                const nowMins = hour*60+now.getMinutes();
+                const sessionStatus = nowMins < 8*60+30 ? "PRE-MARKET — NY session opens at 8:30 AM CT. Pre-market movement is information, not permission."
+                  : nowMins <= 10*60+30 ? "NY SESSION LIVE — execution window open until 10:30 AM CT"
+                  : "NY SESSION CLOSED — execution window closed at 10:30 AM CT";
+                const fridayNote = isFriday ? " FRIDAY: End of week — apply extra caution, consider reduced size, a PASS on Friday protects the week's profit." : "";
+                return `Today is ${dateStr} at ${timeStr} Chicago time. ${sessionStatus}.${fridayNote} Instrument: ${instrument}. Session selected: ${sessionName}. Images submitted in order: [1]=Daily slot, [2]=4H slot, [3]=1H slot, [4]=30M slot, [5]=15M slot. First validate each chart matches its slot, then write the full BRC session plan. Return only JSON.`;
+              })()}]}]})
       });
       const data=await res.json();
       if(data.error){
