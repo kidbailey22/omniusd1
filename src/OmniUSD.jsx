@@ -1897,7 +1897,7 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
   const biasColor = plan?.bias === "SHORT" ? "#ff6b6b" : plan?.bias === "LONG" ? "#7fff6b" : "#ffd166";
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0d0b14", color: "#f0ecff", fontFamily: "'Space Mono', monospace", display: "flex", flexDirection: "column" }}>
+    <div style={{ minHeight: "100vh", background: "#0f0c1a", color: "#f0ecff", fontFamily: "'Space Mono', monospace", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1909,8 +1909,13 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
         @keyframes fadein { from{opacity:0}to{opacity:1} }
       `}</style>
 
+      {/* Subtle branded bg — grid + faint orbs */}
+      <div style={{ position: "fixed", inset: 0, backgroundImage: "linear-gradient(rgba(255,107,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,107,255,0.025) 1px,transparent 1px)", backgroundSize: "48px 48px", pointerEvents: "none", zIndex: 0 }}/>
+      <div style={{ position: "fixed", width: 500, height: 500, borderRadius: "50%", background: "#7b2fff", top: -200, left: -200, filter: "blur(120px)", opacity: 0.11, pointerEvents: "none", zIndex: 0 }}/>
+      <div style={{ position: "fixed", width: 320, height: 320, borderRadius: "50%", background: "#00e5ff", bottom: -100, right: -80, filter: "blur(100px)", opacity: 0.08, pointerEvents: "none", zIndex: 0 }}/>
+
       {/* ── NAV ── */}
-      <header style={{ padding: "12px 20px", background: "rgba(255,255,255,0.025)", borderBottom: "1px solid rgba(255,107,255,0.12)", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+      <header style={{ position: "relative", zIndex: 1, padding: "12px 20px", background: "rgba(255,255,255,0.025)", borderBottom: "1px solid rgba(255,107,255,0.22)", boxShadow: "0 1px 20px rgba(123,47,255,0.08)", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{ fontSize: 18, color: "#ff6bff" }}>◈</span>
           <div>
@@ -1958,67 +1963,122 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
       {/* ══ PHASE: UPLOAD ══════════════════════════════════════════════════════ */}
       {phase === "upload" && (
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", padding: "48px 24px 32px", animation: "fadein 0.3s ease both" }}>
-          <div style={{ width: "100%", maxWidth: 520 }}>
-            <div style={{ textAlign: "center", marginBottom: 36 }}>
+          <div style={{ width: "100%", maxWidth: 560 }}>
+
+            {/* Header */}
+            <div style={{ textAlign: "center", marginBottom: 32 }}>
               <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: "0.22em", color: "#ff6bff", marginBottom: 12 }}>UPLOAD FIRST · LIVE SESSION SECOND</div>
               <h1 style={{ fontSize: 28, fontWeight: 700, lineHeight: 1.2, marginBottom: 8, letterSpacing: "-0.01em" }}>Upload your charts.<br/>Start the session.</h1>
               <p style={{ fontSize: 11, color: "#8878aa", lineHeight: 1.7 }}>Upload all 5 timeframes. Your plan generates automatically,<br/>then live session begins.</p>
             </div>
 
             {/* Instrument selector */}
-            <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 20 }}>
+            <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 24 }}>
               {["BTCUSD","XAUUSD","NAS100","US30","USOIL","GBPUSD"].map(sym => (
                 <button key={sym} onClick={() => setInstrument(sym)}
-                  style={{ fontSize: 9, fontWeight: 700, padding: "5px 10px", borderRadius: 6, border: `1px solid ${instrument === sym ? "#ff6bff88" : "rgba(255,255,255,0.1)"}`, background: instrument === sym ? "rgba(255,107,255,0.12)" : "rgba(255,255,255,0.03)", color: instrument === sym ? "#ff6bff" : "#8878aa", cursor: "pointer", fontFamily: "inherit" }}>
+                  style={{ fontSize: 9, fontWeight: 700, padding: "5px 10px", borderRadius: 6, border: `1px solid ${instrument === sym ? "rgba(255,107,255,0.6)" : "rgba(255,255,255,0.1)"}`, background: instrument === sym ? "rgba(255,107,255,0.18)" : "rgba(255,255,255,0.04)", boxShadow: instrument === sym ? "0 0 12px rgba(255,107,255,0.15)" : "none", color: instrument === sym ? "#ff6bff" : "#8878aa", cursor: "pointer", fontFamily: "inherit" }}>
                   {sym}
                 </button>
               ))}
             </div>
 
-            {/* Upload zone */}
-            <div
-              onClick={() => fileRef.current?.click()}
-              onDragOver={e => e.preventDefault()}
-              onDrop={e => { e.preventDefault(); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith("image/")).slice(0, 5); setImages(files); }}
-              style={{ border: `2px dashed ${images.length === 5 ? "rgba(127,255,107,0.4)" : "rgba(255,107,255,0.25)"}`, borderRadius: 14, padding: "32px 24px", textAlign: "center", cursor: "pointer", transition: "all 0.2s", background: images.length === 5 ? "rgba(127,255,107,0.04)" : "rgba(255,255,255,0.02)" }}>
-              <input ref={fileRef} type="file" accept="image/*" multiple style={{ display: "none" }}
-                onChange={e => { const files = Array.from(e.target.files).slice(0, 5); setImages(files); }} />
-
-              {images.length === 0 ? (
-                <>
-                  <div style={{ fontSize: 28, marginBottom: 10 }}>📊</div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: "#f0ecff", marginBottom: 6 }}>Drop 5 charts here</div>
-                  <div style={{ fontSize: 10, color: "#8878aa", lineHeight: 1.7 }}>Daily · 4H · 1H · 30M · 15M<br/>Tap to browse or drag and drop</div>
-                </>
-              ) : (
-                <>
-                  <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 12, flexWrap: "wrap" }}>
-                    {["D","4H","1H","30M","15M"].map((tf, i) => (
-                      <div key={tf} style={{ textAlign: "center" }}>
-                        {images[i] ? (
-                          <img src={URL.createObjectURL(images[i])} alt={tf}
-                            style={{ width: 60, height: 44, objectFit: "cover", borderRadius: 6, border: "1px solid rgba(127,255,107,0.3)", display: "block", marginBottom: 4 }}/>
-                        ) : (
-                          <div style={{ width: 60, height: 44, borderRadius: 6, border: "1px dashed rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.02)", marginBottom: 4 }}/>
-                        )}
-                        <span style={{ fontSize: 8, color: images[i] ? "#7fff6b" : "#8878aa", fontWeight: 700 }}>{tf}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{ fontSize: 10, color: images.length === 5 ? "#7fff6b" : "#ffd166", fontWeight: 700 }}>
-                    {images.length === 5 ? "✓ All 5 charts ready" : `${images.length}/5 charts uploaded`}
-                  </div>
-                </>
-              )}
+            {/* Progress bar */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                <span style={{ fontSize: 9, fontWeight: 700, color: images.filter(Boolean).length === 5 ? "#7fff6b" : "#8878aa", letterSpacing: "0.1em" }}>
+                  {images.filter(Boolean).length === 5 ? "✓ ALL 5 CHARTS READY" : `${images.filter(Boolean).length} / 5 CHARTS UPLOADED`}
+                </span>
+                <span style={{ fontSize: 9, color: "#8878aa" }}>{instrument}</span>
+              </div>
+              <div style={{ height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2, overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${(images.filter(Boolean).length / 5) * 100}%`, background: images.filter(Boolean).length === 5 ? "#7fff6b" : "linear-gradient(90deg,#ff6bff,#00e5ff)", borderRadius: 2, transition: "width 0.3s ease" }}/>
+              </div>
             </div>
 
-            <button onClick={analyzeCharts} disabled={images.length < 5}
-              style={{ width: "100%", marginTop: 14, padding: "14px", borderRadius: 10, border: "none", background: images.length === 5 ? "linear-gradient(135deg,#ff6bff,#7b2fff)" : "rgba(255,255,255,0.06)", color: images.length === 5 ? "#fff" : "#8878aa", fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", fontFamily: "inherit", cursor: images.length === 5 ? "pointer" : "not-allowed", boxShadow: images.length === 5 ? "0 4px 28px rgba(255,107,255,0.22)" : "none", transition: "all 0.2s" }}>
-              {images.length === 5 ? "GENERATE SESSION PLAN →" : images.length === 0 ? "UPLOAD 5 CHARTS" : `UPLOAD ${5 - images.length} MORE CHART${5 - images.length !== 1 ? "S" : ""}`}
+            {/* 5 fixed slots */}
+            {(() => {
+              const slots = [
+                { tf: "Daily", label: "D",   role: "Bias",      desc: "Sets the direction. The General." },
+                { tf: "4H",    label: "4H",  role: "Structure", desc: "Confirms the trend is intact." },
+                { tf: "1H",    label: "1H",  role: "Setup",     desc: "Shows where the setup is forming." },
+                { tf: "30M",   label: "30M", role: "Trigger",   desc: "30M close confirms the trigger." },
+                { tf: "15M",   label: "15M", role: "Refinement",desc: "Fine-tunes the entry zone." },
+              ];
+              return (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
+                  {slots.map((slot, i) => {
+                    const hasImage = !!images[i];
+                    const slotRef = React.createRef();
+                    return (
+                      <label htmlFor={`slot-input-${i}`} key={slot.tf} style={{
+                        display: "flex", alignItems: "center", gap: 14,
+                        padding: "9px 14px",
+                        background: hasImage ? "rgba(127,255,107,0.06)" : "rgba(255,255,255,0.04)",
+                        border: `1px solid ${hasImage ? "rgba(127,255,107,0.28)" : "rgba(255,255,255,0.11)"}`,
+                        borderRadius: 10, transition: "all 0.2s",
+                        cursor: hasImage ? "default" : "pointer",
+                      }}>
+                        {/* Timeframe badge */}
+                        <div style={{ width: 42, height: 42, flexShrink: 0, borderRadius: 8, background: hasImage ? "rgba(127,255,107,0.1)" : "rgba(255,255,255,0.05)", border: `1px solid ${hasImage ? "rgba(127,255,107,0.3)" : "rgba(255,255,255,0.1)"}`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                          <span style={{ fontSize: 11, fontWeight: 900, color: hasImage ? "#7fff6b" : "#8878aa", lineHeight: 1 }}>{slot.label}</span>
+                          <span style={{ fontSize: 7, color: hasImage ? "rgba(127,255,107,0.6)" : "rgba(255,255,255,0.25)", marginTop: 2 }}>{slot.role}</span>
+                        </div>
+
+                        {/* Preview or empty state */}
+                        {hasImage ? (
+                          <img src={URL.createObjectURL(images[i])} alt={slot.tf}
+                            style={{ width: 64, height: 42, objectFit: "cover", borderRadius: 6, border: "1px solid rgba(127,255,107,0.2)", flexShrink: 0 }}/>
+                        ) : (
+                          <div style={{ width: 64, height: 42, flexShrink: 0, borderRadius: 6, border: "1px dashed rgba(255,107,255,0.35)", background: "rgba(255,107,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <span style={{ fontSize: 18, color: "rgba(255,107,255,0.5)", fontWeight: 700, lineHeight: 1 }}>+</span>
+                          </div>
+                        )}
+
+                        {/* Labels */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: hasImage ? "#f0ecff" : "#8878aa", marginBottom: 2 }}>{slot.tf} Chart</div>
+                          <div style={{ fontSize: 9, color: "rgba(255,255,255,0.45)", lineHeight: 1.5 }}>{slot.desc}</div>
+                        </div>
+
+                        {/* Hidden input — row is clickable */}
+                        <input
+                          type="file" accept="image/*"
+                          style={{ display: "none" }}
+                          id={`slot-input-${i}`}
+                          onChange={e => {
+                            if (e.target.files[0]) {
+                              const newImages = [...images];
+                              newImages[i] = e.target.files[0];
+                              setImages(newImages);
+                            }
+                          }}
+                        />
+                        {/* Replace chip — only shows when uploaded */}
+                        {hasImage && (
+                          <label htmlFor={`slot-input-${i}`}
+                            style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.06em", padding: "3px 9px", borderRadius: 5, border: "1px solid rgba(127,255,107,0.25)", background: "rgba(127,255,107,0.05)", color: "rgba(127,255,107,0.6)", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
+                            Replace
+                          </label>
+                        )}
+                      </label>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+
+            {/* CTA */}
+            <button onClick={analyzeCharts} disabled={images.filter(Boolean).length < 5}
+              style={{ width: "100%", padding: "14px", borderRadius: 10, border: "none", background: images.filter(Boolean).length === 5 ? "linear-gradient(135deg,#ff6bff,#7b2fff)" : "rgba(255,107,255,0.08)", color: images.filter(Boolean).length === 5 ? "#fff" : "rgba(255,107,255,0.45)", fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", fontFamily: "inherit", cursor: images.filter(Boolean).length === 5 ? "pointer" : "default", boxShadow: images.filter(Boolean).length === 5 ? "0 4px 32px rgba(255,107,255,0.35), 0 0 0 1px rgba(255,107,255,0.15)" : "none", border: images.filter(Boolean).length === 5 ? "none" : "1px solid rgba(255,107,255,0.2)", transition: "all 0.2s" }}>
+              {images.filter(Boolean).length === 5
+                ? "GENERATE SESSION PLAN →"
+                : images.filter(Boolean).length === 0
+                ? "UPLOAD 5 CHARTS"
+                : `UPLOAD ${5 - images.filter(Boolean).length} MORE CHART${5 - images.filter(Boolean).length !== 1 ? "S" : ""}`}
             </button>
 
             <div style={{ textAlign: "center", marginTop: 10, fontSize: 9, color: "#8878aa" }}>
-              Daily · 4H · 1H · 30M · 15M — from your active broker only
+              Only upload screenshots from the broker you're trading · All 5 timeframes required
             </div>
           </div>
         </div>
@@ -2108,12 +2168,12 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
       {phase === "live" && plan && (
         <>
           {/* Progress strip */}
-          <div style={{ display: "flex", alignItems: "center", padding: "0 20px", height: 36, borderBottom: "1px solid rgba(255,255,255,0.06)", flexShrink: 0, gap: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", padding: "0 20px", height: 36, borderBottom: "1px solid rgba(255,255,255,0.09)", flexShrink: 0 }}>
             {[
-              { label: "Break", done: tier1, active: !tier1 },
-              { label: "Tier 1", done: tier1, active: !tier1 },
-              { label: "Tier 2", done: tier2, active: tier1 && !tier2 },
-              { label: "Limit Order", done: tier2, active: tier1 && tier2 },
+              { label: "Break",       done: tier1,        active: !tier1 },
+              { label: "Tier 1",      done: tier1,        active: !tier1 },
+              { label: "Tier 2",      done: tier2,        active: tier1 && !tier2 },
+              { label: "Limit Order", done: tier2,        active: tier1 && tier2 },
             ].map((t, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center" }}>
                 <div style={{ width: 7, height: 7, borderRadius: "50%", background: t.done ? "#7fff6b" : t.active ? "#00e5ff" : "rgba(255,255,255,0.15)", boxShadow: t.active ? "0 0 8px rgba(0,229,255,0.5)" : "none", animation: t.active ? "pulse 1.5s ease infinite" : "none", transition: "all 0.4s" }}/>
@@ -2127,85 +2187,135 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
             </div>
           </div>
 
-          {/* Timing bar */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 20px", background: "rgba(255,255,255,0.02)", borderBottom: "1px solid rgba(255,255,255,0.05)", flexShrink: 0 }}>
-            <div style={{ display: "flex", gap: 20 }}>
-              <div><span style={{ fontSize: 8, color: "#8878aa", letterSpacing: "0.1em" }}>CURRENT TIME </span><span style={{ fontSize: 10, fontWeight: 700, color: "#00e5ff", fontFamily: "monospace" }}>{ctTime} CT</span></div>
-              {!windowClosed && <div><span style={{ fontSize: 8, color: "#8878aa", letterSpacing: "0.1em" }}>NEXT 30M CLOSE </span><span style={{ fontSize: 10, fontWeight: 700, color: "#ffd166", fontFamily: "monospace" }}>{nextClose} CT</span></div>}
-            </div>
-            <div style={{ fontSize: 9, color: "#8878aa" }}>TRIGGER <span style={{ color: plan.bias === "SHORT" ? "#ff6b6b" : "#7fff6b", fontWeight: 700 }}>{plan.trigger_level}</span></div>
-          </div>
+          {/* ── TWO COLUMN BODY ── */}
+          <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
 
-          {/* Live status panel */}
-          <div style={{ margin: "10px 16px 0", padding: "10px 16px", background: tier2 ? "rgba(127,255,107,0.06)" : tier1 ? "rgba(255,209,102,0.06)" : "rgba(0,229,255,0.05)", border: `1px solid ${tier2 ? "rgba(127,255,107,0.25)" : tier1 ? "rgba(255,209,102,0.25)" : "rgba(0,229,255,0.18)"}`, borderLeft: `3px solid ${tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00e5ff"}`, borderRadius: 8, flexShrink: 0 }}>
-            <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.18em", color: tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00e5ff", marginBottom: 5 }}>CURRENT LIVE STATUS</div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#f0ecff", lineHeight: 1.5 }}>
-              {tier2 ? `✅ Both tiers confirmed. Place sell limit at ${plan.retest_zone}. Hands off.`
-               : tier1 ? `⏳ Tier 1 confirmed. Watching for second 30M close ${plan.bias === "SHORT" ? "below" : "above"} ${plan.trigger_level}.`
-               : `Watching for first valid 30M close ${plan.bias === "SHORT" ? "below" : "above"} ${plan.trigger_level}. No entry until the candle fully closes.`}
-            </div>
-            {tier2 && (
-              <div style={{ display: "flex", gap: 16, marginTop: 8 }}>
-                {[{label:"LIMIT",val:plan.retest_zone},{label:"STOP",val:plan.stop_loss},{label:"TP1",val:plan.tp1},{label:"TP2",val:plan.tp2}].map(r => (
-                  <div key={r.label}>
-                    <div style={{ fontSize: 8, color: "#8878aa", fontWeight: 700, letterSpacing: "0.1em", marginBottom: 2 }}>{r.label}</div>
-                    <div style={{ fontSize: 12, fontWeight: 900, color: "#7fff6b", fontFamily: "monospace" }}>{r.val}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+            {/* ── LEFT COLUMN — locked plan ── */}
+            <div style={{ width: 220, flexShrink: 0, borderRight: "1px solid rgba(255,255,255,0.09)", background: "rgba(123,47,255,0.04)", display: "flex", flexDirection: "column", overflowY: "auto" }}>
 
-          {/* Messages */}
-          <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px 8px" }}>
-            {messages.map((msg, i) => (
-              <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: msg.role === "user" ? "flex-end" : "flex-start", marginBottom: 10, animation: "slide 0.2s ease both" }}>
-                <div style={{ maxWidth: "85%", padding: "9px 13px", borderRadius: msg.role === "user" ? "10px 10px 3px 10px" : "10px 10px 10px 3px", background: msg.role === "user" ? "rgba(255,107,255,0.1)" : "rgba(255,255,255,0.04)", border: msg.role === "user" ? "1px solid rgba(255,107,255,0.2)" : "1px solid rgba(255,255,255,0.07)", fontSize: 11, lineHeight: 1.7, color: msg.role === "user" ? "#f0ecff" : "#ccc4e8" }} dangerouslySetInnerHTML={{ __html: fmt(msg.content) }}/>
-                <span style={{ fontSize: 8, color: "#8878aa", marginTop: 3, paddingLeft: 3, paddingRight: 3 }}>{msg.role === "user" ? "You" : "OmniUSD"} · {msg.time} CT</span>
-              </div>
-            ))}
-            {loading && (
-              <div style={{ display: "flex", marginBottom: 10 }}>
-                <div style={{ padding: "9px 13px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "10px 10px 10px 3px" }}>
-                  <div style={{ display: "flex", gap: 4 }}>
-                    {[0,1,2].map(d => <span key={d} style={{ width: 5, height: 5, borderRadius: "50%", background: "#ff6bff", animation: `pulse 1s ease ${d*0.2}s infinite`, display: "inline-block" }}/>)}
+              {/* Timing */}
+              <div style={{ padding: "10px 14px", borderBottom: "1px solid rgba(255,255,255,0.05)", background: "rgba(255,255,255,0.02)" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                    <span style={{ fontSize: 8, color: "#8878aa", letterSpacing: "0.1em" }}>TIME</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: "#00e5ff", fontFamily: "monospace" }}>{ctTime} CT</span>
                   </div>
+                  {!windowClosed && (
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                      <span style={{ fontSize: 8, color: "#8878aa", letterSpacing: "0.1em" }}>NEXT CLOSE</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: "#ffd166", fontFamily: "monospace" }}>{nextClose} CT</span>
+                    </div>
+                  )}
+                  {windowClosed && (
+                    <div style={{ fontSize: 9, color: "#ff6b6b", fontWeight: 700 }}>Window closed</div>
+                  )}
                 </div>
               </div>
-            )}
-            <div ref={bottomRef}/>
-          </div>
 
-          {/* Grouped chips */}
-          <div style={{ padding: "6px 16px 4px", display: "flex", flexDirection: "column", gap: 5, flexShrink: 0 }}>
-            {[
-              { label: "CANDLE UPDATE", color: "#00e5ff", chips: ["30M closed below the trigger","30M closed above trigger","Wick only — candle still forming"] },
-              { label: "ENTRY QUESTION", color: "#7fff6b", chips: ["Both tiers confirmed — order in?","Limit filled — what now?"] },
-              { label: "SESSION", color: "#ffd166", chips: ["Past 10:30 AM — cancel?","Setup invalidated"] },
-            ].map(g => (
-              <div key={g.label} style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                <span style={{ fontSize: 7, fontWeight: 900, letterSpacing: "0.12em", color: g.color, minWidth: 90, flexShrink: 0 }}>{g.label}</span>
-                {g.chips.map(q => (
-                  <button key={q} onClick={() => { setInput(q); inputRef.current?.focus(); }}
-                    style={{ fontSize: 9, fontWeight: 700, padding: "3px 9px", borderRadius: 16, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", color: "#8878aa", cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap", transition: "all 0.15s" }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = `${g.color}55`; e.currentTarget.style.color = g.color; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#8878aa"; }}>
-                    {q}
-                  </button>
+              {/* Live status panel */}
+              <div style={{ margin: "10px 12px 0", padding: "10px 12px", background: tier2 ? "rgba(127,255,107,0.06)" : tier1 ? "rgba(255,209,102,0.06)" : "rgba(0,229,255,0.05)", border: `1px solid ${tier2 ? "rgba(127,255,107,0.25)" : tier1 ? "rgba(255,209,102,0.25)" : "rgba(0,229,255,0.18)"}`, borderLeft: `3px solid ${tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00e5ff"}`, borderRadius: 0 }}>
+                <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.14em", color: tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00e5ff", marginBottom: 5 }}>LIVE STATUS</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#f0ecff", lineHeight: 1.5 }}>
+                  {tier2
+                    ? `Limit order ready at ${plan.retest_zone}.`
+                    : tier1
+                    ? `Tier 1 confirmed. Watching for Tier 2.`
+                    : `Watching for 30M close ${plan.bias === "SHORT" ? "below" : "above"} ${plan.trigger_level}.`}
+                </div>
+                {!tier1 && (
+                  <div style={{ fontSize: 9, color: "#8878aa", marginTop: 4, lineHeight: 1.5 }}>No entry until candle fully closes.</div>
+                )}
+                {tier1 && !tier2 && (
+                  <div style={{ fontSize: 9, color: "rgba(255,209,102,0.6)", marginTop: 4, lineHeight: 1.5 }}>Do not enter yet. Wait for Tier 2.</div>
+                )}
+              </div>
+
+              {/* Locked plan levels */}
+              <div style={{ padding: "14px 12px 0" }}>
+                <div style={{ fontSize: 8, color: "rgba(255,255,255,0.25)", letterSpacing: "0.14em", marginBottom: 10 }}>LOCKED PLAN</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                  {[
+                    { l: "Trigger",  v: plan.trigger_level, c: plan.bias === "SHORT" ? "#ff6b6b" : "#7fff6b" },
+                    { l: "Retest",   v: plan.retest_zone,   c: "#ffd166" },
+                    { l: "Stop",     v: plan.stop_loss,     c: "#ff6b6b" },
+                    { l: "TP1",      v: plan.tp1,           c: "#7fff6b" },
+                    { l: "TP2",      v: plan.tp2,           c: "#7fff6b" },
+                    { l: "Runner",   v: plan.runner,        c: "#00e5ff" },
+                  ].map((r, i) => (
+                    <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: i < 5 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
+                      <span style={{ fontSize: 9, color: "rgba(255,255,255,0.35)" }}>{r.l}</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: r.c, fontFamily: "monospace" }}>{r.v}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Instrument + session */}
+              <div style={{ padding: "14px 12px", marginTop: "auto", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "rgba(255,107,107,0.1)", border: "1px solid rgba(255,107,107,0.25)", color: "#ff6b6b" }}>{plan.instrument}</span>
+                  <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "rgba(255,107,107,0.1)", border: "1px solid rgba(255,107,107,0.25)", color: "#ff6b6b" }}>{plan.bias}</span>
+                  <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "rgba(127,255,107,0.08)", border: "1px solid rgba(127,255,107,0.2)", color: "#7fff6b" }}>{plan.grade}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* ── RIGHT COLUMN — chat ── */}
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+
+              {/* Messages */}
+              <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px 8px" }}>
+                {messages.map((msg, i) => (
+                  <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: msg.role === "user" ? "flex-end" : "flex-start", marginBottom: 10, animation: "slide 0.2s ease both" }}>
+                    <div style={{ maxWidth: "88%", padding: "9px 13px", borderRadius: msg.role === "user" ? "10px 10px 3px 10px" : "10px 10px 10px 3px", background: msg.role === "user" ? "rgba(255,107,255,0.1)" : "rgba(255,255,255,0.04)", border: msg.role === "user" ? "1px solid rgba(255,107,255,0.2)" : "1px solid rgba(255,255,255,0.07)", fontSize: 11, lineHeight: 1.7, color: msg.role === "user" ? "#f0ecff" : "#ccc4e8" }} dangerouslySetInnerHTML={{ __html: fmt(msg.content) }}/>
+                    <span style={{ fontSize: 8, color: "#8878aa", marginTop: 3, paddingLeft: 3, paddingRight: 3 }}>{msg.role === "user" ? "You" : "OmniUSD"} · {msg.time} CT</span>
+                  </div>
+                ))}
+                {loading && (
+                  <div style={{ display: "flex", marginBottom: 10 }}>
+                    <div style={{ padding: "9px 13px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "10px 10px 10px 3px" }}>
+                      <div style={{ display: "flex", gap: 4 }}>
+                        {[0,1,2].map(d => <span key={d} style={{ width: 5, height: 5, borderRadius: "50%", background: "#ff6bff", animation: `pulse 1s ease ${d*0.2}s infinite`, display: "inline-block" }}/>)}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div ref={bottomRef}/>
+              </div>
+
+              {/* Quick chips */}
+              <div style={{ padding: "6px 16px 4px", display: "flex", flexDirection: "column", gap: 5, flexShrink: 0 }}>
+                {[
+                  { label: "CANDLE UPDATE", color: "#00e5ff", chips: ["30M closed below trigger","30M closed above trigger","Wick only — still forming"] },
+                  { label: "ENTRY",         color: "#7fff6b", chips: ["Both tiers confirmed — order in?","Limit filled — what now?"] },
+                  { label: "SESSION",       color: "#ffd166", chips: ["Past cutoff — cancel?","Setup invalidated"] },
+                ].map(g => (
+                  <div key={g.label} style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 7, fontWeight: 900, letterSpacing: "0.12em", color: g.color, minWidth: 90, flexShrink: 0 }}>{g.label}</span>
+                    {g.chips.map(q => (
+                      <button key={q} onClick={() => { setInput(q); inputRef.current?.focus(); }}
+                        style={{ fontSize: 9, fontWeight: 700, padding: "3px 9px", borderRadius: 16, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", color: "#8878aa", cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap", transition: "all 0.15s" }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = `${g.color}55`; e.currentTarget.style.color = g.color; }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#8878aa"; }}>
+                        {q}
+                      </button>
+                    ))}
+                  </div>
                 ))}
               </div>
-            ))}
-          </div>
 
-          {/* Input */}
-          <div style={{ padding: "8px 16px 14px", borderTop: "1px solid rgba(255,255,255,0.06)", display: "flex", gap: 8, flexShrink: 0 }}>
-            <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendMessage()}
-              placeholder={`Best format: candle close + price — e.g. "30M closed below ${plan.trigger_level} at 69,858"`}
-              style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 8, padding: "9px 13px", fontSize: 10, color: "#f0ecff", fontFamily: "inherit", outline: "none" }}/>
-            <button onClick={sendMessage} disabled={loading || !input.trim()}
-              style={{ padding: "9px 18px", borderRadius: 8, border: "none", background: input.trim() && !loading ? "linear-gradient(135deg,#ff6bff,#7b2fff)" : "rgba(255,255,255,0.05)", color: input.trim() && !loading ? "#fff" : "#8878aa", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", cursor: input.trim() && !loading ? "pointer" : "not-allowed", fontFamily: "inherit", transition: "all 0.2s" }}>
-              SEND →
-            </button>
+              {/* Input */}
+              <div style={{ padding: "8px 16px 14px", borderTop: "1px solid rgba(255,255,255,0.06)", display: "flex", gap: 8, flexShrink: 0 }}>
+                <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendMessage()}
+                  placeholder={`e.g. "30M closed ${plan.bias === "SHORT" ? "below" : "above"} ${plan.trigger_level} at ___"`}
+                  style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 8, padding: "9px 13px", fontSize: 10, color: "#f0ecff", fontFamily: "inherit", outline: "none" }}/>
+                <button onClick={sendMessage} disabled={loading || !input.trim()}
+                  style={{ padding: "9px 18px", borderRadius: 8, border: "none", background: input.trim() && !loading ? "linear-gradient(135deg,#ff6bff,#7b2fff)" : "rgba(255,255,255,0.05)", color: input.trim() && !loading ? "#fff" : "#8878aa", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", cursor: input.trim() && !loading ? "pointer" : "not-allowed", fontFamily: "inherit", transition: "all 0.2s" }}>
+                  SEND →
+                </button>
+              </div>
+
+            </div>
           </div>
         </>
       )}
@@ -4127,6 +4237,24 @@ function PricingPage({onBack, onPaid}){
 // ═══════════════════════════════════════════════════════════════════════════
 // LANDING PAGE
 // ═══════════════════════════════════════════════════════════════════════════
+function FaqRow({q, a, isLast}) {
+  const [open, setOpen] = React.useState(false);
+  return (
+    <div style={{borderBottom: isLast ? "none" : "1px solid rgba(255,255,255,0.06)"}}>
+      <button onClick={() => setOpen(o => !o)}
+        style={{width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"20px 28px", background:"none", border:"none", cursor:"pointer", fontFamily:"inherit", textAlign:"left", gap:16}}>
+        <span style={{fontFamily:"'Space Mono',monospace", fontSize:12, fontWeight:700, color:"#f0ecff", lineHeight:1.4}}>{q}</span>
+        <span style={{fontSize:16, color:"#ff6bff", flexShrink:0, transition:"transform 0.2s", transform: open ? "rotate(45deg)" : "rotate(0deg)", display:"inline-block"}}>+</span>
+      </button>
+      {open && (
+        <div style={{padding:"0 28px 20px", fontFamily:"'Space Mono',monospace", fontSize:11, color:"rgba(255,255,255,0.55)", lineHeight:1.9}}>
+          {a}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function LandingPage({onEnterApp, onLogin}){
   const [hoveredPlan,setHoveredPlan]=useState(null);
   const plans=[
@@ -4185,8 +4313,30 @@ function LandingPage({onEnterApp, onLogin}){
         </div>
       </nav>
 
+      {/* Sticky section nav — second row */}
+      <div style={{position:"fixed",top:64,left:0,right:0,zIndex:99,background:"rgba(7,4,15,0.95)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(255,255,255,0.06)",overflowX:"auto",WebkitOverflowScrolling:"touch"}}>
+        <div style={{display:"flex",alignItems:"center",padding:"0 40px",height:40,gap:0,minWidth:"max-content"}}>
+          {[
+            {label:"Overview",    href:"#overview"},
+            {label:"How It Works",href:"#how-it-works"},
+            {label:"Live Session",href:"#live-session"},
+            {label:"Why It Works",href:"#why-it-works"},
+            {label:"Why OmniUSD", href:"#why-omniusd"},
+            {label:"Pricing",     href:"#pricing"},
+            {label:"FAQ",         href:"#faq"},
+          ].map((item,i)=>(
+            <a key={item.label} href={item.href}
+              style={{fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,letterSpacing:"0.1em",color:"rgba(255,255,255,0.4)",textDecoration:"none",padding:"0 18px",height:40,display:"flex",alignItems:"center",borderRight:"1px solid rgba(255,255,255,0.05)",whiteSpace:"nowrap",transition:"color 0.15s"}}
+              onMouseEnter={e=>e.currentTarget.style.color="#ff6bff"}
+              onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,0.4)"}>
+              {item.label}
+            </a>
+          ))}
+        </div>
+      </div>
+
       {/* Hero — full width headline + mockup right */}
-      <section style={{position:"relative",zIndex:1,paddingTop:80}}>
+      <section id="overview" style={{position:"relative",zIndex:1,paddingTop:120,scrollMarginTop:110}}>
 
         {/* Hero — two column: headline left, mockup right */}
         <div style={{maxWidth:1100,margin:"0 auto",padding:"64px 40px 0",maxWidth:640}}>
@@ -4233,7 +4383,7 @@ function LandingPage({onEnterApp, onLogin}){
       </section>
 
       {/* Live Session Mode section */}
-      <div style={{position:"relative",zIndex:1,maxWidth:1060,margin:"0 auto",padding:"80px 24px 0"}}>
+      <div id="live-session" style={{position:"relative",zIndex:1,scrollMarginTop:110,maxWidth:1060,margin:"0 auto",padding:"80px 24px 0"}}>
         <div style={{height:1,background:"linear-gradient(90deg,transparent,rgba(255,107,255,0.15),transparent)",marginBottom:64}}/>
 
         {/* Section header */}
@@ -4371,7 +4521,7 @@ function LandingPage({onEnterApp, onLogin}){
       </section>
 
       {/* Why This System Works */}
-      <div style={{position:"relative",zIndex:1,maxWidth:1060,margin:"0 auto",padding:"80px 24px 0"}}>
+      <div id="why-it-works" style={{position:"relative",zIndex:1,scrollMarginTop:110,maxWidth:1060,margin:"0 auto",padding:"80px 24px 0"}}>
         <div style={{height:1,background:"linear-gradient(90deg,transparent,rgba(255,107,255,0.15),transparent)",marginBottom:64}}/>
 
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:64,alignItems:"start"}}>
@@ -4448,8 +4598,87 @@ function LandingPage({onEnterApp, onLogin}){
         </div>
       </div>
 
+      {/* Why Traders Use OmniUSD */}
+      <div id="why-omniusd" style={{position:"relative",zIndex:1,scrollMarginTop:110,maxWidth:1060,margin:"0 auto",padding:"80px 24px 0"}}>
+        <div style={{height:1,background:"linear-gradient(90deg,transparent,rgba(255,107,255,0.15),transparent)",marginBottom:64}}/>
+
+        <div style={{marginBottom:48}}>
+          <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,107,255,0.7)",letterSpacing:"0.22em",marginBottom:14}}>WHY TRADERS USE OMNIUSD</div>
+          <h2 style={{fontFamily:"'Syne',sans-serif",fontSize:"clamp(20px,2.8vw,34px)",fontWeight:800,lineHeight:1.15,letterSpacing:"-0.02em",color:"#f0ecff",maxWidth:520}}>
+            The methodology is yours.<br/>The execution is where it breaks down.
+          </h2>
+        </div>
+
+        {/* 4 main cards — 2x2 grid */}
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:2,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:16,overflow:"hidden",marginBottom:2}}>
+          {[
+            {
+              n:"01",
+              title:"You know the rules. You still break them.",
+              body:"Knowing BRC is one skill. Executing it under pressure is another. OmniUSD is built for the second one.",
+              color:"#ff6bff",
+            },
+            {
+              n:"02",
+              title:"The hardest part is not the analysis. It is the wait.",
+              body:"Most traders lose discipline between the setup and the confirmation. OmniUSD gives that wait structure until confirmation is valid.",
+              color:"#00e5ff",
+            },
+            {
+              n:"03",
+              title:"You stop second-guessing at the worst moment.",
+              body:"When price starts moving, doubt shows up fast. A locked plan with live session guidance removes decision fatigue when execution matters most.",
+              color:"#ffd166",
+            },
+            {
+              n:"04",
+              title:"You trade A+ setups only — not boredom trades.",
+              body:"OmniUSD does not let a B-grade setup get treated like an A+. The grade is locked. The rules are visible. The session stays honest.",
+              color:"#7fff6b",
+            },
+          ].map((r,i)=>(
+            <div key={i} style={{
+              padding:"28px 32px",
+              background:"rgba(255,255,255,0.01)",
+              borderRight:i%2===0?"1px solid rgba(255,255,255,0.06)":"none",
+              borderBottom:i<2?"1px solid rgba(255,255,255,0.06)":"none",
+            }}>
+              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
+                <span style={{fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,color:r.color,opacity:0.5,letterSpacing:"0.08em"}}>{r.n}</span>
+                <div style={{flex:1,height:1,background:`${r.color}18`}}/>
+              </div>
+              <div style={{fontFamily:"'Syne',sans-serif",fontSize:16,fontWeight:800,color:"#f0ecff",marginBottom:9,lineHeight:1.25}}>{r.title}</div>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"rgba(255,255,255,0.62)",lineHeight:1.8}}>{r.body}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Full-width closing statement */}
+        <div style={{padding:"30px 32px",background:"rgba(255,107,255,0.04)",border:"1px solid rgba(255,107,255,0.12)",borderTop:"none",borderRadius:"0 0 16px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:24}}>
+          <p style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:"rgba(255,255,255,0.7)",lineHeight:1.8,margin:0,maxWidth:640}}>
+            OmniUSD does not replace your methodology. It makes sure you actually follow it.
+          </p>
+          <div style={{display:"flex",gap:16,flexShrink:0}}>
+            <div style={{textAlign:"center"}}>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,color:"#ff9a3c",marginBottom:3}}>Prop firm ready</div>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:8,color:"rgba(255,255,255,0.4)",letterSpacing:"0.08em"}}>Challenge-safe discipline</div>
+            </div>
+            <div style={{width:1,background:"rgba(255,255,255,0.08)"}}/>
+            <div style={{textAlign:"center"}}>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,color:"#7fff6b",marginBottom:3}}>A+ only</div>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:8,color:"rgba(255,255,255,0.4)",letterSpacing:"0.08em"}}>Execution unlocks here</div>
+            </div>
+            <div style={{width:1,background:"rgba(255,255,255,0.08)"}}/>
+            <div style={{textAlign:"center"}}>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,color:"#00e5ff",marginBottom:3}}>30M closes</div>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:8,color:"rgba(255,255,255,0.4)",letterSpacing:"0.08em"}}>No wick entries</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* BRC Core Truth */}
-      <div style={{position:"relative",zIndex:1,maxWidth:1060,margin:"0 auto",padding:"80px 24px"}}>
+      <div id="how-it-works" style={{position:"relative",zIndex:1,scrollMarginTop:110,maxWidth:1060,margin:"0 auto",padding:"80px 24px"}}>
         {/* Divider line */}
         <div style={{height:1,background:"linear-gradient(90deg,transparent,rgba(255,107,255,0.2),transparent)",marginBottom:80}}/>
 
@@ -4507,8 +4736,59 @@ function LandingPage({onEnterApp, onLogin}){
         </div>
       </div>
 
+      {/* FAQ */}
+      <div id="faq" style={{position:"relative",zIndex:1,scrollMarginTop:110,maxWidth:1060,margin:"0 auto",padding:"80px 24px 0"}}>
+        <div style={{height:1,background:"linear-gradient(90deg,transparent,rgba(255,107,255,0.15),transparent)",marginBottom:64}}/>
+
+        <div style={{marginBottom:48}}>
+          <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,107,255,0.7)",letterSpacing:"0.22em",marginBottom:14}}>FAQ</div>
+          <h2 style={{fontFamily:"'Syne',sans-serif",fontSize:"clamp(22px,3vw,36px)",fontWeight:800,lineHeight:1.15,letterSpacing:"-0.02em",color:"#f0ecff"}}>
+            Common questions.
+          </h2>
+        </div>
+
+        <div style={{display:"flex",flexDirection:"column",gap:0,border:"1px solid rgba(255,255,255,0.07)",borderRadius:16,overflow:"hidden"}}>
+          {[
+            {
+              q:"What broker do I need?",
+              a:"Any broker that shows candlestick charts. OmniUSD reads screenshots — it is not connected to your broker. Tradingview, MT4, MT5, cTrader, or any platform that displays OHLC candles works.",
+            },
+            {
+              q:"What instruments are supported?",
+              a:"BTCUSD, XAUUSD, NAS100, US30, and USOIL on Starter. Pro adds more instruments. Elite unlocks everything including GBPUSD and additional forex pairs. All instruments use the same BRC methodology.",
+            },
+            {
+              q:"Do I need trading experience?",
+              a:"You should understand what a candlestick chart is and have a basic idea of support and resistance. OmniUSD is not a beginner course — it is an execution system. If you have been trading for a few months or more, you will get value from it immediately.",
+            },
+            {
+              q:"What session times does it work with?",
+              a:"OmniUSD is built around the New York session (8:30–10:30 AM CT). The London session and Asian session are supported with adjusted guidance. The NY session is where the highest quality setups occur for the instruments we support.",
+            },
+            {
+              q:"How is this different from signals?",
+              a:"Signals tell you what to do. OmniUSD shows you why — and makes you wait for the confirmation. You upload your own charts, get your own plan, and execute based on structure you can see. There are no black-box calls and no alerts to blindly follow.",
+            },
+            {
+              q:"Can I use this for a prop firm challenge?",
+              a:"Yes — and this is one of the strongest use cases. Prop firm rules punish exactly the mistakes OmniUSD is designed to prevent: chasing entries, oversizing, late trades, and emotional decisions. The hard session cutoff and limit-order-only approach are already aligned with most challenge rules.",
+            },
+            {
+              q:"What happens if the setup is not valid?",
+              a:"OmniUSD shows a PASS. No execution UI, no tracker, no pressure to trade. A clear pass with the reason why is one of the most valuable outputs the system gives. Not every session has a trade — and the system is honest about that.",
+            },
+            {
+              q:"How many trades per month should I expect?",
+              a:"The methodology targets 6–7 A+ setups per month across the instruments you have access to. Quality over quantity is a core rule. You will pass on far more setups than you take — and that is by design.",
+            },
+          ].map((item,i,arr)=>(
+            <FaqRow key={i} q={item.q} a={item.a} isLast={i===arr.length-1}/>
+          ))}
+        </div>
+      </div>
+
       {/* Pricing */}
-      <div style={{position:"relative",zIndex:1,maxWidth:1060,margin:"0 auto",padding:"60px 24px"}}>
+      <div id="pricing" style={{position:"relative",zIndex:1,scrollMarginTop:110,maxWidth:1060,margin:"0 auto",padding:"60px 24px"}}>
         <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,letterSpacing:"0.24em",color:"#ff6bff",background:"rgba(255,107,255,0.08)",border:"1px solid rgba(255,107,255,0.2)",padding:"4px 12px",borderRadius:4,display:"inline-block",marginBottom:20}}>PRICING</div>
         <h2 style={{fontFamily:"'Syne',sans-serif",fontSize:"clamp(30px,5vw,50px)",fontWeight:800,lineHeight:1.1,letterSpacing:"-0.02em",marginBottom:12}}>Choose your plan.</h2>
         <p style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:"#ccc4e8",lineHeight:1.8,maxWidth:520,marginBottom:44}}>Every plan includes the BRC execution tracker, session-aware guidance, and AI session plans.</p>
