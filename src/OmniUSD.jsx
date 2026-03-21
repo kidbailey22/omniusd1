@@ -4198,15 +4198,32 @@ function LandingPage({onEnterApp, onLogin}){
               <span style={{display:"block",color:"#f4f0ff"}}>Stop reacting.</span>
               <span style={{display:"block",background:"linear-gradient(135deg,#ff6bff,#00e5ff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Start executing.</span>
             </h1>
-            <p className="land-fade" style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"rgba(255,255,255,0.45)",lineHeight:1.9,maxWidth:400,marginBottom:32,animationDelay:"0.2s"}}>
-              Upload your 5 charts. Your plan generates automatically, then your live session begins.
+            <p className="land-fade" style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"rgba(255,255,255,0.7)",lineHeight:1.7,maxWidth:480,marginBottom:32,animationDelay:"0.2s",fontWeight:700}}>
+              Upload 5 charts. Get a locked plan. Follow Live Session Mode candle by candle.
             </p>
-            <div className="land-fade" style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap",marginBottom:40,animationDelay:"0.3s"}}>
+            <div className="land-fade" style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap",marginBottom:44,animationDelay:"0.3s"}}>
               <button onClick={onEnterApp}
                 style={{fontFamily:"'Space Mono',monospace",fontSize:11,fontWeight:700,letterSpacing:"0.1em",color:"#fff",background:"linear-gradient(135deg,#ff6bff,#7b2fff)",border:"none",padding:"12px 24px",borderRadius:7,cursor:"pointer",boxShadow:"0 0 32px rgba(255,107,255,0.25)",transition:"all 0.2s"}}>
                 CHOOSE YOUR PLAN →
               </button>
               <span style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"rgba(255,255,255,0.25)"}}>From $29/month</span>
+            </div>
+
+            {/* 3-step product loop */}
+            <div className="land-fade" style={{display:"flex",flexDirection:"column",gap:0,border:"1px solid rgba(255,255,255,0.07)",borderRadius:10,overflow:"hidden",animationDelay:"0.4s"}}>
+              {[
+                {n:"1",title:"Upload 5 charts",sub:"Daily · 4H · 1H · 30M · 15M",color:"#00e5ff"},
+                {n:"2",title:"Get your locked session plan",sub:"Grade, bias, triggers, execution rules",color:"#7fff6b"},
+                {n:"3",title:"Enter Live Session Mode",sub:"Real-time guidance for closes, retests, entries, invalidation, and cutoff",color:"#ff6bff"},
+              ].map((r,i)=>(
+                <div key={r.n} style={{display:"flex",alignItems:"flex-start",gap:14,padding:"14px 18px",background:i%2===0?"rgba(255,255,255,0.02)":"transparent",borderBottom:i<2?"1px solid rgba(255,255,255,0.06)":"none"}}>
+                  <div style={{width:22,height:22,borderRadius:"50%",background:`${r.color}18`,border:`1px solid ${r.color}44`,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,color:r.color,flexShrink:0,marginTop:1}}>{r.n}</div>
+                  <div>
+                    <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,fontWeight:700,color:"#f0ecff",marginBottom:3}}>{r.title}</div>
+                    <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,255,255,0.4)",lineHeight:1.6}}>{r.sub}</div>
+                  </div>
+                </div>
+              ))}
             </div>
 
           </div>
