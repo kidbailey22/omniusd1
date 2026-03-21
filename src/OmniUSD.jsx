@@ -4370,6 +4370,81 @@ function LandingPage({onEnterApp, onLogin}){
 
       </section>
 
+      {/* Why This System Works */}
+      <div style={{position:"relative",zIndex:1,maxWidth:1060,margin:"0 auto",padding:"80px 24px 0"}}>
+        <div style={{height:1,background:"linear-gradient(90deg,transparent,rgba(255,107,255,0.15),transparent)",marginBottom:64}}/>
+
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:64,alignItems:"start"}}>
+
+          {/* Left — headline */}
+          <div style={{position:"sticky",top:100}}>
+            <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,107,255,0.7)",letterSpacing:"0.22em",marginBottom:16}}>THE METHODOLOGY</div>
+            <h2 style={{fontFamily:"'Syne',sans-serif",fontSize:"clamp(26px,3.5vw,42px)",fontWeight:800,lineHeight:1.1,letterSpacing:"-0.02em",color:"#f0ecff",marginBottom:16}}>
+              Why this<br/>system works.
+            </h2>
+            <p style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"rgba(255,255,255,0.4)",lineHeight:1.9,maxWidth:340}}>
+              Every rule exists because someone broke it and lost money. These aren't guidelines. They are the system.
+            </p>
+          </div>
+
+          {/* Right — numbered rules */}
+          <div style={{display:"flex",flexDirection:"column",gap:0}}>
+            {[
+              {
+                n:"01",
+                rule:"The Daily is the General.",
+                detail:"You only trade in the direction the Daily candle confirms. Every loss traced back to a counter-trend trade. This rule ends that.",
+                color:"#00e5ff",
+              },
+              {
+                n:"02",
+                rule:"The 30M close is the only trigger.",
+                detail:"Not a wick. Not a move. The full candle must close beyond the level. This one rule eliminates the most common amateur mistake.",
+                color:"#ffd166",
+              },
+              {
+                n:"03",
+                rule:"All three phases must confirm.",
+                detail:"Break. Retest. Continuation. If any one is missing — there is no trade. Alignment without sequence is not a setup.",
+                color:"#7fff6b",
+              },
+              {
+                n:"04",
+                rule:"Limit orders only. Never chase.",
+                detail:"The order is placed at the retest zone and either fills or it doesn't. If price runs without retesting — you are protected, not missing out.",
+                color:"#ff6bff",
+              },
+              {
+                n:"05",
+                rule:"Pre-market movement is information, not permission.",
+                detail:"What happens before the NY session opens tells you the story. It does not give you a trade. The execution window opens at 8:30 AM.",
+                color:"#ff9a3c",
+              },
+              {
+                n:"06",
+                rule:"A+ setups only. Six to seven per month.",
+                detail:"Not thirty mediocre trades. Six quality setups with full confirmation. Discipline over frequency is what compounds a trading account.",
+                color:"#00e5ff",
+              },
+            ].map((r,i)=>(
+              <div key={i} style={{
+                display:"flex",
+                gap:20,
+                padding:"24px 0",
+                borderBottom:i<5?"1px solid rgba(255,255,255,0.06)":"none",
+              }}>
+                <span style={{fontFamily:"'Space Mono',monospace",fontSize:11,fontWeight:700,color:r.color,opacity:0.5,flexShrink:0,marginTop:3,letterSpacing:"0.05em",minWidth:28}}>{r.n}</span>
+                <div>
+                  <div style={{fontFamily:"'Syne',sans-serif",fontSize:17,fontWeight:800,color:"#f0ecff",marginBottom:8,lineHeight:1.2}}>{r.rule}</div>
+                  <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"rgba(255,255,255,0.45)",lineHeight:1.8}}>{r.detail}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+        </div>
+      </div>
+
       {/* BRC Core Truth */}
       <div style={{position:"relative",zIndex:1,maxWidth:1060,margin:"0 auto",padding:"80px 24px"}}>
         {/* Divider line */}
