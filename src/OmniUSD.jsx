@@ -4189,14 +4189,14 @@ function LandingPage({onEnterApp, onLogin}){
       <section style={{position:"relative",zIndex:1,paddingTop:80}}>
 
         {/* Hero — two column: headline left, mockup right */}
-        <div style={{maxWidth:1100,margin:"0 auto",padding:"64px 40px 0",display:"grid",gridTemplateColumns:"1fr 1fr",gap:64,alignItems:"center"}}>
+        <div style={{maxWidth:1100,margin:"0 auto",padding:"64px 40px 0",maxWidth:640}}>
 
           {/* Left — headline + steps + CTA */}
           <div>
             <div className="land-fade" style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,255,255,0.35)",letterSpacing:"0.22em",marginBottom:20}}>BRC EXECUTION SYSTEM</div>
             <h1 className="land-fade" style={{fontFamily:"'Syne',sans-serif",fontSize:"clamp(30px,4vw,50px)",fontWeight:800,lineHeight:1.08,letterSpacing:"-0.025em",marginBottom:18,animationDelay:"0.1s"}}>
               <span style={{display:"block",color:"#f4f0ff"}}>Stop reacting.</span>
-              <span style={{display:"block",color:"#f4f0ff"}}>Start executing.</span>
+              <span style={{display:"block",background:"linear-gradient(135deg,#ff6bff,#00e5ff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Start executing.</span>
             </h1>
             <p className="land-fade" style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"rgba(255,255,255,0.45)",lineHeight:1.9,maxWidth:400,marginBottom:32,animationDelay:"0.2s"}}>
               Upload your 5 charts. Your plan generates automatically, then your live session begins.
@@ -4211,63 +4211,6 @@ function LandingPage({onEnterApp, onLogin}){
 
           </div>
 
-          {/* Right — live session mockup */}
-          <div className="land-fade" style={{animationDelay:"0.2s"}}>
-            <div style={{background:"rgba(13,11,20,0.98)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:12,overflow:"hidden",boxShadow:"0 24px 80px rgba(0,0,0,0.5)"}}>
-              {/* Session header */}
-              <div style={{padding:"10px 16px",background:"rgba(255,255,255,0.03)",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                <div style={{display:"flex",alignItems:"center",gap:8}}>
-                  <span style={{fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,color:"#ff6bff"}}>◈ OmniUSD</span>
-                  <span style={{fontFamily:"'Space Mono',monospace",fontSize:8,padding:"2px 6px",borderRadius:3,background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.25)",color:"#ff6b6b"}}>BTCUSD</span>
-                  <span style={{fontFamily:"'Space Mono',monospace",fontSize:8,padding:"2px 6px",borderRadius:3,background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.25)",color:"#ff6b6b"}}>SHORT</span>
-                </div>
-                <div style={{display:"flex",alignItems:"center",gap:4}}>
-                  <div style={{width:5,height:5,borderRadius:"50%",background:"#7fff6b"}}/>
-                  <span style={{fontFamily:"'Space Mono',monospace",fontSize:8,color:"#7fff6b",fontWeight:700}}>WINDOW OPEN</span>
-                </div>
-              </div>
-              {/* Progress strip */}
-              <div style={{padding:"0 16px",height:32,borderBottom:"1px solid rgba(255,255,255,0.05)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                <div style={{display:"flex",alignItems:"center",gap:0}}>
-                  {[{l:"Break",done:true},{l:"Tier 1",done:true},{l:"Tier 2",done:false,active:true},{l:"Limit",done:false}].map((t,i)=>(
-                    <div key={i} style={{display:"flex",alignItems:"center"}}>
-                      <div style={{width:6,height:6,borderRadius:"50%",background:t.done?"#7fff6b":t.active?"#00e5ff":"rgba(255,255,255,0.15)",boxShadow:t.active?"0 0 6px rgba(0,229,255,0.5)":"none"}}/>
-                      <span style={{fontFamily:"'Space Mono',monospace",fontSize:8,fontWeight:700,margin:"0 5px",color:t.done?"#7fff6b":t.active?"#00e5ff":"rgba(255,255,255,0.2)"}}>{t.l}</span>
-                      {i<3&&<div style={{width:14,height:1,background:t.done?"#7fff6b":"rgba(255,255,255,0.08)",marginRight:3}}/>}
-                    </div>
-                  ))}
-                </div>
-                <span style={{fontFamily:"'Space Mono',monospace",fontSize:8,color:"rgba(255,255,255,0.3)"}}>NEXT CLOSE <span style={{color:"#ffd166"}}>10:00 AM CT</span></span>
-              </div>
-              {/* Status panel */}
-              <div style={{margin:"10px 14px 0",padding:"9px 12px",background:"rgba(255,209,102,0.05)",border:"1px solid rgba(255,209,102,0.2)",borderLeft:"3px solid #ffd166",borderRadius:6}}>
-                <div style={{fontFamily:"'Space Mono',monospace",fontSize:8,color:"#ffd166",letterSpacing:"0.14em",fontWeight:700,marginBottom:4}}>CURRENT LIVE STATUS</div>
-                <div style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"#f0ecff",lineHeight:1.6}}>⏳ Tier 1 confirmed. Watching for second 30M close below <span style={{color:"#ffd166"}}>70,200</span>.</div>
-              </div>
-              {/* Chat */}
-              <div style={{padding:"10px 14px",display:"flex",flexDirection:"column",gap:7}}>
-                <div style={{display:"flex",justifyContent:"flex-start"}}>
-                  <div style={{maxWidth:"82%",padding:"7px 11px",borderRadius:"9px 9px 9px 3px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.07)",fontFamily:"'Space Mono',monospace",fontSize:9,color:"#ccc4e8",lineHeight:1.7}}>
-                    🥷 Live session started — BTCUSD SHORT<br/><span style={{color:"#00e5ff"}}>Wicks don't count. Only closes.</span>
-                  </div>
-                </div>
-                <div style={{display:"flex",justifyContent:"flex-end"}}>
-                  <div style={{maxWidth:"70%",padding:"7px 11px",borderRadius:"9px 9px 3px 9px",background:"rgba(255,107,255,0.08)",border:"1px solid rgba(255,107,255,0.18)",fontFamily:"'Space Mono',monospace",fontSize:9,color:"#f0ecff"}}>30M closed below 70,200 at 69,858</div>
-                </div>
-                <div style={{display:"flex",justifyContent:"flex-start"}}>
-                  <div style={{maxWidth:"82%",padding:"7px 11px",borderRadius:"9px 9px 9px 3px",background:"rgba(127,255,107,0.05)",border:"1px solid rgba(127,255,107,0.15)",fontFamily:"'Space Mono',monospace",fontSize:9,color:"#ccc4e8",lineHeight:1.7}}>
-                    🚨 <span style={{color:"#7fff6b",fontWeight:700}}>Tier 1 confirmed — 69,858!</span><br/>Strong close. Eyes on the 10:00 AM candle for Tier 2.
-                  </div>
-                </div>
-              </div>
-              {/* Input */}
-              <div style={{padding:"8px 14px 12px",borderTop:"1px solid rgba(255,255,255,0.05)",display:"flex",gap:7}}>
-                <div style={{flex:1,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:6,padding:"7px 11px",fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,255,255,0.2)"}}>e.g. "30M closed below 70,200 at 69,858"</div>
-                <div style={{padding:"7px 14px",borderRadius:6,background:"linear-gradient(135deg,#ff6bff,#7b2fff)",fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,color:"#fff"}}>SEND →</div>
-              </div>
-            </div>
-          </div>
-
         </div>
 
         {/* Info row */}
@@ -4279,42 +4222,15 @@ function LandingPage({onEnterApp, onLogin}){
             {val:"0 signals",desc:"No alerts. No predictions. Structure only."},
           ].map((r,i)=>(
             <div key={i} style={{padding:"22px 32px",borderRight:i<3?"1px solid rgba(255,255,255,0.06)":"none"}}>
-              <div style={{fontFamily:"'Space Mono',monospace",fontSize:17,fontWeight:700,color:"#f0ecff",marginBottom:6}}>{r.val}</div>
-              <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,255,255,0.3)",lineHeight:1.7}}>{r.desc}</div>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:17,fontWeight:700,color:"#ffffff",marginBottom:6}}>{r.val}</div>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,255,255,0.55)",lineHeight:1.7}}>{r.desc}</div>
             </div>
           ))}
         </div>
 
-        {/* Pricing */}
-        <div style={{maxWidth:1060,margin:"0 auto",padding:"48px 40px"}}>
-          <div style={{fontFamily:"'Space Mono',monospace",fontSize:8,color:"rgba(255,255,255,0.25)",letterSpacing:"0.2em",marginBottom:20}}>PLANS</div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12,marginBottom:28}}>
-            {[
-              {tier:"STARTER",price:"$29",tc:"rgba(255,255,255,0.3)",border:"rgba(255,255,255,0.08)",bg:"rgba(255,255,255,0.02)",label:null,instruments:"BTCUSD · XAUUSD",extra:"AI session plans"},
-              {tier:"PRO",price:"$39",tc:"#ff6bff",border:"rgba(255,107,255,0.35)",bg:"rgba(255,107,255,0.04)",label:"MOST POPULAR",instruments:"5 instruments",extra:"AI session plans"},
-              {tier:"ELITE",price:"$59",tc:"rgba(255,255,255,0.3)",border:"rgba(255,255,255,0.08)",bg:"rgba(255,255,255,0.02)",label:null,instruments:"All instruments",extra:"Priority features"},
-            ].map(p=>(
-              <div key={p.tier} style={{position:"relative",background:p.bg,border:`1px solid ${p.border}`,borderRadius:8,padding:"20px"}}>
-                {p.label&&<div style={{position:"absolute",top:-1,left:"50%",transform:"translateX(-50%)",background:"#ff6bff",fontFamily:"'Space Mono',monospace",fontSize:8,fontWeight:700,color:"#0d0b14",padding:"2px 12px",borderRadius:"0 0 6px 6px",whiteSpace:"nowrap",letterSpacing:"0.08em"}}>{p.label}</div>}
-                <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:p.tc,letterSpacing:"0.12em",marginBottom:10}}>{p.tier}</div>
-                <div style={{fontFamily:"'Syne',sans-serif",fontSize:28,fontWeight:800,color:"#f0ecff",marginBottom:2}}>{p.price}<span style={{fontSize:12,fontWeight:400,color:"rgba(255,255,255,0.3)",fontFamily:"'Space Mono',monospace"}}>/mo</span></div>
-                <div style={{height:1,background:"rgba(255,255,255,0.07)",margin:"14px 0"}}/>
-                <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,255,255,0.4)",lineHeight:1.9}}>{p.instruments}<br/>Live session guidance<br/>{p.extra}</div>
-              </div>
-            ))}
-          </div>
-          <div style={{textAlign:"center"}}>
-            <button onClick={onEnterApp}
-              style={{fontFamily:"'Space Mono',monospace",fontSize:11,fontWeight:700,letterSpacing:"0.1em",color:"#fff",background:"linear-gradient(135deg,#ff6bff,#7b2fff)",border:"none",padding:"13px 36px",borderRadius:7,cursor:"pointer",boxShadow:"0 0 32px rgba(255,107,255,0.2)"}}>
-              CHOOSE YOUR PLAN →
-            </button>
-            <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,255,255,0.2)",marginTop:10}}>Secure checkout · Cancel anytime</div>
-          </div>
-        </div>
-
       </section>
 
-            {/* BRC Core Truth */}
+      {/* BRC Core Truth */}
       <div style={{position:"relative",zIndex:1,maxWidth:1060,margin:"0 auto",padding:"80px 24px"}}>
         {/* Divider line */}
         <div style={{height:1,background:"linear-gradient(90deg,transparent,rgba(255,107,255,0.2),transparent)",marginBottom:80}}/>
@@ -4382,40 +4298,6 @@ function LandingPage({onEnterApp, onLogin}){
         </div>
       </div>
 
-      {/* Features */}
-      <div style={{position:"relative",zIndex:1,maxWidth:1060,margin:"0 auto",padding:"60px 24px"}}>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:0,background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:16,overflow:"hidden"}}>
-          {/* Left — headline */}
-          <div style={{padding:"56px 52px",borderRight:"1px solid rgba(255,255,255,0.07)",display:"flex",flexDirection:"column",justifyContent:"space-between"}}>
-            <div>
-              <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,letterSpacing:"0.24em",color:"#ff6bff",marginBottom:20}}>THE RULES</div>
-              <h2 style={{fontFamily:"'Syne',sans-serif",fontSize:"clamp(26px,3.5vw,42px)",fontWeight:800,lineHeight:1.15,letterSpacing:"-0.02em",marginBottom:16}}>Built for execution.<br/>Not entertainment.</h2>
-              <p style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"#8878aa",lineHeight:1.8,maxWidth:340}}>Every feature exists to prevent one thing: entering a trade before it is ready.</p>
-            </div>
-            <div style={{marginTop:40,padding:"16px 20px",background:"rgba(255,107,255,0.05)",border:"1px solid rgba(255,107,255,0.15)",borderRadius:10}}>
-              <div style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"#ff6bff",fontWeight:700,marginBottom:8,letterSpacing:"0.08em"}}>THE ONLY RULE THAT MATTERS</div>
-              <div style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:"#f0ecff",lineHeight:1.7}}>"No 30M close,<br/>no trade.<br/>Full stop."</div>
-            </div>
-          </div>
-          {/* Right — rule list */}
-          <div style={{display:"flex",flexDirection:"column"}}>
-            {[
-              {num:"01", rule:"Wicks are noise. Only closed candles trigger action.", color:"#00e5ff"},
-              {num:"02", rule:"The Break is step one. You do not enter at the Break.", color:"#ffd166"},
-              {num:"03", rule:"The Retest is your setup. The Continuation is your entry.", color:"#7fff6b"},
-              {num:"04", rule:"If all three phases don't align — the app shows PASS.", color:"#ff6bff"},
-              {num:"05", rule:"The Daily is the General. Counter-trend trades don't exist here.", color:"#ff9a3c"},
-              {num:"06", rule:"When the session window closes, it closes. No chasing. No exceptions.", color:"#ff6b6b"},
-            ].map((r,i)=>(
-              <div key={r.num} style={{display:"flex",alignItems:"flex-start",gap:16,padding:"18px 28px",borderBottom:i<5?"1px solid rgba(255,255,255,0.05)":"none",transition:"background 0.15s"}}>
-                <span style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,color:r.color,opacity:0.5,flexShrink:0,marginTop:2,letterSpacing:"0.05em"}}>{r.num}</span>
-                <span style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"#ccc4e8",lineHeight:1.7}}>{r.rule}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
       {/* Pricing */}
       <div style={{position:"relative",zIndex:1,maxWidth:1060,margin:"0 auto",padding:"60px 24px"}}>
         <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,letterSpacing:"0.24em",color:"#ff6bff",background:"rgba(255,107,255,0.08)",border:"1px solid rgba(255,107,255,0.2)",padding:"4px 12px",borderRadius:4,display:"inline-block",marginBottom:20}}>PRICING</div>
@@ -4458,17 +4340,11 @@ function LandingPage({onEnterApp, onLogin}){
 
       {/* Final CTA */}
       <div style={{position:"relative",zIndex:1,textAlign:"center",padding:"100px 24px",borderTop:"1px solid rgba(255,107,255,0.1)"}}>
-        <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,letterSpacing:"0.24em",color:"#ff6bff",background:"rgba(255,107,255,0.08)",border:"1px solid rgba(255,107,255,0.2)",padding:"4px 12px",borderRadius:4,display:"inline-block",marginBottom:24}}>GET STARTED</div>
         <h2 style={{fontFamily:"'Syne',sans-serif",fontSize:"clamp(34px,6vw,68px)",fontWeight:800,letterSpacing:"-0.025em",lineHeight:1.05,marginBottom:20}}>
           Stop reacting.<br/>
           <span style={{background:"linear-gradient(135deg,#ff6bff,#00e5ff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Start executing.</span>
         </h2>
-        <p style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:"#ccc4e8",marginBottom:36,lineHeight:1.7}}>Upload. Plan. Go live. Execute only when the setup is real.</p>
-        <button onClick={onEnterApp}
-          style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,letterSpacing:"0.12em",color:"#130d22",background:"linear-gradient(135deg,#ff6bff,#7b2fff)",border:"none",padding:"17px 48px",borderRadius:8,cursor:"pointer",boxShadow:"0 0 40px rgba(255,107,255,0.3)",transition:"all 0.25s"}}>
-          CHOOSE YOUR PLAN →
-        </button>
-        <div style={{marginTop:16,fontFamily:"'Space Mono',monospace",fontSize:10,color:"#8878aa"}}>Paid plans start at $29/month · Secure checkout · Cancel anytime</div>
+        <p style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:"#ccc4e8",lineHeight:1.7}}>Upload. Plan. Go live. Execute only when the setup is real.</p>
       </div>
 
       {/* Footer */}
