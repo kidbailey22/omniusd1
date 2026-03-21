@@ -4185,137 +4185,136 @@ function LandingPage({onEnterApp, onLogin}){
         </div>
       </nav>
 
-      {/* Hero */}
-      <section style={{position:"relative",zIndex:1,minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",textAlign:"center",padding:"120px 24px 80px"}}>
-        <div className="land-fade" style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,letterSpacing:"0.22em",color:"#00e5ff",background:"rgba(0,229,255,0.08)",border:"1px solid rgba(0,229,255,0.25)",padding:"5px 16px",borderRadius:100,marginBottom:32,display:"inline-block"}}>
-          BRC METHODOLOGY · AI-POWERED
-        </div>
-        <h1 className="land-fade" style={{fontFamily:"'Syne',sans-serif",fontSize:"clamp(42px,7vw,82px)",fontWeight:800,lineHeight:1.05,letterSpacing:"-0.03em",maxWidth:860,marginBottom:28,animationDelay:"0.1s"}}>
-          <span style={{display:"block",color:"#f4f0ff"}}>Stop reacting.</span>
-          <span style={{display:"block",background:"linear-gradient(135deg,#ff6bff,#00e5ff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Start executing.</span>
-        </h1>
-        <p className="land-fade" style={{fontFamily:"'Space Mono',monospace",fontSize:13,lineHeight:1.85,color:"#ccc4e8",maxWidth:560,marginBottom:44,animationDelay:"0.2s"}}>
-          Upload your 5 charts. Get your session plan. Then stay live — OmniUSD guides you through every candle close until execution.
-        </p>
-        <div className="land-fade" style={{display:"flex",alignItems:"center",gap:14,flexWrap:"wrap",justifyContent:"center",animationDelay:"0.3s"}}>
-          <button onClick={onEnterApp}
-            style={{fontFamily:"'Space Mono',monospace",fontSize:12,fontWeight:700,letterSpacing:"0.12em",color:"#130d22",background:"linear-gradient(135deg,#ff6bff,#7b2fff)",border:"none",padding:"15px 36px",borderRadius:8,cursor:"pointer",boxShadow:"0 0 40px rgba(255,107,255,0.3)",transition:"all 0.25s"}}>
-            CHOOSE YOUR PLAN →
-          </button>
-          <a href="#how" style={{fontFamily:"'Space Mono',monospace",fontSize:11,fontWeight:700,letterSpacing:"0.1em",color:"#ccc4e8",background:"none",border:"1px solid rgba(255,255,255,0.15)",padding:"15px 26px",borderRadius:8,cursor:"pointer",transition:"all 0.2s",textDecoration:"none",display:"inline-block"}}>
-            See how it works
-          </a>
-        </div>
-        <div className="land-fade" style={{marginTop:52,display:"flex",alignItems:"center",gap:28,flexWrap:"wrap",justifyContent:"center",animationDelay:"0.4s"}}>
-          {[
-            {text:"No signals. No predictions."},
-            {text:"Upload charts → plan generates → live session begins."},
-            {text:"5 charts. One session. Real-time guidance."},
-          ].map((item,i)=>(
-            <div key={i} style={{display:"flex",alignItems:"center",gap:7,fontFamily:"'Space Mono',monospace",fontSize:12,color:"#8878aa"}}>
-              <div style={{width:6,height:6,borderRadius:"50%",background:"#7fff6b",flexShrink:0}}/>
-              {item.text}
-            </div>
-          ))}
-        </div>
-      </section>
+      {/* Hero — full width headline + mockup right */}
+      <section style={{position:"relative",zIndex:1,paddingTop:80}}>
 
-      {/* Product preview mockup */}
-      <div style={{position:"relative",zIndex:1,padding:"0 24px 100px",display:"flex",justifyContent:"center"}}>
-        <div style={{width:"100%",maxWidth:860,background:"rgba(13,7,24,0.95)",border:"1px solid rgba(255,107,255,0.2)",borderRadius:16,overflow:"hidden",boxShadow:"0 40px 120px rgba(0,0,0,0.6),0 0 80px rgba(123,47,255,0.12)"}}>
-          {/* Title bar */}
-          <div style={{background:"rgba(255,255,255,0.03)",borderBottom:"1px solid rgba(255,107,255,0.1)",padding:"11px 16px",display:"flex",alignItems:"center",gap:7}}>
-            {["#ff5f57","#febc2e","#28c840"].map(c=><div key={c} style={{width:10,height:10,borderRadius:"50%",background:c}}/>)}
-            <span style={{marginLeft:10,fontFamily:"'Space Mono',monospace",fontSize:10,color:"#4a3a6a"}}>OmniUSD · XAUUSD · NY Session</span>
+        {/* Hero — two column: headline left, mockup right */}
+        <div style={{maxWidth:1100,margin:"0 auto",padding:"64px 40px 0",display:"grid",gridTemplateColumns:"1fr 1fr",gap:64,alignItems:"center"}}>
+
+          {/* Left — headline + steps + CTA */}
+          <div>
+            <div className="land-fade" style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,255,255,0.35)",letterSpacing:"0.22em",marginBottom:20}}>BRC EXECUTION SYSTEM</div>
+            <h1 className="land-fade" style={{fontFamily:"'Syne',sans-serif",fontSize:"clamp(30px,4vw,50px)",fontWeight:800,lineHeight:1.08,letterSpacing:"-0.025em",marginBottom:18,animationDelay:"0.1s"}}>
+              <span style={{display:"block",color:"#f4f0ff"}}>Stop reacting.</span>
+              <span style={{display:"block",color:"#f4f0ff"}}>Start executing.</span>
+            </h1>
+            <p className="land-fade" style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"rgba(255,255,255,0.45)",lineHeight:1.9,maxWidth:400,marginBottom:32,animationDelay:"0.2s"}}>
+              Upload your 5 charts. Your plan generates automatically, then your live session begins.
+            </p>
+            <div className="land-fade" style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap",marginBottom:40,animationDelay:"0.3s"}}>
+              <button onClick={onEnterApp}
+                style={{fontFamily:"'Space Mono',monospace",fontSize:11,fontWeight:700,letterSpacing:"0.1em",color:"#fff",background:"linear-gradient(135deg,#ff6bff,#7b2fff)",border:"none",padding:"12px 24px",borderRadius:7,cursor:"pointer",boxShadow:"0 0 32px rgba(255,107,255,0.25)",transition:"all 0.2s"}}>
+                CHOOSE YOUR PLAN →
+              </button>
+              <span style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"rgba(255,255,255,0.25)"}}>From $29/month</span>
+            </div>
+
           </div>
-          <div style={{padding:"20px 22px"}}>
-            {/* Grade row */}
-            <div style={{display:"flex",alignItems:"center",gap:9,marginBottom:14,flexWrap:"wrap"}}>
-              {[{l:"GRADE",v:"A+",c:"#7fff6b",big:true},{l:"BIAS",v:"SHORT",c:"#ff6b6b"},{l:"INSTRUMENT",v:"XAUUSD",c:"#ccc4e8",sm:true}].map(ch=>(
-                <div key={ch.l} style={{display:"flex",alignItems:"center",gap:7,padding:ch.big?"7px 16px":"6px 13px",background:ch.c+"18",border:`${ch.big?"2":"1"}px solid ${ch.c}${ch.big?"60":"35"}`,borderRadius:7,boxShadow:ch.big?`0 0 16px ${ch.c}25`:undefined}}>
-                  <span style={{fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,letterSpacing:"0.14em",color:ch.c,opacity:0.8}}>{ch.l}</span>
-                  <span style={{fontFamily:"'Space Mono',monospace",fontSize:ch.big?26:ch.sm?13:17,fontWeight:900,color:ch.c,lineHeight:1}}>{ch.v}</span>
-                </div>
-              ))}
-            </div>
-            {/* Current state */}
-            <div style={{display:"flex",alignItems:"center",gap:7,padding:"8px 13px",background:"rgba(127,255,107,0.06)",border:"1px solid rgba(127,255,107,0.2)",borderLeft:"3px solid #7fff6b",borderRadius:6,marginBottom:14}}>
-              <div style={{width:7,height:7,borderRadius:"50%",background:"#7fff6b",flexShrink:0}}/>
-              <span style={{fontFamily:"'Space Mono',monospace",fontSize:11,fontWeight:600,color:"#7fff6b"}}>
-                <span style={{color:"#8878aa",fontWeight:400,marginRight:6}}>Current state:</span>
-                Execution ready — place limit order now
-              </span>
-            </div>
-            {/* Tracker */}
-            <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,107,255,0.15)",borderRadius:10,padding:"14px 16px"}}>
-              <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,letterSpacing:"0.18em",color:"#8878aa",marginBottom:10}}>EXECUTION TRACKER · Follow each phase in order</div>
 
-              {/* Phase 1 — confirmed/collapsed */}
-              <div style={{display:"flex",alignItems:"center",gap:10,padding:"7px 10px",marginBottom:6,opacity:0.7}}>
-                <div style={{width:20,height:20,borderRadius:"50%",flexShrink:0,background:"rgba(127,255,107,0.15)",border:"2px solid #7fff6b",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:900,color:"#7fff6b"}}>✓</div>
-                <span style={{fontFamily:"'Space Mono',monospace",fontSize:11,fontWeight:700,color:"#7fff6b"}}>Phase 1 — Break confirmed below 3,182.00</span>
+          {/* Right — live session mockup */}
+          <div className="land-fade" style={{animationDelay:"0.2s"}}>
+            <div style={{background:"rgba(13,11,20,0.98)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:12,overflow:"hidden",boxShadow:"0 24px 80px rgba(0,0,0,0.5)"}}>
+              {/* Session header */}
+              <div style={{padding:"10px 16px",background:"rgba(255,255,255,0.03)",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                  <span style={{fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,color:"#ff6bff"}}>◈ OmniUSD</span>
+                  <span style={{fontFamily:"'Space Mono',monospace",fontSize:8,padding:"2px 6px",borderRadius:3,background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.25)",color:"#ff6b6b"}}>BTCUSD</span>
+                  <span style={{fontFamily:"'Space Mono',monospace",fontSize:8,padding:"2px 6px",borderRadius:3,background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.25)",color:"#ff6b6b"}}>SHORT</span>
+                </div>
+                <div style={{display:"flex",alignItems:"center",gap:4}}>
+                  <div style={{width:5,height:5,borderRadius:"50%",background:"#7fff6b"}}/>
+                  <span style={{fontFamily:"'Space Mono',monospace",fontSize:8,color:"#7fff6b",fontWeight:700}}>WINDOW OPEN</span>
+                </div>
               </div>
-
-              {/* Connector */}
-              <div style={{width:2,height:8,background:"rgba(255,255,255,0.15)",marginLeft:9,marginBottom:6}}/>
-
-              {/* Phase 2 — confirmed/collapsed */}
-              <div style={{display:"flex",alignItems:"center",gap:10,padding:"7px 10px",marginBottom:6,opacity:0.7}}>
-                <div style={{width:20,height:20,borderRadius:"50%",flexShrink:0,background:"rgba(127,255,107,0.15)",border:"2px solid #7fff6b",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:900,color:"#7fff6b"}}>✓</div>
-                <span style={{fontFamily:"'Space Mono',monospace",fontSize:11,fontWeight:700,color:"#7fff6b"}}>Phase 2 — Retest confirmed at 3,190–3,195</span>
-              </div>
-
-              {/* Connector */}
-              <div style={{width:2,height:8,background:"rgba(255,255,255,0.15)",marginLeft:9,marginBottom:6}}/>
-
-              {/* Phase 3 — active with execution cards */}
-              <div style={{background:"rgba(127,255,107,0.05)",border:"1px solid rgba(127,255,107,0.2)",borderRadius:8,padding:"11px 13px"}}>
-                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
-                  <div style={{width:22,height:22,borderRadius:"50%",flexShrink:0,background:"rgba(127,255,107,0.2)",border:"2px solid #7fff6b",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:900,color:"#7fff6b"}}>3</div>
-                  <span style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,letterSpacing:"0.1em",color:"#7fff6b"}}>PHASE 3 — CONFIRM &amp; EXECUTE</span>
-                  <span style={{fontSize:9,color:"#7fff6b",animation:"pulse 1.2s ease infinite",display:"inline-block",marginLeft:4}}>● READY NOW</span>
-                </div>
-                <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"#ccc4e8",marginBottom:12}}>
-                  Second 30M rejection close confirmed. <strong style={{color:"#7fff6b"}}>Place your limit order now.</strong>
-                </div>
-                {/* Execution cards */}
-                <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6,marginBottom:10}}>
-                  {[
-                    {label:"Entry",val:"3,192.00",color:"#7fff6b"},
-                    {label:"Hard Stop",val:"3,215.00",color:"#ff6b6b"},
-                    {label:"TP1",val:"3,160.00",color:"#7fff6b"},
-                    {label:"TP2",val:"3,135.00",color:"#7fff6b"},
-                    {label:"Runner",val:"3,100.00",color:"#ffd166"},
-                    {label:"Size",val:"FULL",color:"#00e5ff"},
-                  ].map(c=>(
-                    <div key={c.label} style={{padding:"7px 9px",background:"rgba(127,255,107,0.05)",border:`1px solid ${c.color}22`,borderRadius:6}}>
-                      <div style={{fontFamily:"'Space Mono',monospace",fontSize:8,fontWeight:700,letterSpacing:"0.1em",color:"#8878aa",marginBottom:3}}>{c.label.toUpperCase()}</div>
-                      <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:900,color:c.color,lineHeight:1}}>{c.val}</div>
+              {/* Progress strip */}
+              <div style={{padding:"0 16px",height:32,borderBottom:"1px solid rgba(255,255,255,0.05)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                <div style={{display:"flex",alignItems:"center",gap:0}}>
+                  {[{l:"Break",done:true},{l:"Tier 1",done:true},{l:"Tier 2",done:false,active:true},{l:"Limit",done:false}].map((t,i)=>(
+                    <div key={i} style={{display:"flex",alignItems:"center"}}>
+                      <div style={{width:6,height:6,borderRadius:"50%",background:t.done?"#7fff6b":t.active?"#00e5ff":"rgba(255,255,255,0.15)",boxShadow:t.active?"0 0 6px rgba(0,229,255,0.5)":"none"}}/>
+                      <span style={{fontFamily:"'Space Mono',monospace",fontSize:8,fontWeight:700,margin:"0 5px",color:t.done?"#7fff6b":t.active?"#00e5ff":"rgba(255,255,255,0.2)"}}>{t.l}</span>
+                      {i<3&&<div style={{width:14,height:1,background:t.done?"#7fff6b":"rgba(255,255,255,0.08)",marginRight:3}}/>}
                     </div>
                   ))}
                 </div>
-                {/* Live chart strip */}
-                <div style={{display:"flex",alignItems:"center",gap:10,padding:"8px 12px",marginBottom:10,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:7}}>
-                  <div style={{flex:1,display:"flex",alignItems:"center",gap:7}}>
-                    <span style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"#7fff6b",fontWeight:700}}>Live chart</span>
-                    <span style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"#7fff6b",background:"rgba(127,255,107,0.1)",border:"1px solid rgba(127,255,107,0.25)",padding:"2px 7px",borderRadius:4,fontWeight:700}}>OANDA:XAUUSD</span>
-                    <span style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"#7fff6b",background:"rgba(127,255,107,0.1)",border:"1px solid rgba(127,255,107,0.25)",padding:"2px 7px",borderRadius:4,fontWeight:700}}>15M</span>
-                  </div>
-                  <div style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,color:"#8878aa",background:"none",border:"1px solid rgba(255,255,255,0.1)",borderRadius:6,padding:"5px 12px",cursor:"default",letterSpacing:"0.06em"}}>
-                    Open Live Chart →
+                <span style={{fontFamily:"'Space Mono',monospace",fontSize:8,color:"rgba(255,255,255,0.3)"}}>NEXT CLOSE <span style={{color:"#ffd166"}}>10:00 AM CT</span></span>
+              </div>
+              {/* Status panel */}
+              <div style={{margin:"10px 14px 0",padding:"9px 12px",background:"rgba(255,209,102,0.05)",border:"1px solid rgba(255,209,102,0.2)",borderLeft:"3px solid #ffd166",borderRadius:6}}>
+                <div style={{fontFamily:"'Space Mono',monospace",fontSize:8,color:"#ffd166",letterSpacing:"0.14em",fontWeight:700,marginBottom:4}}>CURRENT LIVE STATUS</div>
+                <div style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"#f0ecff",lineHeight:1.6}}>⏳ Tier 1 confirmed. Watching for second 30M close below <span style={{color:"#ffd166"}}>70,200</span>.</div>
+              </div>
+              {/* Chat */}
+              <div style={{padding:"10px 14px",display:"flex",flexDirection:"column",gap:7}}>
+                <div style={{display:"flex",justifyContent:"flex-start"}}>
+                  <div style={{maxWidth:"82%",padding:"7px 11px",borderRadius:"9px 9px 9px 3px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.07)",fontFamily:"'Space Mono',monospace",fontSize:9,color:"#ccc4e8",lineHeight:1.7}}>
+                    🥷 Live session started — BTCUSD SHORT<br/><span style={{color:"#00e5ff"}}>Wicks don't count. Only closes.</span>
                   </div>
                 </div>
-                {/* CTA button */}
-                <div style={{display:"inline-block",padding:"8px 18px",background:"rgba(127,255,107,0.12)",border:"1px solid rgba(127,255,107,0.35)",borderRadius:7,fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,color:"#7fff6b",letterSpacing:"0.1em"}}>
-                  📈 LIMIT ORDER ACTIVE
+                <div style={{display:"flex",justifyContent:"flex-end"}}>
+                  <div style={{maxWidth:"70%",padding:"7px 11px",borderRadius:"9px 9px 3px 9px",background:"rgba(255,107,255,0.08)",border:"1px solid rgba(255,107,255,0.18)",fontFamily:"'Space Mono',monospace",fontSize:9,color:"#f0ecff"}}>30M closed below 70,200 at 69,858</div>
                 </div>
+                <div style={{display:"flex",justifyContent:"flex-start"}}>
+                  <div style={{maxWidth:"82%",padding:"7px 11px",borderRadius:"9px 9px 9px 3px",background:"rgba(127,255,107,0.05)",border:"1px solid rgba(127,255,107,0.15)",fontFamily:"'Space Mono',monospace",fontSize:9,color:"#ccc4e8",lineHeight:1.7}}>
+                    🚨 <span style={{color:"#7fff6b",fontWeight:700}}>Tier 1 confirmed — 69,858!</span><br/>Strong close. Eyes on the 10:00 AM candle for Tier 2.
+                  </div>
+                </div>
+              </div>
+              {/* Input */}
+              <div style={{padding:"8px 14px 12px",borderTop:"1px solid rgba(255,255,255,0.05)",display:"flex",gap:7}}>
+                <div style={{flex:1,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:6,padding:"7px 11px",fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,255,255,0.2)"}}>e.g. "30M closed below 70,200 at 69,858"</div>
+                <div style={{padding:"7px 14px",borderRadius:6,background:"linear-gradient(135deg,#ff6bff,#7b2fff)",fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,color:"#fff"}}>SEND →</div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* BRC Core Truth */}
+        </div>
+
+        {/* Info row */}
+        <div style={{borderTop:"1px solid rgba(255,255,255,0.06)",borderBottom:"1px solid rgba(255,255,255,0.06)",marginTop:64,display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr"}}>
+          {[
+            {val:"A+ only",desc:"The only grade that unlocks execution. All others show PASS."},
+            {val:"30M closes",desc:"Wicks don't trigger. Only full candle closes count."},
+            {val:"3 phases",desc:"Break. Retest. Continuation. Every trade. Every time."},
+            {val:"0 signals",desc:"No alerts. No predictions. Structure only."},
+          ].map((r,i)=>(
+            <div key={i} style={{padding:"22px 32px",borderRight:i<3?"1px solid rgba(255,255,255,0.06)":"none"}}>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:17,fontWeight:700,color:"#f0ecff",marginBottom:6}}>{r.val}</div>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,255,255,0.3)",lineHeight:1.7}}>{r.desc}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Pricing */}
+        <div style={{maxWidth:1060,margin:"0 auto",padding:"48px 40px"}}>
+          <div style={{fontFamily:"'Space Mono',monospace",fontSize:8,color:"rgba(255,255,255,0.25)",letterSpacing:"0.2em",marginBottom:20}}>PLANS</div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12,marginBottom:28}}>
+            {[
+              {tier:"STARTER",price:"$29",tc:"rgba(255,255,255,0.3)",border:"rgba(255,255,255,0.08)",bg:"rgba(255,255,255,0.02)",label:null,instruments:"BTCUSD · XAUUSD",extra:"AI session plans"},
+              {tier:"PRO",price:"$39",tc:"#ff6bff",border:"rgba(255,107,255,0.35)",bg:"rgba(255,107,255,0.04)",label:"MOST POPULAR",instruments:"5 instruments",extra:"AI session plans"},
+              {tier:"ELITE",price:"$59",tc:"rgba(255,255,255,0.3)",border:"rgba(255,255,255,0.08)",bg:"rgba(255,255,255,0.02)",label:null,instruments:"All instruments",extra:"Priority features"},
+            ].map(p=>(
+              <div key={p.tier} style={{position:"relative",background:p.bg,border:`1px solid ${p.border}`,borderRadius:8,padding:"20px"}}>
+                {p.label&&<div style={{position:"absolute",top:-1,left:"50%",transform:"translateX(-50%)",background:"#ff6bff",fontFamily:"'Space Mono',monospace",fontSize:8,fontWeight:700,color:"#0d0b14",padding:"2px 12px",borderRadius:"0 0 6px 6px",whiteSpace:"nowrap",letterSpacing:"0.08em"}}>{p.label}</div>}
+                <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:p.tc,letterSpacing:"0.12em",marginBottom:10}}>{p.tier}</div>
+                <div style={{fontFamily:"'Syne',sans-serif",fontSize:28,fontWeight:800,color:"#f0ecff",marginBottom:2}}>{p.price}<span style={{fontSize:12,fontWeight:400,color:"rgba(255,255,255,0.3)",fontFamily:"'Space Mono',monospace"}}>/mo</span></div>
+                <div style={{height:1,background:"rgba(255,255,255,0.07)",margin:"14px 0"}}/>
+                <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,255,255,0.4)",lineHeight:1.9}}>{p.instruments}<br/>Live session guidance<br/>{p.extra}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{textAlign:"center"}}>
+            <button onClick={onEnterApp}
+              style={{fontFamily:"'Space Mono',monospace",fontSize:11,fontWeight:700,letterSpacing:"0.1em",color:"#fff",background:"linear-gradient(135deg,#ff6bff,#7b2fff)",border:"none",padding:"13px 36px",borderRadius:7,cursor:"pointer",boxShadow:"0 0 32px rgba(255,107,255,0.2)"}}>
+              CHOOSE YOUR PLAN →
+            </button>
+            <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,255,255,0.2)",marginTop:10}}>Secure checkout · Cancel anytime</div>
+          </div>
+        </div>
+
+      </section>
+
+            {/* BRC Core Truth */}
       <div style={{position:"relative",zIndex:1,maxWidth:1060,margin:"0 auto",padding:"80px 24px"}}>
         {/* Divider line */}
         <div style={{height:1,background:"linear-gradient(90deg,transparent,rgba(255,107,255,0.2),transparent)",marginBottom:80}}/>
@@ -4383,37 +4382,37 @@ function LandingPage({onEnterApp, onLogin}){
         </div>
       </div>
 
-      {/* How it works */}
-      <div style={{position:"relative",zIndex:1,maxWidth:1060,margin:"0 auto",padding:"60px 24px"}}>
-        <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,letterSpacing:"0.24em",color:"#ff6bff",background:"rgba(255,107,255,0.08)",border:"1px solid rgba(255,107,255,0.2)",padding:"4px 12px",borderRadius:4,display:"inline-block",marginBottom:20}}>HOW IT WORKS</div>
-        <h2 style={{fontFamily:"'Syne',sans-serif",fontSize:"clamp(30px,5vw,50px)",fontWeight:800,lineHeight:1.1,letterSpacing:"-0.02em",marginBottom:14}}>Three steps.<br/>One decision.</h2>
-        <p style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:"#ccc4e8",lineHeight:1.8,maxWidth:480,marginBottom:48}}>Upload 5 charts, get your BRC session plan, then go live. OmniUSD guides you through every 30M close — confirming tiers, tracking phases, and telling you exactly when to act.</p>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",gap:2,background:"rgba(255,107,255,0.08)",border:"1px solid rgba(255,107,255,0.12)",borderRadius:14,overflow:"hidden"}}>
-          {steps.map(s=>(
-            <div key={s.n} style={{background:"#130d22",padding:"32px 28px"}}>
-              <div style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,letterSpacing:"0.1em",color:"#ff6bff",marginBottom:18,display:"flex",alignItems:"center",gap:10}}>
-                {s.n}<div style={{flex:1,height:1,background:"rgba(255,107,255,0.2)"}}/>
-              </div>
-              <div style={{fontFamily:"'Syne',sans-serif",fontSize:20,fontWeight:800,marginBottom:10}}>{s.title}</div>
-              <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"#ccc4e8",lineHeight:1.7}}>{s.desc}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* Features */}
       <div style={{position:"relative",zIndex:1,maxWidth:1060,margin:"0 auto",padding:"60px 24px"}}>
-        <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,letterSpacing:"0.24em",color:"#ff6bff",background:"rgba(255,107,255,0.08)",border:"1px solid rgba(255,107,255,0.2)",padding:"4px 12px",borderRadius:4,display:"inline-block",marginBottom:20}}>FEATURES</div>
-        <h2 style={{fontFamily:"'Syne',sans-serif",fontSize:"clamp(30px,5vw,50px)",fontWeight:800,lineHeight:1.1,letterSpacing:"-0.02em",marginBottom:12}}>Built for execution.<br/>Not entertainment.</h2>
-        <p style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:"#ccc4e8",lineHeight:1.8,maxWidth:460,marginBottom:44}}>Every feature exists to prevent one thing: entering a trade before it is ready.</p>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(290px,1fr))",gap:14}}>
-          {features.map(f=>(
-            <div key={f.title} style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:12,padding:"26px 24px",transition:"all 0.2s",cursor:"default"}}>
-              <div style={{fontSize:26,marginBottom:14}}>{f.icon}</div>
-              <div style={{fontFamily:"'Syne',sans-serif",fontSize:17,fontWeight:700,marginBottom:9}}>{f.title}</div>
-              <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"#ccc4e8",lineHeight:1.7}}>{f.desc}</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:0,background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:16,overflow:"hidden"}}>
+          {/* Left — headline */}
+          <div style={{padding:"56px 52px",borderRight:"1px solid rgba(255,255,255,0.07)",display:"flex",flexDirection:"column",justifyContent:"space-between"}}>
+            <div>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,letterSpacing:"0.24em",color:"#ff6bff",marginBottom:20}}>THE RULES</div>
+              <h2 style={{fontFamily:"'Syne',sans-serif",fontSize:"clamp(26px,3.5vw,42px)",fontWeight:800,lineHeight:1.15,letterSpacing:"-0.02em",marginBottom:16}}>Built for execution.<br/>Not entertainment.</h2>
+              <p style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"#8878aa",lineHeight:1.8,maxWidth:340}}>Every feature exists to prevent one thing: entering a trade before it is ready.</p>
             </div>
-          ))}
+            <div style={{marginTop:40,padding:"16px 20px",background:"rgba(255,107,255,0.05)",border:"1px solid rgba(255,107,255,0.15)",borderRadius:10}}>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"#ff6bff",fontWeight:700,marginBottom:8,letterSpacing:"0.08em"}}>THE ONLY RULE THAT MATTERS</div>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:"#f0ecff",lineHeight:1.7}}>"No 30M close,<br/>no trade.<br/>Full stop."</div>
+            </div>
+          </div>
+          {/* Right — rule list */}
+          <div style={{display:"flex",flexDirection:"column"}}>
+            {[
+              {num:"01", rule:"Wicks are noise. Only closed candles trigger action.", color:"#00e5ff"},
+              {num:"02", rule:"The Break is step one. You do not enter at the Break.", color:"#ffd166"},
+              {num:"03", rule:"The Retest is your setup. The Continuation is your entry.", color:"#7fff6b"},
+              {num:"04", rule:"If all three phases don't align — the app shows PASS.", color:"#ff6bff"},
+              {num:"05", rule:"The Daily is the General. Counter-trend trades don't exist here.", color:"#ff9a3c"},
+              {num:"06", rule:"When the session window closes, it closes. No chasing. No exceptions.", color:"#ff6b6b"},
+            ].map((r,i)=>(
+              <div key={r.num} style={{display:"flex",alignItems:"flex-start",gap:16,padding:"18px 28px",borderBottom:i<5?"1px solid rgba(255,255,255,0.05)":"none",transition:"background 0.15s"}}>
+                <span style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,color:r.color,opacity:0.5,flexShrink:0,marginTop:2,letterSpacing:"0.05em"}}>{r.num}</span>
+                <span style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"#ccc4e8",lineHeight:1.7}}>{r.rule}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
