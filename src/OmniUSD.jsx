@@ -4198,8 +4198,8 @@ function LandingPage({onEnterApp, onLogin}){
               <span style={{display:"block",color:"#f4f0ff"}}>Stop reacting.</span>
               <span style={{display:"block",background:"linear-gradient(135deg,#ff6bff,#00e5ff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Start executing.</span>
             </h1>
-            <p className="land-fade" style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"rgba(255,255,255,0.7)",lineHeight:1.7,maxWidth:480,marginBottom:32,animationDelay:"0.2s",fontWeight:700}}>
-              Upload 5 charts. Get a locked plan. Follow Live Session Mode candle by candle.
+            <p className="land-fade" style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"rgba(255,255,255,0.7)",lineHeight:1.7,maxWidth:520,marginBottom:32,animationDelay:"0.2s",fontWeight:700}}>
+              Upload 5 charts. Get a locked plan. Know when to wait, when to confirm, and when to execute.
             </p>
             <div className="land-fade" style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap",marginBottom:44,animationDelay:"0.3s"}}>
               <button onClick={onEnterApp}
@@ -4212,9 +4212,9 @@ function LandingPage({onEnterApp, onLogin}){
             {/* 3-step product loop */}
             <div className="land-fade" style={{display:"flex",flexDirection:"column",gap:0,border:"1px solid rgba(255,255,255,0.07)",borderRadius:10,overflow:"hidden",animationDelay:"0.4s"}}>
               {[
-                {n:"1",title:"Upload 5 charts",sub:"Daily · 4H · 1H · 30M · 15M",color:"#00e5ff"},
-                {n:"2",title:"Get your locked session plan",sub:"Grade, bias, triggers, execution rules",color:"#7fff6b"},
-                {n:"3",title:"Enter Live Session Mode",sub:"Real-time guidance for closes, retests, entries, invalidation, and cutoff",color:"#ff6bff"},
+                {n:"1",title:"Upload 5 charts",sub:"Daily · 4H · 1H · 30M · 15M from your broker",color:"#00e5ff"},
+                {n:"2",title:"Get your locked session plan",sub:"Grade, bias, key levels, trigger, stops, and targets — generated from your actual charts",color:"#7fff6b"},
+                {n:"3",title:"Follow the session candle by candle",sub:"OmniUSD tells you when to wait, when a tier confirms, and exactly when to place your order. That's Live Session Mode.",color:"#ff6bff"},
               ].map((r,i)=>(
                 <div key={r.n} style={{display:"flex",alignItems:"flex-start",gap:14,padding:"14px 18px",background:i%2===0?"rgba(255,255,255,0.02)":"transparent",borderBottom:i<2?"1px solid rgba(255,255,255,0.06)":"none"}}>
                   <div style={{width:22,height:22,borderRadius:"50%",background:`${r.color}18`,border:`1px solid ${r.color}44`,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,color:r.color,flexShrink:0,marginTop:1}}>{r.n}</div>
@@ -4252,13 +4252,13 @@ function LandingPage({onEnterApp, onLogin}){
         {/* Divider line */}
         <div style={{height:1,background:"linear-gradient(90deg,transparent,rgba(255,107,255,0.2),transparent)",marginBottom:80}}/>
 
-        <div style={{textAlign:"center",marginBottom:56}}>
-          <div style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,letterSpacing:"0.22em",color:"#ff6bff",marginBottom:24}}>THE BRC FRAMEWORK</div>
-          <h2 style={{fontFamily:"'Syne',sans-serif",fontSize:"clamp(24px,4vw,46px)",fontWeight:800,lineHeight:1.1,letterSpacing:"-0.02em",maxWidth:700,margin:"0 auto 16px"}}>
-            One truth. Three phases.<br/>Every market. Every timeframe.
+        <div style={{marginBottom:56}}>
+          <div style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,letterSpacing:"0.22em",color:"#ff6bff",marginBottom:20}}>THE BRC FRAMEWORK</div>
+          <h2 style={{fontFamily:"'Syne',sans-serif",fontSize:"clamp(26px,4vw,46px)",fontWeight:800,lineHeight:1.1,letterSpacing:"-0.02em",marginBottom:12}}>
+            Break. Retest. Continuation.
           </h2>
-          <p style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"#8878aa",lineHeight:1.8,maxWidth:580,margin:"0 auto"}}>
-            BRC is not a signal system. It is a structural framework built on how price actually moves — not how traders wish it moved. The sequence never changes. Only the levels do.
+          <p style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:"rgba(255,255,255,0.55)",lineHeight:1.8,maxWidth:480,margin:0}}>
+            The sequence stays the same. Only the levels change.
           </p>
         </div>
 
@@ -4269,26 +4269,22 @@ function LandingPage({onEnterApp, onLogin}){
               phase:"B",
               name:"Break",
               color:"#00e5ff",
-              meaning:"Price makes the first decisive move — breaks a key level. This is the signal.",
-              emoji:"⚡",
+              meaning:"Price makes the first decisive move and breaks a key level.",
             },
             {
               phase:"R",
               name:"Retest",
               color:"#ffd166",
-              meaning:"Price pulls back to the broken level — normal, healthy, expected. This is your setup.",
-              emoji:"🌬️",
+              meaning:"Price returns to the broken level. This is normal. This is where structure is tested.",
             },
             {
               phase:"C",
               name:"Continuation",
               color:"#7fff6b",
-              meaning:"Price resumes the original direction after the retest. This is where execution becomes valid.",
-              emoji:"🌀",
+              meaning:"Price resumes in the original direction after the retest. This is where execution becomes valid.",
             },
           ].map((p,i)=>(
             <div key={i} style={{background:"#130d22",padding:"36px 28px",position:"relative"}}>
-              {/* Phase letter */}
               <div style={{display:"flex",alignItems:"baseline",gap:12,marginBottom:20}}>
                 <span style={{fontFamily:"'Syne',sans-serif",fontSize:56,fontWeight:800,lineHeight:1,color:p.color,opacity:0.25,letterSpacing:"-0.04em"}}>{p.phase}</span>
                 <div>
@@ -4296,18 +4292,13 @@ function LandingPage({onEnterApp, onLogin}){
                   <div style={{fontFamily:"'Syne',sans-serif",fontSize:22,fontWeight:800,color:p.color}}>{p.name}</div>
                 </div>
               </div>
-              {/* What it means */}
-              <div>
-                <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,letterSpacing:"0.14em",color:"#8878aa",marginBottom:7}}>WHAT IT MEANS</div>
-                <div style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:"#ccc4e8",lineHeight:1.6}}>{p.meaning}</div>
-              </div>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:"#ccc4e8",lineHeight:1.7}}>{p.meaning}</div>
             </div>
           ))}
         </div>
 
         {/* Truth callout */}
         <div style={{textAlign:"center",padding:"32px 40px",background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:12}}>
-          <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,letterSpacing:"0.2em",color:"var(--muted2,#8878aa)",marginBottom:14}}>WHY MOST TRADERS FAIL</div>
           <p style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"#ccc4e8",lineHeight:1.9,maxWidth:640,margin:"0 auto"}}>
             They enter during the <span style={{color:"#ffd166",fontWeight:700}}>Retest</span> — confusing a pullback for the end of the move.<br/>
             <strong style={{color:"#f4f0ff",fontWeight:700}}>OmniUSD</strong> identifies where you are in the <span style={{color:"#00e5ff",fontWeight:700}}>Break</span> → <span style={{color:"#ffd166",fontWeight:700}}>Retest</span> → <span style={{color:"#7fff6b",fontWeight:700}}>Continuation</span> sequence<br/>and tells you exactly when execution is valid — and when it isn't.
@@ -4353,15 +4344,6 @@ function LandingPage({onEnterApp, onLogin}){
             </div>
           ))}
         </div>
-      </div>
-
-      {/* Final CTA */}
-      <div style={{position:"relative",zIndex:1,textAlign:"center",padding:"100px 24px",borderTop:"1px solid rgba(255,107,255,0.1)"}}>
-        <h2 style={{fontFamily:"'Syne',sans-serif",fontSize:"clamp(34px,6vw,68px)",fontWeight:800,letterSpacing:"-0.025em",lineHeight:1.05,marginBottom:20}}>
-          Stop reacting.<br/>
-          <span style={{background:"linear-gradient(135deg,#ff6bff,#00e5ff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Start executing.</span>
-        </h2>
-        <p style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:"#ccc4e8",lineHeight:1.7}}>Upload. Plan. Go live. Execute only when the setup is real.</p>
       </div>
 
       {/* Footer */}
