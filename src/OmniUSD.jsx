@@ -4382,8 +4382,11 @@ function LandingPage({onEnterApp, onLogin}){
             <h2 style={{fontFamily:"'Syne',sans-serif",fontSize:"clamp(26px,3.5vw,42px)",fontWeight:800,lineHeight:1.1,letterSpacing:"-0.02em",color:"#f0ecff",marginBottom:16}}>
               Why this<br/>system works.
             </h2>
-            <p style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"rgba(255,255,255,0.4)",lineHeight:1.9,maxWidth:340}}>
+            <p style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"rgba(255,255,255,0.4)",lineHeight:1.9,maxWidth:340,marginBottom:16}}>
               Every rule exists because someone broke it and lost money. These aren't guidelines. They are the system.
+            </p>
+            <p style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"rgba(255,255,255,0.25)",lineHeight:1.9,maxWidth:340}}>
+              The system is strict on purpose. Every rule exists to stop avoidable mistakes before they become losses.
             </p>
           </div>
 
@@ -4393,19 +4396,19 @@ function LandingPage({onEnterApp, onLogin}){
               {
                 n:"01",
                 rule:"The Daily is the General.",
-                detail:"You only trade in the direction the Daily candle confirms. Every loss traced back to a counter-trend trade. This rule ends that.",
+                detail:"The fastest way to lose is to trade against the Daily trend. This rule removes that mistake.",
                 color:"#00e5ff",
               },
               {
                 n:"02",
                 rule:"The 30M close is the only trigger.",
-                detail:"Not a wick. Not a move. The full candle must close beyond the level. This one rule eliminates the most common amateur mistake.",
+                detail:"Not a wick. Not a move. The full candle must close beyond the level. This one rule cuts out one of the most common amateur mistakes.",
                 color:"#ffd166",
               },
               {
                 n:"03",
                 rule:"All three phases must confirm.",
-                detail:"Break. Retest. Continuation. If any one is missing — there is no trade. Alignment without sequence is not a setup.",
+                detail:"Break. Retest. Continuation. If any one is missing, there is no trade. If the sequence is broken, the setup is not real.",
                 color:"#7fff6b",
               },
               {
@@ -4417,7 +4420,7 @@ function LandingPage({onEnterApp, onLogin}){
               {
                 n:"05",
                 rule:"Pre-market movement is information, not permission.",
-                detail:"What happens before the NY session opens tells you the story. It does not give you a trade. The execution window opens at 8:30 AM.",
+                detail:"What happens before NY opens tells you the story. It does not give you a trade.",
                 color:"#ff9a3c",
               },
               {
