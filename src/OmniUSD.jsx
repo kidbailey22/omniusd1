@@ -2065,21 +2065,30 @@ function SettingsPage({profile, onSignOut, onClose}) {
             </button>
           </div>
 
-          {nextTier && (
+          {tier !== "elite" && (
             <div style={{...card,border:"1px solid rgba(255,107,255,0.2)",background:"rgba(255,107,255,0.03)"}}>
               <span style={lbl}>UPGRADE YOUR PLAN</span>
-              <div style={{marginBottom:14}}>
-                <div style={{fontFamily:"'Syne',sans-serif",fontSize:17,fontWeight:800,color:"#f0ecff",marginBottom:4}}>{nextTier.label} — {nextTier.price}</div>
-                <div style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"rgba(255,255,255,0.4)",marginBottom:6}}>
-                  Unlocks: {nextTier.instruments.filter(i=>!tierCfg.instruments.includes(i)).join(" · ")}
-                </div>
-                <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,255,255,0.3)",lineHeight:1.7}}>
-                  Upgrades are prorated — you only pay the difference for the remaining days in your billing cycle.
-                </div>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,255,255,0.3)",lineHeight:1.7,marginBottom:14}}>
+                Upgrades are prorated — you only pay the difference for the remaining days in your billing cycle.
+              </div>
+              <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:14}}>
+                {Object.entries(TIER_CONFIG).filter(([key])=> {
+                  const order = {starter:0,pro:1,elite:2};
+                  return order[key] > order[tier];
+                }).map(([key,t])=>(
+                  <div key={key} style={{padding:"14px 16px",borderRadius:8,background:"rgba(255,255,255,0.03)",border:`1px solid ${t.color}22`,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                    <div>
+                      <div style={{fontFamily:"'Syne',sans-serif",fontSize:15,fontWeight:800,color:t.color,marginBottom:3}}>{t.label} — {t.price}</div>
+                      <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,255,255,0.35)"}}>
+                        Unlocks: {t.instruments.filter(i=>!tierCfg.instruments.includes(i)).join(" · ")}
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
               <button onClick={openBillingPortal} disabled={portalLoading}
                 style={{width:"100%",padding:"12px",borderRadius:8,border:"none",background:portalLoading?"rgba(255,255,255,0.05)":"linear-gradient(135deg,#ff6bff,#7b2fff)",color:portalLoading?"#8878aa":"#fff",fontFamily:"'Space Mono',monospace",fontSize:11,fontWeight:700,letterSpacing:"0.1em",cursor:portalLoading?"not-allowed":"pointer"}}>
-                {portalLoading ? "Opening..." : `UPGRADE TO ${nextTier.label.toUpperCase()} →`}
+                {portalLoading ? "Opening..." : "UPGRADE PLAN →"}
               </button>
             </div>
           )}
@@ -2187,10 +2196,9 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("from") === "portal") {
-      // Clear the param from URL without reload
       window.history.replaceState({}, "", window.location.pathname);
-      // Force reload to get updated tier from Supabase
-      window.location.reload();
+      // Wait 2 seconds for webhook to update Supabase before reloading
+      setTimeout(() => window.location.reload(), 2000);
     }
   }, []);
   const [images, setImages] = useState(Array(5).fill(null)); // each slot: {file, preview} or null
@@ -2583,13 +2591,7 @@ Return ONLY valid JSON, no markdown, no explanation:
                       </div>
                     );
                   })}
-                  {/* Upgrade nudge if any instruments are locked */}
-                  {allowed.length < allInstruments.length && (
-                    <button onClick={() => window.open("https://omniusd.pro/#pricing","_blank")}
-                      style={{ fontSize: 8, fontWeight: 700, padding: "5px 10px", borderRadius: 6, border: "1px solid rgba(255,107,255,0.2)", background: "rgba(255,107,255,0.05)", color: "rgba(255,107,255,0.6)", cursor: "pointer", fontFamily: "inherit", letterSpacing: "0.06em" }}>
-                      ↑ Upgrade to unlock more
-                    </button>
-                  )}
+
                 </div>
               );
             })()}
