@@ -1910,6 +1910,7 @@ function DashFaqRow({item, isLast}) {
 }
 
 function SettingsPage({profile, onSignOut, onClose}) {
+  const isMobile = useWindowWidth() <= 768;
   const [section, setSection] = useState("account");
   const [pwNew, setPwNew] = useState("");
   const [pwConfirm, setPwConfirm] = useState("");
@@ -2026,7 +2027,7 @@ function SettingsPage({profile, onSignOut, onClose}) {
   const inputSt = {width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"10px 14px",fontSize:12,color:"#f0ecff",fontFamily:"'Space Mono',monospace",outline:"none",boxSizing:"border-box"};
 
   return (
-    <div style={{flex:1,overflowY:"auto",padding:"32px 24px",animation:"fadein 0.3s ease both"}}>
+    <div style={{flex:1,overflowY:"auto",padding:isMobile?"20px 16px":"32px 24px",animation:"fadein 0.3s ease both"}}>
       <div style={{maxWidth:580,margin:"0 auto"}}>
 
         {/* Header */}
@@ -2041,7 +2042,7 @@ function SettingsPage({profile, onSignOut, onClose}) {
         </div>
 
         {/* Section tabs */}
-        <div style={{display:"flex",gap:4,marginBottom:20,background:"rgba(255,255,255,0.03)",padding:4,borderRadius:10}}>
+        <div style={{display:"flex",gap:4,marginBottom:20,background:"rgba(255,255,255,0.03)",padding:4,borderRadius:10,overflowX:"auto"}}>
           {[{id:"account",l:"Account"},{id:"plan",l:"Plan"},{id:"preferences",l:"Preferences"},{id:"danger",l:"Danger Zone"}].map(t=>(
             <button key={t.id} onClick={()=>setSection(t.id)}
               style={{flex:1,padding:"7px 4px",borderRadius:7,border:"none",fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,letterSpacing:"0.06em",cursor:"pointer",transition:"all 0.15s",
@@ -2217,9 +2218,107 @@ function SettingsPage({profile, onSignOut, onClose}) {
   );
 }
 
+
+
+// ── Mobile detection hook ─────────────────────────────────────────────────
+function useWindowWidth() {
+  const [width, setWidth] = React.useState(
+    typeof window !== "undefined" ? window.innerWidth : 1200
+  );
+  React.useEffect(() => {
+    const handler = () => setWidth(window.innerWidth);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+  return width;
+}
+
+// ── Usage tracking helpers ────────────────────────────────────────────────
+const DAILY_CAPS = { starter: 3, pro: 5, elite: 10 };
+const COOLDOWN_MS = 2 * 60 * 60 * 1000; // 2 hours
+
+async function logUsage(userId, token, instrument) {
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/usage_logs`, {
+      method: "POST",
+      headers: {
+        "apikey": SUPABASE_KEY,
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+        "Prefer": "return=minimal",
+      },
+      body: JSON.stringify({
+        user_id: userId,
+        instrument,
+        type: "analysis",
+        created_at: new Date().toISOString(),
+      }),
+    });
+  } catch(e) { console.error("Usage log failed:", e); }
+}
+
+async function checkUsageLimits(userId, token, instrument, tier) {
+  try {
+    // Fetch today's logs for this user
+    const startOfDay = new Date();
+    startOfDay.setHours(0,0,0,0);
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/usage_logs?user_id=eq.${userId}&type=eq.analysis&created_at=gte.${startOfDay.toISOString()}&select=instrument,created_at`,
+      {
+        headers: {
+          "apikey": SUPABASE_KEY,
+          "Authorization": `Bearer ${token}`,
+        }
+      }
+    );
+    if (!res.ok) return { allowed: true }; // fail open
+
+    const logs = await res.json();
+    const cap = DAILY_CAPS[tier] || DAILY_CAPS.starter;
+
+    // Check daily cap
+    if (logs.length >= cap) {
+      return {
+        allowed: false,
+        reason: `Daily limit reached`,
+        detail: `Your ${tier.charAt(0).toUpperCase()+tier.slice(1)} plan includes ${cap} analyses per day. You've used all ${cap} today. Come back tomorrow or upgrade your plan.`,
+        type: "cap",
+      };
+    }
+
+    // Check instrument cooldown (2 hours)
+    const lastForInstrument = logs
+      .filter(l => l.instrument === instrument)
+      .sort((a,b) => new Date(b.created_at) - new Date(a.created_at))[0];
+
+    if (lastForInstrument) {
+      const elapsed = Date.now() - new Date(lastForInstrument.created_at).getTime();
+      if (elapsed < COOLDOWN_MS) {
+        const remaining = COOLDOWN_MS - elapsed;
+        const hrs = Math.floor(remaining / 3600000);
+        const mins = Math.floor((remaining % 3600000) / 60000);
+        const timeStr = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
+        return {
+          allowed: false,
+          reason: `${instrument} cooldown active`,
+          detail: `You analyzed ${instrument} recently. Next analysis available in ${timeStr}. This protects you from overtrading and keeps costs sustainable.`,
+          type: "cooldown",
+        };
+      }
+    }
+
+    return { allowed: true };
+  } catch(e) {
+    console.error("Usage check failed:", e);
+    return { allowed: true }; // fail open — never block on error
+  }
+}
+
 function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
   const [phase, setPhase] = useState("upload"); // upload | analyzing | plan | live
   const [appPage, setAppPage] = useState("dashboard"); // dashboard | settings
+  const isMobile = useWindowWidth() <= 768;
+  const isTablet = useWindowWidth() <= 1024;
 
   // Detect return from Stripe billing portal and reload profile
   React.useEffect(() => {
@@ -2311,6 +2410,28 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
     if (images.filter(Boolean).length < 5) return;
     const mktStatus = getMarketStatus(instrument);
     if (!mktStatus.open) return;
+
+    // ── Usage limit checks ────────────────────────────────────────────────
+    const session = JSON.parse(localStorage.getItem("omniusd_session") || "{}");
+    const token = session.access_token;
+    const userId = session.user?.id || (token ? JSON.parse(atob(token.split(".")[1]))?.sub : null);
+    const userTier = profile?.tier || "starter";
+
+    if (userId && token) {
+      const limitCheck = await checkUsageLimits(userId, token, instrument, userTier);
+      if (!limitCheck.allowed) {
+        setPlan({
+          _blocked: true,
+          _reason: limitCheck.detail,
+          _limitType: limitCheck.type,
+          instrument,
+          grade: "BLOCKED",
+        });
+        setPhase("plan");
+        return;
+      }
+    }
+
     setPhase("analyzing");
 
     try {
@@ -2408,6 +2529,8 @@ Return ONLY valid JSON, no markdown, no explanation:
       parsed.instrument = instrument;
       setPlan(parsed);
       setPhase("plan");
+      // Log successful analysis
+      if (userId && token) logUsage(userId, token, instrument);
     } catch (e) {
       console.error(e);
       setPlan({
@@ -2452,6 +2575,9 @@ Return ONLY valid JSON, no markdown, no explanation:
   // ── STEP 3: Live chat ───────────────────────────────────────────────────────
   async function sendMessage() {
     if (!input.trim() || loading) return;
+    // Chat message cap — 30 per session
+    const userMsgCount = messages.filter(m => m.role === "user").length;
+    if (userMsgCount >= 30) return;
     const userMsg = input.trim();
     setInput("");
     const ct = getCTTime();
@@ -2510,6 +2636,7 @@ Return ONLY valid JSON, no markdown, no explanation:
     <div style={{ minHeight: "100vh", background: "#0f0c1a", color: "#f0ecff", fontFamily: "'Space Mono', monospace", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+        @media (max-width:768px){.omni-hide-mobile{display:none!important;}.omni-stack{flex-direction:column!important;}.omni-full{width:100%!important;}}
         * { box-sizing: border-box; margin: 0; padding: 0; }
         ::-webkit-scrollbar { width: 3px; }
         ::-webkit-scrollbar-thumb { background: rgba(255,107,255,0.3); border-radius: 2px; }
@@ -2543,23 +2670,23 @@ Return ONLY valid JSON, no markdown, no explanation:
             </div>
           )}
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ fontSize: 9, color: "#8878aa" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 6 : 10 }}>
+          <div style={{ fontSize: isMobile ? 8 : 9, color: "#8878aa" }}>
             <span style={{ color: "#00e5ff", fontWeight: 700 }}>{ctTime}</span> CT
           </div>
-          {onOpenJournal && (
+          {!isMobile && onOpenJournal && (
             <button onClick={onOpenJournal}
               style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", color: "#8878aa", background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
               Journal
             </button>
           )}
           <button onClick={() => setAppPage(appPage === "settings" ? "dashboard" : "settings")}
-            style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", color: appPage === "settings" ? "#ff6bff" : "#8878aa", background: appPage === "settings" ? "rgba(255,107,255,0.1)" : "none", border: `1px solid ${appPage === "settings" ? "rgba(255,107,255,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
-            Settings
+            style={{ fontSize: isMobile ? 8 : 9, fontWeight: 700, letterSpacing: "0.06em", color: appPage === "settings" ? "#ff6bff" : "#8878aa", background: appPage === "settings" ? "rgba(255,107,255,0.1)" : "none", border: `1px solid ${appPage === "settings" ? "rgba(255,107,255,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: isMobile ? "4px 8px" : "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
+            {isMobile ? "⚙" : "Settings"}
           </button>
           <button onClick={() => setAppPage(appPage === "faq" ? "dashboard" : "faq")}
-            style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", color: appPage === "faq" ? "#00e5ff" : "#8878aa", background: appPage === "faq" ? "rgba(0,229,255,0.08)" : "none", border: `1px solid ${appPage === "faq" ? "rgba(0,229,255,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
-            Help & FAQ
+            style={{ fontSize: isMobile ? 8 : 9, fontWeight: 700, letterSpacing: "0.06em", color: appPage === "faq" ? "#00e5ff" : "#8878aa", background: appPage === "faq" ? "rgba(0,229,255,0.08)" : "none", border: `1px solid ${appPage === "faq" ? "rgba(0,229,255,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: isMobile ? "4px 8px" : "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
+            {isMobile ? "?" : "Help & FAQ"}
           </button>
 
           {phase === "live" && (
@@ -2590,7 +2717,7 @@ Return ONLY valid JSON, no markdown, no explanation:
 
       {/* ══ FAQ / HELP PAGE ════════════════════════════════════════════════════ */}
       {appPage === "faq" && (
-        <div style={{ flex:1, overflowY:"auto", padding:"32px 24px", animation:"fadein 0.3s ease both" }}>
+        <div style={{ flex:1, overflowY:"auto", padding:isMobile?"20px 16px":"32px 24px", animation:"fadein 0.3s ease both" }}>
           <div style={{ maxWidth:680, margin:"0 auto" }}>
 
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:28 }}>
@@ -2644,7 +2771,7 @@ Return ONLY valid JSON, no markdown, no explanation:
 
       {/* ══ PHASE: UPLOAD ══════════════════════════════════════════════════════ */}
       {appPage === "dashboard" && phase === "upload" && (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", padding: "48px 24px 32px", animation: "fadein 0.3s ease both" }}>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", padding: isMobile ? "24px 16px 24px" : "48px 24px 32px", animation: "fadein 0.3s ease both" }}>
           <div style={{ width: "100%", maxWidth: 560 }}>
 
             {/* Resume active session if one exists */}
@@ -2946,27 +3073,41 @@ Return ONLY valid JSON, no markdown, no explanation:
 
       {/* ══ PHASE: PLAN SUMMARY ════════════════════════════════════════════════ */}
       {appPage === "dashboard" && phase === "plan" && plan && (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 24px", animation: "slide 0.35s ease both" }}>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: isMobile ? "20px 16px" : "32px 24px", animation: "slide 0.35s ease both" }}>
           <div style={{ width: "100%", maxWidth: 520 }}>
 
           {/* ── BLOCKED STATE — instrument mismatch or chart error ── */}
           {plan._blocked && (
-            <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 56, marginBottom: 16 }}>🚫</div>
-              <div style={{ fontFamily: "'Space Mono',monospace", fontSize: 11, fontWeight: 900, letterSpacing: "0.2em", color: "#ff6b6b", marginBottom: 14 }}>UPLOAD REJECTED</div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: "#f0ecff", marginBottom: 12, lineHeight: 1.6 }}>{plan._reason}</div>
-              <div style={{ padding: "12px 16px", background: "rgba(255,209,102,0.06)", border: "1px solid rgba(255,209,102,0.2)", borderRadius: 8, marginBottom: 24, textAlign: "left" }}>
-                <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: "0.16em", color: "#ffd166", marginBottom: 8 }}>HOW TO FIX THIS</div>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", lineHeight: 1.8 }}>
-                  1. Open your broker platform<br/>
-                  2. Make sure the <span style={{ color: "#ffd166" }}>instrument ticker</span> is visible in the chart title or header<br/>
-                  3. Make sure the <span style={{ color: "#ffd166" }}>timeframe</span> (D, 4H, 1H, 30M, 15M) is visible<br/>
-                  4. Take a new screenshot and re-upload
-                </div>
+            <div style={{ textAlign:"center", animation:"fadein 0.4s ease both" }}>
+              <div style={{ fontSize:52, marginBottom:14 }}>
+                {plan._limitType === "cap" ? "⏱" : plan._limitType === "cooldown" ? "🔒" : "🚫"}
               </div>
+              <div style={{ fontFamily:"'Space Mono',monospace", fontSize:11, fontWeight:900, letterSpacing:"0.2em", color: plan._limitType ? "#ffd166" : "#ff6b6b", marginBottom:14 }}>
+                {plan._limitType === "cap" ? "DAILY LIMIT REACHED" : plan._limitType === "cooldown" ? "COOLDOWN ACTIVE" : "UPLOAD REJECTED"}
+              </div>
+              <div style={{ fontSize:13, fontWeight:700, color:"#f0ecff", marginBottom:16, lineHeight:1.6, maxWidth:400, margin:"0 auto 16px" }}>{plan._reason}</div>
+              {!plan._limitType && (
+                <div style={{ padding:"12px 16px", background:"rgba(255,209,102,0.06)", border:"1px solid rgba(255,209,102,0.2)", borderRadius:8, marginBottom:24, textAlign:"left", maxWidth:400, margin:"0 auto 24px" }}>
+                  <div style={{ fontSize:9, fontWeight:900, letterSpacing:"0.16em", color:"#ffd166", marginBottom:8 }}>HOW TO FIX THIS</div>
+                  <div style={{ fontSize:11, color:"rgba(255,255,255,0.6)", lineHeight:1.8 }}>
+                    1. Open your broker platform<br/>
+                    2. Make sure the <span style={{ color:"#ffd166" }}>instrument ticker</span> is visible in the chart title<br/>
+                    3. Make sure the <span style={{ color:"#ffd166" }}>timeframe</span> (D, 4H, 1H, 30M, 15M) is visible<br/>
+                    4. Take a new screenshot and re-upload
+                  </div>
+                </div>
+              )}
+              {plan._limitType === "cap" && (
+                <div style={{ marginBottom:20 }}>
+                  <button onClick={() => window.open("https://omniusd.pro/#pricing","_blank")}
+                    style={{ fontFamily:"'Space Mono',monospace", fontSize:10, fontWeight:700, letterSpacing:"0.1em", padding:"10px 22px", borderRadius:8, border:"none", background:"linear-gradient(135deg,#ff6bff,#7b2fff)", color:"#fff", cursor:"pointer" }}>
+                    ↑ Upgrade for more analyses →
+                  </button>
+                </div>
+              )}
               <button onClick={() => { setPhase("upload"); setPlan(null); setImages(Array(5).fill(null)); }}
-                style={{ fontFamily: "inherit", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", padding: "12px 28px", borderRadius: 8, border: "1px solid rgba(255,107,107,0.4)", background: "rgba(255,107,107,0.08)", color: "#ff6b6b", cursor: "pointer" }}>
-                ← RE-UPLOAD CORRECT CHARTS
+                style={{ fontFamily:"inherit", fontSize:11, fontWeight:700, letterSpacing:"0.1em", padding:"10px 24px", borderRadius:8, border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.04)", color:"#8878aa", cursor:"pointer" }}>
+                ← Back
               </button>
             </div>
           )}
@@ -3136,27 +3277,25 @@ Return ONLY valid JSON, no markdown, no explanation:
           </div>
 
           {/* ── TWO COLUMN BODY ── */}
-          <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+          <div style={{ flex: 1, display: "flex", flexDirection: isMobile ? "column" : "row", overflow: "hidden" }}>
 
             {/* ── LEFT COLUMN — locked plan ── */}
-            <div style={{ width: 220, flexShrink: 0, borderRight: "1px solid rgba(255,255,255,0.09)", background: "rgba(123,47,255,0.04)", display: "flex", flexDirection: "column", overflowY: "auto" }}>
+            <div style={{ width: isMobile ? "100%" : 220, flexShrink: 0, borderRight: isMobile ? "none" : "1px solid rgba(255,255,255,0.09)", borderBottom: isMobile ? "1px solid rgba(255,255,255,0.06)" : "none", background: "rgba(123,47,255,0.04)", display: "flex", flexDirection: isMobile ? "row" : "column", overflowX: isMobile ? "auto" : "hidden", overflowY: isMobile ? "hidden" : "auto", flexShrink: 0 }}>
 
               {/* Timing */}
-              <div style={{ padding: "10px 14px", borderBottom: "1px solid rgba(255,255,255,0.05)", background: "rgba(255,255,255,0.02)" }}>
-                <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+              <div style={{ padding: isMobile ? "8px 14px" : "10px 14px", borderBottom: isMobile ? "none" : "1px solid rgba(255,255,255,0.05)", borderRight: isMobile ? "1px solid rgba(255,255,255,0.05)" : "none", background: "rgba(255,255,255,0.02)", flexShrink: 0 }}>
+                <div style={{ display: "flex", flexDirection: isMobile ? "row" : "column", gap: isMobile ? 16 : 5, alignItems: isMobile ? "center" : "stretch" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: isMobile ? 6 : 0 }}>
                     <span style={{ fontSize: 8, color: "#8878aa", letterSpacing: "0.1em" }}>TIME</span>
                     <span style={{ fontSize: 11, fontWeight: 700, color: "#00e5ff", fontFamily: "monospace" }}>{ctTime} CT</span>
                   </div>
                   {!windowClosed && (
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                      <span style={{ fontSize: 8, color: "#8878aa", letterSpacing: "0.1em" }}>NEXT CLOSE</span>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: isMobile ? 6 : 0 }}>
+                      <span style={{ fontSize: 8, color: "#8878aa", letterSpacing: "0.1em" }}>NEXT</span>
                       <span style={{ fontSize: 11, fontWeight: 700, color: "#ffd166", fontFamily: "monospace" }}>{nextClose} CT</span>
                     </div>
                   )}
-                  {windowClosed && (
-                    <div style={{ fontSize: 9, color: "#ff6b6b", fontWeight: 700 }}>Window closed</div>
-                  )}
+                  {windowClosed && <div style={{ fontSize: 9, color: "#ff6b6b", fontWeight: 700 }}>Closed</div>}
                 </div>
               </div>
 
@@ -3254,13 +3393,21 @@ Return ONLY valid JSON, no markdown, no explanation:
 
               {/* Input */}
               <div style={{ padding: "8px 16px 14px", borderTop: "1px solid rgba(255,255,255,0.06)", display: "flex", gap: 8, flexShrink: 0 }}>
-                <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendMessage()}
-                  placeholder={`e.g. "30M closed ${plan.bias === "SHORT" ? "below" : "above"} ${plan.trigger_level} at ___"`}
-                  style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 8, padding: "9px 13px", fontSize: 10, color: "#f0ecff", fontFamily: "inherit", outline: "none" }}/>
-                <button onClick={sendMessage} disabled={loading || !input.trim()}
-                  style={{ padding: "9px 18px", borderRadius: 8, border: "none", background: input.trim() && !loading ? "linear-gradient(135deg,#ff6bff,#7b2fff)" : "rgba(255,255,255,0.05)", color: input.trim() && !loading ? "#fff" : "#8878aa", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", cursor: input.trim() && !loading ? "pointer" : "not-allowed", fontFamily: "inherit", transition: "all 0.2s" }}>
-                  SEND →
-                </button>
+                {messages.filter(m=>m.role==="user").length >= 30 ? (
+                  <div style={{ flex:1, padding:"9px 13px", fontFamily:"'Space Mono',monospace", fontSize:10, color:"rgba(255,107,107,0.7)", background:"rgba(255,107,107,0.05)", border:"1px solid rgba(255,107,107,0.15)", borderRadius:8 }}>
+                    Session limit reached (30 messages). Start a new analysis to continue.
+                  </div>
+                ) : (
+                  <>
+                    <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendMessage()}
+                      placeholder={`e.g. "30M closed ${plan.bias === "SHORT" ? "below" : "above"} ${plan.trigger_level} at ___"`}
+                      style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 8, padding: "9px 13px", fontSize: 10, color: "#f0ecff", fontFamily: "inherit", outline: "none" }}/>
+                    <button onClick={sendMessage} disabled={loading || !input.trim()}
+                      style={{ padding: "9px 18px", borderRadius: 8, border: "none", background: input.trim() && !loading ? "linear-gradient(135deg,#ff6bff,#7b2fff)" : "rgba(255,255,255,0.05)", color: input.trim() && !loading ? "#fff" : "#8878aa", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", cursor: input.trim() && !loading ? "pointer" : "not-allowed", fontFamily: "inherit", transition: "all 0.2s" }}>
+                      SEND →
+                    </button>
+                  </>
+                )}
               </div>
 
             </div>
@@ -5241,6 +5388,7 @@ function FaqRow({q, a, isLast}) {
 
 function LandingPage({onEnterApp, onLogin}){
   const [hoveredPlan,setHoveredPlan]=useState(null);
+  const isMobile = useWindowWidth() <= 768;
   const plans=[
     {tier:"STARTER",color:"#ffd166",price:"$29",instruments:["XAUUSD","BTCUSD"],popular:false},
     {tier:"PRO",color:"#00e5ff",price:"$39",instruments:["XAUUSD","BTCUSD","NAS100","US30"],popular:true},
@@ -5278,7 +5426,7 @@ function LandingPage({onEnterApp, onLogin}){
       `}</style>
 
       {/* Nav */}
-      <nav style={{position:"fixed",top:0,left:0,right:0,zIndex:100,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 40px",height:64,background:"rgba(7,4,15,0.88)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(255,107,255,0.1)"}}>
+      <nav style={{position:"fixed",top:0,left:0,right:0,zIndex:100,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 16px",height:64,background:"rgba(7,4,15,0.88)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(255,107,255,0.1)"}}>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
           <span style={{fontSize:22,color:"#ff6bff"}}>◈</span>
           <span style={{fontFamily:"'Space Mono',monospace",fontSize:16,fontWeight:700,letterSpacing:"0.12em",background:"linear-gradient(90deg,#ff6bff,#00e5ff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>OmniUSD</span>
@@ -5310,7 +5458,7 @@ function LandingPage({onEnterApp, onLogin}){
             {label:"FAQ",         href:"#faq"},
           ].map((item,i)=>(
             <a key={item.label} href={item.href}
-              style={{fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,letterSpacing:"0.1em",color:"rgba(255,255,255,0.4)",textDecoration:"none",padding:"0 18px",height:40,display:"flex",alignItems:"center",borderRight:"1px solid rgba(255,255,255,0.05)",whiteSpace:"nowrap",transition:"color 0.15s"}}
+              style={{fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,letterSpacing:"0.08em",color:"rgba(255,255,255,0.4)",textDecoration:"none",padding:"0 14px",height:40,display:"flex",alignItems:"center",borderRight:"1px solid rgba(255,255,255,0.05)",whiteSpace:"nowrap",transition:"color 0.15s"}}
               onMouseEnter={e=>e.currentTarget.style.color="#ff6bff"}
               onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,0.4)"}>
               {item.label}
@@ -5367,7 +5515,7 @@ function LandingPage({onEnterApp, onLogin}){
       </section>
 
       {/* Live Session Mode section */}
-      <div id="live-session" style={{position:"relative",zIndex:1,scrollMarginTop:110,maxWidth:1060,margin:"0 auto",padding:"80px 24px 0"}}>
+      <div id="live-session" style={{position:"relative",zIndex:1,scrollMarginTop:110,maxWidth:1060,margin:"0 auto",padding:isMobile?"48px 16px 0":"80px 24px 0"}}>
         <div style={{height:1,background:"linear-gradient(90deg,transparent,rgba(255,107,255,0.15),transparent)",marginBottom:64}}/>
 
         {/* Section header */}
@@ -5488,7 +5636,7 @@ function LandingPage({onEnterApp, onLogin}){
       <section style={{position:"relative",zIndex:1,paddingTop:0}}>
 
         {/* Info row */}
-        <div style={{borderTop:"1px solid rgba(255,255,255,0.06)",borderBottom:"1px solid rgba(255,255,255,0.06)",marginTop:64,display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr"}}>
+        <div style={{borderTop:"1px solid rgba(255,255,255,0.06)",borderBottom:"1px solid rgba(255,255,255,0.06)",marginTop:64,display:"grid",gridTemplateColumns:"1fr 1fr"}}>
           {[
             {val:"A+ only",desc:"The only grade that unlocks execution. All others show PASS."},
             {val:"30M closes",desc:"Wicks don't trigger. Only full candle closes count."},
@@ -5505,13 +5653,13 @@ function LandingPage({onEnterApp, onLogin}){
       </section>
 
       {/* Why This System Works */}
-      <div id="why-it-works" style={{position:"relative",zIndex:1,scrollMarginTop:110,maxWidth:1060,margin:"0 auto",padding:"80px 24px 0"}}>
+      <div id="why-it-works" style={{position:"relative",zIndex:1,scrollMarginTop:110,maxWidth:1060,margin:"0 auto",padding:isMobile?"48px 16px 0":"80px 24px 0"}}>
         <div style={{height:1,background:"linear-gradient(90deg,transparent,rgba(255,107,255,0.15),transparent)",marginBottom:64}}/>
 
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:64,alignItems:"start"}}>
+        <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr",gap:isMobile?32:64,alignItems:"start"}}>
 
           {/* Left — headline */}
-          <div style={{position:"sticky",top:100}}>
+          <div style={{position:isMobile?"static":"sticky",top:100}}>
             <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,107,255,0.7)",letterSpacing:"0.22em",marginBottom:16}}>THE METHODOLOGY</div>
             <h2 style={{fontFamily:"'Syne',sans-serif",fontSize:"clamp(26px,3.5vw,42px)",fontWeight:800,lineHeight:1.1,letterSpacing:"-0.02em",color:"#f0ecff",marginBottom:16}}>
               Why this<br/>system works.
@@ -5583,7 +5731,7 @@ function LandingPage({onEnterApp, onLogin}){
       </div>
 
       {/* Why Traders Use OmniUSD */}
-      <div id="why-omniusd" style={{position:"relative",zIndex:1,scrollMarginTop:110,maxWidth:1060,margin:"0 auto",padding:"80px 24px 0"}}>
+      <div id="why-omniusd" style={{position:"relative",zIndex:1,scrollMarginTop:110,maxWidth:1060,margin:"0 auto",padding:isMobile?"48px 16px 0":"80px 24px 0"}}>
         <div style={{height:1,background:"linear-gradient(90deg,transparent,rgba(255,107,255,0.15),transparent)",marginBottom:64}}/>
 
         <div style={{marginBottom:48}}>
@@ -5594,7 +5742,7 @@ function LandingPage({onEnterApp, onLogin}){
         </div>
 
         {/* 4 main cards — 2x2 grid */}
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:2,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:16,overflow:"hidden",marginBottom:2}}>
+        <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr",gap:2,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:16,overflow:"hidden",marginBottom:2}}>
           {[
             {
               n:"01",
@@ -5638,7 +5786,7 @@ function LandingPage({onEnterApp, onLogin}){
         </div>
 
         {/* Full-width closing statement */}
-        <div style={{padding:"30px 32px",background:"rgba(255,107,255,0.04)",border:"1px solid rgba(255,107,255,0.12)",borderTop:"none",borderRadius:"0 0 16px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:24}}>
+        <div style={{padding:"30px 32px",background:"rgba(255,107,255,0.04)",border:"1px solid rgba(255,107,255,0.12)",borderTop:"none",borderRadius:"0 0 16px 16px",display:"flex",alignItems:isMobile?"flex-start":"center",flexDirection:isMobile?"column":"row",justifyContent:"space-between",gap:16}}>
           <p style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:"rgba(255,255,255,0.7)",lineHeight:1.8,margin:0,maxWidth:640}}>
             OmniUSD does not replace your methodology. It makes sure you actually follow it.
           </p>
@@ -5662,7 +5810,7 @@ function LandingPage({onEnterApp, onLogin}){
       </div>
 
       {/* BRC Core Truth */}
-      <div id="how-it-works" style={{position:"relative",zIndex:1,scrollMarginTop:110,maxWidth:1060,margin:"0 auto",padding:"80px 24px"}}>
+      <div id="how-it-works" style={{position:"relative",zIndex:1,scrollMarginTop:110,maxWidth:1060,margin:"0 auto",padding:isMobile?"48px 16px":"80px 24px"}}>
         {/* Divider line */}
         <div style={{height:1,background:"linear-gradient(90deg,transparent,rgba(255,107,255,0.2),transparent)",marginBottom:80}}/>
 
@@ -5762,7 +5910,7 @@ function LandingPage({onEnterApp, onLogin}){
       </div>
 
       {/* FAQ */}
-      <div id="faq" style={{position:"relative",zIndex:1,scrollMarginTop:110,maxWidth:1060,margin:"0 auto",padding:"80px 24px 0"}}>
+      <div id="faq" style={{position:"relative",zIndex:1,scrollMarginTop:110,maxWidth:1060,margin:"0 auto",padding:isMobile?"48px 16px 0":"80px 24px 0"}}>
         <div style={{height:1,background:"linear-gradient(90deg,transparent,rgba(255,107,255,0.15),transparent)",marginBottom:64}}/>
 
         <div style={{marginBottom:48}}>
