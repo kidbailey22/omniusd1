@@ -1882,7 +1882,6 @@ YOUR ROLE:
 // ─── Main component ───────────────────────────────────────────────────────────
 function SettingsPage({profile, onSignOut, onClose}) {
   const [section, setSection] = useState("account");
-  const [pwCurrent, setPwCurrent] = useState("");
   const [pwNew, setPwNew] = useState("");
   const [pwConfirm, setPwConfirm] = useState("");
   const [pwLoading, setPwLoading] = useState(false);
@@ -1890,11 +1889,31 @@ function SettingsPage({profile, onSignOut, onClose}) {
   const [cancelStep, setCancelStep] = useState(0);
   const [deleteStep, setDeleteStep] = useState(0);
   const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [portalLoading, setPortalLoading] = useState(false);
+  const [tzSearch, setTzSearch] = useState("");
+  const [tzObj, setTzObj] = useState(profile?.tz || null);
+  const [tzSaved, setTzSaved] = useState(false);
 
   const tier = profile?.tier || "starter";
   const tierCfg = TIER_CONFIG[tier] || TIER_CONFIG.starter;
   const nextTier = tier === "starter" ? TIER_CONFIG.pro : tier === "pro" ? TIER_CONFIG.elite : null;
-  const nextTierKey = tier === "starter" ? "pro" : tier === "pro" ? "elite" : null;
+
+  // Common timezones list
+  const TZ_LIST = [
+    {label:"Eastern Time (ET)",iana:"America/New_York",offset:"UTC-5/4"},
+    {label:"Central Time (CT)",iana:"America/Chicago",offset:"UTC-6/5"},
+    {label:"Mountain Time (MT)",iana:"America/Denver",offset:"UTC-7/6"},
+    {label:"Pacific Time (PT)",iana:"America/Los_Angeles",offset:"UTC-8/7"},
+    {label:"London (GMT/BST)",iana:"Europe/London",offset:"UTC+0/1"},
+    {label:"Paris / Berlin (CET)",iana:"Europe/Paris",offset:"UTC+1/2"},
+    {label:"Dubai (GST)",iana:"Asia/Dubai",offset:"UTC+4"},
+    {label:"Singapore (SGT)",iana:"Asia/Singapore",offset:"UTC+8"},
+    {label:"Tokyo (JST)",iana:"Asia/Tokyo",offset:"UTC+9"},
+    {label:"Sydney (AEST)",iana:"Australia/Sydney",offset:"UTC+10/11"},
+    {label:"São Paulo (BRT)",iana:"America/Sao_Paulo",offset:"UTC-3"},
+    {label:"Lagos (WAT)",iana:"Africa/Lagos",offset:"UTC+1"},
+  ];
+  const filteredTZ = tzSearch ? TZ_LIST.filter(t=>t.label.toLowerCase().includes(tzSearch.toLowerCase())) : TZ_LIST;
 
   async function handleChangePassword() {
     if (!pwNew || !pwConfirm) { setPwMsg({type:"error", text:"Fill in all fields."}); return; }
@@ -1911,12 +1930,53 @@ function SettingsPage({profile, onSignOut, onClose}) {
       setPwLoading(false);
       if (res.ok) {
         setPwMsg({type:"success", text:"Password updated successfully."});
-        setPwCurrent(""); setPwNew(""); setPwConfirm("");
+        setPwNew(""); setPwConfirm("");
       } else {
         const d = await res.json();
         setPwMsg({type:"error", text: d.msg || d.error || "Failed to update password."});
       }
     } catch(e) { setPwLoading(false); setPwMsg({type:"error", text:"Connection error."}); }
+  }
+
+  async function handleSaveTz() {
+    if (!tzObj) return;
+    try {
+      const session = JSON.parse(localStorage.getItem("omniusd_session") || "{}");
+      const userId = session.user?.id || JSON.parse(atob(session.access_token.split(".")[1]))?.sub;
+      await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}`, {
+        method: "PATCH",
+        headers: {
+          "apikey": SUPABASE_KEY,
+          "Authorization": `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ tz: JSON.stringify(tzObj), updated_at: new Date().toISOString() }),
+      });
+      setTzSaved(true);
+      setTimeout(() => setTzSaved(false), 3000);
+    } catch(e) {}
+  }
+
+  async function openBillingPortal() {
+    setPortalLoading(true);
+    try {
+      const session = JSON.parse(localStorage.getItem("omniusd_session") || "{}");
+      const userId = session.user?.id || JSON.parse(atob(session.access_token.split(".")[1]))?.sub;
+      const res = await fetch("/api/billing-portal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: userId, return_url: window.location.href }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert("Could not open billing portal. Try again.");
+      }
+    } catch(e) {
+      alert("Connection error. Try again.");
+    }
+    setPortalLoading(false);
   }
 
   async function handleDeleteAccount() {
@@ -1932,17 +1992,16 @@ function SettingsPage({profile, onSignOut, onClose}) {
     window.location.reload();
   }
 
-  const card = {background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:12,padding:"22px 24px",marginBottom:16};
-  const label = {fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,letterSpacing:"0.14em",color:"rgba(255,255,255,0.35)",marginBottom:10,display:"block"};
+  const card = {background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:12,padding:"22px 24px",marginBottom:14};
+  const lbl = {fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,letterSpacing:"0.14em",color:"rgba(255,255,255,0.35)",marginBottom:10,display:"block"};
   const inputSt = {width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"10px 14px",fontSize:12,color:"#f0ecff",fontFamily:"'Space Mono',monospace",outline:"none",boxSizing:"border-box"};
-  const sections = ["account","plan","preferences","danger"];
 
   return (
     <div style={{flex:1,overflowY:"auto",padding:"32px 24px",animation:"fadein 0.3s ease both"}}>
-      <div style={{maxWidth:600,margin:"0 auto"}}>
+      <div style={{maxWidth:580,margin:"0 auto"}}>
 
         {/* Header */}
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:28}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:24}}>
           <div>
             <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,107,255,0.7)",letterSpacing:"0.18em",marginBottom:6}}>SETTINGS</div>
             <h2 style={{fontFamily:"'Syne',sans-serif",fontSize:22,fontWeight:800,color:"#f0ecff",margin:0}}>Account & Plan</h2>
@@ -1953,7 +2012,7 @@ function SettingsPage({profile, onSignOut, onClose}) {
         </div>
 
         {/* Section tabs */}
-        <div style={{display:"flex",gap:4,marginBottom:24,background:"rgba(255,255,255,0.03)",padding:4,borderRadius:10}}>
+        <div style={{display:"flex",gap:4,marginBottom:20,background:"rgba(255,255,255,0.03)",padding:4,borderRadius:10}}>
           {[{id:"account",l:"Account"},{id:"plan",l:"Plan"},{id:"preferences",l:"Preferences"},{id:"danger",l:"Danger Zone"}].map(t=>(
             <button key={t.id} onClick={()=>setSection(t.id)}
               style={{flex:1,padding:"7px 4px",borderRadius:7,border:"none",fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,letterSpacing:"0.06em",cursor:"pointer",transition:"all 0.15s",
@@ -1965,169 +2024,153 @@ function SettingsPage({profile, onSignOut, onClose}) {
         </div>
 
         {/* ── ACCOUNT ── */}
-        {section === "account" && (
-          <>
-            {/* Email */}
-            <div style={card}>
-              <span style={label}>EMAIL ADDRESS</span>
-              <div style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:"#f0ecff",padding:"10px 14px",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:8}}>
-                {profile?.email || "—"}
-              </div>
+        {section === "account" && (<>
+          <div style={card}>
+            <span style={lbl}>EMAIL ADDRESS</span>
+            <div style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:"#f0ecff",padding:"10px 14px",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:8}}>
+              {profile?.email || "—"}
             </div>
-
-            {/* Change password */}
-            <div style={card}>
-              <span style={label}>CHANGE PASSWORD</span>
-              <div style={{display:"flex",flexDirection:"column",gap:10}}>
-                <input type="password" placeholder="New password (min 8 characters)" value={pwNew} onChange={e=>setPwNew(e.target.value)} style={inputSt}/>
-                <input type="password" placeholder="Confirm new password" value={pwConfirm} onChange={e=>setPwConfirm(e.target.value)} style={{...inputSt,borderColor:pwConfirm&&pwConfirm!==pwNew?"rgba(255,107,107,0.4)":pwConfirm&&pwConfirm===pwNew?"rgba(127,255,107,0.3)":"rgba(255,255,255,0.1)"}}/>
-                {pwMsg && <div style={{fontSize:11,color:pwMsg.type==="error"?"#ff8080":"#7fff6b",fontFamily:"'Space Mono',monospace"}}>{pwMsg.text}</div>}
-                <button onClick={handleChangePassword} disabled={pwLoading}
-                  style={{padding:"10px 20px",borderRadius:8,border:"none",background:pwLoading?"rgba(255,255,255,0.05)":"rgba(255,107,255,0.15)",color:pwLoading?"#8878aa":"#ff6bff",fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,letterSpacing:"0.08em",cursor:pwLoading?"not-allowed":"pointer",alignSelf:"flex-start"}}>
-                  {pwLoading ? "Updating..." : "UPDATE PASSWORD →"}
-                </button>
-              </div>
+          </div>
+          <div style={card}>
+            <span style={lbl}>CHANGE PASSWORD</span>
+            <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              <input type="password" placeholder="New password (min 8 characters)" value={pwNew} onChange={e=>setPwNew(e.target.value)} style={inputSt}/>
+              <input type="password" placeholder="Confirm new password" value={pwConfirm} onChange={e=>setPwConfirm(e.target.value)}
+                style={{...inputSt,borderColor:pwConfirm&&pwConfirm!==pwNew?"rgba(255,107,107,0.4)":pwConfirm&&pwConfirm===pwNew?"rgba(127,255,107,0.3)":"rgba(255,255,255,0.1)"}}/>
+              {pwMsg && <div style={{fontSize:11,color:pwMsg.type==="error"?"#ff8080":"#7fff6b",fontFamily:"'Space Mono',monospace"}}>{pwMsg.text}</div>}
+              <button onClick={handleChangePassword} disabled={pwLoading}
+                style={{padding:"10px 20px",borderRadius:8,border:"none",background:pwLoading?"rgba(255,255,255,0.05)":"rgba(255,107,255,0.15)",color:pwLoading?"#8878aa":"#ff6bff",fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,letterSpacing:"0.08em",cursor:pwLoading?"not-allowed":"pointer",alignSelf:"flex-start"}}>
+                {pwLoading ? "Updating..." : "UPDATE PASSWORD →"}
+              </button>
             </div>
-          </>
-        )}
+          </div>
+        </>)}
 
         {/* ── PLAN ── */}
-        {section === "plan" && (
-          <>
-            {/* Current plan */}
-            <div style={{...card,border:`1px solid ${tierCfg.color}33`,background:`${tierCfg.color}08`}}>
-              <span style={label}>CURRENT PLAN</span>
-              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
-                <div style={{fontFamily:"'Syne',sans-serif",fontSize:22,fontWeight:800,color:tierCfg.color}}>{tierCfg.label}</div>
-                <div style={{fontFamily:"'Space Mono',monospace",fontSize:18,fontWeight:700,color:"#f0ecff"}}>{tierCfg.price}</div>
-              </div>
-              <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
-                {tierCfg.instruments.map(sym=>(
-                  <span key={sym} style={{fontFamily:"'Space Mono',monospace",fontSize:9,padding:"3px 9px",borderRadius:4,background:`${tierCfg.color}14`,border:`1px solid ${tierCfg.color}33`,color:tierCfg.color}}>{sym}</span>
-                ))}
-              </div>
+        {section === "plan" && (<>
+          <div style={{...card,border:`1px solid ${tierCfg.color}33`,background:`${tierCfg.color}06`}}>
+            <span style={lbl}>CURRENT PLAN</span>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+              <div style={{fontFamily:"'Syne',sans-serif",fontSize:22,fontWeight:800,color:tierCfg.color}}>{tierCfg.label}</div>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:16,fontWeight:700,color:"#f0ecff"}}>{tierCfg.price}</div>
             </div>
+            <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:16}}>
+              {tierCfg.instruments.map(sym=>(
+                <span key={sym} style={{fontFamily:"'Space Mono',monospace",fontSize:9,padding:"3px 9px",borderRadius:4,background:`${tierCfg.color}14`,border:`1px solid ${tierCfg.color}33`,color:tierCfg.color}}>{sym}</span>
+              ))}
+            </div>
+            <button onClick={openBillingPortal} disabled={portalLoading}
+              style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,padding:"9px 18px",borderRadius:7,border:"1px solid rgba(255,255,255,0.12)",background:"rgba(255,255,255,0.05)",color:"#f0ecff",cursor:portalLoading?"not-allowed":"pointer",letterSpacing:"0.08em"}}>
+              {portalLoading ? "Opening..." : "MANAGE BILLING & INVOICES →"}
+            </button>
+          </div>
 
-            {/* Upgrade */}
-            {nextTier && (
-              <div style={{...card,border:"1px solid rgba(255,107,255,0.15)"}}>
-                <span style={label}>UPGRADE YOUR PLAN</span>
-                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
-                  <div>
-                    <div style={{fontFamily:"'Syne',sans-serif",fontSize:16,fontWeight:800,color:"#f0ecff",marginBottom:4}}>{nextTier.label} — {nextTier.price}</div>
-                    <div style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"rgba(255,255,255,0.4)"}}>Unlocks: {nextTier.instruments.filter(i=>!tierCfg.instruments.includes(i)).join(", ")}</div>
-                  </div>
+          {nextTier && (
+            <div style={{...card,border:"1px solid rgba(255,107,255,0.2)",background:"rgba(255,107,255,0.03)"}}>
+              <span style={lbl}>UPGRADE YOUR PLAN</span>
+              <div style={{marginBottom:14}}>
+                <div style={{fontFamily:"'Syne',sans-serif",fontSize:17,fontWeight:800,color:"#f0ecff",marginBottom:4}}>{nextTier.label} — {nextTier.price}</div>
+                <div style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"rgba(255,255,255,0.4)",marginBottom:6}}>
+                  Unlocks: {nextTier.instruments.filter(i=>!tierCfg.instruments.includes(i)).join(" · ")}
                 </div>
-                <button onClick={()=>window.open("https://omniusd.pro/#pricing","_blank")}
-                  style={{width:"100%",padding:"12px",borderRadius:8,border:"none",background:"linear-gradient(135deg,#ff6bff,#7b2fff)",color:"#fff",fontFamily:"'Space Mono',monospace",fontSize:11,fontWeight:700,letterSpacing:"0.1em",cursor:"pointer"}}>
-                  UPGRADE TO {nextTier.label.toUpperCase()} →
+                <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,255,255,0.3)",lineHeight:1.7}}>
+                  Upgrades are prorated — you only pay the difference for the remaining days in your billing cycle.
+                </div>
+              </div>
+              <button onClick={openBillingPortal} disabled={portalLoading}
+                style={{width:"100%",padding:"12px",borderRadius:8,border:"none",background:portalLoading?"rgba(255,255,255,0.05)":"linear-gradient(135deg,#ff6bff,#7b2fff)",color:portalLoading?"#8878aa":"#fff",fontFamily:"'Space Mono',monospace",fontSize:11,fontWeight:700,letterSpacing:"0.1em",cursor:portalLoading?"not-allowed":"pointer"}}>
+                {portalLoading ? "Opening..." : `UPGRADE TO ${nextTier.label.toUpperCase()} →`}
+              </button>
+            </div>
+          )}
+
+          <div style={card}>
+            <span style={lbl}>CANCEL SUBSCRIPTION</span>
+            {cancelStep === 0 && (<>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"rgba(255,255,255,0.4)",lineHeight:1.8,marginBottom:14}}>
+                Your access continues until the end of your current billing period. You will not be charged again.
+              </div>
+              <button onClick={()=>setCancelStep(1)}
+                style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,padding:"8px 16px",borderRadius:7,border:"1px solid rgba(255,107,107,0.2)",background:"rgba(255,107,107,0.04)",color:"rgba(255,107,107,0.6)",cursor:"pointer"}}>
+                Cancel subscription
+              </button>
+            </>)}
+            {cancelStep === 1 && (<>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"#ff8080",lineHeight:1.8,marginBottom:14,fontWeight:700}}>
+                Are you sure? You will lose access at the end of your billing period.
+              </div>
+              <div style={{display:"flex",gap:8}}>
+                <button onClick={()=>setCancelStep(0)} style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,padding:"8px 16px",borderRadius:7,border:"1px solid rgba(255,255,255,0.08)",background:"rgba(255,255,255,0.04)",color:"#8878aa",cursor:"pointer"}}>Keep my plan</button>
+                <button onClick={openBillingPortal} disabled={portalLoading}
+                  style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,padding:"8px 16px",borderRadius:7,border:"1px solid rgba(255,107,107,0.4)",background:"rgba(255,107,107,0.08)",color:"#ff6b6b",cursor:"pointer"}}>
+                  {portalLoading ? "Opening..." : "Yes, cancel →"}
                 </button>
               </div>
-            )}
-
-            {/* Cancel */}
-            <div style={card}>
-              <span style={label}>CANCEL SUBSCRIPTION</span>
-              {cancelStep === 0 && (
-                <div>
-                  <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"rgba(255,255,255,0.45)",lineHeight:1.8,marginBottom:14}}>
-                    Your access continues until the end of your current billing period. You will not be charged again.
-                  </div>
-                  <button onClick={()=>setCancelStep(1)}
-                    style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,padding:"8px 16px",borderRadius:7,border:"1px solid rgba(255,107,107,0.25)",background:"rgba(255,107,107,0.05)",color:"rgba(255,107,107,0.7)",cursor:"pointer"}}>
-                    Cancel subscription
-                  </button>
-                </div>
-              )}
-              {cancelStep === 1 && (
-                <div>
-                  <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"#ff8080",lineHeight:1.8,marginBottom:14,fontWeight:700}}>
-                    Are you sure? You will lose access to OmniUSD at the end of your billing period.
-                  </div>
-                  <div style={{display:"flex",gap:8}}>
-                    <button onClick={()=>setCancelStep(0)}
-                      style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,padding:"8px 16px",borderRadius:7,border:"1px solid rgba(255,255,255,0.08)",background:"rgba(255,255,255,0.04)",color:"#8878aa",cursor:"pointer"}}>
-                      Keep my plan
-                    </button>
-                    <button onClick={()=>{window.open("mailto:support@omniusd.pro?subject=Cancel Subscription","_blank");setCancelStep(2);}}
-                      style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,padding:"8px 16px",borderRadius:7,border:"1px solid rgba(255,107,107,0.4)",background:"rgba(255,107,107,0.08)",color:"#ff6b6b",cursor:"pointer"}}>
-                      Yes, cancel →
-                    </button>
-                  </div>
-                </div>
-              )}
-              {cancelStep === 2 && (
-                <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"#7fff6b",lineHeight:1.8}}>
-                  Cancellation request sent. We'll process it within 24 hours and confirm by email.
-                </div>
-              )}
-            </div>
-          </>
-        )}
+            </>)}
+          </div>
+        </>)}
 
         {/* ── PREFERENCES ── */}
         {section === "preferences" && (
-          <>
-            <div style={card}>
-              <span style={label}>DEFAULT INSTRUMENT</span>
-              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                {tierCfg.instruments.map(sym=>(
-                  <div key={sym} style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,padding:"6px 14px",borderRadius:6,border:`1px solid ${profile?.defaultInstrument===sym?"rgba(255,107,255,0.5)":"rgba(255,255,255,0.1)"}`,background:profile?.defaultInstrument===sym?"rgba(255,107,255,0.12)":"rgba(255,255,255,0.04)",color:profile?.defaultInstrument===sym?"#ff6bff":"#8878aa"}}>
-                    {sym}
-                  </div>
-                ))}
-              </div>
-              <div style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"rgba(255,255,255,0.25)",marginTop:10}}>
-                To update preferences, sign out and complete onboarding again.
-              </div>
+          <div style={card}>
+            <span style={lbl}>TIMEZONE</span>
+            <div style={{marginBottom:10,fontFamily:"'Space Mono',monospace",fontSize:10,color:"rgba(255,255,255,0.4)"}}>
+              Currently: <span style={{color:"#f0ecff"}}>{tzObj?.label || "Not set"}</span>
             </div>
-
-            <div style={card}>
-              <span style={label}>TIMEZONE</span>
-              <div style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:"#f0ecff",padding:"10px 14px",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:8}}>
-                {profile?.tz?.label || "Not set"}
-              </div>
-              <div style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"rgba(255,255,255,0.25)",marginTop:8}}>
-                To update your timezone, sign out and complete onboarding again.
-              </div>
+            <input
+              placeholder="Search timezone..."
+              value={tzSearch}
+              onChange={e=>setTzSearch(e.target.value)}
+              style={{...inputSt,marginBottom:10}}
+            />
+            <div style={{maxHeight:220,overflowY:"auto",display:"flex",flexDirection:"column",gap:4,marginBottom:14}}>
+              {filteredTZ.map((t,i)=>(
+                <div key={t.iana+i} onClick={()=>setTzObj(t)}
+                  style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 12px",borderRadius:7,cursor:"pointer",
+                    background:tzObj?.iana===t.iana?"rgba(255,107,255,0.12)":"rgba(255,255,255,0.03)",
+                    border:`1px solid ${tzObj?.iana===t.iana?"rgba(255,107,255,0.35)":"rgba(255,255,255,0.06)"}`,
+                    transition:"all 0.15s"}}>
+                  <span style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:tzObj?.iana===t.iana?"#ff6bff":"#f0ecff"}}>{t.label}</span>
+                  <span style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,255,255,0.3)"}}>{t.offset}</span>
+                </div>
+              ))}
             </div>
-          </>
+            {tzSaved && <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"#7fff6b",marginBottom:10}}>✓ Timezone saved.</div>}
+            <button onClick={handleSaveTz} disabled={!tzObj}
+              style={{padding:"10px 20px",borderRadius:8,border:"none",background:tzObj?"rgba(255,107,255,0.15)":"rgba(255,255,255,0.04)",color:tzObj?"#ff6bff":"#8878aa",fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,letterSpacing:"0.08em",cursor:tzObj?"pointer":"not-allowed"}}>
+              SAVE TIMEZONE →
+            </button>
+          </div>
         )}
 
         {/* ── DANGER ZONE ── */}
         {section === "danger" && (
           <div style={{...card,border:"1px solid rgba(255,107,107,0.2)"}}>
-            <span style={{...label,color:"rgba(255,107,107,0.6)"}}>DELETE ACCOUNT</span>
-            <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"rgba(255,255,255,0.45)",lineHeight:1.8,marginBottom:16}}>
+            <span style={{...lbl,color:"rgba(255,107,107,0.6)"}}>DELETE ACCOUNT</span>
+            <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"rgba(255,255,255,0.4)",lineHeight:1.8,marginBottom:16}}>
               This permanently deletes your account, profile, and all session history. This cannot be undone.
             </div>
             {deleteStep === 0 && (
-              <button onClick={()=>setDeleteStep(1)}
-                style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,padding:"8px 16px",borderRadius:7,border:"1px solid rgba(255,107,107,0.3)",background:"rgba(255,107,107,0.06)",color:"rgba(255,107,107,0.6)",cursor:"pointer"}}>
+              <button onClick={()=>setDeleteStep(1)} style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,padding:"8px 16px",borderRadius:7,border:"1px solid rgba(255,107,107,0.3)",background:"rgba(255,107,107,0.06)",color:"rgba(255,107,107,0.6)",cursor:"pointer"}}>
                 Delete my account
               </button>
             )}
-            {deleteStep === 1 && (
-              <div>
-                <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"#ff8080",marginBottom:12,lineHeight:1.7}}>
-                  Type <strong>DELETE</strong> to confirm. This cannot be undone.
-                </div>
-                <input value={deleteConfirm} onChange={e=>setDeleteConfirm(e.target.value)}
-                  placeholder="Type DELETE to confirm"
-                  style={{...inputSt,marginBottom:10,borderColor:deleteConfirm==="DELETE"?"rgba(255,107,107,0.5)":"rgba(255,255,255,0.1)"}}
-                />
-                <div style={{display:"flex",gap:8}}>
-                  <button onClick={()=>{setDeleteStep(0);setDeleteConfirm("");}}
-                    style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,padding:"8px 16px",borderRadius:7,border:"1px solid rgba(255,255,255,0.08)",background:"rgba(255,255,255,0.04)",color:"#8878aa",cursor:"pointer"}}>
-                    Cancel
-                  </button>
-                  <button onClick={handleDeleteAccount} disabled={deleteConfirm!=="DELETE"}
-                    style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,padding:"8px 16px",borderRadius:7,border:"1px solid rgba(255,107,107,0.5)",background:deleteConfirm==="DELETE"?"rgba(255,107,107,0.15)":"rgba(255,107,107,0.04)",color:deleteConfirm==="DELETE"?"#ff6b6b":"rgba(255,107,107,0.3)",cursor:deleteConfirm==="DELETE"?"pointer":"not-allowed"}}>
-                    Permanently delete →
-                  </button>
-                </div>
+            {deleteStep === 1 && (<>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"#ff8080",marginBottom:12,lineHeight:1.7}}>
+                Type <strong>DELETE</strong> to confirm. This cannot be undone.
               </div>
-            )}
+              <input value={deleteConfirm} onChange={e=>setDeleteConfirm(e.target.value)}
+                placeholder="Type DELETE to confirm"
+                style={{...inputSt,marginBottom:10,borderColor:deleteConfirm==="DELETE"?"rgba(255,107,107,0.5)":"rgba(255,255,255,0.1)"}}
+              />
+              <div style={{display:"flex",gap:8}}>
+                <button onClick={()=>{setDeleteStep(0);setDeleteConfirm("");}} style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,padding:"8px 16px",borderRadius:7,border:"1px solid rgba(255,255,255,0.08)",background:"rgba(255,255,255,0.04)",color:"#8878aa",cursor:"pointer"}}>Cancel</button>
+                <button onClick={handleDeleteAccount} disabled={deleteConfirm!=="DELETE"}
+                  style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,padding:"8px 16px",borderRadius:7,border:"1px solid rgba(255,107,107,0.5)",background:deleteConfirm==="DELETE"?"rgba(255,107,107,0.15)":"rgba(255,107,107,0.04)",color:deleteConfirm==="DELETE"?"#ff6b6b":"rgba(255,107,107,0.3)",cursor:deleteConfirm==="DELETE"?"pointer":"not-allowed"}}>
+                  Permanently delete →
+                </button>
+              </div>
+            </>)}
           </div>
         )}
 
