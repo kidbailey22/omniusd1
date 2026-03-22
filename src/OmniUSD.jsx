@@ -2240,6 +2240,41 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
   const inputRef = useRef(null);
   const fileRef = useRef(null);
 
+  // ── Restore saved session on load ─────────────────────────────────────────
+  React.useEffect(() => {
+    try {
+      const saved = localStorage.getItem("omniusd_active_session");
+      if (saved) {
+        const s = JSON.parse(saved);
+        if (s.plan && s.phase) {
+          setPlan(s.plan);
+          setPhase(s.phase);
+          setInstrument(s.instrument || s.plan.instrument);
+          setTier1(s.tier1 || false);
+          setTier2(s.tier2 || false);
+          setSessionState(s.sessionState || "WATCHING");
+          setMessages(s.messages || []);
+          setSessionHistory(s.sessionHistory || []);
+        }
+      }
+    } catch(e) {}
+  }, []);
+
+  // ── Save session state whenever key values change ──────────────────────────
+  React.useEffect(() => {
+    if (!plan || phase === "upload") {
+      // Clear saved session when back at upload
+      localStorage.removeItem("omniusd_active_session");
+      return;
+    }
+    try {
+      localStorage.setItem("omniusd_active_session", JSON.stringify({
+        plan, phase, instrument, tier1, tier2, sessionState, messages, sessionHistory,
+        savedAt: new Date().toISOString(),
+      }));
+    } catch(e) {}
+  }, [plan, phase, tier1, tier2, sessionState, messages]);
+
   // Live clock
   useEffect(() => {
     const id = setInterval(() => {
@@ -2514,7 +2549,7 @@ Return ONLY valid JSON, no markdown, no explanation:
             </div>
           )}
           {phase === "live" && (
-            <button onClick={() => { setPhase("upload"); setImages(Array(5).fill(null)); setPlan(null); setMessages([]); setTier1(false); setTier2(false); setSessionState("WATCHING"); setSessionHistory([]); }}
+            <button onClick={() => { setPhase("upload"); setImages(Array(5).fill(null)); setPlan(null); setMessages([]); setTier1(false); setTier2(false); setSessionState("WATCHING"); setSessionHistory([]); localStorage.removeItem("omniusd_active_session"); }}
               style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", color: "rgba(255,255,255,0.3)", background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
               NEW ANALYSIS
             </button>
@@ -2607,6 +2642,38 @@ Return ONLY valid JSON, no markdown, no explanation:
       {appPage === "dashboard" && phase === "upload" && (
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", padding: "48px 24px 32px", animation: "fadein 0.3s ease both" }}>
           <div style={{ width: "100%", maxWidth: 560 }}>
+
+            {/* Resume active session if one exists */}
+            {(()=>{
+              try {
+                const saved = localStorage.getItem("omniusd_active_session");
+                if (!saved) return null;
+                const s = JSON.parse(saved);
+                if (!s.plan || !s.phase || s.phase === "upload") return null;
+                const savedTime = s.savedAt ? new Date(s.savedAt).toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"}) : "";
+                return (
+                  <div style={{ padding:"14px 18px", background:"rgba(127,255,107,0.05)", border:"1px solid rgba(127,255,107,0.2)", borderLeft:"3px solid #7fff6b", borderRadius:0, marginBottom:20, display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, flexWrap:"wrap" }}>
+                    <div>
+                      <div style={{ fontFamily:"'Space Mono',monospace", fontSize:9, fontWeight:900, letterSpacing:"0.14em", color:"#7fff6b", marginBottom:5 }}>ACTIVE SESSION SAVED</div>
+                      <div style={{ fontFamily:"'Space Mono',monospace", fontSize:11, color:"rgba(255,255,255,0.7)", lineHeight:1.5 }}>
+                        {s.plan.instrument} · {s.plan.bias} · {s.plan.grade}
+                        {savedTime && <span style={{ color:"rgba(255,255,255,0.35)", marginLeft:8 }}>· saved at {savedTime}</span>}
+                      </div>
+                    </div>
+                    <div style={{ display:"flex", gap:8 }}>
+                      <button onClick={() => { setPlan(s.plan); setPhase(s.phase); setInstrument(s.instrument||s.plan.instrument); setTier1(s.tier1||false); setTier2(s.tier2||false); setSessionState(s.sessionState||"WATCHING"); setMessages(s.messages||[]); setSessionHistory(s.sessionHistory||[]); }}
+                        style={{ fontFamily:"'Space Mono',monospace", fontSize:10, fontWeight:700, letterSpacing:"0.08em", padding:"7px 14px", borderRadius:7, border:"none", background:"#7fff6b", color:"#0f0c1a", cursor:"pointer" }}>
+                        Resume →
+                      </button>
+                      <button onClick={() => { localStorage.removeItem("omniusd_active_session"); setPhase("upload"); }}
+                        style={{ fontFamily:"'Space Mono',monospace", fontSize:10, fontWeight:700, padding:"7px 12px", borderRadius:7, border:"1px solid rgba(255,255,255,0.1)", background:"none", color:"rgba(255,255,255,0.3)", cursor:"pointer" }}>
+                        Discard
+                      </button>
+                    </div>
+                  </div>
+                );
+              } catch(e) { return null; }
+            })()}
 
             {/* Market closed warning */}
             {(()=>{
