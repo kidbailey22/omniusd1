@@ -2144,22 +2144,33 @@ Return ONLY valid JSON, no markdown, no explanation:
           <div>
             <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", background: "linear-gradient(90deg,#ff6bff,#00e5ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>OmniUSD</span>
           </div>
+          {/* Tier badge */}
+          <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.1em", padding: "2px 8px", borderRadius: 4, background: `${(TIER_CONFIG[profile?.tier]||TIER_CONFIG.starter).color}18`, border: `1px solid ${(TIER_CONFIG[profile?.tier]||TIER_CONFIG.starter).color}44`, color: (TIER_CONFIG[profile?.tier]||TIER_CONFIG.starter).color }}>
+            {(TIER_CONFIG[profile?.tier]||TIER_CONFIG.starter).label.toUpperCase()}
+          </span>
           {plan && phase !== "upload" && (
-            <div style={{ display: "flex", gap: 6, marginLeft: 8 }}>
+            <div style={{ display: "flex", gap: 6, marginLeft: 4 }}>
               <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", background: `${gradeColor}14`, border: `1px solid ${gradeColor}44`, borderRadius: 4, color: gradeColor }}>{plan.grade}</span>
               <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", background: `${biasColor}14`, border: `1px solid ${biasColor}44`, borderRadius: 4, color: biasColor }}>{plan.bias}</span>
               <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, color: "#8878aa" }}>{plan.instrument}</span>
             </div>
           )}
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ fontSize: 9, color: "#8878aa" }}>
             <span style={{ color: "#00e5ff", fontWeight: 700 }}>{ctTime}</span> CT
           </div>
           {onOpenJournal && (
             <button onClick={onOpenJournal}
-              style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", color: "var(--t-muted4,#8878aa)", background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
+              style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", color: "#8878aa", background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
               Journal
+            </button>
+          )}
+          {/* Upgrade button — show if not elite */}
+          {profile?.tier !== "elite" && (
+            <button onClick={() => window.open("https://omniusd.pro/#pricing","_blank")}
+              style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", color: "#ff6bff", background: "rgba(255,107,255,0.08)", border: "1px solid rgba(255,107,255,0.25)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
+              ↑ Upgrade
             </button>
           )}
           {phase === "live" && (
@@ -2169,7 +2180,7 @@ Return ONLY valid JSON, no markdown, no explanation:
             </div>
           )}
           {phase === "live" && (
-            <button onClick={() => { setPhase("upload"); setImages([]); setPlan(null); setMessages([]); setTier1(false); setTier2(false); setSessionState("WATCHING"); setSessionHistory([]); }}
+            <button onClick={() => { setPhase("upload"); setImages(Array(5).fill(null)); setPlan(null); setMessages([]); setTier1(false); setTier2(false); setSessionState("WATCHING"); setSessionHistory([]); }}
               style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", color: "rgba(255,255,255,0.3)", background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
               NEW ANALYSIS
             </button>
@@ -2225,14 +2236,45 @@ Return ONLY valid JSON, no markdown, no explanation:
             <div style={{ marginBottom: 8, textAlign:"center" }}>
               <span style={{ fontFamily:"'Space Mono',monospace", fontSize:9, color: instrument ? "rgba(255,255,255,0.25)" : "rgba(255,107,255,0.7)", letterSpacing:"0.12em" }}>{instrument ? `INSTRUMENT: ${instrument}` : "SELECT YOUR INSTRUMENT FIRST"}</span>
             </div>
-            <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 24 }}>
-              {["BTCUSD","XAUUSD","NAS100","US30","USOIL","GBPUSD"].map(sym => (
-                <button key={sym} onClick={() => setInstrument(sym)}
-                  style={{ fontSize: 9, fontWeight: 700, padding: "5px 10px", borderRadius: 6, border: `1px solid ${instrument === sym ? "rgba(255,107,255,0.6)" : "rgba(255,255,255,0.1)"}`, background: instrument === sym ? "rgba(255,107,255,0.18)" : "rgba(255,255,255,0.04)", boxShadow: instrument === sym ? "0 0 12px rgba(255,107,255,0.15)" : "none", color: instrument === sym ? "#ff6bff" : "#8878aa", cursor: "pointer", fontFamily: "inherit" }}>
-                  {sym}
-                </button>
-              ))}
-            </div>
+            {(() => {
+              const userTier = profile?.tier || "starter";
+              const tierCfg = TIER_CONFIG[userTier] || TIER_CONFIG.starter;
+              const allInstruments = ["XAUUSD","BTCUSD","NAS100","US30","USOIL","GBPUSD"];
+              const allowed = tierCfg.instruments;
+              return (
+                <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 24, flexWrap: "wrap" }}>
+                  {allInstruments.map(sym => {
+                    const isLocked = !allowed.includes(sym);
+                    const isActive = instrument === sym;
+                    return (
+                      <div key={sym} style={{ position: "relative" }}>
+                        <button
+                          onClick={() => { if (!isLocked) setInstrument(sym); }}
+                          title={isLocked ? `Upgrade to access ${sym}` : sym}
+                          style={{ fontSize: 9, fontWeight: 700, padding: "5px 10px", borderRadius: 6,
+                            border: `1px solid ${isActive ? "rgba(255,107,255,0.6)" : isLocked ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.1)"}`,
+                            background: isActive ? "rgba(255,107,255,0.18)" : isLocked ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.04)",
+                            boxShadow: isActive ? "0 0 12px rgba(255,107,255,0.15)" : "none",
+                            color: isActive ? "#ff6bff" : isLocked ? "rgba(255,255,255,0.2)" : "#8878aa",
+                            cursor: isLocked ? "not-allowed" : "pointer",
+                            fontFamily: "inherit",
+                            opacity: isLocked ? 0.5 : 1,
+                          }}>
+                          {isLocked ? `⊘ ${sym}` : sym}
+                        </button>
+                      </div>
+                    );
+                  })}
+                  {/* Upgrade nudge if any instruments are locked */}
+                  {allowed.length < allInstruments.length && (
+                    <button onClick={() => window.open("https://omniusd.pro/#pricing","_blank")}
+                      style={{ fontSize: 8, fontWeight: 700, padding: "5px 10px", borderRadius: 6, border: "1px solid rgba(255,107,255,0.2)", background: "rgba(255,107,255,0.05)", color: "rgba(255,107,255,0.6)", cursor: "pointer", fontFamily: "inherit", letterSpacing: "0.06em" }}>
+                      ↑ Upgrade to unlock more
+                    </button>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Progress bar */}
             <div style={{ marginBottom: 20 }}>
