@@ -534,9 +534,18 @@ export default function OmniUSD(){
           if(session?.access_token){
             const userId=session.user?.id||session.user_id;
             if(userId){
-              setAuthUser(session.user||{id:userId,email:session.email||""});
-              await loadProfile(userId, session.access_token);
-              setView("app");
+              // Verify token is still valid before proceeding
+              const verifyRes = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+                headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${session.access_token}` }
+              });
+              if(verifyRes.ok){
+                setAuthUser(session.user||{id:userId,email:session.email||""});
+                await loadProfile(userId, session.access_token);
+                setView("app");
+              } else {
+                // Token expired — clear session and show landing
+                localStorage.removeItem("omniusd_session");
+              }
             }
           }
         }
