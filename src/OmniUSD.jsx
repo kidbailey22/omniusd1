@@ -1965,7 +1965,7 @@ function SettingsPage({profile, onSignOut, onClose}) {
       const res = await fetch("/api/billing-portal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId, return_url: window.location.href }),
+        body: JSON.stringify({ user_id: userId, return_url: window.location.origin + "?from=portal" }),
       });
       const data = await res.json();
       if (data.url) {
@@ -2182,6 +2182,17 @@ function SettingsPage({profile, onSignOut, onClose}) {
 function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
   const [phase, setPhase] = useState("upload"); // upload | analyzing | plan | live
   const [appPage, setAppPage] = useState("dashboard"); // dashboard | settings
+
+  // Detect return from Stripe billing portal and reload profile
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("from") === "portal") {
+      // Clear the param from URL without reload
+      window.history.replaceState({}, "", window.location.pathname);
+      // Force reload to get updated tier from Supabase
+      window.location.reload();
+    }
+  }, []);
   const [images, setImages] = useState(Array(5).fill(null)); // each slot: {file, preview} or null
 
   function readSlotFile(file, i) {
@@ -2474,13 +2485,7 @@ Return ONLY valid JSON, no markdown, no explanation:
             style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", color: appPage === "settings" ? "#ff6bff" : "#8878aa", background: appPage === "settings" ? "rgba(255,107,255,0.1)" : "none", border: `1px solid ${appPage === "settings" ? "rgba(255,107,255,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
             Settings
           </button>
-          {/* Upgrade button — show if not elite */}
-          {profile?.tier !== "elite" && (
-            <button onClick={() => window.open("https://omniusd.pro/#pricing","_blank")}
-              style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", color: "#ff6bff", background: "rgba(255,107,255,0.08)", border: "1px solid rgba(255,107,255,0.25)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
-              ↑ Upgrade
-            </button>
-          )}
+
           {phase === "live" && (
             <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: windowClosed ? "#ff6b6b" : "#7fff6b", animation: windowOpen ? "pulse 1.5s ease infinite" : "none" }}/>
