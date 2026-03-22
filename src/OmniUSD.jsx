@@ -4247,8 +4247,10 @@ function FaqRow({q, a, isLast}) {
         <span style={{fontSize:16, color:"#ff6bff", flexShrink:0, transition:"transform 0.2s", transform: open ? "rotate(45deg)" : "rotate(0deg)", display:"inline-block"}}>+</span>
       </button>
       {open && (
-        <div style={{padding:"0 28px 20px", fontFamily:"'Space Mono',monospace", fontSize:11, color:"rgba(255,255,255,0.55)", lineHeight:1.9}}>
-          {a}
+        <div style={{padding:"0 28px 20px"}}>
+          {a.split("\n\n").map((para,i) => (
+            <p key={i} style={{fontFamily:"'Space Mono',monospace", fontSize:11, color:"rgba(255,255,255,0.55)", lineHeight:1.9, margin:i>0?"12px 0 0":0}}>{para}</p>
+          ))}
         </div>
       )}
     </div>
@@ -4736,56 +4738,6 @@ function LandingPage({onEnterApp, onLogin}){
         </div>
       </div>
 
-      {/* FAQ */}
-      <div id="faq" style={{position:"relative",zIndex:1,scrollMarginTop:110,maxWidth:1060,margin:"0 auto",padding:"80px 24px 0"}}>
-        <div style={{height:1,background:"linear-gradient(90deg,transparent,rgba(255,107,255,0.15),transparent)",marginBottom:64}}/>
-
-        <div style={{marginBottom:48}}>
-          <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,107,255,0.7)",letterSpacing:"0.22em",marginBottom:14}}>FAQ</div>
-          <h2 style={{fontFamily:"'Syne',sans-serif",fontSize:"clamp(22px,3vw,36px)",fontWeight:800,lineHeight:1.15,letterSpacing:"-0.02em",color:"#f0ecff"}}>
-            Common questions.
-          </h2>
-        </div>
-
-        <div style={{display:"flex",flexDirection:"column",gap:0,border:"1px solid rgba(255,255,255,0.07)",borderRadius:16,overflow:"hidden"}}>
-          {[
-            {
-              q:"What broker do I need?",
-              a:"Any broker that shows candlestick charts. OmniUSD reads screenshots — it is not connected to your broker. Tradingview, MT4, MT5, cTrader, or any platform that displays OHLC candles works.",
-            },
-            {
-              q:"What instruments are supported?",
-              a:"BTCUSD, XAUUSD, NAS100, US30, and USOIL on Starter. Pro adds more instruments. Elite unlocks everything including GBPUSD and additional forex pairs. All instruments use the same BRC methodology.",
-            },
-            {
-              q:"Do I need trading experience?",
-              a:"You should understand what a candlestick chart is and have a basic idea of support and resistance. OmniUSD is not a beginner course — it is an execution system. If you have been trading for a few months or more, you will get value from it immediately.",
-            },
-            {
-              q:"What session times does it work with?",
-              a:"OmniUSD is built around the New York session (8:30–10:30 AM CT). The London session and Asian session are supported with adjusted guidance. The NY session is where the highest quality setups occur for the instruments we support.",
-            },
-            {
-              q:"How is this different from signals?",
-              a:"Signals tell you what to do. OmniUSD shows you why — and makes you wait for the confirmation. You upload your own charts, get your own plan, and execute based on structure you can see. There are no black-box calls and no alerts to blindly follow.",
-            },
-            {
-              q:"Can I use this for a prop firm challenge?",
-              a:"Yes — and this is one of the strongest use cases. Prop firm rules punish exactly the mistakes OmniUSD is designed to prevent: chasing entries, oversizing, late trades, and emotional decisions. The hard session cutoff and limit-order-only approach are already aligned with most challenge rules.",
-            },
-            {
-              q:"What happens if the setup is not valid?",
-              a:"OmniUSD shows a PASS. No execution UI, no tracker, no pressure to trade. A clear pass with the reason why is one of the most valuable outputs the system gives. Not every session has a trade — and the system is honest about that.",
-            },
-            {
-              q:"How many trades per month should I expect?",
-              a:"The methodology targets 6–7 A+ setups per month across the instruments you have access to. Quality over quantity is a core rule. You will pass on far more setups than you take — and that is by design.",
-            },
-          ].map((item,i,arr)=>(
-            <FaqRow key={i} q={item.q} a={item.a} isLast={i===arr.length-1}/>
-          ))}
-        </div>
-      </div>
 
       {/* Pricing */}
       <div id="pricing" style={{position:"relative",zIndex:1,scrollMarginTop:110,maxWidth:1060,margin:"0 auto",padding:"60px 24px"}}>
@@ -4827,7 +4779,87 @@ function LandingPage({onEnterApp, onLogin}){
         </div>
       </div>
 
-      {/* Footer */}
+      {/* FAQ */}
+      <div id="faq" style={{position:"relative",zIndex:1,scrollMarginTop:110,maxWidth:1060,margin:"0 auto",padding:"80px 24px 0"}}>
+        <div style={{height:1,background:"linear-gradient(90deg,transparent,rgba(255,107,255,0.15),transparent)",marginBottom:64}}/>
+
+        <div style={{marginBottom:48}}>
+          <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,107,255,0.7)",letterSpacing:"0.22em",marginBottom:14}}>FAQ</div>
+          <h2 style={{fontFamily:"'Syne',sans-serif",fontSize:"clamp(22px,3vw,36px)",fontWeight:800,lineHeight:1.15,letterSpacing:"-0.02em",color:"#f0ecff"}}>
+            Common questions.
+          </h2>
+        </div>
+
+        <div style={{display:"flex",flexDirection:"column",gap:0,border:"1px solid rgba(255,255,255,0.07)",borderRadius:16,overflow:"hidden"}}>
+          {[
+            {
+              q:"Is this just another signal service?",
+              a:"No. You upload your own charts, the system reads the structure, and you decide. There are no alerts, no calls, and no black-box recommendations. If the setup is not valid, OmniUSD says PASS and shows nothing else.",
+            },
+            {
+              q:"What if the setup does not confirm?",
+              a:"You do nothing. If the BRC sequence is incomplete, the result is PASS. No execution UI appears, no pressure to trade. A clean PASS protects your account. Not every session has a trade — the system is honest about that.",
+            },
+            {
+              q:"Can I use this for a prop firm challenge?",
+              a:"Yes — this is one of the strongest use cases. OmniUSD prevents exactly what prop firms punish: chasing, late entries, and emotional decisions. Limit orders only, hard session cutoffs, A+ setups only — already aligned with most challenge rules.",
+            },
+            {
+              q:"How much should I risk per trade?",
+              a:"2.5% per trade is the recommended risk. For prop firm challenges, check your drawdown rules — most allow 1–2% and you should adjust accordingly. OmniUSD tells you when to execute. You control the size.",
+            },
+            {
+              q:"Has this been tested?",
+              a:"BRC is built on price action and market structure principles used by institutional traders. OmniUSD applies those principles with a structured, rules-based execution system. Results depend on how strictly you follow the process.",
+            },
+            {
+              q:"When should I upload the charts?",
+              a:"Upload 30–60 minutes before your session opens. For the NY session, upload between 7:30–8:00 AM CT. This gives you time to review the plan and set alerts before the execution window opens. Do not upload during the session.",
+            },
+            {
+              q:"What timeframes does BRC use?",
+              a:"Five timeframes: Daily (bias), 4H (structure), 1H (setup), 30M (trigger), 15M (refinement). The 30M candle close is the only valid entry signal. All five are required — missing one means the plan cannot be graded accurately.",
+            },
+            {
+              q:"What sessions can I trade?",
+              a:"New York — Opens 9:30 AM ET (8:30 AM CT). BRC execution window: 9:00–11:30 AM ET (8:00–10:30 AM CT). Last valid 30M close is 10:30 AM CT. No new entries after that.\n\nLondon — Opens 8:00 AM GMT (3:00 AM ET / 2:00 AM CT). BRC execution window: 2:00–5:00 AM CT. Last valid 30M close is 5:00 AM CT.\n\nAsian — Opens 9:00 PM ET (8:00 PM CT). BRC execution window: 8:00–11:00 PM CT. Last valid 30M close is 11:00 PM CT. Reduced size recommended.",
+            },
+            {
+              q:"What is the edge?",
+              a:"Most traders enter at the Break. BRC waits for all three phases — Break, Retest, Continuation. You enter after confirmation, not during the move. That patience enforced by structure is the edge. OmniUSD holds that discipline when pressure says otherwise.",
+            },
+            {
+              q:"Do I need to watch charts all session?",
+              a:"No. Upload before the session, review the plan, set your alerts. You only need to be present at the 30M candle closes. Between closes, there is nothing to act on. OmniUSD is built for structure, not screen time.",
+            },
+            {
+              q:"What broker do I need?",
+              a:"Any broker that shows candlestick charts. OmniUSD reads screenshots — it is not connected to your broker. TradingView, MT4, MT5, cTrader, or any platform that displays OHLC candles works.",
+            },
+            {
+              q:"What instruments are supported?",
+              a:"BTCUSD and XAUUSD on Starter. Pro adds NAS100, US30, and more. Elite unlocks all instruments including GBPUSD and additional pairs. All instruments use the same BRC methodology.",
+            },
+            {
+              q:"Do I need trading experience?",
+              a:"You should understand candlestick charts and basic support and resistance. OmniUSD is not a beginner course — it is an execution system. If you have been trading for a few months or more, you will get value from it immediately.",
+            },
+            {
+              q:"Is BRC scalp trading or swing trading?",
+              a:"Neither exactly. It is intraday structured execution. The setup takes hours to form across multiple timeframes. The trade typically resolves within the same session or the next. You are not scalping ticks or holding for days — you are waiting for a confirmed structural move.",
+            },
+            {
+              q:"How many trades per month should I expect?",
+              a:"6–7 A+ setups per month across your instruments. Quality over quantity is a core rule. You will pass on far more setups than you take — and that is by design.",
+            },
+          ].map((item,i,arr)=>(
+            <FaqRow key={i} q={item.q} a={item.a} isLast={i===arr.length-1}/>
+          ))}
+        </div>
+      </div>
+
+
+            {/* Footer */}
       <div style={{position:"relative",zIndex:1,borderTop:"1px solid rgba(255,255,255,0.06)",padding:"20px 40px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:10}}>
         <div style={{fontFamily:"'Space Mono',monospace",fontSize:12,fontWeight:700,color:"#8878aa"}}>◈ OmniUSD</div>
         <div style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"#8878aa",textAlign:"right"}}>
