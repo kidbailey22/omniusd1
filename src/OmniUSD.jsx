@@ -2502,6 +2502,10 @@ Return ONLY valid JSON, no markdown, no explanation:
             style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", color: appPage === "settings" ? "#ff6bff" : "#8878aa", background: appPage === "settings" ? "rgba(255,107,255,0.1)" : "none", border: `1px solid ${appPage === "settings" ? "rgba(255,107,255,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
             Settings
           </button>
+          <button onClick={() => setAppPage(appPage === "faq" ? "dashboard" : "faq")}
+            style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", color: appPage === "faq" ? "#00e5ff" : "#8878aa", background: appPage === "faq" ? "rgba(0,229,255,0.08)" : "none", border: `1px solid ${appPage === "faq" ? "rgba(0,229,255,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
+            Help & FAQ
+          </button>
 
           {phase === "live" && (
             <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
@@ -2529,6 +2533,76 @@ Return ONLY valid JSON, no markdown, no explanation:
         <SettingsPage profile={profile} onSignOut={onSignOut} onClose={() => setAppPage("dashboard")} />
       )}
 
+      {/* ══ FAQ / HELP PAGE ════════════════════════════════════════════════════ */}
+      {appPage === "faq" && (
+        <div style={{ flex:1, overflowY:"auto", padding:"32px 24px", animation:"fadein 0.3s ease both" }}>
+          <div style={{ maxWidth:680, margin:"0 auto" }}>
+
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:28 }}>
+              <div>
+                <div style={{ fontFamily:"'Space Mono',monospace", fontSize:9, color:"rgba(0,229,255,0.7)", letterSpacing:"0.18em", marginBottom:6 }}>HELP & FAQ</div>
+                <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:22, fontWeight:800, color:"#f0ecff", margin:0 }}>Common Questions</h2>
+              </div>
+              <button onClick={() => setAppPage("dashboard")}
+                style={{ fontFamily:"'Space Mono',monospace", fontSize:9, fontWeight:700, color:"#8878aa", background:"none", border:"1px solid rgba(255,255,255,0.08)", borderRadius:6, padding:"6px 12px", cursor:"pointer" }}>
+                ← Back
+              </button>
+            </div>
+
+            {/* Contact banner */}
+            <div style={{ padding:"14px 18px", background:"rgba(255,107,255,0.05)", border:"1px solid rgba(255,107,255,0.15)", borderRadius:10, marginBottom:24, display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:10 }}>
+              <div>
+                <div style={{ fontFamily:"'Space Mono',monospace", fontSize:11, fontWeight:700, color:"#f0ecff", marginBottom:3 }}>Can't find your answer?</div>
+                <div style={{ fontFamily:"'Space Mono',monospace", fontSize:10, color:"rgba(255,255,255,0.4)" }}>Reach out — we respond within 24 hours.</div>
+              </div>
+              <a href="mailto:support@omniusd.pro"
+                style={{ fontFamily:"'Space Mono',monospace", fontSize:10, fontWeight:700, letterSpacing:"0.08em", padding:"8px 16px", borderRadius:7, border:"1px solid rgba(255,107,255,0.3)", background:"rgba(255,107,255,0.1)", color:"#ff6bff", textDecoration:"none" }}>
+                Contact Us →
+              </a>
+            </div>
+
+            {/* FAQ items */}
+            <div style={{ display:"flex", flexDirection:"column", gap:0, border:"1px solid rgba(255,255,255,0.07)", borderRadius:12, overflow:"hidden" }}>
+              {[
+                { q:"You only need to upload charts once per instrument per session.", a:"Select your instrument first, then upload all 5 timeframes (Daily, 4H, 1H, 30M, 15M). Your plan generates automatically. You do not need to re-upload unless you switch instruments or start a new session.", highlight:true },
+                { q:"When should I upload the charts?", a:"Upload 30–60 minutes before your session opens. For the NY session, upload between 7:30–8:00 AM CT. Do not upload during the session — the plan is built on pre-session structure." },
+                { q:"What timeframes does BRC use?", a:"Five timeframes: Daily (bias), 4H (structure), 1H (setup), 30M (trigger), 15M (refinement). The 30M candle close is the only valid entry signal. All five are required." },
+                { q:"Every chart must show the instrument and timeframe.", a:"The ticker (e.g. BTCUSD) and timeframe (e.g. 1H, 30M) must be clearly visible in every screenshot. If either is not visible, your upload will be rejected. Take screenshots with labels showing." , highlight:true },
+                { q:"What if the setup does not confirm?", a:"You do nothing. If the BRC sequence is incomplete, the result is PASS. No execution UI appears. A clean PASS protects your account. Not every session has a trade." },
+                { q:"Can I use this for a prop firm challenge?", a:"Yes — this is one of the strongest use cases. Limit orders only, hard session cutoffs, A+ setups only. These are exactly the rules prop firms require." },
+                { q:"How much should I risk per trade?", a:"2.5% per trade is the recommended risk. For prop firm challenges, check your drawdown rules — most allow 1–2% and you should adjust accordingly." },
+                { q:"What sessions can I trade?", a:"NY session: 8:30–10:30 AM CT (last valid 30M close). London: 2:00–5:00 AM CT. Asian: 8:00–11:00 PM CT. NY produces the cleanest setups." },
+                { q:"Do I need to watch charts all session?", a:"No. Upload before the session, review the plan, set your alerts. You only need to be present at the 30M candle closes. Between closes, there is nothing to act on." },
+                { q:"What is the edge?", a:"Most traders enter at the Break. BRC waits for all three phases — Break, Retest, Continuation. You enter after confirmation, not during the move. That patience enforced by structure is the edge." },
+                { q:"How do I request a new instrument?", a:"Email us at support@omniusd.pro with the subject 'Instrument Request' and tell us what you want to trade. We review all requests and add the most requested instruments to upcoming plan updates." },
+              ].map((item, i, arr) => {
+                const [open, setOpen] = React.useState(false);
+                return (
+                  <div key={i} style={{ borderBottom: i < arr.length-1 ? "1px solid rgba(255,255,255,0.06)" : "none", background: item.highlight ? "rgba(0,229,255,0.02)" : "transparent" }}>
+                    <button onClick={() => setOpen(o => !o)}
+                      style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"18px 22px", background:"none", border:"none", cursor:"pointer", fontFamily:"inherit", textAlign:"left", gap:16 }}>
+                      <span style={{ fontFamily:"'Space Mono',monospace", fontSize:13, fontWeight:700, color: item.highlight ? "#00e5ff" : "#f0ecff", lineHeight:1.4 }}>
+                        {item.highlight && <span style={{ marginRight:8 }}>📌</span>}{item.q}
+                      </span>
+                      <span style={{ fontSize:18, color:"#ff6bff", flexShrink:0, transition:"transform 0.2s", transform: open ? "rotate(45deg)" : "rotate(0deg)", display:"inline-block" }}>+</span>
+                    </button>
+                    {open && (
+                      <div style={{ padding:"0 22px 18px", fontFamily:"'Space Mono',monospace", fontSize:12, color:"rgba(255,255,255,0.6)", lineHeight:1.9 }}>
+                        {item.a}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div style={{ textAlign:"center", marginTop:24, fontFamily:"'Space Mono',monospace", fontSize:10, color:"rgba(255,255,255,0.25)" }}>
+              Want to suggest a new instrument? <a href="mailto:support@omniusd.pro?subject=Instrument Request" style={{ color:"rgba(255,107,255,0.5)", textDecoration:"none" }}>Email us →</a>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ══ PHASE: UPLOAD ══════════════════════════════════════════════════════ */}
       {appPage === "dashboard" && phase === "upload" && (
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", padding: "48px 24px 32px", animation: "fadein 0.3s ease both" }}>
@@ -2553,10 +2627,17 @@ Return ONLY valid JSON, no markdown, no explanation:
             })()}
 
             {/* Header */}
-            <div style={{ textAlign: "center", marginBottom: 32 }}>
+            <div style={{ textAlign: "center", marginBottom: 24 }}>
               <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: "0.22em", color: "#ff6bff", marginBottom: 12 }}>UPLOAD FIRST · LIVE SESSION SECOND</div>
               <h1 style={{ fontSize: 28, fontWeight: 700, lineHeight: 1.2, marginBottom: 8, letterSpacing: "-0.01em" }}>Upload your charts.<br/>Start the session.</h1>
               <p style={{ fontSize: 11, color: "#8878aa", lineHeight: 1.7 }}>Upload all 5 timeframes. Your plan generates automatically,<br/>then live session begins.</p>
+            </div>
+
+            {/* Upload once reminder */}
+            <div style={{ padding: "10px 16px", background: "rgba(0,229,255,0.05)", border: "1px solid rgba(0,229,255,0.15)", borderLeft: "3px solid #00e5ff", borderRadius: 0, marginBottom: 14 }}>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.65)", lineHeight: 1.7 }}>
+                <span style={{ color: "#00e5ff", fontWeight: 700 }}>You only need to upload charts once per instrument per session.</span> Select your instrument, upload all 5 timeframes, and your plan generates automatically.
+              </div>
             </div>
 
             {/* HARD REQUIREMENT — always visible */}
@@ -5705,8 +5786,18 @@ function LandingPage({onEnterApp, onLogin}){
 
 
             {/* Footer */}
-      <div style={{position:"relative",zIndex:1,borderTop:"1px solid rgba(255,255,255,0.06)",padding:"20px 40px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:10}}>
+      <div style={{position:"relative",zIndex:1,borderTop:"1px solid rgba(255,255,255,0.06)",padding:"24px 40px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:16}}>
         <div style={{fontFamily:"'Space Mono',monospace",fontSize:12,fontWeight:700,color:"#8878aa"}}>◈ OmniUSD</div>
+        <div style={{display:"flex",gap:24,alignItems:"center"}}>
+          <a href="mailto:support@omniusd.pro"
+            style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"rgba(255,107,255,0.6)",textDecoration:"none",fontWeight:700,letterSpacing:"0.08em"}}>
+            Contact Us
+          </a>
+          <a href="mailto:support@omniusd.pro?subject=Instrument Request"
+            style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"rgba(255,255,255,0.3)",textDecoration:"none",letterSpacing:"0.06em"}}>
+            Request an instrument
+          </a>
+        </div>
         <div style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"#8878aa",textAlign:"right"}}>
           © 2026 OmniUSD · AI-powered trading analysis<br/>
           <span style={{opacity:0.5}}>Trade at your own risk · Results not guaranteed</span>
