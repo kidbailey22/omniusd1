@@ -274,8 +274,15 @@ STEP 1 — INSTRUMENT CHECK: Before checking timeframes, inspect all 5 charts fo
 - If you cannot clearly identify the instrument on any chart, set instrument_valid=false with instrument_detected="unreadable".
 INSTRUMENT MISMATCH = hard block. Do NOT proceed with analysis if instrument_valid=false.
 
-STEP 2 — TIMEFRAME CHECK: Inspect each image for timeframe indicators. If any mismatch → charts_valid=false, stop, no plan.
-CONSERVATIVE RULE: If you cannot clearly confirm the timeframe from visual indicators, mark that slot as invalid. A false pass is worse than a false fail.
+STEP 2 — TIMEFRAME CHECK: Inspect EVERY image for timeframe indicators (chart title, interval selector, candle size, time axis). This check is MANDATORY and NON-NEGOTIABLE.
+- Slot 1 MUST be a Daily chart. If it shows 4H, 1H, 30M, 15M, or any other timeframe → charts_valid=false, stop immediately.
+- Slot 2 MUST be a 4H chart. Wrong timeframe → charts_valid=false, stop.
+- Slot 3 MUST be a 1H chart. Wrong timeframe → charts_valid=false, stop.
+- Slot 4 MUST be a 30M chart. Wrong timeframe → charts_valid=false, stop.
+- Slot 5 MUST be a 15M chart. Wrong timeframe → charts_valid=false, stop.
+- If you CANNOT clearly read the timeframe from the image → mark that slot invalid → charts_valid=false, stop.
+- A false pass on a wrong chart is worse than a false fail. When in doubt, reject.
+- NEVER generate a plan if any slot has the wrong chart. No exceptions.
 For each slot, set detected= the timeframe you actually see, and signals= array of 2-3 short visual cues (5 words max each). If valid, signals can be empty array.
 If all valid → charts_valid=true, proceed.
 
@@ -1663,6 +1670,43 @@ function getCTTime() {
   };
 }
 
+function getMarketStatus(instrument) {
+  if (!instrument) return { open: false, reason: "Select an instrument first.", comeback: "" };
+  const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
+  const day = now.getDay(); // 0=Sun, 1=Mon...6=Sat
+  const mins = now.getHours() * 60 + now.getMinutes();
+  const isBTC = instrument === "BTCUSD";
+
+  // BTC is 24/7 — always open
+  if (isBTC) return { open: true };
+
+  // Saturday — all traditional markets closed
+  if (day === 6) {
+    // Asian opens Sunday ~4 PM CT (pre-market prep allowed 2 hrs before = 2 PM CT Sunday)
+    return {
+      open: false,
+      reason: "Markets are closed on Saturday.",
+      comeback: "Come back Sunday at 2:00 PM CT — 2 hours before the Asian session opens.",
+    };
+  }
+
+  // Sunday before 2:00 PM CT
+  if (day === 0 && mins < 14 * 60) {
+    const minsLeft = 14 * 60 - mins;
+    const hrs = Math.floor(minsLeft / 60);
+    const min = minsLeft % 60;
+    const timeStr = hrs > 0 ? `${hrs}h ${min}m` : `${min}m`;
+    return {
+      open: false,
+      reason: "Markets are not open yet.",
+      comeback: `Come back at 2:00 PM CT (opens in ${timeStr}) — 2 hours before the Asian session.`,
+    };
+  }
+
+  // Sunday after 4:00 AM CT Monday (markets close again briefly — simplified: allow all week)
+  return { open: true };
+}
+
 function getNextClose() {
   const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
   const m = now.getMinutes();
@@ -1673,23 +1717,53 @@ function getNextClose() {
 
 function getAnalysisPrompt(instrument) {
   const ct = getCTTime();
+  const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
+  const day = now.getDay(); // 0=Sun,1=Mon...6=Sat
   const nowMins = ct.mins;
-  const sessionStatus = nowMins < 8*60+30 ? "PRE-MARKET"
-    : nowMins <= 10*60+30 ? "NY SESSION LIVE"
-    : "NY SESSION CLOSED";
-  const fridayNote = ct.isFriday ? " FRIDAY — end of week, apply extra caution." : "";
+  const isBTC = instrument === "BTCUSD";
+
+  // Build honest session context
+  let sessionContext = "";
+  let sessionWarning = "";
+
+  if (day === 6) {
+    // Saturday
+    sessionContext = "TODAY IS SATURDAY. Traditional markets are CLOSED. No NY session today. No London session today.";
+    if (isBTC) {
+      sessionContext += " BTCUSD trades 24/7 so analysis is valid, but the next BRC execution window is the Asian session (Sunday ~8:00 PM CT) or NY session (Monday ~8:30 AM CT).";
+      sessionWarning = "IMPORTANT: Do NOT frame this as a NY session setup. The next valid execution window is Sunday Asian or Monday NY. Grade the setup based on structure only — not session timing. If the setup requires NY execution, note that clearly.";
+    }
+  } else if (day === 0 && nowMins < 14 * 60) {
+    // Sunday before 2 PM CT
+    sessionContext = "TODAY IS SUNDAY. Markets not yet open for the week. Asian session opens ~8:00 PM CT Sunday.";
+    if (isBTC) {
+      sessionWarning = "Do NOT frame as NY session. Next window is Asian session tonight or NY session Monday morning.";
+    }
+  } else if (day === 0 && nowMins >= 14 * 60) {
+    sessionContext = "TODAY IS SUNDAY. Asian session prep window — session opens ~8:00 PM CT. NY session is Monday.";
+  } else {
+    // Weekday — normal session logic
+    const sessionStatus = nowMins < 8*60+30 ? "PRE-MARKET — NY session not yet open"
+      : nowMins <= 10*60+30 ? "NY SESSION LIVE (8:30–10:30 AM CT window)"
+      : "NY SESSION CLOSED for today";
+    sessionContext = sessionStatus;
+  }
+
+  const fridayNote = ct.isFriday ? " FRIDAY — end of week. Apply extra caution. A PASS protects the week." : "";
 
   return `You are an expert BRC (Break-Retest-Continuation) trade analyst.
-Today is ${ct.dayName} ${ct.dateStr} at ${ct.str} Chicago time. ${sessionStatus}.${fridayNote}
+Today is ${ct.dayName} ${ct.dateStr} at ${ct.str} Chicago time.
+SESSION STATUS: ${sessionContext}${fridayNote}
 Instrument: ${instrument}.
+${sessionWarning ? `\n⚠️ ${sessionWarning}` : ""}
 
-Analyze these 5 charts (Daily, 4H, 1H, 30M, 15M) and return ONLY a JSON object with this exact structure:
+Analyze these 5 charts (Daily, 4H, 1H, 30M, 15M) and return ONLY a JSON object:
 {
   "grade": "A+|A|B|C|PASS",
   "bias": "SHORT|LONG|NEUTRAL",
   "confidence": "HIGH|MEDIUM|LOW",
   "confidence_score": 75,
-  "summary": "2-3 sentence plain English summary of what the charts show. Written for a 16-year-old. No jargon.",
+  "summary": "2-3 sentence plain English summary of what the charts show AND which session window this setup is for. Written for a 16-year-old. No jargon.",
   "trigger_level": "exact price",
   "retest_zone": "price zone e.g. 70,200–70,350",
   "stop_loss": "exact price",
@@ -1699,7 +1773,8 @@ Analyze these 5 charts (Daily, 4H, 1H, 30M, 15M) and return ONLY a JSON object w
   "current_phase": "BREAK|RETEST|CONTINUATION|PRE-SETUP",
   "key_levels": ["level 1", "level 2", "level 3"],
   "friday_note": "brief Friday caution if applicable, empty string otherwise",
-  "pass_reason": "if PASS, why. Otherwise empty string."
+  "pass_reason": "if PASS, why. Otherwise empty string.",
+  "session_note": "which session this setup targets e.g. Asian Sunday, NY Monday"
 }
 
 BRC RULES:
@@ -1709,18 +1784,68 @@ BRC RULES:
 - Trigger level = the CURRENT nearest actionable level, not a historical one.
 - Small bounces after big moves = valid retests. Do not call expired setup.
 - PASS only when Daily+4H+1H all agree AND move ran with zero retest outside NY.
+- CRITICAL: Always reflect the correct session window in the summary and session_note. Never imply NY session on a Saturday.
+- WEEKEND RULE — ABSOLUTE: If today is Saturday OR Sunday before 8:00 PM CT, you MUST set grade="PASS" regardless of what the charts show. Weekend volume is thin, unreliable, and not a valid BRC execution window. Set pass_reason="Weekend — markets are thin and unreliable. No valid execution window until Sunday Asian session (8:00 PM CT) or Monday NY session (8:30 AM CT). Structure noted — come back when a proper session opens."
 Return only the JSON. No markdown. No explanation.`;
 }
 
 function getLivePrompt(plan) {
   const ct = getCTTime();
+  const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
+  const day = now.getDay(); // 0=Sun, 1=Mon...6=Sat
   const nowMins = ct.mins;
-  const windowOpen = nowMins >= 8*60+30 && nowMins <= 10*60+30;
-  const fridayNote = ct.isFriday ? " FRIDAY: protect the week's profit — if not A+, PASS." : "";
+  const isBTC = plan.instrument === "BTCUSD";
+
+  // Build accurate session status
+  let windowStatus = "";
+  let sessionWarning = "";
+
+  if (day === 6) {
+    // Saturday
+    windowStatus = "SATURDAY — NO VALID SESSION ❌";
+    sessionWarning = `CRITICAL CONTEXT — IT IS SATURDAY:
+- Traditional markets are CLOSED. No NY session, no London session.
+- Even BTCUSD has thin, choppy weekend volume with no institutional participation.
+- THIS IS NOT A VALID BRC EXECUTION WINDOW.
+- If the trader asks about entering: tell them clearly — DO NOT TRADE NOW. Weekend moves are unreliable and do not count as BRC confirmations.
+- Next valid execution window: Sunday Asian session (~8:00 PM CT) OR Monday NY session (~8:30 AM CT).
+- Your job is to monitor the structure, NOT guide an entry tonight.
+- If they push back: hold firm. The system is strict on purpose.`;
+  } else if (day === 0) {
+    // Sunday
+    const asianOpen = 20 * 60; // 8 PM CT
+    if (nowMins < asianOpen - 120) {
+      windowStatus = "SUNDAY — MARKETS NOT YET OPEN ❌";
+      sessionWarning = `CRITICAL CONTEXT — IT IS SUNDAY, MARKETS NOT OPEN YET:
+- No valid session right now. Asian session opens ~8:00 PM CT Sunday.
+- Do NOT guide any entries. Weekend moves are unreliable.
+- Next window: Asian session tonight ~8:00 PM CT.`;
+    } else if (nowMins >= asianOpen - 120 && nowMins < asianOpen) {
+      windowStatus = "ASIAN SESSION PRE-MARKET — opens soon";
+      sessionWarning = "Asian session opens in under 2 hours. This is prep time, not execution time.";
+    } else {
+      windowStatus = "ASIAN SESSION ACTIVE — reduced size recommended";
+      sessionWarning = "Asian session is live. Remind the trader: reduced position size recommended. Choppier price action than NY.";
+    }
+  } else {
+    // Weekday
+    const nyOpen = 8 * 60 + 30;
+    const nyCutoff = 10 * 60 + 30;
+    if (nowMins < nyOpen) {
+      windowStatus = `PRE-MARKET — NY opens at 8:30 AM CT (in ${Math.floor((nyOpen - nowMins) / 60)}h ${(nyOpen - nowMins) % 60}m)`;
+    } else if (nowMins <= nyCutoff) {
+      windowStatus = "NY SESSION LIVE ✅ (8:30–10:30 AM CT)";
+    } else {
+      windowStatus = "NY SESSION CLOSED ❌ — no new entries today";
+      sessionWarning = "NY session is closed. If the trader wants to enter: tell them clearly — session is over, no new entries. Wait for tomorrow.";
+    }
+  }
+
+  const fridayNote = ct.isFriday ? " FRIDAY: protect the week — if not A+, PASS." : "";
 
   return `You are an OmniUSD live session guide — a disciplined BRC trading coach.
-Time: ${ct.str} CT. Window: ${windowOpen ? "OPEN ✅" : nowMins < 8*60+30 ? "PRE-MARKET" : "CLOSED ❌"}.${fridayNote}
-
+Time: ${ct.str} CT | Day: ${ct.dayName} | Session: ${windowStatus}${fridayNote}
+${sessionWarning ? `\n⚠️ ${sessionWarning}\n` : ""}
 ACTIVE PLAN:
 Instrument: ${plan.instrument}
 Bias: ${plan.bias} | Grade: ${plan.grade} | Confidence: ${plan.confidence_score}%
@@ -1734,24 +1859,40 @@ RULES — NON-NEGOTIABLE:
 - Tier 1 = first 30M close through trigger level
 - Tier 2 = second 30M close confirms. THEN place limit order.
 - Never chase. Never enter on a wick. Never market order.
+- Weekend moves do NOT count as BRC confirmations.
 - "Pre-market movement is information — not permission."
 
 YOUR ROLE:
 - Respond to live price updates from the trader
 - Confirm or deny tier completions based on CLOSES only
 - Keep responses SHORT — 3-5 sentences max unless confirming a tier
-- When tier confirms: lead with 🚨, be clear and energetic
+- When tier confirms on a valid session: lead with 🚨, be clear and energetic
+- When window is CLOSED or it's WEEKEND: lead with ⛔, be firm and direct
 - When price moves but no close: keep calm, remind of the rule
 - Write like explaining to a disciplined 16-year-old
-- Use ✅ ❌ ⏳ 🔴 🟢 🥷 for status — never excessive
-- Bold key prices with **price**`;
+- Use ✅ ❌ ⏳ 🔴 🟢 🥷 ⛔ for status — never excessive
+- Bold key prices with **price**
+- NEVER suggest entering a trade when the session window is closed or it is a weekend`;
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
 function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
   const [phase, setPhase] = useState("upload"); // upload | analyzing | plan | live
-  const [images, setImages] = useState([]);
-  const [instrument, setInstrument] = useState("BTCUSD");
+  const [images, setImages] = useState(Array(5).fill(null)); // each slot: {file, preview} or null
+
+  function readSlotFile(file, i) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setImages(prev => {
+        const next = [...prev];
+        next[i] = { file, preview: e.target.result };
+        return next;
+      });
+    };
+    reader.readAsDataURL(file);
+  }
+  const [instrument, setInstrument] = useState(null);
   const [plan, setPlan] = useState(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -1762,6 +1903,7 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
   const [sessionHistory, setSessionHistory] = useState([]);
   const [ctTime, setCtTime] = useState(getCTTime().str);
   const [nextClose, setNextClose] = useState(getNextClose());
+  const [dragOverSlot, setDragOverSlot] = useState(null);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
   const fileRef = useRef(null);
@@ -1779,20 +1921,65 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
 
   // ── STEP 1: Analyze charts ──────────────────────────────────────────────────
   async function analyzeCharts() {
-    if (images.length < 5) return;
+    if (images.filter(Boolean).length < 5) return;
+    const mktStatus = getMarketStatus(instrument);
+    if (!mktStatus.open) return;
     setPhase("analyzing");
 
     try {
       // Build image blocks
-      const imgBlocks = await Promise.all(images.map(async (img, i) => {
-        const base64 = await new Promise(res => {
-          const r = new FileReader();
-          r.onload = () => res(r.result.split(",")[1]);
-          r.readAsDataURL(img);
-        });
-        return { type: "image", source: { type: "base64", media_type: img.type, data: base64 } };
+      const imgBlocks = await Promise.all(images.map(async (slot, i) => {
+        const base64 = slot.preview.split(",")[1];
+        return { type: "image", source: { type: "base64", media_type: slot.file.type, data: base64 } };
       }));
 
+      // ── STEP 0: DEDICATED INSTRUMENT VALIDATION — runs before everything ──
+      // One job only: what instrument is in these charts?
+      const validationRes = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "anthropic-version": "2023-06-01" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 150,
+          system: `You are a strict chart validator. Your ONLY job: verify the instrument AND timeframe are clearly visible in each chart screenshot.
+
+RULE 1 — INSTRUMENT MUST BE VISIBLE:
+The ticker/instrument symbol (e.g. XAUUSD, BTCUSD, NAS100) must be clearly readable in the chart — in the title bar, header, or chart label. Do NOT guess from price range alone. If the ticker is not visibly printed on the chart, set match=false and detected="not visible".
+
+RULE 2 — TIMEFRAME MUST BE VISIBLE:
+The timeframe (D, 4H, 1H, 30M, 15M) must be clearly readable on the chart — in the interval selector, title, or time axis. If the timeframe cannot be confirmed visually, set match=false.
+
+RULE 3 — NO GUESSING EVER:
+If you are not 100% certain what the instrument or timeframe is from what is visibly printed on the chart, set match=false. A wrong pass is catastrophic. A false block is acceptable. When in doubt, reject.
+
+RULE 4 — INSTRUMENT MATCH:
+If instrument IS visible and does NOT match the expected instrument, set match=false and detected=what you actually see.
+
+Return ONLY valid JSON, no markdown, no explanation:
+{"detected":"TICKER_OR_not_visible","match":true_or_false,"reason":"one sentence why"}`,
+          messages: [{ role: "user", content: [...imgBlocks.slice(0,2), { type: "text", text: `Expected instrument: ${instrument}. Check: is the instrument ticker VISIBLY PRINTED on these charts? Is the timeframe VISIBLY PRINTED? If either is not clearly visible, set match=false immediately. Return JSON only: {"detected":"TICKER_OR_not_visible","match":true_or_false,"reason":"why"}` }] }],
+        }),
+      });
+
+      const vData = await validationRes.json();
+      const vText = vData.content?.[0]?.text || "{}";
+      let vResult = { detected: "unknown", match: false };
+      try { vResult = JSON.parse(vText.replace(/```json|```/g, "").trim()); } catch(e) {}
+
+      if (!vResult.match) {
+        setPlan({
+          _blocked: true,
+          _reason: vResult.detected === "not visible"
+            ? `Charts rejected. The instrument ticker and/or timeframe labels are not visible in your screenshots. OmniUSD requires that both the instrument (e.g. BTCUSD) and timeframe (e.g. 1H, 30M) are clearly visible on every chart. Re-upload with labels showing.`
+            : `Wrong charts uploaded. You selected ${instrument} but these charts show ${vResult.detected}. Upload the correct ${instrument} charts.`,
+          instrument,
+          grade: "BLOCKED",
+        });
+        setPhase("plan");
+        return;
+      }
+
+      // ── STEP 1: MAIN ANALYSIS — only runs if instrument validated ─────────
       const res = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json", "anthropic-version": "2023-06-01" },
@@ -1807,19 +1994,40 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
       const data = await res.json();
       const text = data.content?.[0]?.text || "{}";
       const parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
+
+      // Secondary check — if main analysis also flags mismatch, respect it
+      if (parsed.instrument_valid === false || parsed.charts_valid === false) {
+        const detected = parsed.instrument_detected || vResult.detected || "unknown";
+        setPlan({
+          _blocked: true,
+          _reason: `Wrong charts uploaded. You selected ${instrument} but these charts show ${detected}. Upload the correct ${instrument} charts.`,
+          instrument,
+          grade: "BLOCKED",
+        });
+        setPhase("plan");
+        return;
+      }
+
+      // ── WEEKEND HARD OVERRIDE — force PASS regardless of AI grade ────────
+      const _now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
+      const _day = _now.getDay();
+      const _mins = _now.getHours() * 60 + _now.getMinutes();
+      const _isWeekend = _day === 6 || (_day === 0 && _mins < 20 * 60);
+      if (_isWeekend && parsed.grade !== "PASS") {
+        parsed.grade = "PASS";
+        parsed.pass_reason = "Weekend — markets are thin and unreliable. No valid BRC execution window until Sunday Asian session (~8:00 PM CT) or Monday NY session (~8:30 AM CT). Structure noted — come back when a proper session opens.";
+      }
+
       parsed.instrument = instrument;
       setPlan(parsed);
       setPhase("plan");
     } catch (e) {
       console.error(e);
-      // Fallback mock plan for demo
       setPlan({
-        instrument, grade: "B", bias: "SHORT", confidence: "MEDIUM", confidence_score: 68,
-        summary: "Bitcoin is in a downtrend from 97,938. After flushing to 68,770, price is bouncing. This bounce is the retest. We're watching for a 30M close below 70,200 to confirm the next leg down.",
-        trigger_level: "70,200", retest_zone: "70,200–70,350", stop_loss: "71,000",
-        tp1: "69,200", tp2: "68,770", runner: "67,500",
-        current_phase: "RETEST", key_levels: ["71,626 resistance", "70,200 trigger", "68,770 support"],
-        friday_note: "Friday — protect the week. Only A+ setups.", pass_reason: "",
+        _blocked: true,
+        _reason: "Analysis failed. Check your connection and try again.",
+        instrument,
+        grade: "BLOCKED",
       });
       setPhase("plan");
     }
@@ -1829,12 +2037,27 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
   function startLiveSession() {
     setPhase("live");
     const ct = getCTTime();
+    const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
+    const day = now.getDay();
     const nowMins = ct.mins;
-    const windowOpen = nowMins >= 8*60+30 && nowMins <= 10*60+30;
+    const isSat = day === 6;
+    const isSunEarly = day === 0 && nowMins < 20 * 60;
+    const nyOpen = nowMins >= 8*60+30 && nowMins <= 10*60+30;
+
+    let openingMsg = "";
+    if (isSat) {
+      openingMsg = `⛔ **Live session started — ${plan.instrument} ${plan.bias}**\n\n**It is Saturday. This is NOT a valid execution window.**\n\nWeekend crypto volume is thin and unreliable. No BRC entries tonight — no exceptions.\n\n**Next valid window:** Sunday Asian session (~8:00 PM CT) or Monday NY session (~8:30 AM CT).\n\nYou can monitor the structure here, but no orders until a proper session opens.`;
+    } else if (isSunEarly) {
+      openingMsg = `⛔ **Live session started — ${plan.instrument} ${plan.bias}**\n\nMarkets not yet open. Asian session opens ~8:00 PM CT tonight.\n\nMonitor the structure. No entries yet.`;
+    } else if (nyOpen) {
+      openingMsg = `🥷 **Live session started — ${plan.instrument} ${plan.bias}**\n\nNY window is open. Send price updates as candles close. I'll guide the session step by step.\n**Wicks don't count. Only closes.**`;
+    } else {
+      openingMsg = `🥷 **Live session started — ${plan.instrument} ${plan.bias}**\n\nSend price updates as candles close. I'll guide the session step by step.\n**Wicks don't count. Only closes.**\n\n${nowMins < 8*60+30 ? "NY window opens at 8:30 AM CT. Stay patient." : "NY session is closed — no new entries today."}`;
+    }
 
     setMessages([{
       role: "assistant",
-      content: `🥷 **Live session started — ${plan.instrument} ${plan.bias}**\n\nSend price updates as candles close. I'll guide the session step by step.\n**Wicks don't count. Only closes.**\n\n${windowOpen ? `NY window is open — best entries at the 30M closes. ⚡` : `NY window opens at 8:30 AM CT. Stay patient.`}`,
+      content: openingMsg,
       time: ct.str,
     }]);
   }
@@ -1965,6 +2188,24 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", padding: "48px 24px 32px", animation: "fadein 0.3s ease both" }}>
           <div style={{ width: "100%", maxWidth: 560 }}>
 
+            {/* Market closed warning */}
+            {(()=>{
+              const status = getMarketStatus(instrument);
+              if (!status.open) return (
+                <div style={{ padding: "20px 24px", background: "rgba(255,107,107,0.06)", border: "1px solid rgba(255,107,107,0.2)", borderLeft: "3px solid #ff6b6b", borderRadius: 10, marginBottom: 24 }}>
+                  <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: "0.16em", color: "#ff6b6b", marginBottom: 8 }}>MARKET CLOSED</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#f0ecff", marginBottom: 6 }}>{status.reason}</div>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", lineHeight: 1.7 }}>{status.comeback}</div>
+                  {instrument !== "BTCUSD" && (
+                    <div style={{ marginTop: 12, fontSize: 10, color: "rgba(255,209,102,0.7)", lineHeight: 1.6 }}>
+                      Trading BTCUSD? BTC is 24/7 — <span style={{ color: "#ffd166", fontWeight: 700, cursor: "pointer" }} onClick={() => setInstrument("BTCUSD")}>switch to BTCUSD</span> to start a session now.
+                    </div>
+                  )}
+                </div>
+              );
+              return null;
+            })()}
+
             {/* Header */}
             <div style={{ textAlign: "center", marginBottom: 32 }}>
               <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: "0.22em", color: "#ff6bff", marginBottom: 12 }}>UPLOAD FIRST · LIVE SESSION SECOND</div>
@@ -1972,7 +2213,18 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
               <p style={{ fontSize: 11, color: "#8878aa", lineHeight: 1.7 }}>Upload all 5 timeframes. Your plan generates automatically,<br/>then live session begins.</p>
             </div>
 
+            {/* HARD REQUIREMENT — always visible */}
+            <div style={{ padding: "12px 16px", background: "rgba(255,209,102,0.06)", border: "1px solid rgba(255,209,102,0.2)", borderLeft: "3px solid #ffd166", borderRadius: 0, marginBottom: 20 }}>
+              <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: "0.16em", color: "#ffd166", marginBottom: 6 }}>REQUIRED — NO EXCEPTIONS</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.7)", lineHeight: 1.7 }}>
+                Every chart must clearly show the <span style={{ color: "#ffd166", fontWeight: 700 }}>instrument ticker</span> (e.g. BTCUSD) and the <span style={{ color: "#ffd166", fontWeight: 700 }}>timeframe</span> (e.g. 1H, 30M) in the screenshot. If either is not visible, your upload will be rejected.
+              </div>
+            </div>
+
             {/* Instrument selector */}
+            <div style={{ marginBottom: 8, textAlign:"center" }}>
+              <span style={{ fontFamily:"'Space Mono',monospace", fontSize:9, color: instrument ? "rgba(255,255,255,0.25)" : "rgba(255,107,255,0.7)", letterSpacing:"0.12em" }}>{instrument ? `INSTRUMENT: ${instrument}` : "SELECT YOUR INSTRUMENT FIRST"}</span>
+            </div>
             <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 24 }}>
               {["BTCUSD","XAUUSD","NAS100","US30","USOIL","GBPUSD"].map(sym => (
                 <button key={sym} onClick={() => setInstrument(sym)}
@@ -1995,7 +2247,7 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
               </div>
             </div>
 
-            {/* 5 fixed slots */}
+            {/* 5 fixed slots — click or drag & drop */}
             {(() => {
               const slots = [
                 { tf: "Daily", label: "D",   role: "Bias",      desc: "Sets the direction. The General." },
@@ -2004,20 +2256,35 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
                 { tf: "30M",   label: "30M", role: "Trigger",   desc: "30M close confirms the trigger." },
                 { tf: "15M",   label: "15M", role: "Refinement",desc: "Fine-tunes the entry zone." },
               ];
+
+              function handleDrop(e, i) {
+                e.preventDefault();
+                setDragOverSlot(null);
+                const file = Array.from(e.dataTransfer.files).find(f => f.type.startsWith("image/"));
+                if (file) readSlotFile(file, i);
+              }
+
               return (
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
                   {slots.map((slot, i) => {
-                    const hasImage = !!images[i];
-                    const slotRef = React.createRef();
+                    const hasImage = !!(images[i] && images[i].preview);
+                    const isDragging = dragOverSlot === i;
                     return (
-                      <label htmlFor={`slot-input-${i}`} key={slot.tf} style={{
-                        display: "flex", alignItems: "center", gap: 14,
-                        padding: "9px 14px",
-                        background: hasImage ? "rgba(127,255,107,0.06)" : "rgba(255,255,255,0.04)",
-                        border: `1px solid ${hasImage ? "rgba(127,255,107,0.28)" : "rgba(255,255,255,0.11)"}`,
-                        borderRadius: 10, transition: "all 0.2s",
-                        cursor: hasImage ? "default" : "pointer",
-                      }}>
+                      <div
+                        key={slot.tf}
+                        onDragOver={e => { e.preventDefault(); setDragOverSlot(i); }}
+                        onDragLeave={() => setDragOverSlot(null)}
+                        onDrop={e => handleDrop(e, i)}
+                        onClick={() => document.getElementById(`slot-input-${i}`).click()}
+                        style={{
+                          display: "flex", alignItems: "center", gap: 14,
+                          padding: "9px 14px",
+                          background: isDragging ? "rgba(255,107,255,0.08)" : hasImage ? "rgba(127,255,107,0.06)" : "rgba(255,255,255,0.04)",
+                          border: `1px solid ${isDragging ? "rgba(255,107,255,0.5)" : hasImage ? "rgba(127,255,107,0.28)" : "rgba(255,255,255,0.11)"}`,
+                          borderRadius: 10, transition: "all 0.15s",
+                          cursor: "pointer",
+                        }}>
+
                         {/* Timeframe badge */}
                         <div style={{ width: 42, height: 42, flexShrink: 0, borderRadius: 8, background: hasImage ? "rgba(127,255,107,0.1)" : "rgba(255,255,255,0.05)", border: `1px solid ${hasImage ? "rgba(127,255,107,0.3)" : "rgba(255,255,255,0.1)"}`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
                           <span style={{ fontSize: 11, fontWeight: 900, color: hasImage ? "#7fff6b" : "#8878aa", lineHeight: 1 }}>{slot.label}</span>
@@ -2026,41 +2293,39 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
 
                         {/* Preview or empty state */}
                         {hasImage ? (
-                          <img src={URL.createObjectURL(images[i])} alt={slot.tf}
-                            style={{ width: 64, height: 42, objectFit: "cover", borderRadius: 6, border: "1px solid rgba(127,255,107,0.2)", flexShrink: 0 }}/>
+                          <img src={images[i].preview} alt={slot.tf}
+                            style={{ width: 64, height: 42, objectFit: "cover", borderRadius: 6, border: "1px solid rgba(127,255,107,0.25)", borderRadius: 6, flexShrink: 0 }}/>
                         ) : (
-                          <div style={{ width: 64, height: 42, flexShrink: 0, borderRadius: 6, border: "1px dashed rgba(255,107,255,0.35)", background: "rgba(255,107,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                            <span style={{ fontSize: 18, color: "rgba(255,107,255,0.5)", fontWeight: 700, lineHeight: 1 }}>+</span>
+                          <div style={{ width: 64, height: 42, flexShrink: 0, borderRadius: 6, border: `1px dashed ${isDragging ? "rgba(255,107,255,0.7)" : "rgba(255,107,255,0.35)"}`, background: isDragging ? "rgba(255,107,255,0.1)" : "rgba(255,107,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}>
+                            <span style={{ fontSize: 18, color: isDragging ? "rgba(255,107,255,0.9)" : "rgba(255,107,255,0.5)", fontWeight: 700, lineHeight: 1 }}>{isDragging ? "↓" : "+"}</span>
                           </div>
                         )}
 
                         {/* Labels */}
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 12, fontWeight: 700, color: hasImage ? "#f0ecff" : "#8878aa", marginBottom: 2 }}>{slot.tf} Chart</div>
-                          <div style={{ fontSize: 9, color: "rgba(255,255,255,0.45)", lineHeight: 1.5 }}>{slot.desc}</div>
+                          <div style={{ fontSize: 9, color: "rgba(255,255,255,0.45)", lineHeight: 1.5 }}>{isDragging ? `Drop your ${slot.tf} chart here` : slot.desc}</div>
                         </div>
 
-                        {/* Hidden input — row is clickable */}
+                        {/* Hidden file input */}
                         <input
                           type="file" accept="image/*"
                           style={{ display: "none" }}
                           id={`slot-input-${i}`}
+                          onClick={e => e.stopPropagation()}
                           onChange={e => {
-                            if (e.target.files[0]) {
-                              const newImages = [...images];
-                              newImages[i] = e.target.files[0];
-                              setImages(newImages);
-                            }
+                            if (e.target.files[0]) readSlotFile(e.target.files[0], i);
                           }}
                         />
-                        {/* Replace chip — only shows when uploaded */}
+                        {/* Replace chip */}
                         {hasImage && (
-                          <label htmlFor={`slot-input-${i}`}
+                          <div
+                            onClick={e => { e.stopPropagation(); document.getElementById(`slot-input-${i}`).click(); }}
                             style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.06em", padding: "3px 9px", borderRadius: 5, border: "1px solid rgba(127,255,107,0.25)", background: "rgba(127,255,107,0.05)", color: "rgba(127,255,107,0.6)", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
                             Replace
-                          </label>
+                          </div>
                         )}
-                      </label>
+                      </div>
                     );
                   })}
                 </div>
@@ -2068,14 +2333,23 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
             })()}
 
             {/* CTA */}
-            <button onClick={analyzeCharts} disabled={images.filter(Boolean).length < 5}
-              style={{ width: "100%", padding: "14px", borderRadius: 10, border: "none", background: images.filter(Boolean).length === 5 ? "linear-gradient(135deg,#ff6bff,#7b2fff)" : "rgba(255,107,255,0.08)", color: images.filter(Boolean).length === 5 ? "#fff" : "rgba(255,107,255,0.45)", fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", fontFamily: "inherit", cursor: images.filter(Boolean).length === 5 ? "pointer" : "default", boxShadow: images.filter(Boolean).length === 5 ? "0 4px 32px rgba(255,107,255,0.35), 0 0 0 1px rgba(255,107,255,0.15)" : "none", border: images.filter(Boolean).length === 5 ? "none" : "1px solid rgba(255,107,255,0.2)", transition: "all 0.2s" }}>
-              {images.filter(Boolean).length === 5
-                ? "GENERATE SESSION PLAN →"
-                : images.filter(Boolean).length === 0
-                ? "UPLOAD 5 CHARTS"
-                : `UPLOAD ${5 - images.filter(Boolean).length} MORE CHART${5 - images.filter(Boolean).length !== 1 ? "S" : ""}`}
-            </button>
+            {(()=>{
+              const mkt = getMarketStatus(instrument);
+              const ready = images.filter(Boolean).length === 5 && mkt.open;
+              const partial = images.filter(Boolean).length > 0 && images.filter(Boolean).length < 5;
+              return (
+                <button onClick={analyzeCharts} disabled={!ready}
+                  style={{ width: "100%", padding: "14px", borderRadius: 10, border: ready ? "none" : "1px solid rgba(255,107,255,0.2)", background: ready ? "linear-gradient(135deg,#ff6bff,#7b2fff)" : "rgba(255,107,255,0.08)", color: ready ? "#fff" : "rgba(255,107,255,0.45)", fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", fontFamily: "inherit", cursor: ready ? "pointer" : "default", boxShadow: ready ? "0 4px 32px rgba(255,107,255,0.35), 0 0 0 1px rgba(255,107,255,0.15)" : "none", transition: "all 0.2s" }}>
+                  {!mkt.open
+                    ? "MARKET CLOSED — COME BACK LATER"
+                    : images.filter(Boolean).length === 5
+                    ? "GENERATE SESSION PLAN →"
+                    : images.filter(Boolean).length === 0
+                    ? "UPLOAD 5 CHARTS"
+                    : `UPLOAD ${5 - images.filter(Boolean).length} MORE CHART${5 - images.filter(Boolean).length !== 1 ? "S" : ""}`}
+                </button>
+              );
+            })()}
 
             <div style={{ textAlign: "center", marginTop: 10, fontSize: 9, color: "#8878aa" }}>
               Only upload screenshots from the broker you're trading · All 5 timeframes required
@@ -2086,11 +2360,78 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
 
       {/* ══ PHASE: ANALYZING ═══════════════════════════════════════════════════ */}
       {phase === "analyzing" && (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20, animation: "fadein 0.3s ease both" }}>
-          <div style={{ width: 40, height: 40, border: "3px solid rgba(255,107,255,0.15)", borderTop: "3px solid #ff6bff", borderRadius: "50%", animation: "spin 0.8s linear infinite" }}/>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 32, animation: "fadein 0.3s ease both", padding: "32px 24px" }}>
+          <style>{`
+            @keyframes scanScroll {
+              0%   { transform: translateY(0);     opacity: 0; }
+              8%   { opacity: 1; }
+              92%  { opacity: 1; }
+              100% { transform: translateY(-100%); opacity: 0; }
+            }
+            @keyframes scanLine {
+              0%,100% { opacity: 0.3; }
+              50% { opacity: 1; }
+            }
+            @keyframes blink {
+              0%,100% { opacity: 1; }
+              50% { opacity: 0; }
+            }
+          `}</style>
+
+          {/* Scanning animation block */}
+          <div style={{ width: "100%", maxWidth: 480, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,107,255,0.12)", borderRadius: 12, overflow: "hidden", position: "relative" }}>
+
+            {/* Top bar */}
+            <div style={{ padding: "10px 16px", borderBottom: "1px solid rgba(255,107,255,0.1)", display: "flex", alignItems: "center", gap: 8, background: "rgba(255,107,255,0.04)" }}>
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#ff6bff", animation: "pulse 1s ease infinite" }}/>
+              <span style={{ fontFamily: "'Space Mono',monospace", fontSize: 9, fontWeight: 700, letterSpacing: "0.16em", color: "#ff6bff" }}>OMNIUSD ANALYSIS ENGINE</span>
+              <span style={{ fontFamily: "'Space Mono',monospace", fontSize: 9, color: "#8878aa", marginLeft: "auto" }}>
+                {instrument} <span style={{ animation: "blink 1s step-end infinite", color: "#ff6bff" }}>|</span>
+              </span>
+            </div>
+
+            {/* Scrolling messages */}
+            <div style={{ height: 180, position: "relative", overflow: "hidden" }}>
+              {[
+                { msg: `Validating instrument — checking for ${instrument} labels...`, color: "#00e5ff",  delay: "0s",    dur: "2.8s" },
+                { msg: "Reading Daily chart — identifying trend bias...",              color: "#ffd166",  delay: "2.2s",  dur: "2.8s" },
+                { msg: "Reading 4H chart — confirming market structure...",            color: "#ffd166",  delay: "4.2s",  dur: "2.8s" },
+                { msg: "Reading 1H chart — locating BRC sequence...",                 color: "#ff6bff",  delay: "6.2s",  dur: "2.8s" },
+                { msg: "Reading 30M chart — identifying trigger level...",             color: "#ff6bff",  delay: "8.2s",  dur: "2.8s" },
+                { msg: "Reading 15M chart — refining entry zone...",                  color: "#7fff6b",  delay: "10.2s", dur: "2.8s" },
+                { msg: "Checking 3-timeframe alignment...",                            color: "#00e5ff",  delay: "12.2s", dur: "2.8s" },
+                { msg: "Calculating BRC phase — Break / Retest / Continuation...",    color: "#ffd166",  delay: "14.2s", dur: "2.8s" },
+                { msg: "Grading the setup...",                                         color: "#7fff6b",  delay: "16.2s", dur: "2.8s" },
+                { msg: "Building your locked session plan...",                         color: "#ff6bff",  delay: "18.2s", dur: "2.8s" },
+              ].map((item, i) => (
+                <div key={i} style={{
+                  position: "absolute", top: "100%", left: 0, right: 0,
+                  padding: "0 20px",
+                  display: "flex", alignItems: "center", gap: 10,
+                  height: "100%",
+                  animation: `scanScroll ${item.dur} ease both`,
+                  animationDelay: item.delay,
+                }}>
+                  <div style={{ width: 4, height: 4, borderRadius: "50%", background: item.color, flexShrink: 0 }}/>
+                  <span style={{ fontFamily: "'Space Mono',monospace", fontSize: 11, color: item.color, lineHeight: 1.5 }}>{item.msg}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Scan line */}
+            <div style={{ height: 1, background: "linear-gradient(90deg,transparent,rgba(255,107,255,0.4),transparent)", animation: "scanLine 1.5s ease infinite" }}/>
+
+            {/* Bottom progress bar */}
+            <div style={{ height: 3, background: "rgba(255,255,255,0.06)" }}>
+              <div style={{ height: "100%", background: "linear-gradient(90deg,#ff6bff,#00e5ff)", animation: "grow 22s linear both", width: "0%" }}/>
+            </div>
+            <style>{`@keyframes grow { to { width: 95%; } }`}</style>
+          </div>
+
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#f0ecff", marginBottom: 6 }}>Reading your charts...</div>
-            <div style={{ fontSize: 10, color: "#8878aa" }}>Identifying BRC phase · Grading the setup · Building your plan</div>
+            <div style={{ fontFamily: "'Space Mono',monospace", fontSize: 10, color: "rgba(255,255,255,0.3)", lineHeight: 1.8 }}>
+              Do not close this tab — analysis in progress
+            </div>
           </div>
         </div>
       )}
@@ -2099,6 +2440,30 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
       {phase === "plan" && plan && (
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 24px", animation: "slide 0.35s ease both" }}>
           <div style={{ width: "100%", maxWidth: 520 }}>
+
+          {/* ── BLOCKED STATE — instrument mismatch or chart error ── */}
+          {plan._blocked && (
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 56, marginBottom: 16 }}>🚫</div>
+              <div style={{ fontFamily: "'Space Mono',monospace", fontSize: 11, fontWeight: 900, letterSpacing: "0.2em", color: "#ff6b6b", marginBottom: 14 }}>UPLOAD REJECTED</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#f0ecff", marginBottom: 12, lineHeight: 1.6 }}>{plan._reason}</div>
+              <div style={{ padding: "12px 16px", background: "rgba(255,209,102,0.06)", border: "1px solid rgba(255,209,102,0.2)", borderRadius: 8, marginBottom: 24, textAlign: "left" }}>
+                <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: "0.16em", color: "#ffd166", marginBottom: 8 }}>HOW TO FIX THIS</div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", lineHeight: 1.8 }}>
+                  1. Open your broker platform<br/>
+                  2. Make sure the <span style={{ color: "#ffd166" }}>instrument ticker</span> is visible in the chart title or header<br/>
+                  3. Make sure the <span style={{ color: "#ffd166" }}>timeframe</span> (D, 4H, 1H, 30M, 15M) is visible<br/>
+                  4. Take a new screenshot and re-upload
+                </div>
+              </div>
+              <button onClick={() => { setPhase("upload"); setPlan(null); setImages(Array(5).fill(null)); }}
+                style={{ fontFamily: "inherit", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", padding: "12px 28px", borderRadius: 8, border: "1px solid rgba(255,107,107,0.4)", background: "rgba(255,107,107,0.08)", color: "#ff6b6b", cursor: "pointer" }}>
+                ← RE-UPLOAD CORRECT CHARTS
+              </button>
+            </div>
+          )}
+
+          {!plan._blocked && (<>
 
             {/* Grade + bias header */}
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
@@ -2118,6 +2483,19 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
             <div style={{ padding: "14px 16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10, marginBottom: 16, fontSize: 12, color: "#ccc4e8", lineHeight: 1.7 }}>
               {plan.summary}
             </div>
+
+            {/* Session context note — always show on weekends */}
+            {(()=>{
+              const now = new Date(new Date().toLocaleString("en-US",{timeZone:"America/Chicago"}));
+              const day = now.getDay();
+              const isWeekend = day === 0 || day === 6;
+              if (!isWeekend) return null;
+              return (
+                <div style={{ padding: "10px 14px", background: "rgba(0,229,255,0.05)", border: "1px solid rgba(0,229,255,0.2)", borderLeft: "3px solid #00e5ff", borderRadius: 0, marginBottom: 16, fontSize: 11, color: "#00e5ff", lineHeight: 1.7 }}>
+                  <span style={{ fontWeight: 700 }}>Weekend session:</span> {plan.session_note || (day===6 ? "Next valid BRC window — Asian session Sunday ~8:00 PM CT or NY session Monday ~8:30 AM CT." : "Asian session opens tonight ~8:00 PM CT. NY session Monday ~8:30 AM CT.")}
+                </div>
+              );
+            })()}
 
             {/* Friday note */}
             {plan.friday_note && (
@@ -2151,15 +2529,77 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
                 </div>
               </>
             ) : (
-              <div style={{ padding: "16px", background: "rgba(255,107,107,0.06)", border: "1px solid rgba(255,107,107,0.2)", borderRadius: 10, textAlign: "center" }}>
-                <div style={{ fontSize: 12, color: "#ff8080", fontWeight: 700, marginBottom: 6 }}>No valid entry — PASS</div>
-                <div style={{ fontSize: 11, color: "#8878aa", marginBottom: 14 }}>{plan.pass_reason || "No A+ BRC sequence formed. Wait for fresh structure."}</div>
-                <button onClick={() => { setPhase("upload"); setImages([]); setPlan(null); }}
-                  style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", padding: "8px 20px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: "#8878aa", cursor: "pointer", fontFamily: "inherit" }}>
-                  ← New Analysis
-                </button>
-              </div>
+              (() => {
+                const _n = new Date(new Date().toLocaleString("en-US",{timeZone:"America/Chicago"}));
+                const _d = _n.getDay();
+                const _m = _n.getHours()*60+_n.getMinutes();
+                const isWeekendPass = (_d===6||(_d===0&&_m<20*60)) && plan.pass_reason && plan.pass_reason.includes("Weekend");
+
+                if (isWeekendPass) return (
+                  <div style={{ animation: "fadein 0.4s ease both" }}>
+                    {/* Header */}
+                    <div style={{ textAlign:"center", marginBottom:24 }}>
+                      <div style={{ fontSize:11, fontWeight:900, letterSpacing:"0.2em", color:"#ff6b6b", marginBottom:12, fontFamily:"'Space Mono',monospace" }}>PASS — WEEKEND SESSION</div>
+                      <div style={{ fontSize:18, fontWeight:800, color:"#f0ecff", lineHeight:1.3, fontFamily:"'Syne',sans-serif" }}>
+                        Our job is to protect you<br/>from bad trades — not just good ones.
+                      </div>
+                    </div>
+
+                    {/* Why */}
+                    <div style={{ padding:"16px 18px", background:"rgba(255,107,107,0.04)", border:"1px solid rgba(255,107,107,0.15)", borderLeft:"3px solid #ff6b6b", borderRadius:0, marginBottom:14, fontFamily:"'Space Mono',monospace", fontSize:11, color:"rgba(255,255,255,0.55)", lineHeight:1.9 }}>
+                      Weekend crypto volume is thin, choppy, and driven by retail noise — not institutional structure. A setup that looks clean right now can completely reset before Monday's open. This is not a valid BRC execution window.
+                    </div>
+
+                    {/* FOMO section */}
+                    <div style={{ padding:"16px 18px", background:"rgba(255,209,102,0.04)", border:"1px solid rgba(255,209,102,0.15)", borderLeft:"3px solid #ffd166", borderRadius:0, marginBottom:14 }}>
+                      <div style={{ fontFamily:"'Space Mono',monospace", fontSize:9, fontWeight:900, letterSpacing:"0.16em", color:"#ffd166", marginBottom:10 }}>ON FOMO</div>
+                      <div style={{ fontFamily:"'Space Mono',monospace", fontSize:11, color:"rgba(255,255,255,0.55)", lineHeight:1.9 }}>
+                        The feeling that you are missing something right now is one of the most expensive emotions in trading. <span style={{ color:"#ffd166", fontWeight:700 }}>The market will always be there. Monday will always come.</span> The same structure you are looking at tonight will either still be valid when a real session opens — or it will have reset and protected you from a bad trade.
+                      </div>
+                      <div style={{ fontFamily:"'Space Mono',monospace", fontSize:11, color:"rgba(255,255,255,0.7)", lineHeight:1.9, marginTop:10, fontWeight:700 }}>
+                        Either way, you win by waiting.
+                      </div>
+                    </div>
+
+                    {/* The hard truth */}
+                    <div style={{ padding:"14px 18px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:8, marginBottom:20, fontFamily:"'Space Mono',monospace", fontSize:11, color:"rgba(255,255,255,0.45)", lineHeight:1.9, fontStyle:"italic" }}>
+                      The traders who blow accounts do not lose on A+ setups. They lose on Saturday nights when they convinced themselves the setup was too good to wait.
+                    </div>
+
+                    {/* Come back times */}
+                    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:20 }}>
+                      {[
+                        { label:"ASIAN SESSION", time:"Sunday ~8:00 PM CT", color:"#00e5ff" },
+                        { label:"NY SESSION",    time:"Monday ~8:30 AM CT",  color:"#7fff6b" },
+                      ].map(r=>(
+                        <div key={r.label} style={{ padding:"12px 14px", background:`${r.color}08`, border:`1px solid ${r.color}22`, borderRadius:8, textAlign:"center" }}>
+                          <div style={{ fontFamily:"'Space Mono',monospace", fontSize:8, fontWeight:900, letterSpacing:"0.14em", color:r.color, marginBottom:6 }}>{r.label}</div>
+                          <div style={{ fontFamily:"'Space Mono',monospace", fontSize:11, fontWeight:700, color:"#f0ecff" }}>{r.time}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <button onClick={() => { setPhase("upload"); setImages(Array(5).fill(null)); setPlan(null); }}
+                      style={{ width:"100%", fontSize:10, fontWeight:700, letterSpacing:"0.1em", padding:"11px", borderRadius:8, border:"1px solid rgba(255,255,255,0.08)", background:"rgba(255,255,255,0.03)", color:"#8878aa", cursor:"pointer", fontFamily:"inherit" }}>
+                      ← New Analysis
+                    </button>
+                  </div>
+                );
+
+                // Standard weekday PASS
+                return (
+                  <div style={{ padding:"16px", background:"rgba(255,107,107,0.06)", border:"1px solid rgba(255,107,107,0.2)", borderRadius:10, textAlign:"center" }}>
+                    <div style={{ fontSize:12, color:"#ff8080", fontWeight:700, marginBottom:6 }}>No valid entry — PASS</div>
+                    <div style={{ fontSize:11, color:"#8878aa", marginBottom:14 }}>{plan.pass_reason || "No A+ BRC sequence formed. Wait for fresh structure."}</div>
+                    <button onClick={() => { setPhase("upload"); setImages(Array(5).fill(null)); setPlan(null); }}
+                      style={{ fontSize:10, fontWeight:700, letterSpacing:"0.08em", padding:"8px 20px", borderRadius:8, border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.04)", color:"#8878aa", cursor:"pointer", fontFamily:"inherit" }}>
+                      ← New Analysis
+                    </button>
+                  </div>
+                );
+              })()
             )}
+          </>)}
           </div>
         </div>
       )}
