@@ -1880,8 +1880,265 @@ YOUR ROLE:
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
+function SettingsPage({profile, onSignOut, onClose}) {
+  const [section, setSection] = useState("account");
+  const [pwCurrent, setPwCurrent] = useState("");
+  const [pwNew, setPwNew] = useState("");
+  const [pwConfirm, setPwConfirm] = useState("");
+  const [pwLoading, setPwLoading] = useState(false);
+  const [pwMsg, setPwMsg] = useState(null);
+  const [cancelStep, setCancelStep] = useState(0);
+  const [deleteStep, setDeleteStep] = useState(0);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+
+  const tier = profile?.tier || "starter";
+  const tierCfg = TIER_CONFIG[tier] || TIER_CONFIG.starter;
+  const nextTier = tier === "starter" ? TIER_CONFIG.pro : tier === "pro" ? TIER_CONFIG.elite : null;
+  const nextTierKey = tier === "starter" ? "pro" : tier === "pro" ? "elite" : null;
+
+  async function handleChangePassword() {
+    if (!pwNew || !pwConfirm) { setPwMsg({type:"error", text:"Fill in all fields."}); return; }
+    if (pwNew.length < 8) { setPwMsg({type:"error", text:"Password must be at least 8 characters."}); return; }
+    if (pwNew !== pwConfirm) { setPwMsg({type:"error", text:"Passwords do not match."}); return; }
+    setPwLoading(true); setPwMsg(null);
+    try {
+      const session = JSON.parse(localStorage.getItem("omniusd_session") || "{}");
+      const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", "apikey": SUPABASE_KEY, "Authorization": `Bearer ${session.access_token}` },
+        body: JSON.stringify({ password: pwNew }),
+      });
+      setPwLoading(false);
+      if (res.ok) {
+        setPwMsg({type:"success", text:"Password updated successfully."});
+        setPwCurrent(""); setPwNew(""); setPwConfirm("");
+      } else {
+        const d = await res.json();
+        setPwMsg({type:"error", text: d.msg || d.error || "Failed to update password."});
+      }
+    } catch(e) { setPwLoading(false); setPwMsg({type:"error", text:"Connection error."}); }
+  }
+
+  async function handleDeleteAccount() {
+    if (deleteConfirm !== "DELETE") return;
+    try {
+      const session = JSON.parse(localStorage.getItem("omniusd_session") || "{}");
+      await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+        method: "DELETE",
+        headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${session.access_token}` },
+      });
+    } catch(e) {}
+    localStorage.clear();
+    window.location.reload();
+  }
+
+  const card = {background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:12,padding:"22px 24px",marginBottom:16};
+  const label = {fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,letterSpacing:"0.14em",color:"rgba(255,255,255,0.35)",marginBottom:10,display:"block"};
+  const inputSt = {width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"10px 14px",fontSize:12,color:"#f0ecff",fontFamily:"'Space Mono',monospace",outline:"none",boxSizing:"border-box"};
+  const sections = ["account","plan","preferences","danger"];
+
+  return (
+    <div style={{flex:1,overflowY:"auto",padding:"32px 24px",animation:"fadein 0.3s ease both"}}>
+      <div style={{maxWidth:600,margin:"0 auto"}}>
+
+        {/* Header */}
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:28}}>
+          <div>
+            <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,107,255,0.7)",letterSpacing:"0.18em",marginBottom:6}}>SETTINGS</div>
+            <h2 style={{fontFamily:"'Syne',sans-serif",fontSize:22,fontWeight:800,color:"#f0ecff",margin:0}}>Account & Plan</h2>
+          </div>
+          <button onClick={onClose} style={{fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,color:"#8878aa",background:"none",border:"1px solid rgba(255,255,255,0.08)",borderRadius:6,padding:"6px 12px",cursor:"pointer"}}>
+            ← Back
+          </button>
+        </div>
+
+        {/* Section tabs */}
+        <div style={{display:"flex",gap:4,marginBottom:24,background:"rgba(255,255,255,0.03)",padding:4,borderRadius:10}}>
+          {[{id:"account",l:"Account"},{id:"plan",l:"Plan"},{id:"preferences",l:"Preferences"},{id:"danger",l:"Danger Zone"}].map(t=>(
+            <button key={t.id} onClick={()=>setSection(t.id)}
+              style={{flex:1,padding:"7px 4px",borderRadius:7,border:"none",fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,letterSpacing:"0.06em",cursor:"pointer",transition:"all 0.15s",
+                background:section===t.id?"rgba(255,107,255,0.12)":"none",
+                color:section===t.id?"#ff6bff":"#8878aa"}}>
+              {t.l}
+            </button>
+          ))}
+        </div>
+
+        {/* ── ACCOUNT ── */}
+        {section === "account" && (
+          <>
+            {/* Email */}
+            <div style={card}>
+              <span style={label}>EMAIL ADDRESS</span>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:"#f0ecff",padding:"10px 14px",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:8}}>
+                {profile?.email || "—"}
+              </div>
+            </div>
+
+            {/* Change password */}
+            <div style={card}>
+              <span style={label}>CHANGE PASSWORD</span>
+              <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                <input type="password" placeholder="New password (min 8 characters)" value={pwNew} onChange={e=>setPwNew(e.target.value)} style={inputSt}/>
+                <input type="password" placeholder="Confirm new password" value={pwConfirm} onChange={e=>setPwConfirm(e.target.value)} style={{...inputSt,borderColor:pwConfirm&&pwConfirm!==pwNew?"rgba(255,107,107,0.4)":pwConfirm&&pwConfirm===pwNew?"rgba(127,255,107,0.3)":"rgba(255,255,255,0.1)"}}/>
+                {pwMsg && <div style={{fontSize:11,color:pwMsg.type==="error"?"#ff8080":"#7fff6b",fontFamily:"'Space Mono',monospace"}}>{pwMsg.text}</div>}
+                <button onClick={handleChangePassword} disabled={pwLoading}
+                  style={{padding:"10px 20px",borderRadius:8,border:"none",background:pwLoading?"rgba(255,255,255,0.05)":"rgba(255,107,255,0.15)",color:pwLoading?"#8878aa":"#ff6bff",fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,letterSpacing:"0.08em",cursor:pwLoading?"not-allowed":"pointer",alignSelf:"flex-start"}}>
+                  {pwLoading ? "Updating..." : "UPDATE PASSWORD →"}
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ── PLAN ── */}
+        {section === "plan" && (
+          <>
+            {/* Current plan */}
+            <div style={{...card,border:`1px solid ${tierCfg.color}33`,background:`${tierCfg.color}08`}}>
+              <span style={label}>CURRENT PLAN</span>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+                <div style={{fontFamily:"'Syne',sans-serif",fontSize:22,fontWeight:800,color:tierCfg.color}}>{tierCfg.label}</div>
+                <div style={{fontFamily:"'Space Mono',monospace",fontSize:18,fontWeight:700,color:"#f0ecff"}}>{tierCfg.price}</div>
+              </div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                {tierCfg.instruments.map(sym=>(
+                  <span key={sym} style={{fontFamily:"'Space Mono',monospace",fontSize:9,padding:"3px 9px",borderRadius:4,background:`${tierCfg.color}14`,border:`1px solid ${tierCfg.color}33`,color:tierCfg.color}}>{sym}</span>
+                ))}
+              </div>
+            </div>
+
+            {/* Upgrade */}
+            {nextTier && (
+              <div style={{...card,border:"1px solid rgba(255,107,255,0.15)"}}>
+                <span style={label}>UPGRADE YOUR PLAN</span>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+                  <div>
+                    <div style={{fontFamily:"'Syne',sans-serif",fontSize:16,fontWeight:800,color:"#f0ecff",marginBottom:4}}>{nextTier.label} — {nextTier.price}</div>
+                    <div style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"rgba(255,255,255,0.4)"}}>Unlocks: {nextTier.instruments.filter(i=>!tierCfg.instruments.includes(i)).join(", ")}</div>
+                  </div>
+                </div>
+                <button onClick={()=>window.open("https://omniusd.pro/#pricing","_blank")}
+                  style={{width:"100%",padding:"12px",borderRadius:8,border:"none",background:"linear-gradient(135deg,#ff6bff,#7b2fff)",color:"#fff",fontFamily:"'Space Mono',monospace",fontSize:11,fontWeight:700,letterSpacing:"0.1em",cursor:"pointer"}}>
+                  UPGRADE TO {nextTier.label.toUpperCase()} →
+                </button>
+              </div>
+            )}
+
+            {/* Cancel */}
+            <div style={card}>
+              <span style={label}>CANCEL SUBSCRIPTION</span>
+              {cancelStep === 0 && (
+                <div>
+                  <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"rgba(255,255,255,0.45)",lineHeight:1.8,marginBottom:14}}>
+                    Your access continues until the end of your current billing period. You will not be charged again.
+                  </div>
+                  <button onClick={()=>setCancelStep(1)}
+                    style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,padding:"8px 16px",borderRadius:7,border:"1px solid rgba(255,107,107,0.25)",background:"rgba(255,107,107,0.05)",color:"rgba(255,107,107,0.7)",cursor:"pointer"}}>
+                    Cancel subscription
+                  </button>
+                </div>
+              )}
+              {cancelStep === 1 && (
+                <div>
+                  <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"#ff8080",lineHeight:1.8,marginBottom:14,fontWeight:700}}>
+                    Are you sure? You will lose access to OmniUSD at the end of your billing period.
+                  </div>
+                  <div style={{display:"flex",gap:8}}>
+                    <button onClick={()=>setCancelStep(0)}
+                      style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,padding:"8px 16px",borderRadius:7,border:"1px solid rgba(255,255,255,0.08)",background:"rgba(255,255,255,0.04)",color:"#8878aa",cursor:"pointer"}}>
+                      Keep my plan
+                    </button>
+                    <button onClick={()=>{window.open("mailto:support@omniusd.pro?subject=Cancel Subscription","_blank");setCancelStep(2);}}
+                      style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,padding:"8px 16px",borderRadius:7,border:"1px solid rgba(255,107,107,0.4)",background:"rgba(255,107,107,0.08)",color:"#ff6b6b",cursor:"pointer"}}>
+                      Yes, cancel →
+                    </button>
+                  </div>
+                </div>
+              )}
+              {cancelStep === 2 && (
+                <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"#7fff6b",lineHeight:1.8}}>
+                  Cancellation request sent. We'll process it within 24 hours and confirm by email.
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* ── PREFERENCES ── */}
+        {section === "preferences" && (
+          <>
+            <div style={card}>
+              <span style={label}>DEFAULT INSTRUMENT</span>
+              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                {tierCfg.instruments.map(sym=>(
+                  <div key={sym} style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,padding:"6px 14px",borderRadius:6,border:`1px solid ${profile?.defaultInstrument===sym?"rgba(255,107,255,0.5)":"rgba(255,255,255,0.1)"}`,background:profile?.defaultInstrument===sym?"rgba(255,107,255,0.12)":"rgba(255,255,255,0.04)",color:profile?.defaultInstrument===sym?"#ff6bff":"#8878aa"}}>
+                    {sym}
+                  </div>
+                ))}
+              </div>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"rgba(255,255,255,0.25)",marginTop:10}}>
+                To update preferences, sign out and complete onboarding again.
+              </div>
+            </div>
+
+            <div style={card}>
+              <span style={label}>TIMEZONE</span>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:"#f0ecff",padding:"10px 14px",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:8}}>
+                {profile?.tz?.label || "Not set"}
+              </div>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"rgba(255,255,255,0.25)",marginTop:8}}>
+                To update your timezone, sign out and complete onboarding again.
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ── DANGER ZONE ── */}
+        {section === "danger" && (
+          <div style={{...card,border:"1px solid rgba(255,107,107,0.2)"}}>
+            <span style={{...label,color:"rgba(255,107,107,0.6)"}}>DELETE ACCOUNT</span>
+            <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"rgba(255,255,255,0.45)",lineHeight:1.8,marginBottom:16}}>
+              This permanently deletes your account, profile, and all session history. This cannot be undone.
+            </div>
+            {deleteStep === 0 && (
+              <button onClick={()=>setDeleteStep(1)}
+                style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,padding:"8px 16px",borderRadius:7,border:"1px solid rgba(255,107,107,0.3)",background:"rgba(255,107,107,0.06)",color:"rgba(255,107,107,0.6)",cursor:"pointer"}}>
+                Delete my account
+              </button>
+            )}
+            {deleteStep === 1 && (
+              <div>
+                <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"#ff8080",marginBottom:12,lineHeight:1.7}}>
+                  Type <strong>DELETE</strong> to confirm. This cannot be undone.
+                </div>
+                <input value={deleteConfirm} onChange={e=>setDeleteConfirm(e.target.value)}
+                  placeholder="Type DELETE to confirm"
+                  style={{...inputSt,marginBottom:10,borderColor:deleteConfirm==="DELETE"?"rgba(255,107,107,0.5)":"rgba(255,255,255,0.1)"}}
+                />
+                <div style={{display:"flex",gap:8}}>
+                  <button onClick={()=>{setDeleteStep(0);setDeleteConfirm("");}}
+                    style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,padding:"8px 16px",borderRadius:7,border:"1px solid rgba(255,255,255,0.08)",background:"rgba(255,255,255,0.04)",color:"#8878aa",cursor:"pointer"}}>
+                    Cancel
+                  </button>
+                  <button onClick={handleDeleteAccount} disabled={deleteConfirm!=="DELETE"}
+                    style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,padding:"8px 16px",borderRadius:7,border:"1px solid rgba(255,107,107,0.5)",background:deleteConfirm==="DELETE"?"rgba(255,107,107,0.15)":"rgba(255,107,107,0.04)",color:deleteConfirm==="DELETE"?"#ff6b6b":"rgba(255,107,107,0.3)",cursor:deleteConfirm==="DELETE"?"pointer":"not-allowed"}}>
+                    Permanently delete →
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
+
 function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
   const [phase, setPhase] = useState("upload"); // upload | analyzing | plan | live
+  const [appPage, setAppPage] = useState("dashboard"); // dashboard | settings
   const [images, setImages] = useState(Array(5).fill(null)); // each slot: {file, preview} or null
 
   function readSlotFile(file, i) {
@@ -2170,6 +2427,10 @@ Return ONLY valid JSON, no markdown, no explanation:
               Journal
             </button>
           )}
+          <button onClick={() => setAppPage(appPage === "settings" ? "dashboard" : "settings")}
+            style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", color: appPage === "settings" ? "#ff6bff" : "#8878aa", background: appPage === "settings" ? "rgba(255,107,255,0.1)" : "none", border: `1px solid ${appPage === "settings" ? "rgba(255,107,255,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
+            Settings
+          </button>
           {/* Upgrade button — show if not elite */}
           {profile?.tier !== "elite" && (
             <button onClick={() => window.open("https://omniusd.pro/#pricing","_blank")}
@@ -2198,8 +2459,13 @@ Return ONLY valid JSON, no markdown, no explanation:
         </div>
       </header>
 
+      {/* ══ SETTINGS PAGE ══════════════════════════════════════════════════════ */}
+      {appPage === "settings" && (
+        <SettingsPage profile={profile} onSignOut={onSignOut} onClose={() => setAppPage("dashboard")} />
+      )}
+
       {/* ══ PHASE: UPLOAD ══════════════════════════════════════════════════════ */}
-      {phase === "upload" && (
+      {appPage === "dashboard" && phase === "upload" && (
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", padding: "48px 24px 32px", animation: "fadein 0.3s ease both" }}>
           <div style={{ width: "100%", maxWidth: 560 }}>
 
@@ -2405,7 +2671,7 @@ Return ONLY valid JSON, no markdown, no explanation:
       )}
 
       {/* ══ PHASE: ANALYZING ═══════════════════════════════════════════════════ */}
-      {phase === "analyzing" && (
+      {appPage === "dashboard" && phase === "analyzing" && (
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 32, animation: "fadein 0.3s ease both", padding: "32px 24px" }}>
           <style>{`
             @keyframes scanScroll {
@@ -2483,7 +2749,7 @@ Return ONLY valid JSON, no markdown, no explanation:
       )}
 
       {/* ══ PHASE: PLAN SUMMARY ════════════════════════════════════════════════ */}
-      {phase === "plan" && plan && (
+      {appPage === "dashboard" && phase === "plan" && plan && (
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 24px", animation: "slide 0.35s ease both" }}>
           <div style={{ width: "100%", maxWidth: 520 }}>
 
@@ -2651,7 +2917,7 @@ Return ONLY valid JSON, no markdown, no explanation:
       )}
 
       {/* ══ PHASE: LIVE SESSION ════════════════════════════════════════════════ */}
-      {phase === "live" && plan && (
+      {appPage === "dashboard" && phase === "live" && plan && (
         <>
           {/* Progress strip */}
           <div style={{ display: "flex", alignItems: "center", padding: "0 20px", height: 36, borderBottom: "1px solid rgba(255,255,255,0.09)", flexShrink: 0 }}>
