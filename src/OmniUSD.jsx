@@ -1424,11 +1424,6 @@ function Onboarding({onSelect}){
               )}
             </div>
 
-            <div style={{background:"rgba(0,229,255,0.03)",border:"1px solid rgba(0,229,255,0.09)",borderRadius:12,padding:"14px 18px",marginBottom:28}}>
-              <p style={{fontSize:13,color:"var(--t-muted3)",margin:0,lineHeight:1.6,fontWeight:500}}>
-                Upload 5 charts and the engine reads <strong style={{color:"#00e5ff",fontWeight:700}}>Break → Retest → Confirmation</strong> across all timeframes to generate a rules-based session plan.
-              </p>
-            </div>
             <div style={{display:"flex",gap:10}}>
               {OB_BTN("← Back",()=>setStep(1),false,false)}
               <button onClick={()=>tzObj&&setStep(3)} disabled={!tzObj}
@@ -1457,45 +1452,49 @@ function Onboarding({onSelect}){
             <h2 style={{fontSize:34,fontWeight:900,color:"var(--t-text)",lineHeight:1.1,margin:"0 0 10px",letterSpacing:"-0.01em"}}>
               Before you begin.
             </h2>
-            <p style={{fontSize:16,color:"var(--t-muted3)",margin:"0 0 36px",fontWeight:500,lineHeight:1.55}}>This only works if you follow the process.</p>
+            <p style={{fontSize:16,color:"var(--t-muted3)",margin:"0 0 32px",fontWeight:500,lineHeight:1.55}}>
+              The edge is not in knowing the rules. It is in following them.
+            </p>
 
             {/* Commitments */}
-            <div style={{display:"flex",flexDirection:"column",gap:16,marginBottom:40}}>
+            <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:32}}>
               {[
-                "Do not judge BRC after two trades.",
+                "Do not judge the system after two trades.",
                 "Do not skip the phases.",
-                "Do not risk real money before you can follow the process consistently.",
-                "Use a demo account first and commit to 30 days of disciplined execution before going live.",
+                "Do not risk real money until you can follow the process consistently.",
+                "Use demo first. Commit to 30 days of disciplined execution before going live.",
               ].map((line,i)=>(
                 <div key={i} style={{display:"flex",alignItems:"flex-start",gap:14,
-                  padding:"16px 18px",
+                  padding:"14px 18px",
                   background:"rgba(255,255,255,0.03)",
                   border:"1px solid rgba(255,255,255,0.07)",
-                  borderRadius:12}}>
+                  borderRadius:10}}>
                   <div style={{width:22,height:22,borderRadius:"50%",flexShrink:0,marginTop:1,
-                    background:"rgba(255,107,255,0.12)",border:"1.5px solid rgba(255,107,255,0.35)",
+                    background:"rgba(255,107,255,0.1)",border:"1px solid rgba(255,107,255,0.3)",
                     display:"flex",alignItems:"center",justifyContent:"center",
                     fontSize:10,fontWeight:900,color:"#ff6bff"}}>
                     {i+1}
                   </div>
-                  <p style={{fontSize:15,
-                    color:"var(--t-muted)",
-                    fontWeight:500,
-                    lineHeight:1.55,margin:0}}>{line}</p>
+                  <p style={{fontSize:14,color:"var(--t-muted)",fontWeight:500,lineHeight:1.6,margin:0}}>{line}</p>
                 </div>
               ))}
             </div>
 
-            <div style={{display:"flex",gap:10}}>
+            <div style={{display:"flex",gap:10,marginBottom:20}}>
               {OB_BTN("← Back",()=>setStep(2),false,false)}
               <button onClick={finish}
                 style={{flex:2,background:"linear-gradient(135deg,#ff6bff,#7b2fff)",border:"none",
-                  color:"#fff",padding:"18px 28px",borderRadius:13,fontSize:16,fontWeight:900,
+                  color:"#fff",padding:"18px 28px",borderRadius:13,fontSize:15,fontWeight:900,
                   letterSpacing:"0.12em",fontFamily:"inherit",cursor:"pointer",
                   boxShadow:"0 6px 40px rgba(255,107,255,0.28)",transition:"all 0.2s"}}>
-                I'M COMMITTED →
+                I ACCEPT THE PROCESS →
               </button>
             </div>
+
+            {/* Disclaimer */}
+            <p style={{fontSize:11,color:"rgba(255,255,255,0.2)",textAlign:"center",lineHeight:1.6,margin:0}}>
+              OmniUSD is an execution framework, not financial advice. Trade at your own risk.
+            </p>
           </div>
         )}
 
