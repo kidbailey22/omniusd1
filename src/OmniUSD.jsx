@@ -580,6 +580,9 @@ export default function OmniUSD(){
     try{
       if(authUser){
         const token=JSON.parse(localStorage.getItem("omniusd_session")||"{}")?.access_token||SUPABASE_KEY;
+        const paidTier=localStorage.getItem("omniusd_paid_tier")||p.tier||"starter";
+        const TIER_COLORS={starter:"#ffd166",pro:"#00e5ff",elite:"#ff6bff"};
+        const TIER_LABELS={starter:"Starter",pro:"Pro",elite:"Elite"};
         await fetch(`${SUPABASE_URL}/rest/v1/profiles`,{
           method:"POST",
           headers:{
@@ -591,9 +594,9 @@ export default function OmniUSD(){
           body:JSON.stringify({
             id:authUser.id,
             email:authUser.email||"",
-            tier:p.tier||"starter",
-            tier_label:p.tierLabel||"Starter",
-            tier_color:p.tierColor||"#ffd166",
+            tier:paidTier,
+            tier_label:TIER_LABELS[paidTier]||"Starter",
+            tier_color:TIER_COLORS[paidTier]||"#ffd166",
             default_instrument:p.defaultInstrument||"XAUUSD",
             session:p.session||null,
             tz:p.tz?JSON.stringify(p.tz):null,
@@ -601,6 +604,8 @@ export default function OmniUSD(){
             updated_at:new Date().toISOString(),
           }),
         });
+        // Merge paid tier into profile object
+        p = { ...p, tier: paidTier, tierLabel: TIER_LABELS[paidTier]||"Starter", tierColor: TIER_COLORS[paidTier]||"#ffd166" };
       }
       try{await window.storage.set("omniusd_profile",JSON.stringify(p));}catch(e){}
     }catch(e){console.error("Profile save failed",e);}
@@ -4351,31 +4356,9 @@ function AuthScreen({onBack, supabase, initialTab="signup"}){
       const loginData=await loginRes.json();
       if(loginData.access_token){
         localStorage.setItem("omniusd_session",JSON.stringify(loginData));
-        const paidTier=localStorage.getItem("omniusd_paid_tier")||"starter";
-        const userId=loginData.user?.id;
-        if(userId){
-          const TIER_COLORS={starter:"#ffd166",pro:"#00e5ff",elite:"#ff6bff"};
-          const TIER_LABELS={starter:"Starter",pro:"Pro",elite:"Elite"};
-          await fetch(`${SUPABASE_URL}/rest/v1/profiles`,{
-            method:"POST",
-            headers:{
-              "Content-Type":"application/json",
-              "apikey":SUPABASE_KEY,
-              "Authorization":`Bearer ${loginData.access_token}`,
-              "Prefer":"resolution=merge-duplicates",
-            },
-            body:JSON.stringify({
-              id:userId,
-              email,
-              tier:paidTier,
-              tier_label:TIER_LABELS[paidTier]||"Starter",
-              tier_color:TIER_COLORS[paidTier]||"#ffd166",
-              default_instrument:"XAUUSD",
-              is_paid:true,
-              updated_at:new Date().toISOString(),
-            }),
-          });
-        }
+        // Don't create profile here — let onboarding run first
+        // Store the paid tier so onboarding knows which plan was purchased
+        // Profile gets created when user completes onboarding via selectProfile()
         window.location.reload();
       } else {
         setSuccess("Account created! Check your email to confirm, then log in.");
