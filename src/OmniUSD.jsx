@@ -1889,6 +1889,26 @@ YOUR ROLE:
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
+function DashFaqRow({item, isLast}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ borderBottom: isLast ? "none" : "1px solid rgba(255,255,255,0.06)", background: item.highlight ? "rgba(0,229,255,0.02)" : "transparent" }}>
+      <button onClick={() => setOpen(o => !o)}
+        style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"18px 22px", background:"none", border:"none", cursor:"pointer", fontFamily:"inherit", textAlign:"left", gap:16 }}>
+        <span style={{ fontFamily:"'Space Mono',monospace", fontSize:13, fontWeight:700, color: item.highlight ? "#00e5ff" : "#f0ecff", lineHeight:1.4 }}>
+          {item.highlight && <span style={{ marginRight:8 }}>📌</span>}{item.q}
+        </span>
+        <span style={{ fontSize:18, color:"#ff6bff", flexShrink:0, transition:"transform 0.2s", transform: open ? "rotate(45deg)" : "rotate(0deg)", display:"inline-block" }}>+</span>
+      </button>
+      {open && (
+        <div style={{ padding:"0 22px 18px", fontFamily:"'Space Mono',monospace", fontSize:12, color:"rgba(255,255,255,0.6)", lineHeight:1.9 }}>
+          {item.a}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SettingsPage({profile, onSignOut, onClose}) {
   const [section, setSection] = useState("account");
   const [pwNew, setPwNew] = useState("");
@@ -2602,7 +2622,7 @@ Return ONLY valid JSON, no markdown, no explanation:
                 { q:"You only need to upload charts once per instrument per session.", a:"Select your instrument first, then upload all 5 timeframes (Daily, 4H, 1H, 30M, 15M). Your plan generates automatically. You do not need to re-upload unless you switch instruments or start a new session.", highlight:true },
                 { q:"When should I upload the charts?", a:"Upload 30–60 minutes before your session opens. For the NY session, upload between 7:30–8:00 AM CT. Do not upload during the session — the plan is built on pre-session structure." },
                 { q:"What timeframes does BRC use?", a:"Five timeframes: Daily (bias), 4H (structure), 1H (setup), 30M (trigger), 15M (refinement). The 30M candle close is the only valid entry signal. All five are required." },
-                { q:"Every chart must show the instrument and timeframe.", a:"The ticker (e.g. BTCUSD) and timeframe (e.g. 1H, 30M) must be clearly visible in every screenshot. If either is not visible, your upload will be rejected. Take screenshots with labels showing." , highlight:true },
+                { q:"Every chart must show the instrument and timeframe.", a:"The ticker (e.g. BTCUSD) and timeframe (e.g. 1H, 30M) must be clearly visible in every screenshot. If either is not visible, your upload will be rejected. Take screenshots with labels showing.", highlight:true },
                 { q:"What if the setup does not confirm?", a:"You do nothing. If the BRC sequence is incomplete, the result is PASS. No execution UI appears. A clean PASS protects your account. Not every session has a trade." },
                 { q:"Can I use this for a prop firm challenge?", a:"Yes — this is one of the strongest use cases. Limit orders only, hard session cutoffs, A+ setups only. These are exactly the rules prop firms require." },
                 { q:"How much should I risk per trade?", a:"2.5% per trade is the recommended risk. For prop firm challenges, check your drawdown rules — most allow 1–2% and you should adjust accordingly." },
@@ -2610,25 +2630,9 @@ Return ONLY valid JSON, no markdown, no explanation:
                 { q:"Do I need to watch charts all session?", a:"No. Upload before the session, review the plan, set your alerts. You only need to be present at the 30M candle closes. Between closes, there is nothing to act on." },
                 { q:"What is the edge?", a:"Most traders enter at the Break. BRC waits for all three phases — Break, Retest, Continuation. You enter after confirmation, not during the move. That patience enforced by structure is the edge." },
                 { q:"How do I request a new instrument?", a:"Email us at support@omniusd.pro with the subject 'Instrument Request' and tell us what you want to trade. We review all requests and add the most requested instruments to upcoming plan updates." },
-              ].map((item, i, arr) => {
-                const [open, setOpen] = React.useState(false);
-                return (
-                  <div key={i} style={{ borderBottom: i < arr.length-1 ? "1px solid rgba(255,255,255,0.06)" : "none", background: item.highlight ? "rgba(0,229,255,0.02)" : "transparent" }}>
-                    <button onClick={() => setOpen(o => !o)}
-                      style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"18px 22px", background:"none", border:"none", cursor:"pointer", fontFamily:"inherit", textAlign:"left", gap:16 }}>
-                      <span style={{ fontFamily:"'Space Mono',monospace", fontSize:13, fontWeight:700, color: item.highlight ? "#00e5ff" : "#f0ecff", lineHeight:1.4 }}>
-                        {item.highlight && <span style={{ marginRight:8 }}>📌</span>}{item.q}
-                      </span>
-                      <span style={{ fontSize:18, color:"#ff6bff", flexShrink:0, transition:"transform 0.2s", transform: open ? "rotate(45deg)" : "rotate(0deg)", display:"inline-block" }}>+</span>
-                    </button>
-                    {open && (
-                      <div style={{ padding:"0 22px 18px", fontFamily:"'Space Mono',monospace", fontSize:12, color:"rgba(255,255,255,0.6)", lineHeight:1.9 }}>
-                        {item.a}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+              ].map((item, i, arr) => (
+                <DashFaqRow key={i} item={item} isLast={i===arr.length-1} />
+              ))}
             </div>
 
             <div style={{ textAlign:"center", marginTop:24, fontFamily:"'Space Mono',monospace", fontSize:10, color:"rgba(255,255,255,0.25)" }}>
@@ -2675,17 +2679,16 @@ Return ONLY valid JSON, no markdown, no explanation:
               } catch(e) { return null; }
             })()}
 
-            {/* Market closed warning */}
+            {/* Market closed warning — conditional only */}
             {(()=>{
               const status = getMarketStatus(instrument);
               if (!status.open) return (
-                <div style={{ padding: "20px 24px", background: "rgba(255,107,107,0.06)", border: "1px solid rgba(255,107,107,0.2)", borderLeft: "3px solid #ff6b6b", borderRadius: 10, marginBottom: 24 }}>
-                  <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: "0.16em", color: "#ff6b6b", marginBottom: 8 }}>MARKET CLOSED</div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#f0ecff", marginBottom: 6 }}>{status.reason}</div>
-                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", lineHeight: 1.7 }}>{status.comeback}</div>
+                <div style={{ padding: "12px 16px", background: "rgba(255,107,107,0.06)", border: "1px solid rgba(255,107,107,0.2)", borderLeft: "3px solid #ff6b6b", borderRadius: 0, marginBottom: 16 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#ff6b6b", marginBottom: 4 }}>{status.reason}</div>
+                  <div style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", lineHeight: 1.6 }}>{status.comeback}</div>
                   {instrument !== "BTCUSD" && (
-                    <div style={{ marginTop: 12, fontSize: 10, color: "rgba(255,209,102,0.7)", lineHeight: 1.6 }}>
-                      Trading BTCUSD? BTC is 24/7 — <span style={{ color: "#ffd166", fontWeight: 700, cursor: "pointer" }} onClick={() => setInstrument("BTCUSD")}>switch to BTCUSD</span> to start a session now.
+                    <div style={{ marginTop: 8, fontSize: 10, color: "rgba(255,209,102,0.6)" }}>
+                      BTC is 24/7 — <span style={{ color: "#ffd166", fontWeight: 700, cursor: "pointer" }} onClick={() => setInstrument("BTCUSD")}>switch to BTCUSD</span>
                     </div>
                   )}
                 </div>
@@ -2694,24 +2697,10 @@ Return ONLY valid JSON, no markdown, no explanation:
             })()}
 
             {/* Header */}
-            <div style={{ textAlign: "center", marginBottom: 24 }}>
-              <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: "0.22em", color: "#ff6bff", marginBottom: 12 }}>UPLOAD FIRST · LIVE SESSION SECOND</div>
-              <h1 style={{ fontSize: 28, fontWeight: 700, lineHeight: 1.2, marginBottom: 8, letterSpacing: "-0.01em" }}>Upload your charts.<br/>Start the session.</h1>
-              <p style={{ fontSize: 11, color: "#8878aa", lineHeight: 1.7 }}>Upload all 5 timeframes. Your plan generates automatically,<br/>then live session begins.</p>
-            </div>
-
-            {/* Upload once reminder */}
-            <div style={{ padding: "10px 16px", background: "rgba(0,229,255,0.05)", border: "1px solid rgba(0,229,255,0.15)", borderLeft: "3px solid #00e5ff", borderRadius: 0, marginBottom: 14 }}>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.65)", lineHeight: 1.7 }}>
-                <span style={{ color: "#00e5ff", fontWeight: 700 }}>You only need to upload charts once per instrument per session.</span> Select your instrument, upload all 5 timeframes, and your plan generates automatically.
-              </div>
-            </div>
-
-            {/* HARD REQUIREMENT — always visible */}
-            <div style={{ padding: "12px 16px", background: "rgba(255,209,102,0.06)", border: "1px solid rgba(255,209,102,0.2)", borderLeft: "3px solid #ffd166", borderRadius: 0, marginBottom: 20 }}>
-              <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: "0.16em", color: "#ffd166", marginBottom: 6 }}>REQUIRED — NO EXCEPTIONS</div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.7)", lineHeight: 1.7 }}>
-                Every chart must clearly show the <span style={{ color: "#ffd166", fontWeight: 700 }}>instrument ticker</span> (e.g. BTCUSD) and the <span style={{ color: "#ffd166", fontWeight: 700 }}>timeframe</span> (e.g. 1H, 30M) in the screenshot. If either is not visible, your upload will be rejected.
+            <div style={{ marginBottom: 20 }}>
+              <h1 style={{ fontSize: 26, fontWeight: 700, lineHeight: 1.2, marginBottom: 10, letterSpacing: "-0.01em" }}>Upload your charts.<br/>Start the session.</h1>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", lineHeight: 1.7 }}>
+                Select one instrument · Upload all 5 timeframes once · Every screenshot must show the <span style={{ color: "rgba(255,255,255,0.6)" }}>ticker</span> and <span style={{ color: "rgba(255,255,255,0.6)" }}>timeframe</span>
               </div>
             </div>
 
