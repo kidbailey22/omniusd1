@@ -4314,17 +4314,21 @@ function JournalPage({journal, onUpdate, T=DARK}){
 
 function AuthScreen({onBack, supabase, initialTab="signup"}){
   const [tab,setTab]=useState(initialTab);
-  const loginOnly=initialTab==="login"; // "signup" | "login" | "reset"
+  const loginOnly=initialTab==="login";
   const [email,setEmail]=useState("");
   const [password,setPassword]=useState("");
+  const [confirmPassword,setConfirmPassword]=useState("");
   const [loading,setLoading]=useState(false);
   const [error,setError]=useState(null);
   const [success,setSuccess]=useState(null);
   const [showPass,setShowPass]=useState(false);
+  const [showConfirm,setShowConfirm]=useState(false);
+  const [resetSent,setResetSent]=useState(false);
 
   async function handleSignUp(){
     if(!email||!password){setError("Email and password are required.");return;}
     if(password.length<8){setError("Password must be at least 8 characters.");return;}
+    if(password!==confirmPassword){setError("Passwords do not match. Please check and try again.");return;}
     setLoading(true);setError(null);
     try{
       const res=await fetch(`${SUPABASE_URL}/auth/v1/signup`,{
@@ -4347,7 +4351,6 @@ function AuthScreen({onBack, supabase, initialTab="signup"}){
       const loginData=await loginRes.json();
       if(loginData.access_token){
         localStorage.setItem("omniusd_session",JSON.stringify(loginData));
-        // Create profile immediately with paid tier
         const paidTier=localStorage.getItem("omniusd_paid_tier")||"starter";
         const userId=loginData.user?.id;
         if(userId){
@@ -4415,10 +4418,24 @@ function AuthScreen({onBack, supabase, initialTab="signup"}){
   async function handleReset(){
     if(!email){setError("Enter your email address first.");return;}
     setLoading(true);setError(null);
-    const {error:err}=await supabase.auth.resetPasswordForEmail(email);
-    setLoading(false);
-    if(err){setError(err.message);return;}
-    setSuccess("Password reset email sent. Check your inbox.");
+    try{
+      const res=await fetch(`${SUPABASE_URL}/auth/v1/recover`,{
+        method:"POST",
+        headers:{"Content-Type":"application/json","apikey":SUPABASE_KEY},
+        body:JSON.stringify({email}),
+      });
+      setLoading(false);
+      if(!res.ok){
+        const d=await res.json();
+        setError(d.msg||d.error||"Could not send reset email. Try again.");
+        return;
+      }
+      setResetSent(true);
+      setSuccess("Reset link sent. Check your inbox — it may take a minute.");
+    }catch(e){
+      setLoading(false);
+      setError("Connection error: "+e.message);
+    }
   }
 
   const inputStyle={
@@ -4447,7 +4464,7 @@ function AuthScreen({onBack, supabase, initialTab="signup"}){
             <span style={{fontFamily:"monospace",fontSize:18,fontWeight:700,letterSpacing:"0.12em",background:"linear-gradient(90deg,#ff6bff,#00e5ff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>OmniUSD</span>
           </button>
           <div style={{fontSize:22,fontWeight:800,color:"#f4f0ff",marginBottom:6,letterSpacing:"-0.01em"}}>
-            {tab==="reset"?"Reset your password":tab==="signup"?"Almost done.":"Welcome back"}
+            {tab==="reset"?"Forgot your password?":tab==="signup"?"Almost done.":"Welcome back"}
           </div>
           <div style={{fontSize:13,color:"#8878aa",fontFamily:"monospace"}}>
             {tab==="signup"
@@ -4455,18 +4472,18 @@ function AuthScreen({onBack, supabase, initialTab="signup"}){
                   ? "Payment confirmed. Create your password to access your dashboard."
                   : "Create your account to get started.")
               : tab==="login"?"Sign in to continue to your dashboard."
-              :"We'll send a reset link to your email."}
+              :"Enter your email and we'll send a reset link."}
           </div>
         </div>
 
         {/* Card */}
         <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,107,255,0.15)",borderRadius:16,padding:"32px 28px"}}>
 
-          {/* Tabs — only show when both options available */}
+          {/* Tabs */}
           {!loginOnly&&(
             <div style={{display:"flex",gap:4,marginBottom:24,background:"rgba(255,255,255,0.04)",padding:4,borderRadius:10}}>
               {["signup","login"].map(t=>(
-                <button key={t} onClick={()=>{setTab(t);setError(null);setSuccess(null);}}
+                <button key={t} onClick={()=>{setTab(t);setError(null);setSuccess(null);setResetSent(false);}}
                   style={{flex:1,padding:"9px",borderRadius:7,border:"none",fontFamily:"inherit",
                     fontSize:13,fontWeight:700,cursor:"pointer",letterSpacing:"0.04em",transition:"all 0.15s",
                     background:tab===t?"rgba(255,107,255,0.15)":"none",
@@ -4477,14 +4494,14 @@ function AuthScreen({onBack, supabase, initialTab="signup"}){
             </div>
           )}
 
-          {/* Success message */}
+          {/* Success */}
           {success&&(
             <div style={{padding:"10px 14px",background:"rgba(127,255,107,0.08)",border:"1px solid rgba(127,255,107,0.25)",borderRadius:8,marginBottom:16,fontSize:13,color:"#7fff6b",fontFamily:"monospace",lineHeight:1.5}}>
               {success}
             </div>
           )}
 
-          {/* Error message */}
+          {/* Error */}
           {error&&(
             <div style={{padding:"10px 14px",background:"rgba(255,107,107,0.08)",border:"1px solid rgba(255,107,107,0.25)",borderRadius:8,marginBottom:16,fontSize:13,color:"#ff8080",fontFamily:"monospace",lineHeight:1.5}}>
               {error}
@@ -4493,6 +4510,8 @@ function AuthScreen({onBack, supabase, initialTab="signup"}){
 
           {/* Fields */}
           <div style={{display:"flex",flexDirection:"column",gap:12,marginBottom:20}}>
+
+            {/* Email */}
             <div>
               <label style={{fontSize:11,fontWeight:700,letterSpacing:"0.1em",color:"#8878aa",display:"block",marginBottom:6,fontFamily:"monospace"}}>EMAIL</label>
               <input type="email" value={email} onChange={e=>setEmail(e.target.value)}
@@ -4500,6 +4519,8 @@ function AuthScreen({onBack, supabase, initialTab="signup"}){
                 onKeyDown={e=>e.key==="Enter"&&(tab==="signup"?handleSignUp():tab==="login"?handleLogin():handleReset())}
               />
             </div>
+
+            {/* Password */}
             {tab!=="reset"&&(
               <div>
                 <label style={{fontSize:11,fontWeight:700,letterSpacing:"0.1em",color:"#8878aa",display:"block",marginBottom:6,fontFamily:"monospace"}}>PASSWORD</label>
@@ -4511,41 +4532,76 @@ function AuthScreen({onBack, supabase, initialTab="signup"}){
                   />
                   <button type="button" onClick={()=>setShowPass(p=>!p)}
                     style={{position:"absolute",right:14,top:"50%",transform:"translateY(-50%)",
-                      background:"none",border:"none",cursor:"pointer",
-                      fontSize:16,color:"#8878aa",padding:0,lineHeight:1}}>
+                      background:"none",border:"none",cursor:"pointer",fontSize:16,color:"#8878aa",padding:0,lineHeight:1}}>
                     {showPass?"🙈":"👁"}
                   </button>
                 </div>
               </div>
             )}
+
+            {/* Confirm password — signup only */}
+            {tab==="signup"&&(
+              <div>
+                <label style={{fontSize:11,fontWeight:700,letterSpacing:"0.1em",color:"#8878aa",display:"block",marginBottom:6,fontFamily:"monospace"}}>CONFIRM PASSWORD</label>
+                <div style={{position:"relative"}}>
+                  <input type={showConfirm?"text":"password"} value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)}
+                    placeholder="Re-enter your password"
+                    style={{...inputStyle,paddingRight:48,
+                      borderColor: confirmPassword && confirmPassword!==password ? "rgba(255,107,107,0.5)" : confirmPassword && confirmPassword===password ? "rgba(127,255,107,0.4)" : "rgba(255,255,255,0.12)"
+                    }}
+                    onKeyDown={e=>e.key==="Enter"&&handleSignUp()}
+                  />
+                  <button type="button" onClick={()=>setShowConfirm(p=>!p)}
+                    style={{position:"absolute",right:14,top:"50%",transform:"translateY(-50%)",
+                      background:"none",border:"none",cursor:"pointer",fontSize:16,color:"#8878aa",padding:0,lineHeight:1}}>
+                    {showConfirm?"🙈":"👁"}
+                  </button>
+                  {/* Match indicator */}
+                  {confirmPassword&&(
+                    <div style={{position:"absolute",right:44,top:"50%",transform:"translateY(-50%)",fontSize:14}}>
+                      {confirmPassword===password?"✅":"❌"}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
           </div>
 
           {/* Primary button */}
-          <button
-            onClick={tab==="signup"?handleSignUp:tab==="login"?handleLogin:handleReset}
-            disabled={loading}
-            style={{width:"100%",background:loading?"rgba(255,255,255,0.06)":"linear-gradient(135deg,#ff6bff,#7b2fff)",
-              border:"none",color:loading?"#8878aa":"#fff",padding:"15px",borderRadius:10,
-              fontSize:15,fontWeight:900,letterSpacing:"0.1em",fontFamily:"inherit",
-              cursor:loading?"not-allowed":"pointer",
-              boxShadow:loading?"none":"0 4px 28px rgba(255,107,255,0.22)",transition:"all 0.2s",marginBottom:16}}>
-            {loading?"Please wait..."
-              :tab==="signup"?"CREATE PASSWORD & ENTER →"
-              :tab==="login"?"SIGN IN →"
-              :"SEND RESET EMAIL →"}
-          </button>
+          {!resetSent&&(
+            <button
+              onClick={tab==="signup"?handleSignUp:tab==="login"?handleLogin:handleReset}
+              disabled={loading}
+              style={{width:"100%",background:loading?"rgba(255,255,255,0.06)":"linear-gradient(135deg,#ff6bff,#7b2fff)",
+                border:"none",color:loading?"#8878aa":"#fff",padding:"15px",borderRadius:10,
+                fontSize:15,fontWeight:900,letterSpacing:"0.1em",fontFamily:"inherit",
+                cursor:loading?"not-allowed":"pointer",
+                boxShadow:loading?"none":"0 4px 28px rgba(255,107,255,0.22)",transition:"all 0.2s",marginBottom:16}}>
+              {loading?"Please wait..."
+                :tab==="signup"?"CREATE ACCOUNT →"
+                :tab==="login"?"SIGN IN →"
+                :"SEND RESET LINK →"}
+            </button>
+          )}
 
           {/* Secondary links */}
-          <div style={{textAlign:"center",fontSize:12,fontFamily:"monospace",color:"#8878aa"}}>
-            {tab==="login"&&(
-              <button onClick={()=>{setTab("reset");setError(null);setSuccess(null);}}
-                style={{background:"none",border:"none",color:"#8878aa",cursor:"pointer",fontFamily:"monospace",fontSize:12,textDecoration:"underline"}}>
+          <div style={{textAlign:"center",fontSize:12,fontFamily:"monospace",color:"#8878aa",display:"flex",flexDirection:"column",gap:8}}>
+            {tab==="login"&&!loginOnly&&(
+              <button onClick={()=>{setTab("reset");setError(null);setSuccess(null);setResetSent(false);}}
+                style={{background:"none",border:"none",color:"rgba(255,255,255,0.35)",cursor:"pointer",fontFamily:"monospace",fontSize:12,textDecoration:"underline"}}>
+                Forgot your password?
+              </button>
+            )}
+            {tab==="login"&&loginOnly&&(
+              <button onClick={()=>{setTab("reset");setError(null);setSuccess(null);setResetSent(false);}}
+                style={{background:"none",border:"none",color:"rgba(255,255,255,0.35)",cursor:"pointer",fontFamily:"monospace",fontSize:12,textDecoration:"underline"}}>
                 Forgot your password?
               </button>
             )}
             {tab==="reset"&&(
-              <button onClick={()=>{setTab("login");setError(null);setSuccess(null);}}
-                style={{background:"none",border:"none",color:"#8878aa",cursor:"pointer",fontFamily:"monospace",fontSize:12,textDecoration:"underline"}}>
+              <button onClick={()=>{setTab("login");setError(null);setSuccess(null);setResetSent(false);}}
+                style={{background:"none",border:"none",color:"rgba(255,255,255,0.35)",cursor:"pointer",fontFamily:"monospace",fontSize:12,textDecoration:"underline"}}>
                 ← Back to log in
               </button>
             )}
