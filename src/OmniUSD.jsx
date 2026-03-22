@@ -5533,22 +5533,22 @@ function LandingPage({onEnterApp, onLogin}){
         <div style={{background:"#130d22",borderRadius:12,overflow:"hidden",border:"1px solid rgba(255,255,255,0.08)",boxShadow:"0 32px 80px rgba(0,0,0,0.5)"}}>
 
           {/* Nav bar */}
-          <div style={{padding:"12px 24px",background:"rgba(255,255,255,0.03)",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-            <div style={{display:"flex",alignItems:"center",gap:10}}>
-              <span style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,color:"#ff6bff"}}>◈ OmniUSD</span>
+          <div style={{padding:"10px 16px",background:"rgba(255,255,255,0.03)",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+            <div style={{display:"flex",alignItems:"center",gap:8}}>
+              <span style={{fontFamily:"'Space Mono',monospace",fontSize:12,fontWeight:700,color:"#ff6bff"}}>◈ OmniUSD</span>
               {[{l:"BTCUSD",c:"#ff6b6b"},{l:"SHORT",c:"#ff6b6b"},{l:"A+",c:"#7fff6b"}].map(b=>(
-                <span key={b.l} style={{fontFamily:"'Space Mono',monospace",fontSize:10,padding:"3px 9px",borderRadius:4,background:`${b.c}14`,border:`1px solid ${b.c}33`,color:b.c}}>{b.l}</span>
+                <span key={b.l} style={{fontFamily:"'Space Mono',monospace",fontSize:9,padding:"2px 7px",borderRadius:4,background:`${b.c}14`,border:`1px solid ${b.c}33`,color:b.c}}>{b.l}</span>
               ))}
             </div>
-            <div style={{display:"flex",alignItems:"center",gap:6}}>
-              <div style={{width:6,height:6,borderRadius:"50%",background:"#7fff6b"}}/>
-              <span style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"#7fff6b",fontWeight:700}}>WINDOW OPEN</span>
+            <div style={{display:"flex",alignItems:"center",gap:5}}>
+              <div style={{width:5,height:5,borderRadius:"50%",background:"#7fff6b"}}/>
+              <span style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"#7fff6b",fontWeight:700}}>OPEN</span>
             </div>
           </div>
 
-          {/* Progress strip */}
-          <div style={{padding:"0 24px",height:40,borderBottom:"1px solid rgba(255,255,255,0.05)",display:"flex",alignItems:"center",justifyContent:"space-between",background:"rgba(255,255,255,0.01)"}}>
-            <div style={{display:"flex",alignItems:"center"}}>
+          {/* Progress strip — simplified on mobile */}
+          <div style={{padding:"0 16px",height:36,borderBottom:"1px solid rgba(255,255,255,0.05)",display:"flex",alignItems:"center",justifyContent:"space-between",background:"rgba(255,255,255,0.01)",overflowX:"auto"}}>
+            <div style={{display:"flex",alignItems:"center",flexShrink:0}}>
               {[
                 {l:"Break",done:true},
                 {l:"Tier 1",done:true},
@@ -5556,76 +5556,75 @@ function LandingPage({onEnterApp, onLogin}){
                 {l:"Limit Order",done:false},
               ].map((t,i)=>(
                 <div key={i} style={{display:"flex",alignItems:"center"}}>
-                  <div style={{width:8,height:8,borderRadius:"50%",background:t.done?"#7fff6b":t.active?"#00e5ff":"rgba(255,255,255,0.15)",boxShadow:t.active?"0 0 8px rgba(0,229,255,0.5)":"none"}}/>
-                  <span style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,color:t.done?"#7fff6b":t.active?"#00e5ff":"rgba(255,255,255,0.2)",margin:"0 7px"}}>{t.l}</span>
-                  {i<3&&<div style={{width:22,height:1,background:t.done?"#7fff6b":"rgba(255,255,255,0.08)",marginRight:5}}/>}
+                  <div style={{width:7,height:7,borderRadius:"50%",background:t.done?"#7fff6b":t.active?"#00e5ff":"rgba(255,255,255,0.15)",boxShadow:t.active?"0 0 8px rgba(0,229,255,0.5)":"none",flexShrink:0}}/>
+                  <span style={{fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,color:t.done?"#7fff6b":t.active?"#00e5ff":"rgba(255,255,255,0.2)",margin:"0 5px",whiteSpace:"nowrap"}}>{t.l}</span>
+                  {i<3&&<div style={{width:14,height:1,background:t.done?"#7fff6b":"rgba(255,255,255,0.08)",marginRight:3,flexShrink:0}}/>}
                 </div>
               ))}
             </div>
-            <div style={{display:"flex",gap:20}}>
-              <span style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"rgba(255,255,255,0.35)"}}>NOW <span style={{color:"#00e5ff",fontWeight:700}}>9:32 AM CT</span></span>
-              <span style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"rgba(255,255,255,0.35)"}}>NEXT CLOSE <span style={{color:"#ffd166",fontWeight:700}}>10:00 AM CT</span></span>
-            </div>
+            <span style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"#00e5ff",fontWeight:700,flexShrink:0,marginLeft:8}}>9:32 AM CT</span>
           </div>
 
-          {/* Two column */}
-          <div style={{display:"grid",gridTemplateColumns:"300px 1fr"}}>
+          {/* Body — stack on mobile */}
+          <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"300px 1fr"}}>
 
-            {/* Left — status + key levels */}
-            <div style={{borderRight:"1px solid rgba(255,255,255,0.05)",padding:"18px"}}>
-
-              {/* Current status */}
-              <div style={{padding:"12px 14px",background:"rgba(255,209,102,0.06)",border:"1px solid rgba(255,209,102,0.2)",borderLeft:"3px solid #ffd166",borderRadius:0,marginBottom:18}}>
-                <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"#ffd166",letterSpacing:"0.14em",fontWeight:700,marginBottom:6}}>CURRENT STATUS</div>
-                <div style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:"#f0ecff",lineHeight:1.6,fontWeight:700}}>Tier 1 confirmed.</div>
-                <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"rgba(255,209,102,0.7)",marginTop:4,lineHeight:1.5}}>Watching for second 30M close below 70,200. Do not enter yet.</div>
+            {/* Left — status + key levels — hidden on small mobile, shown on tablet+ */}
+            {!isMobile && (
+              <div style={{borderRight:"1px solid rgba(255,255,255,0.05)",padding:"16px"}}>
+                <div style={{padding:"10px 12px",background:"rgba(255,209,102,0.06)",border:"1px solid rgba(255,209,102,0.2)",borderLeft:"3px solid #ffd166",borderRadius:0,marginBottom:14}}>
+                  <div style={{fontFamily:"'Space Mono',monospace",fontSize:8,color:"#ffd166",letterSpacing:"0.14em",fontWeight:700,marginBottom:5}}>CURRENT STATUS</div>
+                  <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"#f0ecff",lineHeight:1.5,fontWeight:700}}>Tier 1 confirmed.</div>
+                  <div style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"rgba(255,209,102,0.7)",marginTop:3,lineHeight:1.5}}>Watching for second close below 70,200.</div>
+                </div>
+                <div style={{fontFamily:"'Space Mono',monospace",fontSize:8,color:"rgba(255,255,255,0.25)",letterSpacing:"0.14em",marginBottom:8}}>LOCKED PLAN</div>
+                <div style={{display:"flex",flexDirection:"column",gap:7}}>
+                  {[{l:"Trigger",v:"70,200",c:"#ffd166"},{l:"Stop",v:"71,000",c:"#ff6b6b"},{l:"TP1",v:"69,200",c:"#7fff6b"}].map((r,i)=>(
+                    <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingBottom:i<2?7:0,borderBottom:i<2?"1px solid rgba(255,255,255,0.05)":"none"}}>
+                      <span style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,255,255,0.4)"}}>{r.l}</span>
+                      <span style={{fontFamily:"'Space Mono',monospace",fontSize:12,fontWeight:700,color:r.c}}>{r.v}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-
-              {/* Key levels — simplified */}
-              <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,255,255,0.25)",letterSpacing:"0.14em",marginBottom:10}}>LOCKED PLAN</div>
-              <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                {[
-                  {l:"Trigger",v:"70,200",c:"#ffd166"},
-                  {l:"Stop",v:"71,000",c:"#ff6b6b"},
-                  {l:"TP1",v:"69,200",c:"#7fff6b"},
-                ].map((r,i)=>(
-                  <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingBottom:i<2?8:0,borderBottom:i<2?"1px solid rgba(255,255,255,0.05)":"none"}}>
-                    <span style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"rgba(255,255,255,0.4)"}}>{r.l}</span>
-                    <span style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,color:r.c}}>{r.v}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            )}
 
             {/* Right — chat */}
             <div style={{display:"flex",flexDirection:"column"}}>
-              <div style={{padding:"16px 18px",display:"flex",flexDirection:"column",gap:10}}>
-
+              {/* On mobile show a compact status bar */}
+              {isMobile && (
+                <div style={{padding:"10px 14px",background:"rgba(255,209,102,0.05)",borderBottom:"1px solid rgba(255,209,102,0.15)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <span style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"#ffd166",fontWeight:700}}>Tier 1 confirmed — watching Tier 2</span>
+                  <div style={{display:"flex",gap:10}}>
+                    {[{l:"Trigger",v:"70,200",c:"#ffd166"},{l:"Stop",v:"71,000",c:"#ff6b6b"}].map(r=>(
+                      <div key={r.l} style={{textAlign:"center"}}>
+                        <div style={{fontFamily:"'Space Mono',monospace",fontSize:7,color:"rgba(255,255,255,0.3)"}}>{r.l}</div>
+                        <div style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,color:r.c}}>{r.v}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:8}}>
                 <div style={{display:"flex",justifyContent:"flex-start"}}>
-                  <div style={{maxWidth:"88%",padding:"10px 14px",borderRadius:"10px 10px 10px 3px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.07)",fontFamily:"'Space Mono',monospace",fontSize:11,color:"#ccc4e8",lineHeight:1.8}}>
+                  <div style={{maxWidth:"90%",padding:"9px 12px",borderRadius:"10px 10px 10px 3px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.07)",fontFamily:"'Space Mono',monospace",fontSize:10,color:"#ccc4e8",lineHeight:1.8}}>
                     Live session active — BTCUSD SHORT.<br/>
                     <span style={{color:"#00e5ff"}}>Wicks don't count. Only 30M closes trigger action.</span>
                   </div>
                 </div>
-
                 <div style={{display:"flex",justifyContent:"flex-end"}}>
-                  <div style={{maxWidth:"60%",padding:"10px 14px",borderRadius:"10px 10px 3px 10px",background:"rgba(255,107,255,0.08)",border:"1px solid rgba(255,107,255,0.18)",fontFamily:"'Space Mono',monospace",fontSize:11,color:"#f0ecff"}}>
+                  <div style={{maxWidth:"65%",padding:"9px 12px",borderRadius:"10px 10px 3px 10px",background:"rgba(255,107,255,0.08)",border:"1px solid rgba(255,107,255,0.18)",fontFamily:"'Space Mono',monospace",fontSize:10,color:"#f0ecff"}}>
                     9:30 AM closed at 69,858
                   </div>
                 </div>
-
                 <div style={{display:"flex",justifyContent:"flex-start"}}>
-                  <div style={{maxWidth:"88%",padding:"10px 14px",borderRadius:"10px 10px 10px 3px",background:"rgba(255,209,102,0.05)",border:"1px solid rgba(255,209,102,0.15)",fontFamily:"'Space Mono',monospace",fontSize:11,color:"#ccc4e8",lineHeight:1.8}}>
-                    <span style={{color:"#ffd166",fontWeight:700}}>Tier 1 confirmed — 69,858.</span> Strong close, $342 below 70,200.<br/>Now watching the 10:00 AM candle. If it closes below 70,200 — Tier 2 confirmed, limit order goes in immediately.
+                  <div style={{maxWidth:"90%",padding:"9px 12px",borderRadius:"10px 10px 10px 3px",background:"rgba(255,209,102,0.05)",border:"1px solid rgba(255,209,102,0.15)",fontFamily:"'Space Mono',monospace",fontSize:10,color:"#ccc4e8",lineHeight:1.8}}>
+                    <span style={{color:"#ffd166",fontWeight:700}}>Tier 1 confirmed — 69,858.</span>{isMobile ? " Watching 10:00 AM candle." : " Strong close, $342 below 70,200. Now watching the 10:00 AM candle."}
                   </div>
                 </div>
-
               </div>
-
-              {/* Input bar */}
-              <div style={{padding:"10px 18px 14px",borderTop:"1px solid rgba(255,255,255,0.05)",display:"flex",gap:8,marginTop:"auto"}}>
-                <div style={{flex:1,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:7,padding:"9px 13px",fontFamily:"'Space Mono',monospace",fontSize:10,color:"rgba(255,255,255,0.2)"}}>What did the 10:00 AM candle close at?</div>
-                <div style={{padding:"9px 16px",borderRadius:7,background:"rgba(255,107,255,0.14)",border:"1px solid rgba(255,107,255,0.3)",fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,color:"#ff6bff",whiteSpace:"nowrap"}}>SEND →</div>
+              <div style={{padding:"8px 14px 12px",borderTop:"1px solid rgba(255,255,255,0.05)",display:"flex",gap:7}}>
+                <div style={{flex:1,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:7,padding:"7px 11px",fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,255,255,0.2)"}}>What did the 10:00 AM candle close at?</div>
+                <div style={{padding:"7px 14px",borderRadius:7,background:"rgba(255,107,255,0.14)",border:"1px solid rgba(255,107,255,0.3)",fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,color:"#ff6bff",whiteSpace:"nowrap"}}>SEND →</div>
               </div>
             </div>
 
