@@ -1731,75 +1731,117 @@ function getNextClose() {
 function getAnalysisPrompt(instrument) {
   const ct = getCTTime();
   const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
-  const day = now.getDay(); // 0=Sun,1=Mon...6=Sat
+  const day = now.getDay();
   const nowMins = ct.mins;
   const isBTC = instrument === "BTCUSD";
 
-  // Build honest session context
+  // Session context
   let sessionContext = "";
   let sessionWarning = "";
 
   if (day === 6) {
-    // Saturday
     sessionContext = "TODAY IS SATURDAY. Traditional markets are CLOSED. No NY session today. No London session today.";
     if (isBTC) {
-      sessionContext += " BTCUSD trades 24/7 so analysis is valid, but the next BRC execution window is the Asian session (Sunday ~8:00 PM CT) or NY session (Monday ~8:30 AM CT).";
-      sessionWarning = "IMPORTANT: Do NOT frame this as a NY session setup. The next valid execution window is Sunday Asian or Monday NY. Grade the setup based on structure only — not session timing. If the setup requires NY execution, note that clearly.";
+      sessionContext += " BTCUSD trades 24/7 — next BRC execution window is Asian session (Sunday ~8:00 PM CT) or NY session (Monday ~8:30 AM CT).";
+      sessionWarning = "Do NOT frame as NY session setup. Grade structure only. Note the correct next window.";
     }
   } else if (day === 0 && nowMins < 14 * 60) {
-    // Sunday before 2 PM CT
-    sessionContext = "TODAY IS SUNDAY. Markets not yet open for the week. Asian session opens ~8:00 PM CT Sunday.";
-    if (isBTC) {
-      sessionWarning = "Do NOT frame as NY session. Next window is Asian session tonight or NY session Monday morning.";
-    }
+    sessionContext = "TODAY IS SUNDAY. Markets not yet open. Asian session opens ~8:00 PM CT.";
+    if (isBTC) sessionWarning = "Do NOT frame as NY session. Next window: Asian session tonight or NY Monday.";
   } else if (day === 0 && nowMins >= 14 * 60) {
-    sessionContext = "TODAY IS SUNDAY. Asian session prep window — session opens ~8:00 PM CT. NY session is Monday.";
+    sessionContext = "TODAY IS SUNDAY. Asian session prep window — opens ~8:00 PM CT. NY session is Monday.";
   } else {
-    // Weekday — normal session logic
-    const sessionStatus = nowMins < 8*60+30 ? "PRE-MARKET — NY session not yet open"
-      : nowMins <= 10*60+30 ? "NY SESSION LIVE (8:30–10:30 AM CT window)"
+    sessionContext = nowMins < 8*60+30 ? "PRE-MARKET — NY session not yet open"
+      : nowMins <= 10*60+30 ? "NY SESSION LIVE (8:30–10:30 AM CT)"
       : "NY SESSION CLOSED for today";
-    sessionContext = sessionStatus;
   }
 
-  const fridayNote = ct.isFriday ? " FRIDAY — end of week. Apply extra caution. A PASS protects the week." : "";
+  const fridayNote = ct.isFriday ? " FRIDAY — end of week. Extra caution. A PASS protects the week." : "";
 
-  return `You are an expert BRC (Break-Retest-Continuation) trade analyst.
-Today is ${ct.dayName} ${ct.dateStr} at ${ct.str} Chicago time.
-SESSION STATUS: ${sessionContext}${fridayNote}
-Instrument: ${instrument}.
-${sessionWarning ? `\n⚠️ ${sessionWarning}` : ""}
+  return `You are the enhanced, digital embodiment of the BRC methodology expert. You have mastered all transcripts, chart markups, and psychological principles. You provide institutional-grade analysis with unwavering discipline.
 
-Analyze these 5 charts (Daily, 4H, 1H, 30M, 15M) and return ONLY a JSON object:
+YOUR MISSION: Analyze the uploaded chart screenshots and deliver a structured, actionable trade plan for ${instrument}.
+
+CURRENT CONTEXT:
+Today: ${ct.dayName} ${ct.dateStr} at ${ct.str} Chicago Time
+Session: ${sessionContext}${fridayNote}
+Instrument: ${instrument}
+${sessionWarning ? `⚠️ WARNING: ${sessionWarning}` : ""}
+
+ANALYSIS FRAMEWORK — follow this sequence exactly:
+
+STEP 1 — MARKET STRUCTURE & BRC PHASES:
+- Identify structure: HH/HL (bullish) or LH/LL (bearish) with specific price levels
+- Identify current BRC Phase: BREAK / RETEST / CONTINUATION / PRE-SETUP
+- Daily is the General — it sets the directional bias. Never trade against it.
+- 4H confirms the trend is intact. 1H identifies where the setup is forming.
+- 30M candle CLOSE is the only valid entry trigger. Wicks do not count.
+
+STEP 2 — KEY LEVELS:
+- Primary Support: price level + how it was identified (swing low / consolidation / etc)
+- Primary Resistance: price level + how it was identified
+- Critical Level to Break: the make-or-break price that unlocks execution
+
+STEP 3 — PHASE AWARENESS (CRITICAL):
+- Read current price from the 30M chart FIRST
+- If price already passed the trigger level → Break is DONE. Identify actual phase (Retest or Continuation)
+- NEVER say "wait for break below X" if price is already below X
+- Small bounces after big moves = valid retests — do NOT call expired setup
+- Large move in Daily direction = the Break. Counter-Daily moves = retests.
+
+STEP 4 — TRADE PLAN:
+- BIAS: Bullish / Bearish / Neutral
+- ENTRY TRIGGER: exact 30M candle close requirement with price
+- STOP LOSS: specific price beyond correction structure
+- TAKE PROFIT: primary target at next key level (TP1), extended target (TP2), runner
+- ALERT LEVELS: prices to set alerts at
+
+STEP 5 — FINAL VERDICT:
+- PASS or EXECUTE
+- CONFIDENCE SCORE: 0–100%
+- THE "WHY": multi-timeframe ICC logic — how Daily, 4H, 1H all connect
+- SESSION TIMING: London / NY / Asian — which session is best for this setup
+- PSYCHOLOGICAL RULE: "Once entered, hands off. Trust the system. Pre-market movement is information — not permission."
+
+HARD RULES — NON-NEGOTIABLE:
+- WEEKEND RULE: If today is Saturday OR Sunday before 8:00 PM CT → grade="PASS" regardless of chart structure. Weekend volume is thin and unreliable. pass_reason must explain this clearly.
+- A+ ONLY unlocks execution. A, B, C = informational only.
+- 3-timeframe alignment required (Daily + 4H + 1H) for A+ grade.
+- Limit orders only. Never chase.
+- PASS only when structure is genuinely absent OR weekend rule applies.
+- FRIDAY: ${ct.isFriday ? "Today is Friday — apply extra caution. A PASS protects the week's gains." : "Apply standard rules."}
+
+Return ONLY this JSON object — no markdown, no explanation, no preamble:
 {
   "grade": "A+|A|B|C|PASS",
   "bias": "SHORT|LONG|NEUTRAL",
   "confidence": "HIGH|MEDIUM|LOW",
-  "confidence_score": 75,
-  "summary": "2-3 sentence plain English summary of what the charts show AND which session window this setup is for. Written for a 16-year-old. No jargon.",
+  "confidence_score": 0,
+  "summary": "2-3 sentences plain English — what the charts show, current phase, and which session window this targets. Written for a 16-year-old. Zero jargon.",
+  "market_structure": "HH/HL or LH/LL with key price levels",
+  "brc_phase": "BREAK|RETEST|CONTINUATION|PRE-SETUP",
   "trigger_level": "exact price",
-  "retest_zone": "price zone e.g. 70,200–70,350",
+  "retest_zone": "price zone e.g. 2,650–2,680",
   "stop_loss": "exact price",
   "tp1": "exact price",
   "tp2": "exact price",
   "runner": "exact price",
+  "alert_levels": ["price 1", "price 2"],
+  "key_levels": ["support: price — method", "resistance: price — method", "critical: price"],
   "current_phase": "BREAK|RETEST|CONTINUATION|PRE-SETUP",
-  "key_levels": ["level 1", "level 2", "level 3"],
-  "friday_note": "brief Friday caution if applicable, empty string otherwise",
-  "pass_reason": "if PASS, why. Otherwise empty string.",
-  "session_note": "which session this setup targets e.g. Asian Sunday, NY Monday"
-}
-
-BRC RULES:
-- Daily is the General. Always check it first.
-- Phase awareness: if price already passed the trigger level, identify the ACTUAL current phase.
-- Never call a break pending if price already moved through that level.
-- Trigger level = the CURRENT nearest actionable level, not a historical one.
-- Small bounces after big moves = valid retests. Do not call expired setup.
-- PASS only when Daily+4H+1H all agree AND move ran with zero retest outside NY.
-- CRITICAL: Always reflect the correct session window in the summary and session_note. Never imply NY session on a Saturday.
-- WEEKEND RULE — ABSOLUTE: If today is Saturday OR Sunday before 8:00 PM CT, you MUST set grade="PASS" regardless of what the charts show. Weekend volume is thin, unreliable, and not a valid BRC execution window. Set pass_reason="Weekend — markets are thin and unreliable. No valid execution window until Sunday Asian session (8:00 PM CT) or Monday NY session (8:30 AM CT). Structure noted — come back when a proper session opens."
-Return only the JSON. No markdown. No explanation.`;
+  "confidence_reason": "why this confidence score — multi-timeframe logic",
+  "session_note": "which session this setup targets and why",
+  "friday_note": "Friday caution note if applicable, empty string otherwise",
+  "pass_reason": "if PASS — exactly why. Empty string if EXECUTE.",
+  "plain_english": {
+    "structure": "what the market is doing in plain English",
+    "brc_phase": "which phase we are in and what that means",
+    "key_levels": "the levels that matter and why",
+    "trade_plan": "exactly what needs to happen for a valid entry",
+    "verdict": "PASS or EXECUTE and the one-line reason",
+    "psychological_rule": "Once entered, hands off. Trust the system. Pre-market movement is information — not permission."
+  }
+}`;
 }
 
 function getLivePrompt(plan) {
