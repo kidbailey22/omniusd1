@@ -2360,6 +2360,165 @@ async function checkUsageLimits(userId, token, instrument, tier) {
   }
 }
 
+function FullAnalysisPanel({ plan }) {
+  const [open, setOpen] = useState(false);
+  if (!plan) return null;
+
+  const isBull = plan.bias === "LONG";
+  const biasColor = isBull ? "#7fff6b" : plan.bias === "SHORT" ? "#ff6b6b" : "#ffd166";
+
+  const Section = ({ label, color="#8878aa", children }) => (
+    <div style={{ marginBottom: 16 }}>
+      <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: "0.16em", color, marginBottom: 8, fontFamily: "'Space Mono',monospace" }}>{label}</div>
+      {children}
+    </div>
+  );
+
+  const Row = ({ label, value, color="#f0ecff" }) => (
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "7px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+      <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontFamily: "'Space Mono',monospace" }}>{label}</span>
+      <span style={{ fontSize: 12, fontWeight: 700, color, fontFamily: "monospace" }}>{value || "—"}</span>
+    </div>
+  );
+
+  const Pill = ({ text, color }) => (
+    <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 4, background: `${color}14`, border: `1px solid ${color}33`, color, fontFamily: "'Space Mono',monospace" }}>{text}</span>
+  );
+
+  const TeachBox = ({ text, color="#8878aa" }) => (
+    <div style={{ padding: "10px 14px", background: "rgba(255,255,255,0.02)", border: `1px solid ${color}22`, borderLeft: `3px solid ${color}`, borderRadius: 0, fontSize: 12, color: "rgba(255,255,255,0.6)", lineHeight: 1.8 }}>
+      {text}
+    </div>
+  );
+
+  return (
+    <div style={{ marginTop: 16 }}>
+      <button onClick={() => setOpen(o => !o)}
+        style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: open ? "10px 10px 0 0" : 10, cursor: "pointer", fontFamily: "inherit", transition: "all 0.2s" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 14 }}>📊</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: "#f0ecff", letterSpacing: "0.04em" }}>Full Analysis & Breakdown</span>
+          <span style={{ fontSize: 9, color: "#8878aa", fontFamily: "'Space Mono',monospace" }}>Tap to {open ? "close" : "expand"}</span>
+        </div>
+        <span style={{ fontSize: 16, color: "#ff6bff", transition: "transform 0.2s", transform: open ? "rotate(45deg)" : "none", display: "inline-block" }}>+</span>
+      </button>
+
+      {open && (
+        <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderTop: "none", borderRadius: "0 0 10px 10px", padding: "20px 18px", animation: "fadein 0.25s ease both" }}>
+
+          {/* ── PLAIN ENGLISH INTRO ── */}
+          <div style={{ padding: "12px 16px", background: "rgba(0,229,255,0.04)", border: "1px solid rgba(0,229,255,0.15)", borderLeft: "3px solid #00e5ff", marginBottom: 20 }}>
+            <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: "0.16em", color: "#00e5ff", marginBottom: 8, fontFamily: "'Space Mono',monospace" }}>WHY THIS PLAN EXISTS</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", lineHeight: 1.9 }}>
+              {plan.plain_english?.structure || plan.summary || "Analysis based on uploaded charts."}
+            </div>
+          </div>
+
+          {/* ── MARKET STRUCTURE ── */}
+          <Section label="📈 MARKET STRUCTURE" color="#00e5ff">
+            <TeachBox
+              color="#00e5ff"
+              text={plan.market_structure
+                ? `Your charts are showing: ${plan.market_structure}. This matters because market structure tells you who is in control — buyers or sellers. Higher highs and higher lows = buyers winning. Lower highs and lower lows = sellers winning. We ALWAYS trade with who is winning.`
+                : (plan.plain_english?.structure || "Structure read from your uploaded charts.")}
+            />
+          </Section>
+
+          {/* ── BRC PHASE ── */}
+          <Section label="🔄 CURRENT BRC PHASE" color="#ff6bff">
+            <div style={{ display: "flex", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
+              {["BREAK","RETEST","CONTINUATION"].map(p => (
+                <Pill key={p} text={p} color={plan.brc_phase === p || plan.current_phase === p ? "#ff6bff" : "rgba(255,255,255,0.15)"} />
+              ))}
+            </div>
+            <TeachBox
+              color="#ff6bff"
+              text={plan.plain_english?.brc_phase
+                ? plan.plain_english.brc_phase
+                : `Phase: ${plan.brc_phase || plan.current_phase || "Pre-setup"}. BRC works in 3 steps. Step 1 (Break): price closes through a key level — we notice but don't enter. Step 2 (Retest): price pulls back to that level — this is the discount entry forming. Step 3 (Continuation): price closes back in the break direction again — THIS is when we place the limit order. No shortcutting the steps.`}
+            />
+          </Section>
+
+          {/* ── KEY LEVELS ── */}
+          <Section label="🎯 KEY LEVELS EXPLAINED" color="#ffd166">
+            {plan.key_levels && plan.key_levels.length > 0 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 0, marginBottom: 10 }}>
+                {plan.key_levels.map((lvl, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 0", borderBottom: i < plan.key_levels.length-1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
+                    <span style={{ fontSize: 10, color: "#ffd166", flexShrink: 0, marginTop: 2 }}>→</span>
+                    <span style={{ fontSize: 12, color: "rgba(255,255,255,0.65)", lineHeight: 1.6 }}>{lvl}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            <TeachBox
+              color="#ffd166"
+              text={plan.plain_english?.key_levels
+                ? plan.plain_english.key_levels
+                : "These are the price levels that matter most right now. They act as walls — price either bounces off them or breaks through them. The ones closest to current price are the most important to watch."}
+            />
+          </Section>
+
+          {/* ── TRADE PLAN DETAILS ── */}
+          {plan.grade !== "PASS" && (
+            <Section label="⚔️ FULL TRADE PLAN" color="#7fff6b">
+              <div style={{ marginBottom: 12 }}>
+                <Row label="Trigger Level" value={plan.trigger_level} color={biasColor} />
+                <Row label="Retest Zone" value={plan.retest_zone} color="#ffd166" />
+                <Row label="Stop Loss" value={plan.stop_loss} color="#ff6b6b" />
+                <Row label="TP1" value={plan.tp1} color="#7fff6b" />
+                <Row label="TP2" value={plan.tp2} color="#7fff6b" />
+                <Row label="Runner" value={plan.runner} color="#00e5ff" />
+                {plan.alert_levels && plan.alert_levels.length > 0 && (
+                  <div style={{ padding: "7px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                    <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontFamily: "'Space Mono',monospace" }}>Alert Levels</span>
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 6 }}>
+                      {plan.alert_levels.map((a, i) => <Pill key={i} text={a} color="#ffd166" />)}
+                    </div>
+                  </div>
+                )}
+              </div>
+              <TeachBox
+                color="#7fff6b"
+                text={plan.plain_english?.trade_plan
+                  ? plan.plain_english.trade_plan
+                  : `Here is exactly what needs to happen: 1) Wait for a 30M candle to CLOSE ${plan.bias === "SHORT" ? "below" : "above"} ${plan.trigger_level}. 2) Watch for price to pull back to the retest zone ${plan.retest_zone}. 3) When a 30M candle closes back ${plan.bias === "SHORT" ? "below" : "above"} ${plan.trigger_level} — place your limit order. Stop at ${plan.stop_loss}. Take profit at ${plan.tp1} first. A wick touching the level does NOT count — only a full candle close.`}
+              />
+            </Section>
+          )}
+
+          {/* ── MULTI-TIMEFRAME LOGIC ── */}
+          <Section label="🔭 WHY ALL TIMEFRAMES AGREE" color="#7b2fff">
+            <TeachBox
+              color="#7b2fff"
+              text={plan.confidence_reason
+                ? plan.confidence_reason
+                : `Confidence: ${plan.confidence_score}%. We need the Daily, 4H, and 1H to all point the same direction before calling this a valid setup. Think of it like 3 generals agreeing on the same battle plan. If even one disagrees, we wait. Right now: ${plan.confidence === "HIGH" ? "all three timeframes agree — strong conviction." : plan.confidence === "MEDIUM" ? "most timeframes agree but one is neutral — proceed with caution." : "timeframes are mixed — this is why confidence is lower."}`}
+            />
+          </Section>
+
+          {/* ── SESSION TIMING ── */}
+          <Section label="⏰ SESSION & TIMING" color="#00e5ff">
+            <TeachBox
+              color="#00e5ff"
+              text={`${plan.session_note || "NY session 8:30–10:30 AM CT is the primary window."} The best 30M closes happen at 9:00 and 9:30 AM CT during the NY session — this is when institutions are most active and moves have follow-through. Never enter outside the valid session window.`}
+            />
+          </Section>
+
+          {/* ── PSYCHOLOGICAL RULE ── */}
+          <div style={{ padding: "14px 16px", background: "rgba(255,107,255,0.05)", border: "1px solid rgba(255,107,255,0.2)", borderRadius: 8, marginTop: 4 }}>
+            <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: "0.16em", color: "#ff6bff", marginBottom: 8, fontFamily: "'Space Mono',monospace" }}>🥷 THE RULE</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", lineHeight: 1.8, fontStyle: "italic" }}>
+              {plan.plain_english?.psychological_rule || "Once entered, hands off. Trust the system. Pre-market movement is information — not permission."}
+            </div>
+          </div>
+
+        </div>
+      )}
+    </div>
+  );
+}
+
 function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
   const [phase, setPhase] = useState("upload"); // upload | analyzing | plan | live
   const [appPage, setAppPage] = useState("dashboard"); // dashboard | settings
@@ -2627,13 +2786,13 @@ Return ONLY valid JSON, no markdown, no explanation:
 
     let openingMsg = "";
     if (isSat) {
-      openingMsg = `⛔ **Live session started — ${plan.instrument} ${plan.bias}**\n\n**It is Saturday. This is NOT a valid execution window.**\n\nWeekend crypto volume is thin and unreliable. No BRC entries tonight — no exceptions.\n\n**Next valid window:** Sunday Asian session (~8:00 PM CT) or Monday NY session (~8:30 AM CT).\n\nYou can monitor the structure here, but no orders until a proper session opens.`;
+      openingMsg = `⛔ **${plan.instrument} ${plan.bias} — Saturday. No entries.**\n\nWeekend volume is unreliable. Next window: Sunday Asian (~8:00 PM CT) or Monday NY (~8:30 AM CT). Monitor only.`;
     } else if (isSunEarly) {
-      openingMsg = `⛔ **Live session started — ${plan.instrument} ${plan.bias}**\n\nMarkets not yet open. Asian session opens ~8:00 PM CT tonight.\n\nMonitor the structure. No entries yet.`;
+      openingMsg = `⛔ **${plan.instrument} ${plan.bias} — Markets not yet open.**\n\nAsian session opens ~8:00 PM CT. Monitor only, no entries yet.`;
     } else if (nyOpen) {
-      openingMsg = `🥷 **Live session started — ${plan.instrument} ${plan.bias}**\n\nNY window is open. Send price updates as candles close. I'll guide the session step by step.\n**Wicks don't count. Only closes.**`;
+      openingMsg = `🥷 **${plan.instrument} ${plan.bias} — NY window open.**\n\nSend 30M closes as they happen. Wicks don't count.`;
     } else {
-      openingMsg = `🥷 **Live session started — ${plan.instrument} ${plan.bias}**\n\nSend price updates as candles close. I'll guide the session step by step.\n**Wicks don't count. Only closes.**\n\n${nowMins < 8*60+30 ? "NY window opens at 8:30 AM CT. Stay patient." : "NY session is closed — no new entries today."}`;
+      openingMsg = `🥷 **${plan.instrument} ${plan.bias}.**\n\n${nowMins < 8*60+30 ? "NY opens at 8:30 AM CT — stay patient." : "NY session closed — no new entries today."}\n\nSend 30M closes as they happen. Wicks don't count.`;
     }
 
     setMessages([{
@@ -3271,6 +3430,9 @@ Return ONLY valid JSON, no markdown, no explanation:
                 <div style={{ textAlign: "center", marginTop: 8, fontSize: 9, color: "#8878aa" }}>
                   Live session tracks tier confirmations in real time
                 </div>
+
+                {/* ── FULL ANALYSIS — collapsible ── */}
+                <FullAnalysisPanel plan={plan} />
               </>
             ) : (
               (() => {
@@ -3339,6 +3501,7 @@ Return ONLY valid JSON, no markdown, no explanation:
                       style={{ fontSize:10, fontWeight:700, letterSpacing:"0.08em", padding:"8px 20px", borderRadius:8, border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.04)", color:"#8878aa", cursor:"pointer", fontFamily:"inherit" }}>
                       ← New Analysis
                     </button>
+                    <FullAnalysisPanel plan={plan} />
                   </div>
                 );
               })()
@@ -3351,24 +3514,27 @@ Return ONLY valid JSON, no markdown, no explanation:
       {/* ══ PHASE: LIVE SESSION ════════════════════════════════════════════════ */}
       {appPage === "dashboard" && phase === "live" && plan && (
         <>
-          {/* Progress strip */}
-          <div style={{ display: "flex", alignItems: "center", padding: "0 20px", height: 36, borderBottom: "1px solid rgba(255,255,255,0.09)", flexShrink: 0 }}>
+          {/* Progress strip — desktop only badge, mobile gets it in header already */}
+          <div style={{ display: "flex", alignItems: "center", padding: "0 16px", height: 32, borderBottom: "1px solid rgba(255,255,255,0.07)", flexShrink: 0, overflowX: "auto" }}>
             {[
               { label: "Break",       done: tier1,        active: !tier1 },
               { label: "Tier 1",      done: tier1,        active: !tier1 },
               { label: "Tier 2",      done: tier2,        active: tier1 && !tier2 },
               { label: "Limit Order", done: tier2,        active: tier1 && tier2 },
             ].map((t, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center" }}>
-                <div style={{ width: 7, height: 7, borderRadius: "50%", background: t.done ? "#7fff6b" : t.active ? "#00e5ff" : "rgba(255,255,255,0.15)", boxShadow: t.active ? "0 0 8px rgba(0,229,255,0.5)" : "none", animation: t.active ? "pulse 1.5s ease infinite" : "none", transition: "all 0.4s" }}/>
-                <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.05em", margin: "0 6px", color: t.done ? "#7fff6b" : t.active ? "#00e5ff" : "rgba(255,255,255,0.2)", transition: "color 0.4s" }}>{t.label}</span>
-                {i < 3 && <div style={{ width: 20, height: 1, background: t.done ? "#7fff6b" : "rgba(255,255,255,0.08)", marginRight: 4, transition: "background 0.4s" }}/>}
+              <div key={i} style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
+                <div style={{ width: 6, height: 6, borderRadius: "50%", background: t.done ? "#7fff6b" : t.active ? "#00e5ff" : "rgba(255,255,255,0.15)", boxShadow: t.active ? "0 0 6px rgba(0,229,255,0.5)" : "none", animation: t.active ? "pulse 1.5s ease infinite" : "none", transition: "all 0.4s" }}/>
+                <span style={{ fontSize: 9, fontWeight: 700, margin: "0 5px", color: t.done ? "#7fff6b" : t.active ? "#00e5ff" : "rgba(255,255,255,0.2)", whiteSpace: "nowrap" }}>{t.label}</span>
+                {i < 3 && <div style={{ width: 14, height: 1, background: t.done ? "#7fff6b" : "rgba(255,255,255,0.08)", marginRight: 3 }}/>}
               </div>
             ))}
-            <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6, padding: "3px 10px", borderRadius: 20, background: `${stateObj.color}14`, border: `1px solid ${stateObj.color}44` }}>
-              {stateObj.dot && <span style={{ width: 5, height: 5, borderRadius: "50%", background: stateObj.color, animation: "pulse 1.5s ease infinite" }}/>}
-              <span style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.1em", color: stateObj.color }}>{stateObj.label}</span>
-            </div>
+            {/* Status badge — desktop only, mobile already shows it in header */}
+            {!isMobile && (
+              <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 5, padding: "2px 9px", borderRadius: 20, background: `${stateObj.color}14`, border: `1px solid ${stateObj.color}44`, flexShrink: 0 }}>
+                {stateObj.dot && <span style={{ width: 4, height: 4, borderRadius: "50%", background: stateObj.color, animation: "pulse 1.5s ease infinite", display: "inline-block" }}/>}
+                <span style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.1em", color: stateObj.color }}>{stateObj.label}</span>
+              </div>
+            )}
           </div>
 
           {/* ── TWO COLUMN BODY ── */}
