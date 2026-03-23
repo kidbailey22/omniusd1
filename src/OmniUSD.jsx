@@ -2468,9 +2468,9 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
 
       // ── STEP 0: DEDICATED INSTRUMENT VALIDATION — runs before everything ──
       // One job only: what instrument is in these charts?
-      const validationRes = await fetch("https://api.anthropic.com/v1/messages", {
+      const validationRes = await fetch("/api/analyze", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "anthropic-version": "2023-06-01" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
           max_tokens: 150,
@@ -2513,9 +2513,9 @@ Return ONLY valid JSON, no markdown, no explanation:
       }
 
       // ── STEP 1: MAIN ANALYSIS — only runs if instrument validated ─────────
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetch("/api/analyze", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "anthropic-version": "2023-06-01" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
           max_tokens: 1000,
@@ -2557,10 +2557,10 @@ Return ONLY valid JSON, no markdown, no explanation:
       // Log successful analysis
       if (userId && token) logUsage(userId, token, instrument);
     } catch (e) {
-      console.error(e);
+      console.error("analyzeCharts error:", e);
       setPlan({
         _blocked: true,
-        _reason: "Analysis failed. Check your connection and try again.",
+        _reason: `Analysis failed: ${e.message || "Unknown error"}. Check your connection and try again.`,
         instrument,
         grade: "BLOCKED",
       });
@@ -2612,9 +2612,9 @@ Return ONLY valid JSON, no markdown, no explanation:
     setLoading(true);
 
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetch("/api/analyze", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "anthropic-version": "2023-06-01" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
           max_tokens: 400,
