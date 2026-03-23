@@ -2333,15 +2333,40 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
 
   function readSlotFile(file, i) {
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
+    // Convert to JPEG via canvas — handles HEIC, HEIF, WEBP, and any format
+    // the Anthropic API may not accept
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+      const jpeg = canvas.toDataURL("image/jpeg", 0.92);
+      URL.revokeObjectURL(objectUrl);
+      // Create a synthetic file-like object so media_type is correct
+      const syntheticFile = { type: "image/jpeg", name: file.name };
       setImages(prev => {
         const next = [...prev];
-        next[i] = { file, preview: e.target.result };
+        next[i] = { file: syntheticFile, preview: jpeg };
         return next;
       });
     };
-    reader.readAsDataURL(file);
+    img.onerror = () => {
+      // Fallback to original FileReader if canvas fails
+      URL.revokeObjectURL(objectUrl);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImages(prev => {
+          const next = [...prev];
+          next[i] = { file, preview: e.target.result };
+          return next;
+        });
+      };
+      reader.readAsDataURL(file);
+    };
+    img.src = objectUrl;
   }
   const [instrument, setInstrument] = useState(null);
   const [plan, setPlan] = useState(null);
@@ -2438,7 +2463,7 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
       // Build image blocks
       const imgBlocks = await Promise.all(images.map(async (slot, i) => {
         const base64 = slot.preview.split(",")[1];
-        return { type: "image", source: { type: "base64", media_type: slot.file.type, data: base64 } };
+        return { type: "image", source: { type: "base64", media_type: "image/jpeg", data: base64 } };
       }));
 
       // ── STEP 0: DEDICATED INSTRUMENT VALIDATION — runs before everything ──
