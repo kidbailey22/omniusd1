@@ -3393,24 +3393,17 @@ Return ONLY valid JSON, no markdown, no explanation:
     let openingMsg = "";
 
     if (isSat) {
-      openingMsg = `⛔ **${plan.instrument} ${plan.bias} — Saturday. No entries.**\n\nWeekend volume is unreliable. No BRC entries until Sunday Asian (~8:00 PM CT) or Monday NY (~8:30 AM CT).\n\nThe plan is saved. Come back when a proper session opens.`;
+      openingMsg = `⛔ **Saturday — no entries.**\nCome back Sunday Asian (~9:00 PM ET) or Monday NY (~9:30 AM ET).`;
     } else if (isSunEarly) {
-      openingMsg = `⛔ **${plan.instrument} ${plan.bias} — Markets not yet open.**\n\nAsian session opens ~8:00 PM CT tonight. No entries until then.\n\nThe plan is saved. I'll guide you when the session opens.`;
+      openingMsg = `⛔ **Markets not yet open.**\nAsian session opens ~9:00 PM ET tonight.`;
     } else {
-      openingMsg = `👀 **Watch your 30M chart on ${plan.instrument} RIGHT NOW.**\n\n`;
+      // Compact: just the next action + one timing line
+      const nextCandleLocal = nextCandleObj ? candleDisplay(nextCandleObj) : nextCandleDisplay;
+      openingMsg = `**NEXT ACTION**\n\nWatch the next 30M **${plan.instrument}** close.\n\nIf it closes **${direction} ${trigger}** — tell me immediately.\nIf it does not — send me the closing price.\n\nOnly full candle closes count. Wicks do not.\n\n🕐 Next check: **${nextCandleLocal}**`;
 
       if (advisory) {
-        openingMsg += `⚠️ **Session note:** ${advisory}\n\n`;
+        openingMsg += `\n\n⚠️ ${advisory}`;
       }
-
-      openingMsg += `**Session: ${sessCfg.label} (${sessCfg.hours})**\n\n`;
-      openingMsg += `1. Did the **${nextCandleDisplay}** candle close **${direction} ${trigger}**? → **TELL ME IMMEDIATELY.**\n`;
-      openingMsg += `2. Not ${direction} ${trigger}? → **TELL ME IMMEDIATELY.** We move to the next candle.\n\n`;
-      openingMsg += `⚠️ Wicks don't count. Strong candle bodies ONLY.\n\n`;
-      if (remainingCandles.length > 1) {
-        openingMsg += `⏱ Windows left: **${remainingDisplay}** — cutoff ${sessCfg.cutoff}${!isET ? ` (${etToLocal(sessCfg.cutoffET?.h || 11, sessCfg.cutoffET?.m || 30, true)})` : ""}.\n\n`;
-      }
-      openingMsg += `🥷 I will guide you all the way.`;
     }
 
     setMessages([{
@@ -3487,7 +3480,11 @@ Return ONLY valid JSON, no markdown, no explanation:
   const stateObj = SESSION_STATES[derivedState] || SESSION_STATES.WATCHING;
 
   function fmt(text) {
-    return text.replace(/\*\*(.*?)\*\*/g, '<strong style="color:#00e5ff">$1</strong>').replace(/\n/g, "<br/>");
+    return text
+      .replace(/\*\*(NEXT ACTION)\*\*/g, '<strong style="font-size:10px;letter-spacing:0.16em;color:rgba(255,107,255,0.7)">NEXT ACTION</strong>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#00e5ff">$1</strong>')
+      .replace(/tell me immediately/gi, '<strong style="color:#ff6bff">tell me immediately</strong>')
+      .replace(/\n/g, "<br/>");
   }
 
   const gradeColor = plan ? { "A+": "#7fff6b", "A": "#00e5ff", "B": "#ffd166", "C": "#ff9a3c", "PASS": "#8878aa" }[plan.grade] || "#ffd166" : "#ffd166";
