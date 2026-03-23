@@ -1709,82 +1709,122 @@ function getCTTime() {
 }
 
 function getMarketStatus(instrument, session = "NY") {
-  if (!instrument) return { open: false, reason: "Select an instrument first.", comeback: "" };
-  const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
-  const day = now.getDay(); // 0=Sun, 1=Mon...6=Sat
-  const mins = now.getHours() * 60 + now.getMinutes();
+  if (!instrument) return { open: false, state: "no_instrument", reason: "Select an instrument first.", comeback: "" };
+
+  const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
+  const day = now.getDay(); // ET day
+  const mins = now.getHours() * 60 + now.getMinutes(); // minutes since midnight ET
   const isBTC = instrument === "BTCUSD";
 
   // Saturday — all traditional markets closed
   if (day === 6 && !isBTC) {
     return {
-      open: false,
+      open: false, state: "weekend",
       reason: "Markets are closed on Saturday.",
-      comeback: "Come back Sunday evening — Asian session opens ~8:00 PM CT.",
+      comeback: "Come back Sunday evening — Asian session opens ~9:00 PM ET.",
     };
   }
 
-  // Sunday before 2:00 PM CT — too early for any session prep
+  // Sunday before 2 PM ET — too early for any session prep
   if (day === 0 && mins < 14 * 60 && !isBTC) {
     const minsLeft = 14 * 60 - mins;
-    const hrs = Math.floor(minsLeft / 60);
-    const min = minsLeft % 60;
+    const h = Math.floor(minsLeft / 60), m = minsLeft % 60;
     return {
-      open: false,
+      open: false, state: "weekend",
       reason: "Markets are not open yet.",
-      comeback: `Come back at 2:00 PM CT (${hrs > 0 ? `${hrs}h ${min}m` : `${min}m`}) — Asian session opens tonight ~8:00 PM CT.`,
+      comeback: `Come back at 2:00 PM ET (${h > 0 ? `${h}h ${m}m` : `${m}m`}) to start prep for the Asian session.`,
     };
   }
 
-  // BTC is 24/7 — always valid regardless of session
-  if (isBTC) return { open: true };
+  // BTC always open
+  if (isBTC) return { open: true, state: "live" };
 
-  // Session window check — is the selected session open, upcoming, or closed for today?
   const sessCfg = SESSION_CONFIG[session] || SESSION_CONFIG.NY;
 
-  // Session open window
-  const sessionOpen = mins >= sessCfg.openMins && mins <= sessCfg.cutoffMins;
-  const sessionUpcoming = mins < sessCfg.openMins;
-  const sessionClosed = mins > sessCfg.cutoffMins;
+  // Session boundaries in ET minutes
+  const openMins = sessCfg.openET ? sessCfg.openET.h * 60 + sessCfg.openET.m : sessCfg.openMins;
+  const cutoffMins = sessCfg.cutoffET ? sessCfg.cutoffET.h * 60 + sessCfg.cutoffET.m : sessCfg.cutoffMins;
 
-  // For Asian session — handle day rollover (opens ~8 PM CT = 20:00)
+  // Asian session crosses midnight — handle separately
   const isAsian = session === "ASIAN";
-  const asianOpen = isAsian && (mins >= 20 * 60 || mins <= 23 * 60);
+  if (isAsian) {
+    const asianOpen = 21 * 60;   // 9:00 PM ET
+    const asianPrep = 19 * 60;   // 7:00 PM ET (2hrs before)
+    const asianCutoff = 24 * 60; // midnight ET
 
-  if (sessionOpen || (isAsian && mins >= 20 * 60)) {
-    return { open: true };
-  }
-
-  if (sessionUpcoming) {
-    const minsLeft = sessCfg.openMins - mins;
-    const hrs = Math.floor(minsLeft / 60);
-    const min = minsLeft % 60;
+    if (mins >= asianOpen && mins < asianCutoff) {
+      return { open: true, state: "live" };
+    }
+    if (mins >= asianPrep && mins < asianOpen) {
+      const minsLeft = asianOpen - mins;
+      const h = Math.floor(minsLeft / 60), m = minsLeft % 60;
+      return {
+        open: true, state: "prep",
+        reason: `Asian session opens in ${h > 0 ? `${h}h ${m}m` : `${m}m`}`,
+        comeback: "Upload now and study your plan before the session opens at 9:00 PM ET.",
+        minsUntilOpen: minsLeft,
+      };
+    }
+    if (mins < asianPrep) {
+      const minsLeft = asianPrep - mins;
+      const h = Math.floor(minsLeft / 60), m = minsLeft % 60;
+      const openTimeLocal = etToLocal(21, 0, true);
+      return {
+        open: false, state: "too_early",
+        reason: `Asian session opens at 9:00 PM ET${openTimeLocal.includes("ET") ? "" : ` (${openTimeLocal})`}.`,
+        comeback: `Come back at 7:00 PM ET to upload your charts — 2 hours before open. That gives you time to study the plan before the session starts.`,
+        minsUntilPrep: minsLeft,
+      };
+    }
+    // Past midnight = session closed
     return {
-      open: false,
-      reason: `${sessCfg.label} session hasn't opened yet.`,
-      comeback: `Opens at ${sessCfg.hours.split("–")[0]} CT — in ${hrs > 0 ? `${hrs}h ${min}m` : `${min}m`}. Upload your charts now to be ready.`,
-      upcoming: true, // allow uploading in prep
+      open: false, state: "closed",
+      reason: "Asian session is closed.",
+      comeback: "Come back tonight at 7:00 PM ET to prep for tomorrow's Asian session.",
     };
   }
 
-  if (sessionClosed && !isAsian) {
-    // Find the next available session
-    const sessionOrder = ["ASIAN","LONDON","NY","LONDON_NY"];
-    const nextSessions = {
-      NY: { name: "Asian", time: "~8:00 PM CT tonight" },
-      LONDON: { name: "NY", time: "~8:30 AM CT" },
-      LONDON_NY: { name: "Asian", time: "~8:00 PM CT tonight" },
-      ASIAN: { name: "London", time: "~2:00 AM CT" },
-    };
-    const next = nextSessions[session];
+  // All other sessions
+  const prepMins = openMins - 2 * 60; // 2 hours before open
+
+  if (mins >= openMins && mins <= cutoffMins) {
+    return { open: true, state: "live" };
+  }
+
+  if (mins >= prepMins && mins < openMins) {
+    const minsLeft = openMins - mins;
+    const h = Math.floor(minsLeft / 60), m = minsLeft % 60;
     return {
-      open: false,
-      reason: `${sessCfg.label} session window is closed for today. Cutoff was ${sessCfg.cutoff}.`,
-      comeback: `Next session: ${next?.name || "NY"} opens ${next?.time || "~8:30 AM CT"}. Switch sessions or come back then.`,
+      open: true, state: "prep",
+      reason: `${sessCfg.label} session opens in ${h > 0 ? `${h}h ${m}m` : `${m}m`}`,
+      comeback: `Upload now and study your plan before the session opens. The structure you see is fresh and valid.`,
+      minsUntilOpen: minsLeft,
     };
   }
 
-  return { open: true };
+  if (mins < prepMins) {
+    const minsLeft = prepMins - mins;
+    const h = Math.floor(minsLeft / 60), m = minsLeft % 60;
+    const openTimeDisplay = sessCfg.openET ? etToLocal(sessCfg.openET.h, sessCfg.openET.m, true) : sessCfg.hours.split("–")[0];
+    return {
+      open: false, state: "too_early",
+      reason: `${sessCfg.label} session opens at ${sessCfg.hours.split("–")[0]} ET.`,
+      comeback: `Come back in ${h > 0 ? `${h}h ${m}m` : `${m}m`} to upload your charts — 2 hours before session open gives you time to study the plan properly.`,
+      minsUntilPrep: minsLeft,
+    };
+  }
+
+  // Session closed
+  const nextSessions = {
+    NY: "Asian session tonight ~9:00 PM ET",
+    LONDON: "NY session ~9:30 AM ET",
+    LONDON_NY: "Asian session tonight ~9:00 PM ET",
+  };
+  return {
+    open: false, state: "closed",
+    reason: `${sessCfg.label} session is closed. Cutoff was ${sessCfg.cutoff}.`,
+    comeback: `Next: ${nextSessions[session] || "check tomorrow"}. Switch sessions or come back then.`,
+  };
 }
 
 function getNextClose() {
@@ -3213,7 +3253,7 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
   async function analyzeCharts() {
     if (images.filter(Boolean).length < 5) return;
     const mktStatus = getMarketStatus(instrument, selectedSession);
-    if (!mktStatus.open) return;
+    if (mktStatus.state === "too_early" || mktStatus.state === "closed" || mktStatus.state === "weekend") return;
 
     // ── Usage limit checks ────────────────────────────────────────────────
     const session = JSON.parse(localStorage.getItem("omniusd_session") || "{}");
@@ -3390,14 +3430,25 @@ Return ONLY valid JSON, no markdown, no explanation:
 
     const advisory = SESSION_ADVISORIES[plan.instrument]?.[selectedSession];
 
+    const mktStatus = getMarketStatus(plan.instrument, selectedSession);
+    const isPrep = mktStatus.state === "prep";
+    const minsUntilOpen = mktStatus.minsUntilOpen || 0;
+    const hUntil = Math.floor(minsUntilOpen / 60);
+    const mUntil = minsUntilOpen % 60;
+    const untilStr = hUntil > 0 ? `${hUntil}h ${mUntil}m` : `${mUntil}m`;
+
     let openingMsg = "";
 
     if (isSat) {
       openingMsg = `⛔ **Saturday — no entries.**\nCome back Sunday Asian (~9:00 PM ET) or Monday NY (~9:30 AM ET).`;
     } else if (isSunEarly) {
       openingMsg = `⛔ **Markets not yet open.**\nAsian session opens ~9:00 PM ET tonight.`;
+    } else if (isPrep) {
+      // Prep window — session not open yet
+      const openTimeDisplay = sessCfg.openET ? etToLocal(sessCfg.openET.h, sessCfg.openET.m, true) : sessCfg.hours.split("–")[0] + " ET";
+      openingMsg = `📋 **PREP MODE — Session opens in ${untilStr}**\n\nPlan is locked. Study it now.\n\nTrigger: **${trigger}**\nStop: **${plan.stop_loss}**\nTP1: **${plan.tp1}**\n\nWhen the session opens at **${openTimeDisplay}** — come back and I'll guide you candle by candle.\n\n🥷 Be ready. Not early.`;
     } else {
-      // Compact: just the next action + one timing line
+      // Live — compact execution card
       const nextCandleLocal = nextCandleObj ? candleDisplay(nextCandleObj) : nextCandleDisplay;
       openingMsg = `**NEXT ACTION**\n\nWatch the next 30M **${plan.instrument}** close.\n\nIf it closes **${direction} ${trigger}** — tell me immediately.\nIf it does not — send me the closing price.\n\nOnly full candle closes count. Wicks do not.\n\n🕐 Next check: **${nextCandleLocal}**`;
 
@@ -3656,27 +3707,46 @@ Return ONLY valid JSON, no markdown, no explanation:
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", padding: isMobile ? "24px 16px 24px" : "48px 24px 32px", animation: "fadein 0.3s ease both" }}>
           <div style={{ width: "100%", maxWidth: 560 }}>
 
-            {/* Market closed warning — conditional only */}
+            {/* Session state banner */}
             {(()=>{
+              if (!instrument) return null;
               const status = getMarketStatus(instrument, selectedSession);
-              if (!status.open) return (
-                <div style={{ padding: "12px 16px", background: status.upcoming ? "rgba(0,229,255,0.05)" : "rgba(255,107,107,0.06)", border: `1px solid ${status.upcoming ? "rgba(0,229,255,0.2)" : "rgba(255,107,107,0.2)"}`, borderLeft: `3px solid ${status.upcoming ? "#00e5ff" : "#ff6b6b"}`, borderRadius: 0, marginBottom: 16 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: status.upcoming ? "#00e5ff" : "#ff6b6b", marginBottom: 4 }}>{status.reason}</div>
-                  <div style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", lineHeight: 1.6 }}>{status.comeback}</div>
-                  {!status.upcoming && instrument !== "BTCUSD" && (
-                    <div style={{ marginTop: 8, fontSize: 10, color: "rgba(255,209,102,0.7)" }}>
-                      💡 Switch to a different session above — or{" "}
-                      <span style={{ color: "#ffd166", fontWeight: 700, cursor: "pointer" }} onClick={() => setSelectedSession("ASIAN")}>try Asian session</span>
-                      {" "}/ <span style={{ color: "#ffd166", fontWeight: 700, cursor: "pointer" }} onClick={() => setSelectedSession("LONDON")}>London session</span>
-                    </div>
-                  )}
-                  {status.upcoming && (
-                    <div style={{ marginTop: 8, fontSize: 10, color: "rgba(0,229,255,0.6)" }}>
-                      💡 Upload your charts now — you'll be ready when the session opens.
-                    </div>
-                  )}
+              const sessCfg = SESSION_CONFIG[selectedSession] || SESSION_CONFIG.NY;
+
+              if (status.state === "too_early") return (
+                <div style={{ padding:"14px 16px", background:"rgba(255,107,107,0.05)", border:"1px solid rgba(255,107,107,0.2)", borderLeft:"3px solid #ff6b6b", borderRadius:0, marginBottom:16 }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:"#ff6b6b", marginBottom:4 }}>⏳ {status.reason}</div>
+                  <div style={{ fontSize:10, color:"rgba(255,255,255,0.45)", lineHeight:1.7 }}>{status.comeback}</div>
+                  <div style={{ marginTop:8, fontSize:10, color:"rgba(255,209,102,0.6)" }}>
+                    💡 Switch to a different session — or{" "}
+                    <span style={{ color:"#ffd166", fontWeight:700, cursor:"pointer" }} onClick={()=>setSelectedSession("ASIAN")}>Asian</span>{" · "}
+                    <span style={{ color:"#ffd166", fontWeight:700, cursor:"pointer" }} onClick={()=>setSelectedSession("LONDON")}>London</span>{" · "}
+                    <span style={{ color:"#ffd166", fontWeight:700, cursor:"pointer" }} onClick={()=>setSelectedSession("NY")}>NY</span>
+                  </div>
                 </div>
               );
+
+              if (status.state === "prep") return (
+                <div style={{ padding:"14px 16px", background:"rgba(0,229,255,0.04)", border:"1px solid rgba(0,229,255,0.2)", borderLeft:"3px solid #00e5ff", borderRadius:0, marginBottom:16 }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:"#00e5ff", marginBottom:4 }}>📋 {status.reason} — Prep window open</div>
+                  <div style={{ fontSize:10, color:"rgba(255,255,255,0.5)", lineHeight:1.7 }}>{status.comeback}</div>
+                </div>
+              );
+
+              if (status.state === "closed") return (
+                <div style={{ padding:"14px 16px", background:"rgba(255,107,107,0.05)", border:"1px solid rgba(255,107,107,0.15)", borderLeft:"3px solid #ff6b6b", borderRadius:0, marginBottom:16 }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:"#ff6b6b", marginBottom:4 }}>🔴 {status.reason}</div>
+                  <div style={{ fontSize:10, color:"rgba(255,255,255,0.4)", lineHeight:1.7 }}>{status.comeback}</div>
+                </div>
+              );
+
+              if (status.state === "weekend") return (
+                <div style={{ padding:"14px 16px", background:"rgba(255,107,107,0.05)", border:"1px solid rgba(255,107,107,0.15)", borderLeft:"3px solid #ff6b6b", borderRadius:0, marginBottom:16 }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:"#ff6b6b", marginBottom:4 }}>{status.reason}</div>
+                  <div style={{ fontSize:10, color:"rgba(255,255,255,0.4)", lineHeight:1.7 }}>{status.comeback}</div>
+                </div>
+              );
+
               return null;
             })()}
 
@@ -3873,19 +3943,34 @@ Return ONLY valid JSON, no markdown, no explanation:
             {(()=>{
               const mkt = getMarketStatus(instrument, selectedSession);
               const sessionBlocked = instrument && selectedSession && SESSION_INSTRUMENT_FIT[instrument]?.[selectedSession] === "block";
-              const ready = images.filter(Boolean).length === 5 && mkt.open && !sessionBlocked;
+              const chartsReady = images.filter(Boolean).length === 5;
+              const canGenerate = chartsReady && (mkt.state === "live" || mkt.state === "prep") && !sessionBlocked;
+
+              let btnLabel = "SELECT YOUR 5 CHARTS";
+              if (sessionBlocked) btnLabel = `${instrument} UNAVAILABLE IN ${SESSION_CONFIG[selectedSession]?.short} SESSION`;
+              else if (mkt.state === "too_early") btnLabel = `COME BACK ${SESSION_CONFIG[selectedSession]?.openET ? `AT ${SESSION_CONFIG[selectedSession].openET.h > 12 ? SESSION_CONFIG[selectedSession].openET.h - 12 : SESSION_CONFIG[selectedSession].openET.h}:${String(SESSION_CONFIG[selectedSession].openET.m).padStart(2,"0")} ${SESSION_CONFIG[selectedSession].openET.h >= 12 ? "PM" : "AM"} ET` : "LATER"}`;
+              else if (mkt.state === "closed") btnLabel = "SESSION CLOSED — SWITCH SESSION";
+              else if (mkt.state === "weekend") btnLabel = "COME BACK SUNDAY";
+              else if (!chartsReady && images.filter(Boolean).length === 0) btnLabel = "SELECT YOUR 5 CHARTS";
+              else if (!chartsReady) btnLabel = `${images.filter(Boolean).length} / 5 CHARTS — ADD ${5 - images.filter(Boolean).length} MORE`;
+              else if (mkt.state === "prep") btnLabel = "GENERATE PREP PLAN →";
+              else btnLabel = "GENERATE SESSION PLAN →";
+
               return (
-                <button onClick={analyzeCharts} disabled={!ready}
-                  style={{ width: "100%", padding: "14px", borderRadius: 10, border: ready ? "none" : "1px solid rgba(255,107,255,0.2)", background: ready ? "linear-gradient(135deg,#ff6bff,#7b2fff)" : "rgba(255,107,255,0.08)", color: ready ? "#fff" : "rgba(255,107,255,0.45)", fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", fontFamily: "inherit", cursor: ready ? "pointer" : "default", boxShadow: ready ? "0 4px 32px rgba(255,107,255,0.35), 0 0 0 1px rgba(255,107,255,0.15)" : "none", transition: "all 0.2s" }}>
-                  {sessionBlocked
-                    ? `${instrument} UNAVAILABLE IN ${SESSION_CONFIG[selectedSession]?.short} SESSION`
-                    : !mkt.open
-                    ? "MARKET CLOSED — COME BACK LATER"
-                    : images.filter(Boolean).length === 5
-                    ? "GENERATE SESSION PLAN →"
-                    : images.filter(Boolean).length === 0
-                    ? "SELECT YOUR 5 CHARTS"
-                    : `${images.filter(Boolean).length} / 5 CHARTS READY — ADD ${5 - images.filter(Boolean).length} MORE`}
+                <button onClick={analyzeCharts} disabled={!canGenerate}
+                  style={{ width:"100%", padding:"14px", borderRadius:10,
+                    border: canGenerate ? "none" : "1px solid rgba(255,107,255,0.2)",
+                    background: canGenerate
+                      ? mkt.state === "prep"
+                        ? "linear-gradient(135deg,#00e5ff,#0099bb)"
+                        : "linear-gradient(135deg,#ff6bff,#7b2fff)"
+                      : "rgba(255,107,255,0.08)",
+                    color: canGenerate ? "#fff" : "rgba(255,107,255,0.45)",
+                    fontSize:12, fontWeight:700, letterSpacing:"0.12em", fontFamily:"inherit",
+                    cursor: canGenerate ? "pointer" : "default",
+                    boxShadow: canGenerate ? "0 4px 32px rgba(255,107,255,0.35)" : "none",
+                    transition:"all 0.2s" }}>
+                  {btnLabel}
                 </button>
               );
             })()}
