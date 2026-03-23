@@ -2003,7 +2003,8 @@ YOUR ROLE — OmniUSD Live Session Guide:
 
 STEP-BY-STEP CANDLE COACHING — THIS IS HOW YOU GUIDE:
 Active session: ${sessCfg.label} (${sessCfg.hours})
-Valid 30M closes for this session: ${sessCfg.candles.join(", ")} — Hard cutoff: ${sessCfg.cutoff}
+Valid 30M closes for this session (ALL TIMES IN ET): ${sessCfg.candles.map(c => c.label || c).join(", ")} — Hard cutoff: ${sessCfg.cutoff}
+IMPORTANT: Always show times in ET. The trader's app shows their local time conversion automatically.
 
 When a candle closes and it confirms Tier 1 (first close ${plan.bias==="SHORT"?"below":"above"} ${plan.trigger_level}):
 → Ask if the close was strong or barely made it. A strong close (closed well ${plan.bias==="SHORT"?"below":"above"} the level with a solid body) = high conviction. A barely-made-it close (just crept ${plan.bias==="SHORT"?"below":"above"} by a few points) = lower conviction — note it but still valid.
@@ -2382,54 +2383,152 @@ function useWindowWidth() {
 }
 
 
+
+// ── Timezone utilities ────────────────────────────────────────────────────
+function getUserTZ() {
+  try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch { return "America/New_York"; }
+}
+
+// Convert an ET time (hour, min) to user's local time string
+function etToLocal(etHour, etMin, showTZName = true) {
+  try {
+    const userTZ = getUserTZ();
+    // Build a date representing today at the given ET time
+    const now = new Date();
+    const etStr = now.toLocaleDateString("en-US", { timeZone: "America/New_York" });
+    const d = new Date(`${etStr} ${etHour}:${String(etMin).padStart(2,"0")}:00`);
+    // Adjust for ET offset
+    const etOffset = -5; // ET standard (close enough for display; DST handled by browser)
+    const utc = d.getTime() + (d.getTimezoneOffset() * 60000) + (etOffset * 3600000) * -1;
+    const localD = new Date(utc);
+    // Use Intl to format in user's local TZ
+    const opts = { hour: "numeric", minute: "2-digit", hour12: true, timeZone: userTZ };
+    const localStr = new Intl.DateTimeFormat("en-US", opts).format(new Date(
+      new Date().toLocaleString("en-US", { timeZone: "America/New_York" })
+    ));
+    // Actually, easier approach — format directly
+    const etDate = new Date();
+    const etNow = new Date(etDate.toLocaleString("en-US", { timeZone: "America/New_York" }));
+    etNow.setHours(etHour, etMin, 0, 0);
+    // Now convert this ET time to actual UTC, then to user local
+    const etOffsetMs = etDate.getTime() - new Date(etDate.toLocaleString("en-US", { timeZone: "America/New_York" })).getTime();
+    const utcTime = new Date(etNow.getTime() + etOffsetMs);
+    const localTime = new Intl.DateTimeFormat("en-US", {
+      hour: "numeric", minute: "2-digit", hour12: true,
+      timeZone: userTZ,
+    }).format(utcTime);
+    if (!showTZName) return localTime;
+    const tzShort = new Intl.DateTimeFormat("en-US", {
+      timeZoneName: "short", timeZone: userTZ, hour: "numeric",
+    }).format(utcTime).split(" ").pop();
+    return `${localTime} ${tzShort}`;
+  } catch(e) {
+    return `${etHour}:${String(etMin).padStart(2,"0")} ${etHour < 12 ? "AM" : "PM"} ET`;
+  }
+}
+
+// Format session time showing ET + local
+function sessionTimeDisplay(etTimeStr, etHour, etMin) {
+  try {
+    const userTZ = getUserTZ();
+    const isET = userTZ === "America/New_York" || userTZ === "America/Detroit" || userTZ === "America/Indiana/Indianapolis";
+    if (isET) return `${etTimeStr} ET`;
+    const local = etToLocal(etHour, etMin, true);
+    return `${etTimeStr} ET (${local})`;
+  } catch { return `${etTimeStr} ET`; }
+}
+
+// Get user's timezone abbreviation
+function getUserTZShort() {
+  try {
+    return new Intl.DateTimeFormat("en-US", { timeZoneName: "short", hour: "numeric" })
+      .format(new Date()).split(" ").pop();
+  } catch { return "Local"; }
+}
+
 // ── Session config — instrument compatibility + candle times ────────────────
 const SESSION_CONFIG = {
   NY: {
     label: "New York",
     short: "NY",
     color: "#7fff6b",
-    hours: "8:30–10:30 AM CT",
-    cutoff: "10:30 AM CT",
-    cutoffMins: 10*60+30,
-    openMins: 8*60+30,
-    candles: ["9:00 AM CT","9:30 AM CT","10:00 AM CT","10:30 AM CT"],
-    candleMins: [9*60, 9*60+30, 10*60, 10*60+30],
+    hours: "9:30 AM–11:30 AM ET",
+    cutoff: "11:30 AM ET",
+    cutoffMins: 10*60+30, // CT equivalent for market check
+    openMins: 8*60+30,    // CT equivalent for market check
+    // ET times for display
+    openET: { h: 9, m: 30 },
+    cutoffET: { h: 11, m: 30 },
+    candles: [
+      { label: "9:30 AM ET", h: 9,  m: 30 },
+      { label: "10:00 AM ET", h: 10, m: 0  },
+      { label: "10:30 AM ET", h: 10, m: 30 },
+      { label: "11:00 AM ET", h: 11, m: 0  },
+      { label: "11:30 AM ET", h: 11, m: 30 },
+    ],
+    candleMins: [9*60, 9*60+30, 10*60, 10*60+30, 11*60], // CT for comparison
     desc: "Highest institutional volume. Cleanest BRC setups.",
   },
   LONDON: {
     label: "London",
     short: "LDN",
     color: "#00e5ff",
-    hours: "2:00–5:00 AM CT",
-    cutoff: "5:00 AM CT",
+    hours: "3:00 AM–6:00 AM ET",
+    cutoff: "6:00 AM ET",
     cutoffMins: 5*60,
     openMins: 2*60,
-    candles: ["2:30 AM CT","3:00 AM CT","3:30 AM CT","4:00 AM CT","4:30 AM CT","5:00 AM CT"],
-    candleMins: [2*60+30, 3*60, 3*60+30, 4*60, 4*60+30, 5*60],
+    openET: { h: 3, m: 0 },
+    cutoffET: { h: 6, m: 0 },
+    candles: [
+      { label: "3:00 AM ET",  h: 3, m: 0  },
+      { label: "3:30 AM ET",  h: 3, m: 30 },
+      { label: "4:00 AM ET",  h: 4, m: 0  },
+      { label: "4:30 AM ET",  h: 4, m: 30 },
+      { label: "5:00 AM ET",  h: 5, m: 0  },
+      { label: "5:30 AM ET",  h: 5, m: 30 },
+    ],
+    candleMins: [2*60, 2*60+30, 3*60, 3*60+30, 4*60, 4*60+30],
     desc: "Strong for forex and gold. Fast sharp moves.",
   },
   ASIAN: {
-    label: "Asian",
+    label: "Asian (Singapore/HK)",
     short: "ASIA",
     color: "#ff9a3c",
-    hours: "8:00–11:00 PM CT",
-    cutoff: "11:00 PM CT",
+    hours: "9:00 PM–12:00 AM ET",
+    cutoff: "12:00 AM ET",
     cutoffMins: 23*60,
     openMins: 20*60,
-    candles: ["8:30 PM CT","9:00 PM CT","9:30 PM CT","10:00 PM CT","10:30 PM CT","11:00 PM CT"],
-    candleMins: [20*60+30, 21*60, 21*60+30, 22*60, 22*60+30, 23*60],
-    desc: "Best for BTCUSD. Lower volume on other instruments.",
+    openET: { h: 21, m: 0 },
+    cutoffET: { h: 0, m: 0 },
+    candles: [
+      { label: "9:00 PM ET",  h: 21, m: 0  },
+      { label: "9:30 PM ET",  h: 21, m: 30 },
+      { label: "10:00 PM ET", h: 22, m: 0  },
+      { label: "10:30 PM ET", h: 22, m: 30 },
+      { label: "11:00 PM ET", h: 23, m: 0  },
+      { label: "11:30 PM ET", h: 23, m: 30 },
+    ],
+    candleMins: [20*60, 20*60+30, 21*60, 21*60+30, 22*60, 22*60+30],
+    desc: "Singapore/HK open. Best for BTCUSD.",
   },
   LONDON_NY: {
     label: "London/NY Overlap",
     short: "LDN/NY",
     color: "#ff6bff",
-    hours: "8:30–10:30 AM CT",
-    cutoff: "10:30 AM CT",
+    hours: "9:30 AM–11:30 AM ET",
+    cutoff: "11:30 AM ET",
     cutoffMins: 10*60+30,
     openMins: 8*60+30,
-    candles: ["9:00 AM CT","9:30 AM CT","10:00 AM CT","10:30 AM CT"],
-    candleMins: [9*60, 9*60+30, 10*60, 10*60+30],
+    openET: { h: 9, m: 30 },
+    cutoffET: { h: 11, m: 30 },
+    candles: [
+      { label: "9:30 AM ET",  h: 9,  m: 30 },
+      { label: "10:00 AM ET", h: 10, m: 0  },
+      { label: "10:30 AM ET", h: 10, m: 30 },
+      { label: "11:00 AM ET", h: 11, m: 0  },
+      { label: "11:30 AM ET", h: 11, m: 30 },
+    ],
+    candleMins: [9*60, 9*60+30, 10*60, 10*60+30, 11*60],
     desc: "Premium window. Highest volume of the day.",
   },
 };
@@ -2554,6 +2653,249 @@ async function checkUsageLimits(userId, token, instrument, tier) {
     console.error("Usage check failed:", e);
     return { allowed: true }; // fail open — never block on error
   }
+}
+
+// ── Timeframe detection from filename ─────────────────────────────────────
+function detectTFFromFilename(filename) {
+  const f = filename.toLowerCase();
+  // TradingView patterns: "BTCUSD, 240.png", "BTCUSD, D.png" etc.
+  if (f.match(/[,\s_-]d[,.\s_-]|daily|\b1d\b|,\s*d\b/)) return 0; // Daily
+  if (f.match(/240|4h|4hr|4hour/)) return 1; // 4H
+  if (f.match(/60|1h[^4]|1hr|1hour/)) return 2; // 1H
+  if (f.match(/30m|30min|30\b/)) return 3; // 30M
+  if (f.match(/15m|15min|15\b/)) return 4; // 15M
+  return -1; // unknown
+}
+
+function BulkUploadZone({ images, setImages, readSlotFile, dragOverSlot, setDragOverSlot }) {
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [animating, setAnimating] = useState(false);
+  const [unassigned, setUnassigned] = useState([]); // files that couldn't be auto-detected
+  const fileInputRef = useRef(null);
+
+  const SLOTS = [
+    { tf: "Daily", label: "D",   role: "Bias",       color: "#ff6bff" },
+    { tf: "4H",    label: "4H",  role: "Structure",  color: "#00e5ff" },
+    { tf: "1H",    label: "1H",  role: "Setup",      color: "#7fff6b" },
+    { tf: "30M",   label: "30M", role: "Trigger",    color: "#ffd166" },
+    { tf: "15M",   label: "15M", role: "Refinement", color: "#ff9a3c" },
+  ];
+
+  const uploadedCount = images.filter(Boolean).length;
+  const allReady = uploadedCount === 5;
+
+  function processFiles(files) {
+    const imgs = Array.from(files).filter(f => f.type.startsWith("image/")).slice(0, 10);
+    if (!imgs.length) return;
+    setAnimating(true);
+
+    // Try to auto-detect timeframes
+    const assigned = Array(5).fill(null);
+    const leftover = [];
+
+    imgs.forEach(file => {
+      const idx = detectTFFromFilename(file.name);
+      if (idx >= 0 && !assigned[idx]) {
+        assigned[idx] = file;
+      } else {
+        leftover.push(file);
+      }
+    });
+
+    // Fill remaining slots with leftover files in order
+    let leftoverIdx = 0;
+    for (let i = 0; i < 5; i++) {
+      if (!assigned[i] && leftoverIdx < leftover.length) {
+        assigned[i] = leftover[leftoverIdx++];
+      }
+    }
+
+    // Read each assigned file
+    assigned.forEach((file, i) => {
+      if (file) readSlotFile(file, i);
+    });
+
+    setTimeout(() => setAnimating(false), 800);
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    setIsDragOver(false);
+    setDragOverSlot(null);
+    processFiles(e.dataTransfer.files);
+  }
+
+  return (
+    <div style={{ marginBottom: 20 }}>
+      <style>{`
+        @keyframes cardFanIn {
+          0%   { opacity: 0; transform: translateY(20px) scale(0.92); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes orbitPulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(255,107,255,0.4), 0 0 24px rgba(255,107,255,0.15); }
+          50%       { box-shadow: 0 0 0 8px rgba(255,107,255,0), 0 0 40px rgba(255,107,255,0.3); }
+        }
+        @keyframes readyGlow {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(127,255,107,0.5), 0 0 20px rgba(127,255,107,0.2); }
+          50%       { box-shadow: 0 0 0 6px rgba(127,255,107,0), 0 0 40px rgba(127,255,107,0.4); }
+        }
+        @keyframes scanLine {
+          0%   { top: 0; opacity: 0.7; }
+          100% { top: 100%; opacity: 0; }
+        }
+      `}</style>
+
+      {/* Drop zone */}
+      {uploadedCount < 5 && (
+        <div
+          onDragOver={e => { e.preventDefault(); setIsDragOver(true); }}
+          onDragLeave={() => setIsDragOver(false)}
+          onDrop={handleDrop}
+          onClick={() => fileInputRef.current?.click()}
+          style={{
+            position: "relative", overflow: "hidden",
+            padding: "28px 20px",
+            background: isDragOver
+              ? "rgba(255,107,255,0.08)"
+              : "rgba(255,255,255,0.02)",
+            border: `1px solid ${isDragOver ? "rgba(255,107,255,0.6)" : "rgba(255,107,255,0.2)"}`,
+            borderRadius: 14,
+            cursor: "pointer",
+            textAlign: "center",
+            animation: isDragOver ? "orbitPulse 1s ease infinite" : "none",
+            transition: "all 0.2s",
+            marginBottom: 14,
+          }}>
+
+          {/* Grid overlay */}
+          <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(255,107,255,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,107,255,0.04) 1px,transparent 1px)", backgroundSize: "24px 24px", pointerEvents: "none" }}/>
+
+          {/* Scan line when dragging */}
+          {isDragOver && (
+            <div style={{ position: "absolute", left: 0, right: 0, height: 2, background: "linear-gradient(90deg,transparent,#ff6bff,transparent)", animation: "scanLine 1s linear infinite", pointerEvents: "none" }}/>
+          )}
+
+          <div style={{ position: "relative", zIndex: 1 }}>
+            <div style={{ fontSize: isDragOver ? 40 : 32, marginBottom: 10, transition: "all 0.2s" }}>
+              {isDragOver ? "↓" : "📁"}
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: isDragOver ? "#ff6bff" : "#f0ecff", marginBottom: 6 }}>
+              {isDragOver ? "Drop all 5 charts here" : "Select or drop all 5 charts at once"}
+            </div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>
+              Daily · 4H · 1H · 30M · 15M — select all at once or one by one
+            </div>
+            <div style={{ fontSize: 9, color: "rgba(255,107,255,0.5)", marginTop: 8, fontFamily: "'Space Mono',monospace" }}>
+              Timeframes auto-detected from filename
+            </div>
+          </div>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            style={{ display: "none" }}
+            onChange={e => { if (e.target.files.length) processFiles(e.target.files); e.target.value = ""; }}
+          />
+        </div>
+      )}
+
+      {/* Cards — fan out as uploads come in */}
+      {uploadedCount > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 8 }}>
+          {SLOTS.map((slot, i) => {
+            const hasImage = !!(images[i]?.preview);
+            return (
+              <div key={slot.tf}
+                style={{
+                  display: "flex", alignItems: "center", gap: 12,
+                  padding: "8px 12px",
+                  background: hasImage ? `${slot.color}08` : "rgba(255,255,255,0.02)",
+                  border: `1px solid ${hasImage ? `${slot.color}33` : "rgba(255,255,255,0.06)"}`,
+                  borderRadius: 10,
+                  animation: hasImage && animating ? `cardFanIn 0.4s ease ${i * 0.08}s both` : "none",
+                  transition: "all 0.3s",
+                  cursor: "pointer",
+                }}
+                onClick={() => document.getElementById(`bulk-slot-${i}`).click()}>
+
+                {/* TF badge */}
+                <div style={{ width: 38, height: 38, flexShrink: 0, borderRadius: 8, background: hasImage ? `${slot.color}14` : "rgba(255,255,255,0.04)", border: `1px solid ${hasImage ? `${slot.color}44` : "rgba(255,255,255,0.08)"}`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", transition: "all 0.3s" }}>
+                  <span style={{ fontSize: 10, fontWeight: 900, color: hasImage ? slot.color : "rgba(255,255,255,0.25)", lineHeight: 1 }}>{slot.label}</span>
+                  <span style={{ fontSize: 6, color: hasImage ? `${slot.color}88` : "rgba(255,255,255,0.15)", marginTop: 2, fontFamily: "'Space Mono',monospace" }}>{slot.role}</span>
+                </div>
+
+                {/* Preview thumbnail */}
+                {hasImage ? (
+                  <div style={{ position: "relative", flexShrink: 0 }}>
+                    <img src={images[i].preview} alt={slot.tf}
+                      style={{ width: 60, height: 38, objectFit: "cover", borderRadius: 6, border: `1px solid ${slot.color}44` }}/>
+                    {/* Scan effect overlay */}
+                    <div style={{ position: "absolute", inset: 0, borderRadius: 6, background: `linear-gradient(180deg, transparent 60%, ${slot.color}22)`, pointerEvents: "none" }}/>
+                  </div>
+                ) : (
+                  <div style={{ width: 60, height: 38, flexShrink: 0, borderRadius: 6, border: "1px dashed rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.02)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <span style={{ fontSize: 16, color: "rgba(255,255,255,0.15)" }}>+</span>
+                  </div>
+                )}
+
+                {/* Label */}
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: hasImage ? "#f0ecff" : "rgba(255,255,255,0.3)", marginBottom: 2 }}>{slot.tf} Chart</div>
+                  <div style={{ fontSize: 9, color: hasImage ? `${slot.color}88` : "rgba(255,255,255,0.2)" }}>
+                    {hasImage ? "✓ Uploaded" : "Waiting..."}
+                  </div>
+                </div>
+
+                {/* Replace chip */}
+                {hasImage && (
+                  <div onClick={e => { e.stopPropagation(); document.getElementById(`bulk-slot-${i}`).click(); }}
+                    style={{ fontSize: 8, fontWeight: 700, padding: "3px 8px", borderRadius: 5, border: `1px solid ${slot.color}33`, background: `${slot.color}08`, color: `${slot.color}99`, cursor: "pointer", flexShrink: 0 }}>
+                    Replace
+                  </div>
+                )}
+
+                <input type="file" accept="image/*" id={`bulk-slot-${i}`}
+                  style={{ display: "none" }}
+                  onChange={e => { if (e.target.files[0]) { readSlotFile(e.target.files[0], i); e.target.value = ""; } }}
+                />
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* All ready glow indicator */}
+      {allReady && (
+        <div style={{ padding: "10px 14px", background: "rgba(127,255,107,0.06)", border: "1px solid rgba(127,255,107,0.3)", borderRadius: 8, display: "flex", alignItems: "center", gap: 10, animation: "readyGlow 2s ease infinite" }}>
+          <span style={{ fontSize: 16 }}>✅</span>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#7fff6b" }}>All 5 charts ready</div>
+            <div style={{ fontSize: 9, color: "rgba(127,255,107,0.6)", fontFamily: "'Space Mono',monospace" }}>Hit generate to build your session plan</div>
+          </div>
+          <button onClick={() => { setImages(Array(5).fill(null)); }}
+            style={{ marginLeft: "auto", fontSize: 8, fontWeight: 700, padding: "3px 9px", borderRadius: 5, border: "1px solid rgba(255,255,255,0.1)", background: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}>
+            Clear all
+          </button>
+        </div>
+      )}
+
+      {/* Progress bar */}
+      {uploadedCount > 0 && uploadedCount < 5 && (
+        <div style={{ marginTop: 10 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+            <span style={{ fontSize: 9, color: "#8878aa", fontFamily: "'Space Mono',monospace" }}>{uploadedCount} / 5 charts</span>
+            <span style={{ fontSize: 9, color: "#8878aa", fontFamily: "'Space Mono',monospace" }}>{5 - uploadedCount} remaining</span>
+          </div>
+          <div style={{ height: 3, background: "rgba(255,255,255,0.06)", borderRadius: 2, overflow: "hidden" }}>
+            <div style={{ height: "100%", width: `${(uploadedCount/5)*100}%`, background: "linear-gradient(90deg,#ff6bff,#00e5ff)", borderRadius: 2, transition: "width 0.4s ease" }}/>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function FullAnalysisPanel({ plan }) {
@@ -3020,16 +3362,31 @@ Return ONLY valid JSON, no markdown, no explanation:
     const trigger = plan.trigger_level || "the trigger level";
 
     // Find next valid candle close for this session
+    const candleObjs = sessCfg.candles || [];
     const candleMins = sessCfg.candleMins || [];
-    let nextCandle = sessCfg.candles[0] || "9:00 AM CT";
-    let remainingCandles = [...sessCfg.candles];
+    let nextCandle = candleObjs[0]?.label || "9:30 AM ET";
+    let nextCandleObj = candleObjs[0];
+    let remainingCandles = [...candleObjs];
     for (let i = 0; i < candleMins.length; i++) {
       if (nowMins < candleMins[i]) {
-        nextCandle = sessCfg.candles[i];
-        remainingCandles = sessCfg.candles.slice(i);
+        nextCandle = candleObjs[i]?.label || sessCfg.candles[i];
+        nextCandleObj = candleObjs[i];
+        remainingCandles = candleObjs.slice(i);
         break;
       }
     }
+
+    // Build user-friendly time display
+    const userTZShort = getUserTZShort();
+    const isET = getUserTZ().startsWith("America/New_York") || getUserTZ().startsWith("America/Detroit");
+    function candleDisplay(c) {
+      if (!c) return "";
+      const local = etToLocal(c.h, c.m, false);
+      if (isET) return `${c.label}`;
+      return `${c.label} (${local} ${userTZShort})`;
+    }
+    const nextCandleDisplay = candleDisplay(nextCandleObj);
+    const remainingDisplay = remainingCandles.map(c => candleDisplay(c)).join(" → ");
 
     const advisory = SESSION_ADVISORIES[plan.instrument]?.[selectedSession];
 
@@ -3047,11 +3404,11 @@ Return ONLY valid JSON, no markdown, no explanation:
       }
 
       openingMsg += `**Session: ${sessCfg.label} (${sessCfg.hours})**\n\n`;
-      openingMsg += `1. Did the **${nextCandle}** candle close **${direction} ${trigger}**? → **TELL ME IMMEDIATELY.**\n`;
+      openingMsg += `1. Did the **${nextCandleDisplay}** candle close **${direction} ${trigger}**? → **TELL ME IMMEDIATELY.**\n`;
       openingMsg += `2. Not ${direction} ${trigger}? → **TELL ME IMMEDIATELY.** We move to the next candle.\n\n`;
       openingMsg += `⚠️ Wicks don't count. Strong candle bodies ONLY.\n\n`;
       if (remainingCandles.length > 1) {
-        openingMsg += `⏱ Windows left: **${remainingCandles.join(" → ")}** — cutoff ${sessCfg.cutoff}.\n\n`;
+        openingMsg += `⏱ Windows left: **${remainingDisplay}** — cutoff ${sessCfg.cutoff}${!isET ? ` (${etToLocal(sessCfg.cutoffET?.h || 11, sessCfg.cutoffET?.m || 30, true)})` : ""}.\n\n`;
       }
       openingMsg += `🥷 I will guide you all the way.`;
     }
@@ -3454,6 +3811,11 @@ Return ONLY valid JSON, no markdown, no explanation:
                       const instrFit = instrument ? (SESSION_INSTRUMENT_FIT[instrument]?.[key]) : null;
                       const isBlocked = instrFit === "block";
                       const isBest = instrFit === "best";
+                      const userTZShort = getUserTZShort();
+                      const isET = getUserTZ().startsWith("America/New_York") || getUserTZ().startsWith("America/Detroit");
+                      // Show local time for session open
+                      const localOpen = cfg.openET ? etToLocal(cfg.openET.h, cfg.openET.m, false) : null;
+                      const timeDisplay = isET ? cfg.hours : `${cfg.openET ? `${localOpen} ${userTZShort}` : cfg.hours}`;
                       return (
                         <button key={key}
                           onClick={() => !isBlocked && setSelectedSession(key)}
@@ -3464,10 +3826,10 @@ Return ONLY valid JSON, no markdown, no explanation:
                             background: isSelected ? `${cfg.color}18` : isBlocked ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.04)",
                             color: isSelected ? cfg.color : isBlocked ? "rgba(255,255,255,0.2)" : "#8878aa",
                             opacity: isBlocked ? 0.45 : 1,
-                            display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
+                            display: "flex", flexDirection: "column", alignItems: "center", gap: 2, minWidth: 68,
                           }}>
                           <span>{cfg.short}</span>
-                          <span style={{ fontSize: 7, opacity: 0.7 }}>{cfg.hours}</span>
+                          <span style={{ fontSize: 7, opacity: 0.7, whiteSpace: "nowrap" }}>{timeDisplay}</span>
                           {isBest && !isBlocked && <span style={{ fontSize: 6, color: cfg.color, fontWeight: 900, letterSpacing: "0.08em" }}>BEST</span>}
                           {isBlocked && <span style={{ fontSize: 6, color: "#ff6b6b", fontWeight: 900 }}>🚫 CLOSED</span>}
                         </button>
@@ -3507,97 +3869,14 @@ Return ONLY valid JSON, no markdown, no explanation:
               </div>
             </div>
 
-            {/* 5 fixed slots — click or drag & drop */}
-            {(() => {
-              const slots = [
-                { tf: "Daily", label: "D",   role: "Bias",      desc: "Sets the direction. The General." },
-                { tf: "4H",    label: "4H",  role: "Structure", desc: "Confirms the trend is intact." },
-                { tf: "1H",    label: "1H",  role: "Setup",     desc: "Shows where the setup is forming." },
-                { tf: "30M",   label: "30M", role: "Trigger",   desc: "30M close confirms the trigger." },
-                { tf: "15M",   label: "15M", role: "Refinement",desc: "Fine-tunes the entry zone." },
-              ];
-
-              function handleDrop(e, i) {
-                e.preventDefault();
-                setDragOverSlot(null);
-                const file = Array.from(e.dataTransfer.files).find(f => f.type.startsWith("image/"));
-                if (file) readSlotFile(file, i);
-              }
-
-              return (
-                <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
-                  {slots.map((slot, i) => {
-                    const hasImage = !!(images[i] && images[i].preview);
-                    const isDragging = dragOverSlot === i;
-                    return (
-                      <div
-                        key={slot.tf}
-                        onDragOver={e => { e.preventDefault(); setDragOverSlot(i); }}
-                        onDragLeave={() => setDragOverSlot(null)}
-                        onDrop={e => handleDrop(e, i)}
-                        onClick={() => document.getElementById(`slot-input-${i}`).click()}
-                        style={{
-                          display: "flex", alignItems: "center", gap: 14,
-                          padding: "9px 14px",
-                          background: isDragging ? "rgba(255,107,255,0.08)" : hasImage ? "rgba(127,255,107,0.06)" : "rgba(255,255,255,0.04)",
-                          border: `1px solid ${isDragging ? "rgba(255,107,255,0.5)" : hasImage ? "rgba(127,255,107,0.28)" : "rgba(255,255,255,0.11)"}`,
-                          borderRadius: 10, transition: "all 0.15s",
-                          cursor: "pointer",
-                        }}>
-
-                        {/* Timeframe badge */}
-                        <div style={{ width: 42, height: 42, flexShrink: 0, borderRadius: 8, background: hasImage ? "rgba(127,255,107,0.1)" : "rgba(255,255,255,0.05)", border: `1px solid ${hasImage ? "rgba(127,255,107,0.3)" : "rgba(255,255,255,0.1)"}`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                          <span style={{ fontSize: 11, fontWeight: 900, color: hasImage ? "#7fff6b" : "#8878aa", lineHeight: 1 }}>{slot.label}</span>
-                          <span style={{ fontSize: 7, color: hasImage ? "rgba(127,255,107,0.6)" : "rgba(255,255,255,0.25)", marginTop: 2 }}>{slot.role}</span>
-                        </div>
-
-                        {/* Preview or empty state */}
-                        {hasImage ? (
-                          <img src={images[i].preview} alt={slot.tf}
-                            style={{ width: 64, height: 42, objectFit: "cover", borderRadius: 6, border: "1px solid rgba(127,255,107,0.25)", borderRadius: 6, flexShrink: 0 }}/>
-                        ) : (
-                          <div style={{ width: 64, height: 42, flexShrink: 0, borderRadius: 6, border: `1px dashed ${isDragging ? "rgba(255,107,255,0.7)" : "rgba(255,107,255,0.35)"}`, background: isDragging ? "rgba(255,107,255,0.1)" : "rgba(255,107,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}>
-                            <span style={{ fontSize: 18, color: isDragging ? "rgba(255,107,255,0.9)" : "rgba(255,107,255,0.5)", fontWeight: 700, lineHeight: 1 }}>{isDragging ? "↓" : "+"}</span>
-                          </div>
-                        )}
-
-                        {/* Labels */}
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 12, fontWeight: 700, color: hasImage ? "#f0ecff" : "#8878aa", marginBottom: 2 }}>{slot.tf} Chart</div>
-                          <div style={{ fontSize: 9, color: "rgba(255,255,255,0.45)", lineHeight: 1.5 }}>{isDragging ? `Drop your ${slot.tf} chart here` : slot.desc}</div>
-                        </div>
-
-                        {/* Hidden file input */}
-                        <input
-                          type="file" accept="image/*"
-                          style={{ display: "none" }}
-                          id={`slot-input-${i}`}
-                          onClick={e => e.stopPropagation()}
-                          onChange={e => {
-                            if (e.target.files[0]) readSlotFile(e.target.files[0], i);
-                          }}
-                        />
-                        {/* Replace chip */}
-                        {hasImage && (
-                          <div
-                            onClick={e => { e.stopPropagation(); document.getElementById(`slot-input-${i}`).click(); }}
-                            style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.06em", padding: "3px 9px", borderRadius: 5, border: "1px solid rgba(127,255,107,0.25)", background: "rgba(127,255,107,0.05)", color: "rgba(127,255,107,0.6)", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
-                            Replace
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })()}
+            {/* ── BULK UPLOAD ZONE ── */}
+            <BulkUploadZone images={images} setImages={setImages} readSlotFile={readSlotFile} dragOverSlot={dragOverSlot} setDragOverSlot={setDragOverSlot} />
 
             {/* CTA */}
             {(()=>{
               const mkt = getMarketStatus(instrument, selectedSession);
               const sessionBlocked = instrument && selectedSession && SESSION_INSTRUMENT_FIT[instrument]?.[selectedSession] === "block";
               const ready = images.filter(Boolean).length === 5 && mkt.open && !sessionBlocked;
-              const partial = images.filter(Boolean).length > 0 && images.filter(Boolean).length < 5;
               return (
                 <button onClick={analyzeCharts} disabled={!ready}
                   style={{ width: "100%", padding: "14px", borderRadius: 10, border: ready ? "none" : "1px solid rgba(255,107,255,0.2)", background: ready ? "linear-gradient(135deg,#ff6bff,#7b2fff)" : "rgba(255,107,255,0.08)", color: ready ? "#fff" : "rgba(255,107,255,0.45)", fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", fontFamily: "inherit", cursor: ready ? "pointer" : "default", boxShadow: ready ? "0 4px 32px rgba(255,107,255,0.35), 0 0 0 1px rgba(255,107,255,0.15)" : "none", transition: "all 0.2s" }}>
@@ -3608,14 +3887,14 @@ Return ONLY valid JSON, no markdown, no explanation:
                     : images.filter(Boolean).length === 5
                     ? "GENERATE SESSION PLAN →"
                     : images.filter(Boolean).length === 0
-                    ? "UPLOAD 5 CHARTS"
-                    : `UPLOAD ${5 - images.filter(Boolean).length} MORE CHART${5 - images.filter(Boolean).length !== 1 ? "S" : ""}`}
+                    ? "SELECT YOUR 5 CHARTS"
+                    : `${images.filter(Boolean).length} / 5 CHARTS READY — ADD ${5 - images.filter(Boolean).length} MORE`}
                 </button>
               );
             })()}
 
             <div style={{ textAlign: "center", marginTop: 10, fontSize: 9, color: "#8878aa" }}>
-              Only upload screenshots from the broker you're trading · All 5 timeframes required
+              Screenshots must show the instrument ticker and timeframe clearly
             </div>
           </div>
         </div>
