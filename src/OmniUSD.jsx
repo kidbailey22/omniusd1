@@ -643,7 +643,7 @@ export default function OmniUSD(){
     try {
       const _s = JSON.parse(localStorage.getItem("omniusd_session") || "{}");
       const _uid = _s.user?.id || _s.user_id || "anon";
-      localStorage.removeItem(`omniusd_active_session_${_uid}`);
+      localStorage.removeItem(`omniusd_sessions_${_uid}`);
       // Keep journal on device — user may want it if they log back in
     } catch(e) {}
     localStorage.removeItem("omniusd_paid_tier");
@@ -2548,7 +2548,44 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
   // User-scoped storage keys — prevents session bleed between accounts on same device
   const _session = JSON.parse(localStorage.getItem("omniusd_session") || "{}");
   const _uid = _session.user?.id || _session.user_id || "anon";
-  const SESSION_KEY = `omniusd_active_session_${_uid}`;
+  const SESSIONS_KEY = `omniusd_sessions_${_uid}`; // Map of instrument → session data
+
+  // Helpers for the sessions map
+  function loadSessions() {
+    try { return JSON.parse(localStorage.getItem(SESSIONS_KEY) || "{}"); } catch { return {}; }
+  }
+  function saveSession(instr, data) {
+    try {
+      const all = loadSessions();
+      all[instr] = { ...data, savedAt: new Date().toISOString() };
+      localStorage.setItem(SESSIONS_KEY, JSON.stringify(all));
+    } catch(e) {}
+  }
+  function clearSession(instr) {
+    try {
+      const all = loadSessions();
+      delete all[instr];
+      localStorage.setItem(SESSIONS_KEY, JSON.stringify(all));
+    } catch(e) {}
+  }
+  function getSessionForInstrument(instr) {
+    const all = loadSessions();
+    return all[instr] || null;
+  }
+  // Cooldown check — 2 hours from savedAt
+  const COOLDOWN_MS_LOCAL = 2 * 60 * 60 * 1000;
+  function getCooldownRemaining(instr) {
+    const s = getSessionForInstrument(instr);
+    if (!s?.savedAt) return 0;
+    const elapsed = Date.now() - new Date(s.savedAt).getTime();
+    return Math.max(0, COOLDOWN_MS_LOCAL - elapsed);
+  }
+  function formatCountdown(ms) {
+    if (ms <= 0) return "";
+    const h = Math.floor(ms / 3600000);
+    const m = Math.floor((ms % 3600000) / 60000);
+    return h > 0 ? `${h}h ${m}m` : `${m}m`;
+  }
   const [phase, setPhase] = useState("upload"); // upload | analyzing | plan | live
   const [appPage, setAppPage] = useState("dashboard"); // dashboard | settings
   const isMobile = useWindowWidth() <= 768;
@@ -2621,36 +2658,30 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
   // ── Restore saved session on load ─────────────────────────────────────────
   React.useEffect(() => {
     try {
-      const saved = localStorage.getItem(SESSION_KEY);
-      if (saved) {
-        const s = JSON.parse(saved);
-        if (s.plan && s.phase) {
-          setPlan(s.plan);
-          setPhase(s.phase);
-          setInstrument(s.instrument || s.plan.instrument);
-          setTier1(s.tier1 || false);
-          setTier2(s.tier2 || false);
-          setSessionState(s.sessionState || "WATCHING");
-          setMessages(s.messages || []);
-          setSessionHistory(s.sessionHistory || []);
-        }
+      const all = loadSessions();
+      // Find the most recent non-upload session
+      const recent = Object.values(all)
+        .filter(s => s.plan && s.phase && s.phase !== "upload")
+        .sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt))[0];
+      if (recent) {
+        setPlan(recent.plan);
+        setPhase(recent.phase);
+        setInstrument(recent.instrument || recent.plan.instrument);
+        setTier1(recent.tier1 || false);
+        setTier2(recent.tier2 || false);
+        setSessionState(recent.sessionState || "WATCHING");
+        setMessages(recent.messages || []);
+        setSessionHistory(recent.sessionHistory || []);
       }
     } catch(e) {}
   }, []);
 
   // ── Save session state whenever key values change ──────────────────────────
   React.useEffect(() => {
-    if (!plan || phase === "upload") {
-      // Clear saved session when back at upload
-      localStorage.removeItem(SESSION_KEY);
-      return;
-    }
-    try {
-      localStorage.setItem(SESSION_KEY, JSON.stringify({
-        plan, phase, instrument, tier1, tier2, sessionState, messages, sessionHistory,
-        savedAt: new Date().toISOString(),
-      }));
-    } catch(e) {}
+    if (!plan || !instrument || phase === "upload") return;
+    saveSession(instrument, {
+      plan, phase, instrument, tier1, tier2, sessionState, messages, sessionHistory,
+    });
   }, [plan, phase, tier1, tier2, sessionState, messages]);
 
   // Live clock
@@ -2971,7 +3002,7 @@ Return ONLY valid JSON, no markdown, no explanation:
               {isMobile ? "?" : "Help & FAQ"}
             </button>
             {phase === "live" && (
-              <button onClick={() => { setPhase("upload"); setImages(Array(5).fill(null)); setPlan(null); setMessages([]); setTier1(false); setTier2(false); setSessionState("WATCHING"); setSessionHistory([]); localStorage.removeItem(SESSION_KEY); }}
+              <button onClick={() => { setPhase("upload"); setImages(Array(5).fill(null)); }}
                 style={{ fontSize: isMobile ? 13 : 9, fontWeight: 700, color: "rgba(255,255,255,0.3)", background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: isMobile ? "3px 7px" : "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
                 {isMobile ? "↩" : "NEW ANALYSIS"}
               </button>
@@ -3057,38 +3088,6 @@ Return ONLY valid JSON, no markdown, no explanation:
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", padding: isMobile ? "24px 16px 24px" : "48px 24px 32px", animation: "fadein 0.3s ease both" }}>
           <div style={{ width: "100%", maxWidth: 560 }}>
 
-            {/* Resume active session if one exists */}
-            {(()=>{
-              try {
-                const saved = localStorage.getItem(SESSION_KEY);
-                if (!saved) return null;
-                const s = JSON.parse(saved);
-                if (!s.plan || !s.phase || s.phase === "upload") return null;
-                const savedTime = s.savedAt ? new Date(s.savedAt).toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"}) : "";
-                return (
-                  <div style={{ padding:"14px 18px", background:"rgba(127,255,107,0.05)", border:"1px solid rgba(127,255,107,0.2)", borderLeft:"3px solid #7fff6b", borderRadius:0, marginBottom:20, display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, flexWrap:"wrap" }}>
-                    <div>
-                      <div style={{ fontFamily:"'Space Mono',monospace", fontSize:9, fontWeight:900, letterSpacing:"0.14em", color:"#7fff6b", marginBottom:5 }}>ACTIVE SESSION SAVED</div>
-                      <div style={{ fontFamily:"'Space Mono',monospace", fontSize:11, color:"rgba(255,255,255,0.7)", lineHeight:1.5 }}>
-                        {s.plan.instrument} · {s.plan.bias} · {s.plan.grade}
-                        {savedTime && <span style={{ color:"rgba(255,255,255,0.35)", marginLeft:8 }}>· saved at {savedTime}</span>}
-                      </div>
-                    </div>
-                    <div style={{ display:"flex", gap:8 }}>
-                      <button onClick={() => { setPlan(s.plan); setPhase(s.phase); setInstrument(s.instrument||s.plan.instrument); setTier1(s.tier1||false); setTier2(s.tier2||false); setSessionState(s.sessionState||"WATCHING"); setMessages(s.messages||[]); setSessionHistory(s.sessionHistory||[]); }}
-                        style={{ fontFamily:"'Space Mono',monospace", fontSize:10, fontWeight:700, letterSpacing:"0.08em", padding:"7px 14px", borderRadius:7, border:"none", background:"#7fff6b", color:"#0f0c1a", cursor:"pointer" }}>
-                        Resume →
-                      </button>
-                      <button onClick={() => { localStorage.removeItem(SESSION_KEY); setPhase("upload"); }}
-                        style={{ fontFamily:"'Space Mono',monospace", fontSize:10, fontWeight:700, padding:"7px 12px", borderRadius:7, border:"1px solid rgba(255,255,255,0.1)", background:"none", color:"rgba(255,255,255,0.3)", cursor:"pointer" }}>
-                        Discard
-                      </button>
-                    </div>
-                  </div>
-                );
-              } catch(e) { return null; }
-            })()}
-
             {/* Market closed warning — conditional only */}
             {(()=>{
               const status = getMarketStatus(instrument);
@@ -3114,40 +3113,104 @@ Return ONLY valid JSON, no markdown, no explanation:
               </div>
             </div>
 
-            {/* Instrument selector */}
-            <div style={{ marginBottom: 8, textAlign:"center" }}>
-              <span style={{ fontFamily:"'Space Mono',monospace", fontSize:9, color: instrument ? "rgba(255,255,255,0.25)" : "rgba(255,107,255,0.7)", letterSpacing:"0.12em" }}>{instrument ? `INSTRUMENT: ${instrument}` : "SELECT YOUR INSTRUMENT FIRST"}</span>
-            </div>
+            {/* Smart instrument selector — session aware */}
             {(() => {
               const userTier = profile?.tier || "starter";
               const tierCfg = TIER_CONFIG[userTier] || TIER_CONFIG.starter;
               const allInstruments = ["XAUUSD","BTCUSD","NAS100","US30","USOIL","GBPUSD"];
               const allowed = tierCfg.instruments;
-              return (
-                <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 24, flexWrap: "wrap" }}>
-                  {allInstruments.map(sym => {
-                    const isLocked = !allowed.includes(sym);
-                    const isActive = instrument === sym;
-                    return (
-                      <div key={sym} style={{ position: "relative" }}>
-                        <button
-                          onClick={() => { if (!isLocked) setInstrument(sym); }}
-                          title={isLocked ? `Upgrade to access ${sym}` : sym}
-                          style={{ fontSize: 9, fontWeight: 700, padding: "5px 10px", borderRadius: 6,
-                            border: `1px solid ${isActive ? "rgba(255,107,255,0.6)" : isLocked ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.1)"}`,
-                            background: isActive ? "rgba(255,107,255,0.18)" : isLocked ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.04)",
-                            boxShadow: isActive ? "0 0 12px rgba(255,107,255,0.15)" : "none",
-                            color: isActive ? "#ff6bff" : isLocked ? "rgba(255,255,255,0.2)" : "#8878aa",
-                            cursor: isLocked ? "not-allowed" : "pointer",
-                            fontFamily: "inherit",
-                            opacity: isLocked ? 0.5 : 1,
-                          }}>
-                          {isLocked ? `⊘ ${sym}` : sym}
-                        </button>
-                      </div>
-                    );
-                  })}
+              const allSessions = loadSessions();
 
+              return (
+                <div style={{ marginBottom: 24 }}>
+                  <div style={{ marginBottom: 8, textAlign: "center" }}>
+                    <span style={{ fontFamily:"'Space Mono',monospace", fontSize:9, color: instrument ? "rgba(255,255,255,0.25)" : "rgba(255,107,255,0.7)", letterSpacing:"0.12em" }}>
+                      {instrument ? `INSTRUMENT: ${instrument}` : "SELECT YOUR INSTRUMENT"}
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", gap: 6, justifyContent: "center", flexWrap: "wrap" }}>
+                    {allInstruments.map(sym => {
+                      const isLocked = !allowed.includes(sym);
+                      const isSelected = instrument === sym;
+                      const sess = allSessions[sym];
+                      const hasActivePlan = sess?.plan && sess?.phase && sess?.phase !== "upload";
+                      const cooldownMs = getCooldownRemaining(sym);
+                      const inCooldown = cooldownMs > 0 && !hasActivePlan;
+                      const cooldownLabel = formatCountdown(cooldownMs);
+
+                      // Status:
+                      // 1. tier-locked (⊘)
+                      // 2. has active plan (ACTIVE — tap to resume)
+                      // 3. in cooldown but no active plan (timer)
+                      // 4. available
+
+                      let borderColor, bgColor, textColor, cursor, label, subLabel;
+
+                      if (isLocked) {
+                        borderColor = "rgba(255,255,255,0.05)";
+                        bgColor = "rgba(255,255,255,0.02)";
+                        textColor = "rgba(255,255,255,0.2)";
+                        cursor = "not-allowed";
+                        label = `⊘ ${sym}`;
+                        subLabel = null;
+                      } else if (hasActivePlan) {
+                        const gradeC = sess.plan.grade === "A+" ? "#7fff6b" : sess.plan.grade === "PASS" ? "#ff6b6b" : "#ffd166";
+                        borderColor = `${gradeC}55`;
+                        bgColor = `${gradeC}12`;
+                        textColor = gradeC;
+                        cursor = "pointer";
+                        label = sym;
+                        subLabel = `${sess.plan.grade} · ${sess.plan.bias}`;
+                      } else if (inCooldown) {
+                        borderColor = "rgba(255,154,60,0.3)";
+                        bgColor = "rgba(255,154,60,0.06)";
+                        textColor = "rgba(255,154,60,0.6)";
+                        cursor = "not-allowed";
+                        label = sym;
+                        subLabel = `🔒 ${cooldownLabel}`;
+                      } else {
+                        borderColor = isSelected ? "rgba(255,107,255,0.6)" : "rgba(255,255,255,0.1)";
+                        bgColor = isSelected ? "rgba(255,107,255,0.18)" : "rgba(255,255,255,0.04)";
+                        textColor = isSelected ? "#ff6bff" : "#8878aa";
+                        cursor = "pointer";
+                        label = sym;
+                        subLabel = null;
+                      }
+
+                      return (
+                        <button key={sym}
+                          onClick={() => {
+                            if (isLocked || inCooldown) return;
+                            if (hasActivePlan) {
+                              // Resume this instrument's session
+                              setPlan(sess.plan);
+                              setPhase(sess.phase);
+                              setInstrument(sym);
+                              setTier1(sess.tier1 || false);
+                              setTier2(sess.tier2 || false);
+                              setSessionState(sess.sessionState || "WATCHING");
+                              setMessages(sess.messages || []);
+                              setSessionHistory(sess.sessionHistory || []);
+                            } else {
+                              setInstrument(sym);
+                              setPlan(null);
+                              setMessages([]);
+                              setTier1(false);
+                              setTier2(false);
+                            }
+                          }}
+                          title={isLocked ? `Upgrade to access ${sym}` : hasActivePlan ? `Resume ${sym} session` : inCooldown ? `${sym} available in ${cooldownLabel}` : sym}
+                          style={{ fontSize: 9, fontWeight: 700, padding: subLabel ? "5px 10px 7px" : "5px 10px", borderRadius: 6, border: `1px solid ${borderColor}`, background: bgColor, color: textColor, cursor, fontFamily: "inherit", opacity: isLocked ? 0.5 : 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2, boxShadow: isSelected && !hasActivePlan ? "0 0 12px rgba(255,107,255,0.15)" : "none", transition: "all 0.15s" }}>
+                          <span>{label}</span>
+                          {subLabel && <span style={{ fontSize: 7, fontWeight: 900, letterSpacing: "0.06em", opacity: 0.85 }}>{subLabel}</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {/* Legend */}
+                  <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 8, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", fontFamily: "'Space Mono',monospace" }}>✦ Tap active plan to resume · 🔒 Cooldown resets in 2h</span>
+                  </div>
                 </div>
               );
             })()}
@@ -3388,7 +3451,7 @@ Return ONLY valid JSON, no markdown, no explanation:
                   </button>
                 </div>
               )}
-              <button onClick={() => { setPhase("upload"); setPlan(null); setImages(Array(5).fill(null)); }}
+              <button onClick={() => { setPhase("upload"); setImages(Array(5).fill(null)); }}
                 style={{ fontFamily:"inherit", fontSize:11, fontWeight:700, letterSpacing:"0.1em", padding:"10px 24px", borderRadius:8, border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.04)", color:"#8878aa", cursor:"pointer" }}>
                 ← Back
               </button>
@@ -3514,7 +3577,7 @@ Return ONLY valid JSON, no markdown, no explanation:
                       ))}
                     </div>
 
-                    <button onClick={() => { setPhase("upload"); setImages(Array(5).fill(null)); setPlan(null); }}
+                    <button onClick={() => { setPhase("upload"); setImages(Array(5).fill(null)); }}
                       style={{ width:"100%", fontSize:10, fontWeight:700, letterSpacing:"0.1em", padding:"11px", borderRadius:8, border:"1px solid rgba(255,255,255,0.08)", background:"rgba(255,255,255,0.03)", color:"#8878aa", cursor:"pointer", fontFamily:"inherit" }}>
                       ← New Analysis
                     </button>
@@ -3526,7 +3589,7 @@ Return ONLY valid JSON, no markdown, no explanation:
                   <div style={{ padding:"16px", background:"rgba(255,107,107,0.06)", border:"1px solid rgba(255,107,107,0.2)", borderRadius:10, textAlign:"center" }}>
                     <div style={{ fontSize:12, color:"#ff8080", fontWeight:700, marginBottom:6 }}>No valid entry — PASS</div>
                     <div style={{ fontSize:11, color:"#8878aa", marginBottom:14 }}>{plan.pass_reason || "No A+ BRC sequence formed. Wait for fresh structure."}</div>
-                    <button onClick={() => { setPhase("upload"); setImages(Array(5).fill(null)); setPlan(null); }}
+                    <button onClick={() => { setPhase("upload"); setImages(Array(5).fill(null)); }}
                       style={{ fontSize:10, fontWeight:700, letterSpacing:"0.08em", padding:"8px 20px", borderRadius:8, border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.04)", color:"#8878aa", cursor:"pointer", fontFamily:"inherit" }}>
                       ← New Analysis
                     </button>
