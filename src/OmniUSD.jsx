@@ -1753,12 +1753,15 @@ function getNextClose() {
   return next.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", timeZone: "America/Chicago" });
 }
 
-function getAnalysisPrompt(instrument) {
+function getAnalysisPrompt(instrument, session = "NY") {
   const ct = getCTTime();
   const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
   const day = now.getDay();
   const nowMins = ct.mins;
   const isBTC = instrument === "BTCUSD";
+  const sessCfg = SESSION_CONFIG[session] || SESSION_CONFIG.NY;
+  const fit = SESSION_INSTRUMENT_FIT[instrument]?.[session] || "ok";
+  const advisory = SESSION_ADVISORIES[instrument]?.[session] || null;
 
   // Session context
   let sessionContext = "";
@@ -1791,6 +1794,9 @@ CURRENT CONTEXT:
 Today: ${ct.dayName} ${ct.dateStr} at ${ct.str} Chicago Time
 Session: ${sessionContext}${fridayNote}
 Instrument: ${instrument}
+Trading Session Selected: ${sessCfg.label} (${sessCfg.hours})
+Session Candle Windows: ${sessCfg.candles.join(" → ")} — Hard cutoff: ${sessCfg.cutoff}
+${advisory ? `⚠️ SESSION ADVISORY: ${advisory}` : `✅ ${instrument} is well-suited for the ${sessCfg.label} session.`}
 ${sessionWarning ? `⚠️ WARNING: ${sessionWarning}` : ""}
 
 ANALYSIS FRAMEWORK — follow this sequence exactly:
@@ -1871,12 +1877,13 @@ Return ONLY this JSON object — no markdown, no explanation, no preamble:
 }`;
 }
 
-function getLivePrompt(plan) {
+function getLivePrompt(plan, session = "NY") {
   const ct = getCTTime();
   const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
   const day = now.getDay(); // 0=Sun, 1=Mon...6=Sat
   const nowMins = ct.mins;
   const isBTC = plan.instrument === "BTCUSD";
+  const sessCfg = SESSION_CONFIG[session] || SESSION_CONFIG.NY;
 
   // Build accurate session status
   let windowStatus = "";
@@ -1953,7 +1960,8 @@ YOUR ROLE — OmniUSD Live Session Guide:
 - Use bullets when listing more than 2 things
 
 STEP-BY-STEP CANDLE COACHING — THIS IS HOW YOU GUIDE:
-The NY session has 4 valid 30M closes: 9:00 AM, 9:30 AM, 10:00 AM, 10:30 AM CT. Hard cutoff is 10:30 AM CT.
+Active session: ${sessCfg.label} (${sessCfg.hours})
+Valid 30M closes for this session: ${sessCfg.candles.join(", ")} — Hard cutoff: ${sessCfg.cutoff}
 
 When a candle closes and it confirms Tier 1 (first close ${plan.bias==="SHORT"?"below":"above"} ${plan.trigger_level}):
 → Ask if the close was strong or barely made it. A strong close (closed well ${plan.bias==="SHORT"?"below":"above"} the level with a solid body) = high conviction. A barely-made-it close (just crept ${plan.bias==="SHORT"?"below":"above"} by a few points) = lower conviction — note it but still valid.
@@ -2331,6 +2339,100 @@ function useWindowWidth() {
   return width;
 }
 
+
+// ── Session config — instrument compatibility + candle times ────────────────
+const SESSION_CONFIG = {
+  NY: {
+    label: "New York",
+    short: "NY",
+    color: "#7fff6b",
+    hours: "8:30–10:30 AM CT",
+    cutoff: "10:30 AM CT",
+    cutoffMins: 10*60+30,
+    openMins: 8*60+30,
+    candles: ["9:00 AM CT","9:30 AM CT","10:00 AM CT","10:30 AM CT"],
+    candleMins: [9*60, 9*60+30, 10*60, 10*60+30],
+    desc: "Highest institutional volume. Cleanest BRC setups.",
+  },
+  LONDON: {
+    label: "London",
+    short: "LDN",
+    color: "#00e5ff",
+    hours: "2:00–5:00 AM CT",
+    cutoff: "5:00 AM CT",
+    cutoffMins: 5*60,
+    openMins: 2*60,
+    candles: ["2:30 AM CT","3:00 AM CT","3:30 AM CT","4:00 AM CT","4:30 AM CT","5:00 AM CT"],
+    candleMins: [2*60+30, 3*60, 3*60+30, 4*60, 4*60+30, 5*60],
+    desc: "Strong for forex and gold. Fast sharp moves.",
+  },
+  ASIAN: {
+    label: "Asian",
+    short: "ASIA",
+    color: "#ff9a3c",
+    hours: "8:00–11:00 PM CT",
+    cutoff: "11:00 PM CT",
+    cutoffMins: 23*60,
+    openMins: 20*60,
+    candles: ["8:30 PM CT","9:00 PM CT","9:30 PM CT","10:00 PM CT","10:30 PM CT","11:00 PM CT"],
+    candleMins: [20*60+30, 21*60, 21*60+30, 22*60, 22*60+30, 23*60],
+    desc: "Best for BTCUSD. Lower volume on other instruments.",
+  },
+  LONDON_NY: {
+    label: "London/NY Overlap",
+    short: "LDN/NY",
+    color: "#ff6bff",
+    hours: "8:30–10:30 AM CT",
+    cutoff: "10:30 AM CT",
+    cutoffMins: 10*60+30,
+    openMins: 8*60+30,
+    candles: ["9:00 AM CT","9:30 AM CT","10:00 AM CT","10:30 AM CT"],
+    candleMins: [9*60, 9*60+30, 10*60, 10*60+30],
+    desc: "Premium window. Highest volume of the day.",
+  },
+};
+
+// Instrument-session compatibility
+// "best" = optimal, "ok" = valid with advisory, "block" = hard blocked
+const SESSION_INSTRUMENT_FIT = {
+  XAUUSD:  { NY:"best", LONDON:"ok",    ASIAN:"ok",    LONDON_NY:"best" },
+  BTCUSD:  { NY:"best", LONDON:"ok",    ASIAN:"best",  LONDON_NY:"best" },
+  NAS100:  { NY:"best", LONDON:"block", ASIAN:"block", LONDON_NY:"best" },
+  US30:    { NY:"best", LONDON:"block", ASIAN:"block", LONDON_NY:"best" },
+  USOIL:   { NY:"best", LONDON:"ok",    ASIAN:"ok",    LONDON_NY:"best" },
+  GBPUSD:  { NY:"ok",   LONDON:"best",  ASIAN:"ok",    LONDON_NY:"best" },
+};
+
+const SESSION_ADVISORIES = {
+  XAUUSD: {
+    LONDON: "XAUUSD trades in London but NY is where institutional money moves gold. Expect wider spreads and slower moves in London. BRC setups here are valid but less reliable.",
+    ASIAN:  "XAUUSD has very thin liquidity in the Asian session. Moves can be choppy and misleading. BRC works best on XAUUSD during NY (8:30–10:30 AM CT) when volume is highest. Proceed with extra caution.",
+  },
+  BTCUSD: {
+    LONDON: "BTCUSD trades 24/7 but London session can produce choppy moves before NY takes over. Valid for BRC but NY produces cleaner follow-through.",
+    ASIAN:  null, // no advisory — BTCUSD Asian is genuinely good
+  },
+  GBPUSD: {
+    NY:     "GBPUSD is a London pair. NY can produce valid setups but the best GBPUSD moves happen during London open (2:00–5:00 AM CT) and the London/NY overlap.",
+    ASIAN:  "GBPUSD has minimal movement in the Asian session. Valid BRC setups are rare here. Consider waiting for London open.",
+  },
+  USOIL: {
+    LONDON: "USOIL moves in London but the biggest volume comes at the NY open — especially around the 9:30 AM EIA report. London USOIL setups are valid but lighter.",
+    ASIAN:  "USOIL has very thin volume in the Asian session. Wide spreads and low participation make BRC setups unreliable here.",
+  },
+};
+
+const SESSION_BLOCKS = {
+  NAS100: {
+    LONDON: "NAS100 is a US equity index. The US market is CLOSED during London session. There is no valid BRC setup here — price is not being driven by real institutional volume.",
+    ASIAN:  "NAS100 is a US equity index. The US market is CLOSED during the Asian session. Attempting to trade NAS100 overnight is gambling on noise, not structure.",
+  },
+  US30: {
+    LONDON: "US30 is a US equity index. The US market is CLOSED during London session. No valid BRC execution is possible here.",
+    ASIAN:  "US30 is a US equity index. The US market is CLOSED during the Asian session. No valid BRC execution is possible here.",
+  },
+};
+
 // ── Usage tracking helpers ────────────────────────────────────────────────
 const DAILY_CAPS = { starter: 3, pro: 5, elite: 10 };
 const COOLDOWN_MS = 2 * 60 * 60 * 1000; // 2 hours
@@ -2615,6 +2717,7 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
   }
   const [phase, setPhase] = useState("upload"); // upload | analyzing | plan | live
   const [appPage, setAppPage] = useState("dashboard"); // dashboard | settings
+  const [selectedSession, setSelectedSession] = useState("NY"); // NY | LONDON | ASIAN | LONDON_NY
   const isMobile = useWindowWidth() <= 768;
   const isTablet = useWindowWidth() <= 1024;
 
@@ -2811,7 +2914,7 @@ Return ONLY valid JSON, no markdown, no explanation:
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
           max_tokens: 1000,
-          system: getAnalysisPrompt(instrument),
+          system: getAnalysisPrompt(instrument, selectedSession),
           messages: [{ role: "user", content: [...imgBlocks, { type: "text", text: `Analyze these ${instrument} charts. Daily first, then 4H, 1H, 30M, 15M. Return only the JSON.` }] }],
         }),
       });
@@ -2869,23 +2972,24 @@ Return ONLY valid JSON, no markdown, no explanation:
     const nowMins = ct.mins;
     const isSat = day === 6;
     const isSunEarly = day === 0 && nowMins < 20 * 60;
-    const nyOpen = nowMins >= 8*60+30 && nowMins <= 10*60+30;
-    const preNY = nowMins < 8*60+30;
 
-    const trigger = plan.trigger_level || "the trigger level";
-    const stop = plan.stop_loss || "stop level";
-    const tp1 = plan.tp1 || "TP1";
+    const sessCfg = SESSION_CONFIG[selectedSession] || SESSION_CONFIG.NY;
     const direction = plan.bias === "SHORT" ? "below" : "above";
-    const opposite = plan.bias === "SHORT" ? "above" : "below";
+    const trigger = plan.trigger_level || "the trigger level";
 
-    // Figure out next NY candle close times
-    const nyCloses = ["9:00 AM","9:30 AM","10:00 AM","10:30 AM"];
-    const nyCloseMins = [9*60, 9*60+30, 10*60, 10*60+30];
-    let nextCandle = "9:00 AM";
-    let remainingCandles = [...nyCloses];
-    for (let i = 0; i < nyCloseMins.length; i++) {
-      if (nowMins < nyCloseMins[i]) { nextCandle = nyCloses[i]; remainingCandles = nyCloses.slice(i); break; }
+    // Find next valid candle close for this session
+    const candleMins = sessCfg.candleMins || [];
+    let nextCandle = sessCfg.candles[0] || "9:00 AM CT";
+    let remainingCandles = [...sessCfg.candles];
+    for (let i = 0; i < candleMins.length; i++) {
+      if (nowMins < candleMins[i]) {
+        nextCandle = sessCfg.candles[i];
+        remainingCandles = sessCfg.candles.slice(i);
+        break;
+      }
     }
+
+    const advisory = SESSION_ADVISORIES[plan.instrument]?.[selectedSession];
 
     let openingMsg = "";
 
@@ -2893,12 +2997,21 @@ Return ONLY valid JSON, no markdown, no explanation:
       openingMsg = `⛔ **${plan.instrument} ${plan.bias} — Saturday. No entries.**\n\nWeekend volume is unreliable. No BRC entries until Sunday Asian (~8:00 PM CT) or Monday NY (~8:30 AM CT).\n\nThe plan is saved. Come back when a proper session opens.`;
     } else if (isSunEarly) {
       openingMsg = `⛔ **${plan.instrument} ${plan.bias} — Markets not yet open.**\n\nAsian session opens ~8:00 PM CT tonight. No entries until then.\n\nThe plan is saved. I'll guide you when the session opens.`;
-    } else if (preNY) {
-      openingMsg = `👀 **Watch your 30M chart on ${plan.instrument} RIGHT NOW.**\n\n1. Did the 9:00 AM CT candle close **${direction} ${trigger}**? → **TELL ME IMMEDIATELY.**\n2. Not ${direction} ${trigger}? → **TELL ME IMMEDIATELY.** We move to the next candle.\n\n⚠️ Wicks don't count. Strong candle bodies ONLY.\n\n🥷 I will guide you all the way.`;
-    } else if (nyOpen) {
-      openingMsg = `👀 **Watch your 30M chart on ${plan.instrument} RIGHT NOW.**\n\n1. Did the **${nextCandle} CT** candle close **${direction} ${trigger}**? → **TELL ME IMMEDIATELY.**\n2. Not ${direction} ${trigger}? → **TELL ME IMMEDIATELY.** We move to the next window.\n\n⚠️ Wicks don't count. Strong candle bodies ONLY.\n\n⏱ Windows left: **${remainingCandles.join(" → ")}** — cutoff 10:30 AM CT.\n\n🥷 I will guide you all the way.`;
     } else {
-      openingMsg = `⛔ **${plan.instrument} ${plan.bias} — NY session is closed for today.**\n\nThe 10:30 AM CT cutoff has passed. No new entries today.\n\nThe plan is saved. Come back tomorrow — NY session opens at 8:30 AM CT.`;
+      openingMsg = `👀 **Watch your 30M chart on ${plan.instrument} RIGHT NOW.**\n\n`;
+
+      if (advisory) {
+        openingMsg += `⚠️ **Session note:** ${advisory}\n\n`;
+      }
+
+      openingMsg += `**Session: ${sessCfg.label} (${sessCfg.hours})**\n\n`;
+      openingMsg += `1. Did the **${nextCandle}** candle close **${direction} ${trigger}**? → **TELL ME IMMEDIATELY.**\n`;
+      openingMsg += `2. Not ${direction} ${trigger}? → **TELL ME IMMEDIATELY.** We move to the next candle.\n\n`;
+      openingMsg += `⚠️ Wicks don't count. Strong candle bodies ONLY.\n\n`;
+      if (remainingCandles.length > 1) {
+        openingMsg += `⏱ Windows left: **${remainingCandles.join(" → ")}** — cutoff ${sessCfg.cutoff}.\n\n`;
+      }
+      openingMsg += `🥷 I will guide you all the way.`;
     }
 
     setMessages([{
@@ -2929,7 +3042,7 @@ Return ONLY valid JSON, no markdown, no explanation:
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
           max_tokens: 400,
-          system: getLivePrompt(plan),
+          system: getLivePrompt(plan, selectedSession),
           messages: newHistory,
         }),
       });
@@ -3274,6 +3387,64 @@ Return ONLY valid JSON, no markdown, no explanation:
               );
             })()}
 
+            {/* Session selector */}
+            {(() => {
+              const fit = instrument ? (SESSION_INSTRUMENT_FIT[instrument] || {}) : {};
+              const blocked = instrument && selectedSession && fit[selectedSession] === "block";
+              const advisory = instrument && selectedSession && fit[selectedSession] === "ok"
+                ? SESSION_ADVISORIES[instrument]?.[selectedSession]
+                : null;
+              const blockMsg = instrument && selectedSession && SESSION_BLOCKS[instrument]?.[selectedSession];
+
+              return (
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", fontFamily: "'Space Mono',monospace", letterSpacing: "0.12em", marginBottom: 8, textAlign: "center" }}>SELECT SESSION</div>
+                  <div style={{ display: "flex", gap: 6, justifyContent: "center", flexWrap: "wrap", marginBottom: 10 }}>
+                    {Object.entries(SESSION_CONFIG).map(([key, cfg]) => {
+                      const isSelected = selectedSession === key;
+                      const instrFit = instrument ? (SESSION_INSTRUMENT_FIT[instrument]?.[key]) : null;
+                      const isBlocked = instrFit === "block";
+                      const isBest = instrFit === "best";
+                      return (
+                        <button key={key}
+                          onClick={() => !isBlocked && setSelectedSession(key)}
+                          style={{
+                            fontSize: 9, fontWeight: 700, padding: "6px 12px", borderRadius: 6, fontFamily: "inherit",
+                            cursor: isBlocked ? "not-allowed" : "pointer",
+                            border: `1px solid ${isSelected ? `${cfg.color}66` : isBlocked ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.1)"}`,
+                            background: isSelected ? `${cfg.color}18` : isBlocked ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.04)",
+                            color: isSelected ? cfg.color : isBlocked ? "rgba(255,255,255,0.2)" : "#8878aa",
+                            opacity: isBlocked ? 0.45 : 1,
+                            display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
+                          }}>
+                          <span>{cfg.short}</span>
+                          <span style={{ fontSize: 7, opacity: 0.7 }}>{cfg.hours}</span>
+                          {isBest && !isBlocked && <span style={{ fontSize: 6, color: cfg.color, fontWeight: 900, letterSpacing: "0.08em" }}>BEST</span>}
+                          {isBlocked && <span style={{ fontSize: 6, color: "#ff6b6b", fontWeight: 900 }}>🚫 CLOSED</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Hard block message */}
+                  {blocked && blockMsg && (
+                    <div style={{ padding: "12px 14px", background: "rgba(255,107,107,0.06)", border: "1px solid rgba(255,107,107,0.25)", borderLeft: "3px solid #ff6b6b", borderRadius: 0, fontSize: 11, color: "rgba(255,255,255,0.6)", lineHeight: 1.7 }}>
+                      <span style={{ color: "#ff6b6b", fontWeight: 700, fontFamily: "'Space Mono',monospace", fontSize: 9, letterSpacing: "0.12em", display: "block", marginBottom: 6 }}>🚫 SESSION BLOCKED</span>
+                      {blockMsg} <span style={{ color: "#ffd166" }}>Switch to NY or London/NY Overlap to trade {instrument}.</span>
+                    </div>
+                  )}
+
+                  {/* Advisory message */}
+                  {!blocked && advisory && (
+                    <div style={{ padding: "10px 14px", background: "rgba(255,209,102,0.04)", border: "1px solid rgba(255,209,102,0.2)", borderLeft: "3px solid #ffd166", borderRadius: 0, fontSize: 11, color: "rgba(255,255,255,0.55)", lineHeight: 1.7 }}>
+                      <span style={{ color: "#ffd166", fontWeight: 700, fontFamily: "'Space Mono',monospace", fontSize: 9, letterSpacing: "0.12em", display: "block", marginBottom: 5 }}>⚠ SESSION ADVISORY</span>
+                      {advisory}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
             {/* Progress bar */}
             <div style={{ marginBottom: 20 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
@@ -3375,12 +3546,15 @@ Return ONLY valid JSON, no markdown, no explanation:
             {/* CTA */}
             {(()=>{
               const mkt = getMarketStatus(instrument);
-              const ready = images.filter(Boolean).length === 5 && mkt.open;
+              const sessionBlocked = instrument && selectedSession && SESSION_INSTRUMENT_FIT[instrument]?.[selectedSession] === "block";
+              const ready = images.filter(Boolean).length === 5 && mkt.open && !sessionBlocked;
               const partial = images.filter(Boolean).length > 0 && images.filter(Boolean).length < 5;
               return (
                 <button onClick={analyzeCharts} disabled={!ready}
                   style={{ width: "100%", padding: "14px", borderRadius: 10, border: ready ? "none" : "1px solid rgba(255,107,255,0.2)", background: ready ? "linear-gradient(135deg,#ff6bff,#7b2fff)" : "rgba(255,107,255,0.08)", color: ready ? "#fff" : "rgba(255,107,255,0.45)", fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", fontFamily: "inherit", cursor: ready ? "pointer" : "default", boxShadow: ready ? "0 4px 32px rgba(255,107,255,0.35), 0 0 0 1px rgba(255,107,255,0.15)" : "none", transition: "all 0.2s" }}>
-                  {!mkt.open
+                  {sessionBlocked
+                    ? `${instrument} UNAVAILABLE IN ${SESSION_CONFIG[selectedSession]?.short} SESSION`
+                    : !mkt.open
                     ? "MARKET CLOSED — COME BACK LATER"
                     : images.filter(Boolean).length === 5
                     ? "GENERATE SESSION PLAN →"
