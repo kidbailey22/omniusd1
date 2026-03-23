@@ -2892,9 +2892,9 @@ Return ONLY valid JSON, no markdown, no explanation:
     } else if (isSunEarly) {
       openingMsg = `⛔ **${plan.instrument} ${plan.bias} — Markets not yet open.**\n\nAsian session opens ~8:00 PM CT tonight. No entries until then.\n\nThe plan is saved. I'll guide you when the session opens.`;
     } else if (preNY) {
-      openingMsg = `🥷 **${plan.instrument} ${plan.bias} — NY opens at 8:30 AM CT.**\n\nTrigger: **${trigger}**. We need a 30M candle to close ${direction} it — not just touch it.\n\n**First candle: 9:00 AM CT close.**\nWhen it closes, tell me two things:\n1. The close price\n2. Was it a strong close or barely made it?\n\n⚠️ Wicks don't count. Only the close price.`;
+      openingMsg = `👀 **Watch your 30M chart on ${plan.instrument} right now.**\n\nAt the **9:00 AM CT close** — check if the candle closed **${direction} ${trigger}**.\n\nA strong close means: the candle body is mostly ${direction} **${trigger}** — not just the wick poking through. Think of it like the candle "committed" to going ${direction} that level.\n\n**If that happens — tell me immediately.** I'll give you the next instruction right away.\n\nIf it didn't close ${direction} ${trigger} — tell me where it closed. We wait for the next candle.`;
     } else if (nyOpen) {
-      openingMsg = `🥷 **${plan.instrument} ${plan.bias} — NY is live.**\n\nTrigger: **${trigger}**. We need a 30M close ${direction} it.\n\n**Next close: ${nextCandle} CT.** When it closes, tell me:\n1. The close price\n2. Strong close or barely made it?\n\n**Windows left: ${remainingCandles.join(" → ")}** — hard cutoff 10:30 AM CT.\n\n⚠️ Wicks don't count.`;
+      openingMsg = `👀 **Watch your 30M chart on ${plan.instrument} right now.**\n\nAt the **${nextCandle} CT close** — check if the candle closed **${direction} ${trigger}**.\n\nA strong close means: the candle body is mostly ${direction} **${trigger}** — not just the wick poking through. Think of it like the candle "committed" to going ${direction} that level.\n\n**If that happens — tell me immediately.** I'll give you the next instruction right away.\n\nIf it didn't close ${direction} ${trigger} — tell me where it closed. We wait for the next candle.\n\n⏱ Windows remaining: **${remainingCandles.join(" → ")}** — hard cutoff 10:30 AM CT.`;
     } else {
       openingMsg = `⛔ **${plan.instrument} ${plan.bias} — NY session is closed for today.**\n\nThe 10:30 AM CT cutoff has passed. No new entries today.\n\nThe plan is saved. Come back tomorrow — NY session opens at 8:30 AM CT.`;
     }
@@ -3801,53 +3801,6 @@ Return ONLY valid JSON, no markdown, no explanation:
                   </div>
                 )}
                 <div ref={bottomRef}/>
-              </div>
-
-              {/* Quick chips — fewer on mobile */}
-              <div style={{ padding: "6px 16px 4px", display: "flex", flexDirection: "column", gap: 5, flexShrink: 0 }}>
-                {(isMobile ? [
-                  { label: "CANDLE", color: "#00e5ff", chips: [
-                    `Closed ${plan.bias==="SHORT"?"below":"above"} ${plan.trigger_level} — strong`,
-                    `Closed ${plan.bias==="SHORT"?"below":"above"} ${plan.trigger_level} — barely`,
-                    `Wick only — no close yet`,
-                  ]},
-                  { label: "ENTRY",  color: "#7fff6b", chips: [
-                    `Both tiers confirmed at ${plan.trigger_level}`,
-                    `Limit order filled`,
-                  ]},
-                ] : [
-                  { label: "9:00 AM CLOSE", color: "#00e5ff", chips: [
-                    `9:00 AM closed ${plan.bias==="SHORT"?"below":"above"} ${plan.trigger_level} — strong close`,
-                    `9:00 AM closed ${plan.bias==="SHORT"?"below":"above"} ${plan.trigger_level} — barely made it`,
-                    `9:00 AM closed ${plan.bias==="SHORT"?"above":"below"} ${plan.trigger_level} — no confirm`,
-                    `Wick only — candle still forming`,
-                  ]},
-                  { label: "9:30 AM CLOSE", color: "#00e5ff", chips: [
-                    `9:30 AM closed ${plan.bias==="SHORT"?"below":"above"} ${plan.trigger_level} — strong close`,
-                    `9:30 AM closed ${plan.bias==="SHORT"?"below":"above"} ${plan.trigger_level} — barely made it`,
-                    `9:30 AM closed ${plan.bias==="SHORT"?"above":"below"} ${plan.trigger_level} — no confirm`,
-                  ]},
-                  { label: "ENTRY",  color: "#7fff6b", chips: [
-                    `Both tiers confirmed — placing limit at ${plan.retest_zone}`,
-                    `Limit order filled at ${plan.retest_zone}`,
-                  ]},
-                  { label: "SESSION", color: "#ffd166", chips: [
-                    `10:30 AM cutoff hit — cancel?`,
-                    `Setup invalidated`,
-                  ]},
-                ]).map(g => (
-                  <div key={g.label} style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 7, fontWeight: 900, letterSpacing: "0.12em", color: g.color, minWidth: isMobile ? 52 : 90, flexShrink: 0 }}>{g.label}</span>
-                    {g.chips.map(q => (
-                      <button key={q} onClick={() => { setInput(q); inputRef.current?.focus(); }}
-                        style={{ fontSize: 9, fontWeight: 700, padding: "3px 9px", borderRadius: 16, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", color: "#8878aa", cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap", transition: "all 0.15s" }}
-                        onMouseEnter={e => { e.currentTarget.style.borderColor = `${g.color}55`; e.currentTarget.style.color = g.color; }}
-                        onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#8878aa"; }}>
-                        {q}
-                      </button>
-                    ))}
-                  </div>
-                ))}
               </div>
 
               {/* Input */}
