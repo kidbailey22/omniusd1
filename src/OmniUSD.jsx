@@ -2892,9 +2892,9 @@ Return ONLY valid JSON, no markdown, no explanation:
     } else if (isSunEarly) {
       openingMsg = `⛔ **${plan.instrument} ${plan.bias} — Markets not yet open.**\n\nAsian session opens ~8:00 PM CT tonight. No entries until then.\n\nThe plan is saved. I'll guide you when the session opens.`;
     } else if (preNY) {
-      openingMsg = `👀 **Watch your 30M chart on ${plan.instrument} right now.**\n\nAt the **9:00 AM CT close** — check if the candle closed **${direction} ${trigger}**.\n\nA strong close means: the candle body is mostly ${direction} **${trigger}** — not just the wick poking through. Think of it like the candle "committed" to going ${direction} that level.\n\n**If that happens — tell me immediately.** I'll give you the next instruction right away.\n\nIf it didn't close ${direction} ${trigger} — tell me where it closed. We wait for the next candle.`;
+      openingMsg = `👀 **Watch your 30M chart on ${plan.instrument} RIGHT NOW.**\n\n1. Did the 9:00 AM CT candle close **${direction} ${trigger}**? → **TELL ME IMMEDIATELY.**\n2. Not ${direction} ${trigger}? → **TELL ME IMMEDIATELY.** We move to the next candle.\n\n⚠️ Wicks don't count. Strong candle bodies ONLY.\n\n🥷 I will guide you all the way.`;
     } else if (nyOpen) {
-      openingMsg = `👀 **Watch your 30M chart on ${plan.instrument} right now.**\n\nAt the **${nextCandle} CT close** — check if the candle closed **${direction} ${trigger}**.\n\nA strong close means: the candle body is mostly ${direction} **${trigger}** — not just the wick poking through. Think of it like the candle "committed" to going ${direction} that level.\n\n**If that happens — tell me immediately.** I'll give you the next instruction right away.\n\nIf it didn't close ${direction} ${trigger} — tell me where it closed. We wait for the next candle.\n\n⏱ Windows remaining: **${remainingCandles.join(" → ")}** — hard cutoff 10:30 AM CT.`;
+      openingMsg = `👀 **Watch your 30M chart on ${plan.instrument} RIGHT NOW.**\n\n1. Did the **${nextCandle} CT** candle close **${direction} ${trigger}**? → **TELL ME IMMEDIATELY.**\n2. Not ${direction} ${trigger}? → **TELL ME IMMEDIATELY.** We move to the next window.\n\n⚠️ Wicks don't count. Strong candle bodies ONLY.\n\n⏱ Windows left: **${remainingCandles.join(" → ")}** — cutoff 10:30 AM CT.\n\n🥷 I will guide you all the way.`;
     } else {
       openingMsg = `⛔ **${plan.instrument} ${plan.bias} — NY session is closed for today.**\n\nThe 10:30 AM CT cutoff has passed. No new entries today.\n\nThe plan is saved. Come back tomorrow — NY session opens at 8:30 AM CT.`;
     }
@@ -3787,7 +3787,7 @@ Return ONLY valid JSON, no markdown, no explanation:
               <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px 8px" }}>
                 {messages.map((msg, i) => (
                   <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: msg.role === "user" ? "flex-end" : "flex-start", marginBottom: 10, animation: "slide 0.2s ease both" }}>
-                    <div style={{ maxWidth: "88%", padding: "9px 13px", borderRadius: msg.role === "user" ? "10px 10px 3px 10px" : "10px 10px 10px 3px", background: msg.role === "user" ? "rgba(255,107,255,0.1)" : "rgba(255,255,255,0.04)", border: msg.role === "user" ? "1px solid rgba(255,107,255,0.2)" : "1px solid rgba(255,255,255,0.07)", fontSize: 11, lineHeight: 1.7, color: msg.role === "user" ? "#f0ecff" : "#ccc4e8" }} dangerouslySetInnerHTML={{ __html: fmt(msg.content) }}/>
+                    <div style={{ maxWidth: "88%", padding: "9px 13px", borderRadius: msg.role === "user" ? "10px 10px 3px 10px" : "10px 10px 10px 3px", background: msg.role === "user" ? "rgba(255,107,255,0.1)" : "rgba(255,255,255,0.04)", border: msg.role === "user" ? "1px solid rgba(255,107,255,0.2)" : "1px solid rgba(255,255,255,0.07)", fontSize: isMobile ? 13 : 12, lineHeight: 1.75, color: msg.role === "user" ? "#f0ecff" : "#ccc4e8" }} dangerouslySetInnerHTML={{ __html: fmt(msg.content) }}/>
                     <span style={{ fontSize: 8, color: "#8878aa", marginTop: 3, paddingLeft: 3, paddingRight: 3 }}>{msg.role === "user" ? "You" : "OmniUSD"} · {msg.time} CT</span>
                   </div>
                 ))}
@@ -3812,8 +3812,8 @@ Return ONLY valid JSON, no markdown, no explanation:
                 ) : (
                   <>
                     <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendMessage()}
-                      placeholder={`e.g. "9:00 AM candle closed at ___ — ${plan.bias === "SHORT" ? "below" : "above"} ${plan.trigger_level}?"`}
-                      style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 8, padding: "9px 13px", fontSize: 10, color: "#f0ecff", fontFamily: "inherit", outline: "none" }}/>
+                      placeholder="Type what the candle closed at..."
+                      style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 8, padding: "10px 14px", fontSize: isMobile ? 13 : 12, color: "#f0ecff", fontFamily: "inherit", outline: "none" }}/>
                     <button onClick={sendMessage} disabled={loading || !input.trim()}
                       style={{ padding: "9px 18px", borderRadius: 8, border: "none", background: input.trim() && !loading ? "linear-gradient(135deg,#ff6bff,#7b2fff)" : "rgba(255,255,255,0.05)", color: input.trim() && !loading ? "#fff" : "#8878aa", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", cursor: input.trim() && !loading ? "pointer" : "not-allowed", fontFamily: "inherit", transition: "all 0.2s" }}>
                       SEND →
