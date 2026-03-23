@@ -1949,14 +1949,39 @@ YOUR ROLE — OmniUSD Live Session Guide:
 - Respond ONLY to what matters RIGHT NOW in the session
 - Keep ALL responses to 1-4 short lines maximum. No essays. No over-explanation.
 - Use bullets when listing more than 2 things
-- Confirm or deny tier completions based on 30M CLOSES ONLY — never wicks
-- When tier confirms: lead with 🚨, state the confirmed price, tell them exactly what to do next. Nothing else.
-- When price moves but no close: one line — "Wick only. Wait for the close."
-- When window is CLOSED or WEEKEND: lead with ⛔, be firm, one or two lines max
-- When they ask why: "Your charts showed [structure]. That's the basis of this plan."
-- Bold key prices with **price**
-- NEVER suggest entering when session window is closed or it is weekend
-- The trader uploaded charts and got this plan. Your job is to help them execute it — not explain the methodology to them.`;
+
+STEP-BY-STEP CANDLE COACHING — THIS IS HOW YOU GUIDE:
+The NY session has 4 valid 30M closes: 9:00 AM, 9:30 AM, 10:00 AM, 10:30 AM CT. Hard cutoff is 10:30 AM CT.
+
+When a candle closes and it confirms Tier 1 (first close ${plan.bias==="SHORT"?"below":"above"} ${plan.trigger_level}):
+→ Ask if the close was strong or barely made it. A strong close (closed well ${plan.bias==="SHORT"?"below":"above"} the level with a solid body) = high conviction. A barely-made-it close (just crept ${plan.bias==="SHORT"?"below":"above"} by a few points) = lower conviction — note it but still valid.
+→ Say: "🚨 **Tier 1 confirmed.** Closed at [price] — ${plan.bias==="SHORT"?"below":"above"} **${plan.trigger_level}**. [Strong close = 'Solid conviction.' / Weak close = 'Barely made it — watch Tier 2 carefully.'] Do NOT enter yet. Tell me the [next candle time] close."
+
+When a candle closes but does NOT confirm (wrong direction or insufficient):
+→ Say which candle failed and why in one line
+→ Tell them the NEXT specific candle time to watch: "The 9:00 AM candle didn't close below ${plan.trigger_level}. Let's wait for the **9:30 AM close**. Keep watching your 30M chart."
+→ If it's 10:00 AM and still no confirm: "Two candles haven't confirmed. One window left — **10:30 AM**. If that doesn't confirm, we close the session for today."
+→ If 10:30 AM passes without confirm: "10:30 AM cutoff reached. No confirmation today. The plan is saved for tomorrow's session."
+
+When user reports a wick (price touched level but candle didn't close there):
+→ ONE line only: "Wick only. The candle needs to CLOSE ${plan.bias==="SHORT"?"below":"above"} **${plan.trigger_level}**. Wait for the full close — don't let the wick fool you."
+
+When Tier 2 confirms:
+→ "🚨 **Tier 2 confirmed.** Both closes through **${plan.trigger_level}**. Place your **LIMIT ORDER** at ${plan.retest_zone}. Stop at **${plan.stop_loss}**. TP1 at **${plan.tp1}**. Order in — then hands off."
+
+Always refer to levels by their actual price — never say "the trigger" without including the price number.
+Never tell them to "watch the chart" without telling them EXACTLY what candle time and EXACTLY what price to watch for.
+
+CONFIRMATION SIGNALS — CRITICAL:
+When a REAL tier confirmation happens (trader reports an actual 30M candle close through the trigger level), you MUST append a machine-readable signal tag at the very end of your response. This is the ONLY way the app registers a tier confirmation — do NOT emit this signal for educational questions, explanations, or hypotheticals.
+
+Emit ONLY when a real close is reported by the trader:
+- Tier 1 confirmed: append <!--SIGNAL:{"tier1":true}--> at the end
+- Tier 2 confirmed: append <!--SIGNAL:{"tier2":true}--> at the end
+- Setup invalidated: append <!--SIGNAL:{"invalidated":true}--> at the end
+- Retest forming: append <!--SIGNAL:{"retest":true}--> at the end
+
+If the trader is asking a question, asking about tiers in general, or you are explaining the system — DO NOT emit any signal tag. Signals are only for real confirmed price events.`;
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -2843,16 +2868,35 @@ Return ONLY valid JSON, no markdown, no explanation:
     const isSat = day === 6;
     const isSunEarly = day === 0 && nowMins < 20 * 60;
     const nyOpen = nowMins >= 8*60+30 && nowMins <= 10*60+30;
+    const preNY = nowMins < 8*60+30;
+
+    const trigger = plan.trigger_level || "the trigger level";
+    const stop = plan.stop_loss || "stop level";
+    const tp1 = plan.tp1 || "TP1";
+    const direction = plan.bias === "SHORT" ? "below" : "above";
+    const opposite = plan.bias === "SHORT" ? "above" : "below";
+
+    // Figure out next NY candle close times
+    const nyCloses = ["9:00 AM","9:30 AM","10:00 AM","10:30 AM"];
+    const nyCloseMins = [9*60, 9*60+30, 10*60, 10*60+30];
+    let nextCandle = "9:00 AM";
+    let remainingCandles = [...nyCloses];
+    for (let i = 0; i < nyCloseMins.length; i++) {
+      if (nowMins < nyCloseMins[i]) { nextCandle = nyCloses[i]; remainingCandles = nyCloses.slice(i); break; }
+    }
 
     let openingMsg = "";
+
     if (isSat) {
-      openingMsg = `⛔ **${plan.instrument} ${plan.bias} — Saturday. No entries.**\n\nWeekend volume is unreliable. Next window: Sunday Asian (~8:00 PM CT) or Monday NY (~8:30 AM CT). Monitor only.`;
+      openingMsg = `⛔ **${plan.instrument} ${plan.bias} — Saturday. No entries.**\n\nWeekend volume is unreliable. No BRC entries until Sunday Asian (~8:00 PM CT) or Monday NY (~8:30 AM CT).\n\nThe plan is saved. Come back when a proper session opens.`;
     } else if (isSunEarly) {
-      openingMsg = `⛔ **${plan.instrument} ${plan.bias} — Markets not yet open.**\n\nAsian session opens ~8:00 PM CT. Monitor only, no entries yet.`;
+      openingMsg = `⛔ **${plan.instrument} ${plan.bias} — Markets not yet open.**\n\nAsian session opens ~8:00 PM CT tonight. No entries until then.\n\nThe plan is saved. I'll guide you when the session opens.`;
+    } else if (preNY) {
+      openingMsg = `🥷 **${plan.instrument} ${plan.bias} — NY opens at 8:30 AM CT.**\n\nTrigger: **${trigger}**. We need a 30M candle to close ${direction} it — not just touch it.\n\n**First candle: 9:00 AM CT close.**\nWhen it closes, tell me two things:\n1. The close price\n2. Was it a strong close or barely made it?\n\n⚠️ Wicks don't count. Only the close price.`;
     } else if (nyOpen) {
-      openingMsg = `🥷 **${plan.instrument} ${plan.bias} — NY window open.**\n\nSend 30M closes as they happen. Wicks don't count.`;
+      openingMsg = `🥷 **${plan.instrument} ${plan.bias} — NY is live.**\n\nTrigger: **${trigger}**. We need a 30M close ${direction} it.\n\n**Next close: ${nextCandle} CT.** When it closes, tell me:\n1. The close price\n2. Strong close or barely made it?\n\n**Windows left: ${remainingCandles.join(" → ")}** — hard cutoff 10:30 AM CT.\n\n⚠️ Wicks don't count.`;
     } else {
-      openingMsg = `🥷 **${plan.instrument} ${plan.bias}.**\n\n${nowMins < 8*60+30 ? "NY opens at 8:30 AM CT — stay patient." : "NY session closed — no new entries today."}\n\nSend 30M closes as they happen. Wicks don't count.`;
+      openingMsg = `⛔ **${plan.instrument} ${plan.bias} — NY session is closed for today.**\n\nThe 10:30 AM CT cutoff has passed. No new entries today.\n\nThe plan is saved. Come back tomorrow — NY session opens at 8:30 AM CT.`;
     }
 
     setMessages([{
@@ -2893,13 +2937,26 @@ Return ONLY valid JSON, no markdown, no explanation:
       const updatedHistory = [...newHistory, { role: "assistant", content: reply }];
       setSessionHistory(updatedHistory);
 
-      const r = reply.toLowerCase();
-      if (r.includes("tier 1") && (r.includes("confirm") || r.includes("✅"))) { setTier1(true); setSessionState("BREAK_CONFIRMED"); }
-      if (r.includes("tier 2") && (r.includes("confirm") || r.includes("✅"))) { setTier2(true); setSessionState("READY_FOR_LIMIT"); }
-      if (r.includes("retest") && r.includes("forming")) setSessionState("RETEST_FORMING");
-      if (r.includes("invalidat")) setSessionState("INVALIDATED");
+      // ── Tier detection — STRICT JSON signal only ──────────────────────────
+      // The AI must explicitly emit a JSON signal block to confirm a tier.
+      // Never trigger from natural language — prevents false positives when
+      // users ask educational questions about tiers.
+      // Format: <!--SIGNAL:{"tier1":true}-->  or  <!--SIGNAL:{"tier2":true}-->
+      const signalMatch = reply.match(/<!--SIGNAL:(\{[^}]+\})-->/);
+      if (signalMatch) {
+        try {
+          const sig = JSON.parse(signalMatch[1]);
+          if (sig.tier1 === true && !tier1) { setTier1(true); setSessionState("BREAK_CONFIRMED"); }
+          if (sig.tier2 === true && !tier2) { setTier2(true); setSessionState("READY_FOR_LIMIT"); }
+          if (sig.invalidated === true) setSessionState("INVALIDATED");
+          if (sig.retest === true) setSessionState("RETEST_FORMING");
+        } catch(e) {}
+      }
 
-      setMessages(prev => [...prev, { role: "assistant", content: reply, time: getCTTime().str }]);
+      // Strip the signal tag from the displayed message
+      const displayReply = reply.replace(/<!--SIGNAL:[^>]+-->/g, "").trim();
+
+      setMessages(prev => [...prev, { role: "assistant", content: displayReply, time: getCTTime().str }]);
     } catch (e) {
       setMessages(prev => [...prev, { role: "assistant", content: "Connection error. Try again.", time: getCTTime().str }]);
     }
@@ -3749,12 +3806,35 @@ Return ONLY valid JSON, no markdown, no explanation:
               {/* Quick chips — fewer on mobile */}
               <div style={{ padding: "6px 16px 4px", display: "flex", flexDirection: "column", gap: 5, flexShrink: 0 }}>
                 {(isMobile ? [
-                  { label: "CANDLE", color: "#00e5ff", chips: ["30M closed below trigger","30M closed above trigger","Wick only"] },
-                  { label: "ENTRY",  color: "#7fff6b", chips: ["Both tiers confirmed","Limit filled"] },
+                  { label: "CANDLE", color: "#00e5ff", chips: [
+                    `Closed ${plan.bias==="SHORT"?"below":"above"} ${plan.trigger_level} — strong`,
+                    `Closed ${plan.bias==="SHORT"?"below":"above"} ${plan.trigger_level} — barely`,
+                    `Wick only — no close yet`,
+                  ]},
+                  { label: "ENTRY",  color: "#7fff6b", chips: [
+                    `Both tiers confirmed at ${plan.trigger_level}`,
+                    `Limit order filled`,
+                  ]},
                 ] : [
-                  { label: "CANDLE UPDATE", color: "#00e5ff", chips: ["30M closed below trigger","30M closed above trigger","Wick only — still forming"] },
-                  { label: "ENTRY",         color: "#7fff6b", chips: ["Both tiers confirmed — order in?","Limit filled — what now?"] },
-                  { label: "SESSION",       color: "#ffd166", chips: ["Past cutoff — cancel?","Setup invalidated"] },
+                  { label: "9:00 AM CLOSE", color: "#00e5ff", chips: [
+                    `9:00 AM closed ${plan.bias==="SHORT"?"below":"above"} ${plan.trigger_level} — strong close`,
+                    `9:00 AM closed ${plan.bias==="SHORT"?"below":"above"} ${plan.trigger_level} — barely made it`,
+                    `9:00 AM closed ${plan.bias==="SHORT"?"above":"below"} ${plan.trigger_level} — no confirm`,
+                    `Wick only — candle still forming`,
+                  ]},
+                  { label: "9:30 AM CLOSE", color: "#00e5ff", chips: [
+                    `9:30 AM closed ${plan.bias==="SHORT"?"below":"above"} ${plan.trigger_level} — strong close`,
+                    `9:30 AM closed ${plan.bias==="SHORT"?"below":"above"} ${plan.trigger_level} — barely made it`,
+                    `9:30 AM closed ${plan.bias==="SHORT"?"above":"below"} ${plan.trigger_level} — no confirm`,
+                  ]},
+                  { label: "ENTRY",  color: "#7fff6b", chips: [
+                    `Both tiers confirmed — placing limit at ${plan.retest_zone}`,
+                    `Limit order filled at ${plan.retest_zone}`,
+                  ]},
+                  { label: "SESSION", color: "#ffd166", chips: [
+                    `10:30 AM cutoff hit — cancel?`,
+                    `Setup invalidated`,
+                  ]},
                 ]).map(g => (
                   <div key={g.label} style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                     <span style={{ fontSize: 7, fontWeight: 900, letterSpacing: "0.12em", color: g.color, minWidth: isMobile ? 52 : 90, flexShrink: 0 }}>{g.label}</span>
@@ -3779,7 +3859,7 @@ Return ONLY valid JSON, no markdown, no explanation:
                 ) : (
                   <>
                     <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendMessage()}
-                      placeholder={`e.g. "30M closed ${plan.bias === "SHORT" ? "below" : "above"} ${plan.trigger_level} at ___"`}
+                      placeholder={`e.g. "9:00 AM candle closed at ___ — ${plan.bias === "SHORT" ? "below" : "above"} ${plan.trigger_level}?"`}
                       style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 8, padding: "9px 13px", fontSize: 10, color: "#f0ecff", fontFamily: "inherit", outline: "none" }}/>
                     <button onClick={sendMessage} disabled={loading || !input.trim()}
                       style={{ padding: "9px 18px", borderRadius: 8, border: "none", background: input.trim() && !loading ? "linear-gradient(135deg,#ff6bff,#7b2fff)" : "rgba(255,255,255,0.05)", color: input.trim() && !loading ? "#fff" : "#8878aa", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", cursor: input.trim() && !loading ? "pointer" : "not-allowed", fontFamily: "inherit", transition: "all 0.2s" }}>
