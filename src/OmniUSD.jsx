@@ -1835,6 +1835,7 @@ HARD RULES — NON-NEGOTIABLE:
 - Limit orders only. Never chase.
 - PASS only when structure is genuinely absent OR weekend rule applies.
 - FRIDAY: ${ct.isFriday ? "Today is Friday — apply extra caution. A PASS protects the week's gains." : "Apply standard rules."}
+- what_still_needed: For ANY grade that is NOT A+, you MUST populate this array with 2-4 specific, concrete conditions that would upgrade this to A+. Include exact prices where relevant. Include the session timing deadline. Be specific enough that a 16-year-old knows exactly what to watch for. Example: "30M candle close above 71,082", "Retest holds above 71,082 on the pullback", "NY session participation — valid window 8:30–10:30 AM CT". If grade IS A+, return an empty array [].
 
 Return ONLY this JSON object — no markdown, no explanation, no preamble:
 {
@@ -1858,6 +1859,7 @@ Return ONLY this JSON object — no markdown, no explanation, no preamble:
   "session_note": "which session this setup targets and why",
   "friday_note": "Friday caution note if applicable, empty string otherwise",
   "pass_reason": "if PASS — exactly why. Empty string if EXECUTE.",
+  "what_still_needed": ["specific condition 1 with price if applicable", "specific condition 2", "specific condition 3"],
   "plain_english": {
     "structure": "what the market is doing in plain English",
     "brc_phase": "which phase we are in and what that means",
@@ -3519,12 +3521,22 @@ Return ONLY valid JSON, no markdown, no explanation:
 
             {/* Grade + bias header */}
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-              <div style={{ fontSize: 48, fontWeight: 900, color: gradeColor, lineHeight: 1, letterSpacing: "-0.02em" }}>{plan.grade}</div>
+              {/* Grade badge — A+ gets green glow, others get muted treatment */}
+              <div style={{
+                fontSize: plan.grade === "A+" ? 48 : 36,
+                fontWeight: 900,
+                color: gradeColor,
+                lineHeight: 1,
+                letterSpacing: "-0.02em",
+                opacity: plan.grade === "A+" ? 1 : 0.75,
+              }}>{plan.grade}</div>
               <div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: "#f0ecff", marginBottom: 4 }}>
-                  {plan.grade === "PASS" ? "No active setup" : `${plan.bias.charAt(0)+plan.bias.slice(1).toLowerCase()} setup`}
+                <div style={{ fontSize: plan.grade === "A+" ? 18 : 15, fontWeight: 700, color: plan.grade === "A+" ? "#f0ecff" : "rgba(255,255,255,0.6)", marginBottom: 4 }}>
+                  {plan.grade === "PASS" ? "No active setup"
+                    : plan.grade === "A+" ? `${plan.bias.charAt(0)+plan.bias.slice(1).toLowerCase()} setup — ready to execute`
+                    : `${plan.bias.charAt(0)+plan.bias.slice(1).toLowerCase()} setup — not yet A+`}
                 </div>
-                <div style={{ display: "flex", gap: 6 }}>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                   <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", background: `${biasColor}14`, border: `1px solid ${biasColor}44`, borderRadius: 4, color: biasColor }}>{plan.bias}</span>
                   <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", background: "rgba(255,209,102,0.1)", border: "1px solid rgba(255,209,102,0.3)", borderRadius: 4, color: "#ffd166" }}>{plan.confidence} CONFIDENCE · {plan.confidence_score}%</span>
                 </div>
@@ -3558,26 +3570,58 @@ Return ONLY valid JSON, no markdown, no explanation:
 
             {plan.grade !== "PASS" ? (
               <>
-                {/* Key levels */}
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginBottom: 16 }}>
-                  {[
-                    { label: "TRIGGER", val: plan.trigger_level, color: plan.bias === "SHORT" ? "#ff6b6b" : "#7fff6b" },
-                    { label: "STOP", val: plan.stop_loss, color: "#ff6b6b" },
-                    { label: "TP1", val: plan.tp1, color: "#7fff6b" },
-                  ].map(r => (
-                    <div key={r.label} style={{ padding: "10px 12px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8 }}>
-                      <div style={{ fontSize: 8, color: "#8878aa", fontWeight: 700, letterSpacing: "0.1em", marginBottom: 4 }}>{r.label}</div>
-                      <div style={{ fontSize: 15, fontWeight: 900, color: r.color, fontFamily: "monospace" }}>{r.val}</div>
-                    </div>
-                  ))}
-                </div>
+                {/* A+ — show trigger/stop/TP1 execution cards */}
+                {plan.grade === "A+" && (
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginBottom: 16 }}>
+                    {[
+                      { label: "TRIGGER", val: plan.trigger_level, color: plan.bias === "SHORT" ? "#ff6b6b" : "#7fff6b" },
+                      { label: "STOP", val: plan.stop_loss, color: "#ff6b6b" },
+                      { label: "TP1", val: plan.tp1, color: "#7fff6b" },
+                    ].map(r => (
+                      <div key={r.label} style={{ padding: "10px 12px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8 }}>
+                        <div style={{ fontSize: 8, color: "#8878aa", fontWeight: 700, letterSpacing: "0.1em", marginBottom: 4 }}>{r.label}</div>
+                        <div style={{ fontSize: 15, fontWeight: 900, color: r.color, fontFamily: "monospace" }}>{r.val}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
+                {/* NON A+ — show "What this setup still needs" checklist */}
+                {plan.grade !== "A+" && (
+                  <div style={{ padding: "14px 16px", background: "rgba(255,209,102,0.04)", border: "1px solid rgba(255,209,102,0.18)", borderLeft: "3px solid #ffd166", borderRadius: 0, marginBottom: 16 }}>
+                    <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: "0.16em", color: "#ffd166", marginBottom: 10, fontFamily: "'Space Mono',monospace" }}>⚠ WHAT THIS SETUP STILL NEEDS</div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", marginBottom: 10, lineHeight: 1.6 }}>
+                      This is a <span style={{ color: gradeColor, fontWeight: 700 }}>{plan.grade} grade</span> setup — not yet A+. Do NOT execute until every condition below is met.
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {(plan.what_still_needed && plan.what_still_needed.length > 0
+                        ? plan.what_still_needed
+                        : [
+                            `30M candle close ${plan.bias === "SHORT" ? "below" : "above"} ${plan.trigger_level}`,
+                            `Retest holds ${plan.bias === "SHORT" ? "below" : "above"} ${plan.trigger_level} on the pullback`,
+                            `Full 3-timeframe alignment — Daily + 4H + 1H all agree`,
+                            `NY session window — valid entries 8:30–10:30 AM CT only`,
+                          ]
+                      ).map((cond, i) => (
+                        <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                          <span style={{ fontSize: 12, color: "#ffd166", flexShrink: 0, marginTop: 1 }}>□</span>
+                          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.65)", lineHeight: 1.6 }}>{cond}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ marginTop: 12, padding: "8px 12px", background: "rgba(255,255,255,0.03)", borderRadius: 6, fontSize: 10, color: "rgba(255,255,255,0.35)", fontFamily: "'Space Mono',monospace", lineHeight: 1.7 }}>
+                      When all boxes are checked — that is an A+ setup. Until then, this is for watching only.
+                    </div>
+                  </div>
+                )}
+
+                {/* START LIVE SESSION — A+ only gets full button, others get muted version */}
                 <button onClick={startLiveSession}
-                  style={{ width: "100%", padding: "15px", borderRadius: 10, border: "none", background: "linear-gradient(135deg,#ff6bff,#7b2fff)", color: "#fff", fontSize: 13, fontWeight: 700, letterSpacing: "0.12em", fontFamily: "inherit", cursor: "pointer", boxShadow: "0 4px 28px rgba(255,107,255,0.25)" }}>
-                  START LIVE SESSION →
+                  style={{ width: "100%", padding: "15px", borderRadius: 10, border: plan.grade === "A+" ? "none" : "1px solid rgba(255,255,255,0.1)", background: plan.grade === "A+" ? "linear-gradient(135deg,#ff6bff,#7b2fff)" : "rgba(255,255,255,0.04)", color: plan.grade === "A+" ? "#fff" : "rgba(255,255,255,0.4)", fontSize: 13, fontWeight: 700, letterSpacing: "0.12em", fontFamily: "inherit", cursor: "pointer", boxShadow: plan.grade === "A+" ? "0 4px 28px rgba(255,107,255,0.25)" : "none" }}>
+                  {plan.grade === "A+" ? "START LIVE SESSION →" : "MONITOR SETUP →"}
                 </button>
                 <div style={{ textAlign: "center", marginTop: 8, fontSize: 9, color: "#8878aa" }}>
-                  Live session tracks tier confirmations in real time
+                  {plan.grade === "A+" ? "Live session tracks tier confirmations in real time" : "Monitor until all A+ conditions are met"}
                 </div>
 
                 {/* ── FULL ANALYSIS — collapsible ── */}
