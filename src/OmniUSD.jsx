@@ -1708,40 +1708,82 @@ function getCTTime() {
   };
 }
 
-function getMarketStatus(instrument) {
+function getMarketStatus(instrument, session = "NY") {
   if (!instrument) return { open: false, reason: "Select an instrument first.", comeback: "" };
   const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
   const day = now.getDay(); // 0=Sun, 1=Mon...6=Sat
   const mins = now.getHours() * 60 + now.getMinutes();
   const isBTC = instrument === "BTCUSD";
 
-  // BTC is 24/7 — always open
-  if (isBTC) return { open: true };
-
   // Saturday — all traditional markets closed
-  if (day === 6) {
-    // Asian opens Sunday ~4 PM CT (pre-market prep allowed 2 hrs before = 2 PM CT Sunday)
+  if (day === 6 && !isBTC) {
     return {
       open: false,
       reason: "Markets are closed on Saturday.",
-      comeback: "Come back Sunday at 2:00 PM CT — 2 hours before the Asian session opens.",
+      comeback: "Come back Sunday evening — Asian session opens ~8:00 PM CT.",
     };
   }
 
-  // Sunday before 2:00 PM CT
-  if (day === 0 && mins < 14 * 60) {
+  // Sunday before 2:00 PM CT — too early for any session prep
+  if (day === 0 && mins < 14 * 60 && !isBTC) {
     const minsLeft = 14 * 60 - mins;
     const hrs = Math.floor(minsLeft / 60);
     const min = minsLeft % 60;
-    const timeStr = hrs > 0 ? `${hrs}h ${min}m` : `${min}m`;
     return {
       open: false,
       reason: "Markets are not open yet.",
-      comeback: `Come back at 2:00 PM CT (opens in ${timeStr}) — 2 hours before the Asian session.`,
+      comeback: `Come back at 2:00 PM CT (${hrs > 0 ? `${hrs}h ${min}m` : `${min}m`}) — Asian session opens tonight ~8:00 PM CT.`,
     };
   }
 
-  // Sunday after 4:00 AM CT Monday (markets close again briefly — simplified: allow all week)
+  // BTC is 24/7 — always valid regardless of session
+  if (isBTC) return { open: true };
+
+  // Session window check — is the selected session open, upcoming, or closed for today?
+  const sessCfg = SESSION_CONFIG[session] || SESSION_CONFIG.NY;
+
+  // Session open window
+  const sessionOpen = mins >= sessCfg.openMins && mins <= sessCfg.cutoffMins;
+  const sessionUpcoming = mins < sessCfg.openMins;
+  const sessionClosed = mins > sessCfg.cutoffMins;
+
+  // For Asian session — handle day rollover (opens ~8 PM CT = 20:00)
+  const isAsian = session === "ASIAN";
+  const asianOpen = isAsian && (mins >= 20 * 60 || mins <= 23 * 60);
+
+  if (sessionOpen || (isAsian && mins >= 20 * 60)) {
+    return { open: true };
+  }
+
+  if (sessionUpcoming) {
+    const minsLeft = sessCfg.openMins - mins;
+    const hrs = Math.floor(minsLeft / 60);
+    const min = minsLeft % 60;
+    return {
+      open: false,
+      reason: `${sessCfg.label} session hasn't opened yet.`,
+      comeback: `Opens at ${sessCfg.hours.split("–")[0]} CT — in ${hrs > 0 ? `${hrs}h ${min}m` : `${min}m`}. Upload your charts now to be ready.`,
+      upcoming: true, // allow uploading in prep
+    };
+  }
+
+  if (sessionClosed && !isAsian) {
+    // Find the next available session
+    const sessionOrder = ["ASIAN","LONDON","NY","LONDON_NY"];
+    const nextSessions = {
+      NY: { name: "Asian", time: "~8:00 PM CT tonight" },
+      LONDON: { name: "NY", time: "~8:30 AM CT" },
+      LONDON_NY: { name: "Asian", time: "~8:00 PM CT tonight" },
+      ASIAN: { name: "London", time: "~2:00 AM CT" },
+    };
+    const next = nextSessions[session];
+    return {
+      open: false,
+      reason: `${sessCfg.label} session window is closed for today. Cutoff was ${sessCfg.cutoff}.`,
+      comeback: `Next session: ${next?.name || "NY"} opens ${next?.time || "~8:30 AM CT"}. Switch sessions or come back then.`,
+    };
+  }
+
   return { open: true };
 }
 
@@ -2828,7 +2870,7 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
   // ── STEP 1: Analyze charts ──────────────────────────────────────────────────
   async function analyzeCharts() {
     if (images.filter(Boolean).length < 5) return;
-    const mktStatus = getMarketStatus(instrument);
+    const mktStatus = getMarketStatus(instrument, selectedSession);
     if (!mktStatus.open) return;
 
     // ── Usage limit checks ────────────────────────────────────────────────
@@ -3262,14 +3304,21 @@ Return ONLY valid JSON, no markdown, no explanation:
 
             {/* Market closed warning — conditional only */}
             {(()=>{
-              const status = getMarketStatus(instrument);
+              const status = getMarketStatus(instrument, selectedSession);
               if (!status.open) return (
-                <div style={{ padding: "12px 16px", background: "rgba(255,107,107,0.06)", border: "1px solid rgba(255,107,107,0.2)", borderLeft: "3px solid #ff6b6b", borderRadius: 0, marginBottom: 16 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: "#ff6b6b", marginBottom: 4 }}>{status.reason}</div>
+                <div style={{ padding: "12px 16px", background: status.upcoming ? "rgba(0,229,255,0.05)" : "rgba(255,107,107,0.06)", border: `1px solid ${status.upcoming ? "rgba(0,229,255,0.2)" : "rgba(255,107,107,0.2)"}`, borderLeft: `3px solid ${status.upcoming ? "#00e5ff" : "#ff6b6b"}`, borderRadius: 0, marginBottom: 16 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: status.upcoming ? "#00e5ff" : "#ff6b6b", marginBottom: 4 }}>{status.reason}</div>
                   <div style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", lineHeight: 1.6 }}>{status.comeback}</div>
-                  {instrument !== "BTCUSD" && (
-                    <div style={{ marginTop: 8, fontSize: 10, color: "rgba(255,209,102,0.6)" }}>
-                      BTC is 24/7 — <span style={{ color: "#ffd166", fontWeight: 700, cursor: "pointer" }} onClick={() => setInstrument("BTCUSD")}>switch to BTCUSD</span>
+                  {!status.upcoming && instrument !== "BTCUSD" && (
+                    <div style={{ marginTop: 8, fontSize: 10, color: "rgba(255,209,102,0.7)" }}>
+                      💡 Switch to a different session above — or{" "}
+                      <span style={{ color: "#ffd166", fontWeight: 700, cursor: "pointer" }} onClick={() => setSelectedSession("ASIAN")}>try Asian session</span>
+                      {" "}/ <span style={{ color: "#ffd166", fontWeight: 700, cursor: "pointer" }} onClick={() => setSelectedSession("LONDON")}>London session</span>
+                    </div>
+                  )}
+                  {status.upcoming && (
+                    <div style={{ marginTop: 8, fontSize: 10, color: "rgba(0,229,255,0.6)" }}>
+                      💡 Upload your charts now — you'll be ready when the session opens.
                     </div>
                   )}
                 </div>
@@ -3545,7 +3594,7 @@ Return ONLY valid JSON, no markdown, no explanation:
 
             {/* CTA */}
             {(()=>{
-              const mkt = getMarketStatus(instrument);
+              const mkt = getMarketStatus(instrument, selectedSession);
               const sessionBlocked = instrument && selectedSession && SESSION_INSTRUMENT_FIT[instrument]?.[selectedSession] === "block";
               const ready = images.filter(Boolean).length === 5 && mkt.open && !sessionBlocked;
               const partial = images.filter(Boolean).length > 0 && images.filter(Boolean).length < 5;
