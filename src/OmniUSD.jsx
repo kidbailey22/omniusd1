@@ -1917,17 +1917,21 @@ RULES — NON-NEGOTIABLE:
 - Weekend moves do NOT count as BRC confirmations.
 - "Pre-market movement is information — not permission."
 
-YOUR ROLE:
-- Respond to live price updates from the trader
-- Confirm or deny tier completions based on CLOSES only
-- Keep responses SHORT — 3-5 sentences max unless confirming a tier
-- When tier confirms on a valid session: lead with 🚨, be clear and energetic
-- When window is CLOSED or it's WEEKEND: lead with ⛔, be firm and direct
-- When price moves but no close: keep calm, remind of the rule
-- Write like explaining to a disciplined 16-year-old
-- Use ✅ ❌ ⏳ 🔴 🟢 🥷 ⛔ for status — never excessive
+YOUR ROLE — OmniUSD Live Session Guide:
+- You guide execution of the ACTIVE SESSION PLAN generated from the trader's uploaded charts
+- Never say "I didn't come up with this analysis" — you ARE the system. Say: "This plan came from your uploaded charts and OmniUSD rules."
+- Never be meta or self-referential. Never explain what you are.
+- Respond ONLY to what matters RIGHT NOW in the session
+- Keep ALL responses to 1-4 short lines maximum. No essays. No over-explanation.
+- Use bullets when listing more than 2 things
+- Confirm or deny tier completions based on 30M CLOSES ONLY — never wicks
+- When tier confirms: lead with 🚨, state the confirmed price, tell them exactly what to do next. Nothing else.
+- When price moves but no close: one line — "Wick only. Wait for the close."
+- When window is CLOSED or WEEKEND: lead with ⛔, be firm, one or two lines max
+- When they ask why: "Your charts showed [structure]. That's the basis of this plan."
 - Bold key prices with **price**
-- NEVER suggest entering a trade when the session window is closed or it is a weekend`;
+- NEVER suggest entering when session window is closed or it is weekend
+- The trader uploaded charts and got this plan. Your job is to help them execute it — not explain the methodology to them.`;
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -2719,62 +2723,86 @@ Return ONLY valid JSON, no markdown, no explanation:
       <div style={{ position: "fixed", width: 320, height: 320, borderRadius: "50%", background: "#00e5ff", bottom: -100, right: -80, filter: "blur(100px)", opacity: 0.08, pointerEvents: "none", zIndex: 0 }}/>
 
       {/* ── NAV ── */}
-      <header style={{ position: "relative", zIndex: 1, padding: "12px 20px", background: "rgba(255,255,255,0.025)", borderBottom: "1px solid rgba(255,107,255,0.22)", boxShadow: "0 1px 20px rgba(123,47,255,0.08)", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontSize: 18, color: "#ff6bff" }}>◈</span>
-          <div>
-            <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", background: "linear-gradient(90deg,#ff6bff,#00e5ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>OmniUSD</span>
-          </div>
-          {/* Tier badge */}
-          <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.1em", padding: "2px 8px", borderRadius: 4, background: `${(TIER_CONFIG[profile?.tier]||TIER_CONFIG.starter).color}18`, border: `1px solid ${(TIER_CONFIG[profile?.tier]||TIER_CONFIG.starter).color}44`, color: (TIER_CONFIG[profile?.tier]||TIER_CONFIG.starter).color }}>
-            {(TIER_CONFIG[profile?.tier]||TIER_CONFIG.starter).label.toUpperCase()}
-          </span>
-          {plan && phase !== "upload" && (
-            <div style={{ display: "flex", gap: 6, marginLeft: 4 }}>
-              <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", background: `${gradeColor}14`, border: `1px solid ${gradeColor}44`, borderRadius: 4, color: gradeColor }}>{plan.grade}</span>
-              <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", background: `${biasColor}14`, border: `1px solid ${biasColor}44`, borderRadius: 4, color: biasColor }}>{plan.bias}</span>
-              <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, color: "#8878aa" }}>{plan.instrument}</span>
-            </div>
-          )}
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 6 : 10 }}>
-          <div style={{ fontSize: isMobile ? 8 : 9, color: "#8878aa" }}>
-            <span style={{ color: "#00e5ff", fontWeight: 700 }}>{ctTime}</span> CT
-          </div>
-          {!isMobile && onOpenJournal && (
-            <button onClick={onOpenJournal}
-              style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", color: "#8878aa", background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
-              Journal
-            </button>
-          )}
-          <button onClick={() => setAppPage(appPage === "settings" ? "dashboard" : "settings")}
-            style={{ fontSize: isMobile ? 8 : 9, fontWeight: 700, letterSpacing: "0.06em", color: appPage === "settings" ? "#ff6bff" : "#8878aa", background: appPage === "settings" ? "rgba(255,107,255,0.1)" : "none", border: `1px solid ${appPage === "settings" ? "rgba(255,107,255,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: isMobile ? "4px 8px" : "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
-            {isMobile ? "⚙" : "Settings"}
-          </button>
-          <button onClick={() => setAppPage(appPage === "faq" ? "dashboard" : "faq")}
-            style={{ fontSize: isMobile ? 8 : 9, fontWeight: 700, letterSpacing: "0.06em", color: appPage === "faq" ? "#00e5ff" : "#8878aa", background: appPage === "faq" ? "rgba(0,229,255,0.08)" : "none", border: `1px solid ${appPage === "faq" ? "rgba(0,229,255,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: isMobile ? "4px 8px" : "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
-            {isMobile ? "?" : "Help & FAQ"}
-          </button>
+      <header style={{ position: "relative", zIndex: 1, background: "rgba(255,255,255,0.025)", borderBottom: "1px solid rgba(255,107,255,0.22)", boxShadow: "0 1px 20px rgba(123,47,255,0.08)", flexShrink: 0 }}>
 
-          {phase === "live" && (
-            <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-              <span style={{ width: 6, height: 6, borderRadius: "50%", background: windowClosed ? "#ff6b6b" : "#7fff6b", animation: windowOpen ? "pulse 1.5s ease infinite" : "none" }}/>
-              <span style={{ fontSize: 9, fontWeight: 700, color: windowClosed ? "#ff6b6b" : "#7fff6b" }}>{windowClosed ? "WINDOW CLOSED" : "WINDOW OPEN"}</span>
-            </div>
-          )}
-          {phase === "live" && (
-            <button onClick={() => { setPhase("upload"); setImages(Array(5).fill(null)); setPlan(null); setMessages([]); setTier1(false); setTier2(false); setSessionState("WATCHING"); setSessionHistory([]); localStorage.removeItem("omniusd_active_session"); }}
-              style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", color: "rgba(255,255,255,0.3)", background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
-              NEW ANALYSIS
+        {/* Primary row */}
+        <div style={{ padding: isMobile ? "10px 14px" : "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          {/* Left: logo + instrument + bias on mobile */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: isMobile ? 15 : 18, color: "#ff6bff" }}>◈</span>
+            <span style={{ fontSize: isMobile ? 11 : 12, fontWeight: 700, letterSpacing: "0.1em", background: "linear-gradient(90deg,#ff6bff,#00e5ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>OmniUSD</span>
+            {/* Mobile: instrument + bias only */}
+            {isMobile && plan && phase !== "upload" && (
+              <div style={{ display: "flex", gap: 5 }}>
+                <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 7px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, color: "#8878aa" }}>{plan.instrument}</span>
+                <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 7px", background: `${biasColor}14`, border: `1px solid ${biasColor}44`, borderRadius: 4, color: biasColor }}>{plan.bias}</span>
+              </div>
+            )}
+            {/* Desktop: tier + grade + bias + instrument */}
+            {!isMobile && (<>
+              <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.1em", padding: "2px 8px", borderRadius: 4, background: `${(TIER_CONFIG[profile?.tier]||TIER_CONFIG.starter).color}18`, border: `1px solid ${(TIER_CONFIG[profile?.tier]||TIER_CONFIG.starter).color}44`, color: (TIER_CONFIG[profile?.tier]||TIER_CONFIG.starter).color }}>
+                {(TIER_CONFIG[profile?.tier]||TIER_CONFIG.starter).label.toUpperCase()}
+              </span>
+              {plan && phase !== "upload" && (
+                <div style={{ display: "flex", gap: 6 }}>
+                  <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", background: `${gradeColor}14`, border: `1px solid ${gradeColor}44`, borderRadius: 4, color: gradeColor }}>{plan.grade}</span>
+                  <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", background: `${biasColor}14`, border: `1px solid ${biasColor}44`, borderRadius: 4, color: biasColor }}>{plan.bias}</span>
+                  <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, color: "#8878aa" }}>{plan.instrument}</span>
+                </div>
+              )}
+            </>)}
+          </div>
+
+          {/* Right: status badge on mobile, full controls on desktop */}
+          <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 6 : 10 }}>
+            {/* Mobile: status badge */}
+            {isMobile && phase === "live" && (
+              <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "3px 8px", borderRadius: 20, background: `${stateObj.color}14`, border: `1px solid ${stateObj.color}33` }}>
+                <span style={{ width: 5, height: 5, borderRadius: "50%", background: stateObj.color, display: "inline-block", animation: stateObj.dot ? "pulse 1.5s ease infinite" : "none" }}/>
+                <span style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.06em", color: stateObj.color }}>{stateObj.label}</span>
+              </div>
+            )}
+            {/* Desktop: time + journal + window */}
+            {!isMobile && <div style={{ fontSize: 9, color: "#8878aa" }}><span style={{ color: "#00e5ff", fontWeight: 700 }}>{ctTime}</span> CT</div>}
+            {!isMobile && onOpenJournal && (
+              <button onClick={onOpenJournal} style={{ fontSize: 9, fontWeight: 700, color: "#8878aa", background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>Journal</button>
+            )}
+            {!isMobile && phase === "live" && (
+              <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: windowClosed ? "#ff6b6b" : "#7fff6b", animation: windowOpen ? "pulse 1.5s ease infinite" : "none" }}/>
+                <span style={{ fontSize: 9, fontWeight: 700, color: windowClosed ? "#ff6b6b" : "#7fff6b" }}>{windowClosed ? "WINDOW CLOSED" : "WINDOW OPEN"}</span>
+              </div>
+            )}
+            {/* Settings + FAQ — both mobile and desktop */}
+            <button onClick={() => setAppPage(appPage === "settings" ? "dashboard" : "settings")}
+              style={{ fontSize: isMobile ? 15 : 9, fontWeight: 700, color: appPage === "settings" ? "#ff6bff" : "#8878aa", background: appPage === "settings" ? "rgba(255,107,255,0.1)" : "none", border: `1px solid ${appPage === "settings" ? "rgba(255,107,255,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: isMobile ? "3px 7px" : "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
+              {isMobile ? "⚙" : "Settings"}
             </button>
-          )}
-          {onSignOut && (
-            <button onClick={onSignOut}
-              style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", color: "rgba(255,255,255,0.25)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", padding: "4px 6px" }}>
-              Sign out
+            <button onClick={() => setAppPage(appPage === "faq" ? "dashboard" : "faq")}
+              style={{ fontSize: isMobile ? 15 : 9, fontWeight: 700, color: appPage === "faq" ? "#00e5ff" : "#8878aa", background: appPage === "faq" ? "rgba(0,229,255,0.08)" : "none", border: `1px solid ${appPage === "faq" ? "rgba(0,229,255,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: isMobile ? "3px 7px" : "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
+              {isMobile ? "?" : "Help & FAQ"}
             </button>
-          )}
+            {phase === "live" && (
+              <button onClick={() => { setPhase("upload"); setImages(Array(5).fill(null)); setPlan(null); setMessages([]); setTier1(false); setTier2(false); setSessionState("WATCHING"); setSessionHistory([]); localStorage.removeItem("omniusd_active_session"); }}
+                style={{ fontSize: isMobile ? 13 : 9, fontWeight: 700, color: "rgba(255,255,255,0.3)", background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: isMobile ? "3px 7px" : "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
+                {isMobile ? "↩" : "NEW ANALYSIS"}
+              </button>
+            )}
+            {onSignOut && !isMobile && (
+              <button onClick={onSignOut} style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", padding: "4px 6px" }}>Sign out</button>
+            )}
+          </div>
         </div>
+
+        {/* Mobile secondary strip — grade, time, window, sign out */}
+        {isMobile && plan && phase !== "upload" && (
+          <div style={{ padding: "5px 14px 7px", display: "flex", alignItems: "center", gap: 8, borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+            <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 7px", background: `${gradeColor}14`, border: `1px solid ${gradeColor}33`, borderRadius: 4, color: gradeColor }}>{plan.grade}</span>
+            <span style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", fontFamily: "monospace" }}>{ctTime} CT</span>
+            {phase === "live" && <span style={{ fontSize: 9, fontWeight: 700, color: windowClosed ? "#ff6b6b" : "#7fff6b" }}>{windowClosed ? "⛔ CLOSED" : "✅ OPEN"}</span>}
+            {onSignOut && <button onClick={onSignOut} style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", marginLeft: "auto" }}>Sign out</button>}
+          </div>
+        )}
       </header>
 
       {/* ══ SETTINGS PAGE ══════════════════════════════════════════════════════ */}
@@ -3347,71 +3375,94 @@ Return ONLY valid JSON, no markdown, no explanation:
           <div style={{ flex: 1, display: "flex", flexDirection: isMobile ? "column" : "row", overflow: "hidden" }}>
 
             {/* ── LEFT COLUMN — locked plan ── */}
-            <div style={{ width: isMobile ? "100%" : 220, flexShrink: 0, borderRight: isMobile ? "none" : "1px solid rgba(255,255,255,0.09)", borderBottom: isMobile ? "1px solid rgba(255,255,255,0.06)" : "none", background: "rgba(123,47,255,0.04)", display: "flex", flexDirection: isMobile ? "row" : "column", overflowX: isMobile ? "auto" : "hidden", overflowY: isMobile ? "hidden" : "auto", flexShrink: 0 }}>
+            <div style={{ width: isMobile ? "100%" : 220, flexShrink: 0, borderRight: isMobile ? "none" : "1px solid rgba(255,255,255,0.09)", borderBottom: isMobile ? "1px solid rgba(255,255,255,0.08)" : "none", background: "rgba(123,47,255,0.04)", display: "flex", flexDirection: "column", overflowY: isMobile ? "hidden" : "auto" }}>
 
-              {/* Timing */}
-              <div style={{ padding: isMobile ? "8px 14px" : "10px 14px", borderBottom: isMobile ? "none" : "1px solid rgba(255,255,255,0.05)", borderRight: isMobile ? "1px solid rgba(255,255,255,0.05)" : "none", background: "rgba(255,255,255,0.02)", flexShrink: 0 }}>
-                <div style={{ display: "flex", flexDirection: isMobile ? "row" : "column", gap: isMobile ? 16 : 5, alignItems: isMobile ? "center" : "stretch" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: isMobile ? 6 : 0 }}>
-                    <span style={{ fontSize: 8, color: "#8878aa", letterSpacing: "0.1em" }}>TIME</span>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: "#00e5ff", fontFamily: "monospace" }}>{ctTime} CT</span>
+              {/* MOBILE: full-width status block */}
+              {isMobile ? (
+                <div style={{ padding: "10px 14px" }}>
+                  {/* Status bar */}
+                  <div style={{ padding: "10px 14px", background: tier2 ? "rgba(127,255,107,0.07)" : tier1 ? "rgba(255,209,102,0.07)" : "rgba(0,229,255,0.06)", border: `1px solid ${tier2 ? "rgba(127,255,107,0.3)" : tier1 ? "rgba(255,209,102,0.3)" : "rgba(0,229,255,0.2)"}`, borderLeft: `3px solid ${tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00e5ff"}`, marginBottom: 10 }}>
+                    <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.14em", color: tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00e5ff", marginBottom: 4 }}>LIVE STATUS</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: "#f0ecff", lineHeight: 1.5 }}>
+                      {tier2 ? `Limit order ready at ${plan.retest_zone}.`
+                        : tier1 ? `Tier 1 confirmed. Watching for Tier 2.`
+                        : `Watching for 30M close ${plan.bias === "SHORT" ? "below" : "above"} ${plan.trigger_level}.`}
+                    </div>
+                    {!tier1 && <div style={{ fontSize: 10, color: "#8878aa", marginTop: 3 }}>No entry until candle fully closes.</div>}
+                    {tier1 && !tier2 && <div style={{ fontSize: 10, color: "rgba(255,209,102,0.6)", marginTop: 3 }}>Do not enter yet. Wait for Tier 2.</div>}
                   </div>
-                  {!windowClosed && (
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: isMobile ? 6 : 0 }}>
-                      <span style={{ fontSize: 8, color: "#8878aa", letterSpacing: "0.1em" }}>NEXT</span>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: "#ffd166", fontFamily: "monospace" }}>{nextClose} CT</span>
+                  {/* Mobile: horizontal scrollable key levels */}
+                  <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4 }}>
+                    {[
+                      { l: "Trigger", v: plan.trigger_level, c: plan.bias === "SHORT" ? "#ff6b6b" : "#7fff6b" },
+                      { l: "Stop",    v: plan.stop_loss,     c: "#ff6b6b" },
+                      { l: "TP1",     v: plan.tp1,           c: "#7fff6b" },
+                      { l: "TP2",     v: plan.tp2,           c: "#7fff6b" },
+                      { l: "Runner",  v: plan.runner,        c: "#00e5ff" },
+                    ].map((r, i) => (
+                      <div key={i} style={{ flexShrink: 0, padding: "7px 11px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8, textAlign: "center", minWidth: 70 }}>
+                        <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", letterSpacing: "0.1em", marginBottom: 4 }}>{r.l}</div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: r.c, fontFamily: "monospace" }}>{r.v}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* DESKTOP: original vertical layout */}
+                  <div style={{ padding: "10px 14px", borderBottom: "1px solid rgba(255,255,255,0.05)", background: "rgba(255,255,255,0.02)" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                        <span style={{ fontSize: 8, color: "#8878aa", letterSpacing: "0.1em" }}>TIME</span>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: "#00e5ff", fontFamily: "monospace" }}>{ctTime} CT</span>
+                      </div>
+                      {!windowClosed && (
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                          <span style={{ fontSize: 8, color: "#8878aa", letterSpacing: "0.1em" }}>NEXT CLOSE</span>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: "#ffd166", fontFamily: "monospace" }}>{nextClose} CT</span>
+                        </div>
+                      )}
+                      {windowClosed && <div style={{ fontSize: 9, color: "#ff6b6b", fontWeight: 700 }}>Window closed</div>}
                     </div>
-                  )}
-                  {windowClosed && <div style={{ fontSize: 9, color: "#ff6b6b", fontWeight: 700 }}>Closed</div>}
-                </div>
-              </div>
-
-              {/* Live status panel */}
-              <div style={{ margin: "10px 12px 0", padding: "10px 12px", background: tier2 ? "rgba(127,255,107,0.06)" : tier1 ? "rgba(255,209,102,0.06)" : "rgba(0,229,255,0.05)", border: `1px solid ${tier2 ? "rgba(127,255,107,0.25)" : tier1 ? "rgba(255,209,102,0.25)" : "rgba(0,229,255,0.18)"}`, borderLeft: `3px solid ${tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00e5ff"}`, borderRadius: 0 }}>
-                <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.14em", color: tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00e5ff", marginBottom: 5 }}>LIVE STATUS</div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "#f0ecff", lineHeight: 1.5 }}>
-                  {tier2
-                    ? `Limit order ready at ${plan.retest_zone}.`
-                    : tier1
-                    ? `Tier 1 confirmed. Watching for Tier 2.`
-                    : `Watching for 30M close ${plan.bias === "SHORT" ? "below" : "above"} ${plan.trigger_level}.`}
-                </div>
-                {!tier1 && (
-                  <div style={{ fontSize: 9, color: "#8878aa", marginTop: 4, lineHeight: 1.5 }}>No entry until candle fully closes.</div>
-                )}
-                {tier1 && !tier2 && (
-                  <div style={{ fontSize: 9, color: "rgba(255,209,102,0.6)", marginTop: 4, lineHeight: 1.5 }}>Do not enter yet. Wait for Tier 2.</div>
-                )}
-              </div>
-
-              {/* Locked plan levels */}
-              <div style={{ padding: "14px 12px 0" }}>
-                <div style={{ fontSize: 8, color: "rgba(255,255,255,0.25)", letterSpacing: "0.14em", marginBottom: 10 }}>LOCKED PLAN</div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-                  {[
-                    { l: "Trigger",  v: plan.trigger_level, c: plan.bias === "SHORT" ? "#ff6b6b" : "#7fff6b" },
-                    { l: "Retest",   v: plan.retest_zone,   c: "#ffd166" },
-                    { l: "Stop",     v: plan.stop_loss,     c: "#ff6b6b" },
-                    { l: "TP1",      v: plan.tp1,           c: "#7fff6b" },
-                    { l: "TP2",      v: plan.tp2,           c: "#7fff6b" },
-                    { l: "Runner",   v: plan.runner,        c: "#00e5ff" },
-                  ].map((r, i) => (
-                    <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: i < 5 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
-                      <span style={{ fontSize: 9, color: "rgba(255,255,255,0.35)" }}>{r.l}</span>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: r.c, fontFamily: "monospace" }}>{r.v}</span>
+                  </div>
+                  <div style={{ margin: "10px 12px 0", padding: "10px 12px", background: tier2 ? "rgba(127,255,107,0.06)" : tier1 ? "rgba(255,209,102,0.06)" : "rgba(0,229,255,0.05)", border: `1px solid ${tier2 ? "rgba(127,255,107,0.25)" : tier1 ? "rgba(255,209,102,0.25)" : "rgba(0,229,255,0.18)"}`, borderLeft: `3px solid ${tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00e5ff"}`, borderRadius: 0 }}>
+                    <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.14em", color: tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00e5ff", marginBottom: 5 }}>LIVE STATUS</div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: "#f0ecff", lineHeight: 1.5 }}>
+                      {tier2 ? `Limit order ready at ${plan.retest_zone}.`
+                        : tier1 ? `Tier 1 confirmed. Watching for Tier 2.`
+                        : `Watching for 30M close ${plan.bias === "SHORT" ? "below" : "above"} ${plan.trigger_level}.`}
                     </div>
-                  ))}
-                </div>
-              </div>
+                    {!tier1 && <div style={{ fontSize: 9, color: "#8878aa", marginTop: 4, lineHeight: 1.5 }}>No entry until candle fully closes.</div>}
+                    {tier1 && !tier2 && <div style={{ fontSize: 9, color: "rgba(255,209,102,0.6)", marginTop: 4, lineHeight: 1.5 }}>Do not enter yet. Wait for Tier 2.</div>}
+                  </div>
+                  <div style={{ padding: "14px 12px 0" }}>
+                    <div style={{ fontSize: 8, color: "rgba(255,255,255,0.25)", letterSpacing: "0.14em", marginBottom: 10 }}>LOCKED PLAN</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                      {[
+                        { l: "Trigger", v: plan.trigger_level, c: plan.bias === "SHORT" ? "#ff6b6b" : "#7fff6b" },
+                        { l: "Retest",  v: plan.retest_zone,   c: "#ffd166" },
+                        { l: "Stop",    v: plan.stop_loss,     c: "#ff6b6b" },
+                        { l: "TP1",     v: plan.tp1,           c: "#7fff6b" },
+                        { l: "TP2",     v: plan.tp2,           c: "#7fff6b" },
+                        { l: "Runner",  v: plan.runner,        c: "#00e5ff" },
+                      ].map((r, i) => (
+                        <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: i < 5 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
+                          <span style={{ fontSize: 9, color: "rgba(255,255,255,0.35)" }}>{r.l}</span>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: r.c, fontFamily: "monospace" }}>{r.v}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div style={{ padding: "14px 12px", marginTop: "auto", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "rgba(255,107,107,0.1)", border: "1px solid rgba(255,107,107,0.25)", color: "#ff6b6b" }}>{plan.instrument}</span>
+                      <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "rgba(255,107,107,0.1)", border: "1px solid rgba(255,107,107,0.25)", color: "#ff6b6b" }}>{plan.bias}</span>
+                      <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "rgba(127,255,107,0.08)", border: "1px solid rgba(127,255,107,0.2)", color: "#7fff6b" }}>{plan.grade}</span>
+                    </div>
+                  </div>
+                </>
+              )}
 
-              {/* Instrument + session */}
-              <div style={{ padding: "14px 12px", marginTop: "auto", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "rgba(255,107,107,0.1)", border: "1px solid rgba(255,107,107,0.25)", color: "#ff6b6b" }}>{plan.instrument}</span>
-                  <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "rgba(255,107,107,0.1)", border: "1px solid rgba(255,107,107,0.25)", color: "#ff6b6b" }}>{plan.bias}</span>
-                  <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "rgba(127,255,107,0.08)", border: "1px solid rgba(127,255,107,0.2)", color: "#7fff6b" }}>{plan.grade}</span>
-                </div>
-              </div>
             </div>
 
             {/* ── RIGHT COLUMN — chat ── */}
@@ -3437,15 +3488,18 @@ Return ONLY valid JSON, no markdown, no explanation:
                 <div ref={bottomRef}/>
               </div>
 
-              {/* Quick chips */}
+              {/* Quick chips — fewer on mobile */}
               <div style={{ padding: "6px 16px 4px", display: "flex", flexDirection: "column", gap: 5, flexShrink: 0 }}>
-                {[
+                {(isMobile ? [
+                  { label: "CANDLE", color: "#00e5ff", chips: ["30M closed below trigger","30M closed above trigger","Wick only"] },
+                  { label: "ENTRY",  color: "#7fff6b", chips: ["Both tiers confirmed","Limit filled"] },
+                ] : [
                   { label: "CANDLE UPDATE", color: "#00e5ff", chips: ["30M closed below trigger","30M closed above trigger","Wick only — still forming"] },
                   { label: "ENTRY",         color: "#7fff6b", chips: ["Both tiers confirmed — order in?","Limit filled — what now?"] },
                   { label: "SESSION",       color: "#ffd166", chips: ["Past cutoff — cancel?","Setup invalidated"] },
-                ].map(g => (
+                ]).map(g => (
                   <div key={g.label} style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 7, fontWeight: 900, letterSpacing: "0.12em", color: g.color, minWidth: 90, flexShrink: 0 }}>{g.label}</span>
+                    <span style={{ fontSize: 7, fontWeight: 900, letterSpacing: "0.12em", color: g.color, minWidth: isMobile ? 52 : 90, flexShrink: 0 }}>{g.label}</span>
                     {g.chips.map(q => (
                       <button key={q} onClick={() => { setInput(q); inputRef.current?.focus(); }}
                         style={{ fontSize: 9, fontWeight: 700, padding: "3px 9px", borderRadius: 16, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", color: "#8878aa", cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap", transition: "all 0.15s" }}
