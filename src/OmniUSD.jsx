@@ -506,7 +506,11 @@ export default function OmniUSD(){
   const [page,setPage]=useState("home");
   const [planResult,setPlanResult]=useState(null);
   const [journal,setJournal]=useState(()=>{
-    try{return JSON.parse(localStorage.getItem("omniusd_journal")||"[]");}catch{return[];}
+    try{
+      const _s=JSON.parse(localStorage.getItem("omniusd_session")||"{}");
+      const _uid=_s.user?.id||_s.user_id||"anon";
+      return JSON.parse(localStorage.getItem(`omniusd_journal_${_uid}`)||"[]");
+    }catch{return[];}
   });
   const T=DARK;
 
@@ -635,6 +639,15 @@ export default function OmniUSD(){
   }
 
   async function signOut(){
+    // Clear user-scoped keys before session is gone
+    try {
+      const _s = JSON.parse(localStorage.getItem("omniusd_session") || "{}");
+      const _uid = _s.user?.id || _s.user_id || "anon";
+      localStorage.removeItem(`omniusd_active_session_${_uid}`);
+      // Keep journal on device — user may want it if they log back in
+    } catch(e) {}
+    localStorage.removeItem("omniusd_paid_tier");
+    localStorage.removeItem("omniusd_session");
     await supabase.auth.signOut();
     setAuthUser(null);
     setProfile(null);
@@ -690,7 +703,11 @@ export default function OmniUSD(){
     onJournalEntry={(entry)=>{
       const newJournal=[{...entry,id:Date.now(),outcome:null},...journal];
       setJournal(newJournal);
-      localStorage.setItem("omniusd_journal",JSON.stringify(newJournal));
+      (() => {
+        const _s=JSON.parse(localStorage.getItem("omniusd_session")||"{}");
+        const _uid=_s.user?.id||_s.user_id||"anon";
+        localStorage.setItem(`omniusd_journal_${_uid}`,JSON.stringify(newJournal));
+      })();
     }}
     onOpenJournal={()=>setPage("journal")}
     onSignOut={signOut}
@@ -746,11 +763,19 @@ export default function OmniUSD(){
         {page==="home" && <HomePage planResult={planResult} setPlanResult={setPlanResult} anime={profile} T={T} onJournalEntry={(entry)=>{
           const newJournal=[{...entry,id:Date.now(),outcome:null},...journal];
           setJournal(newJournal);
-          localStorage.setItem("omniusd_journal",JSON.stringify(newJournal));
+          (() => {
+        const _s=JSON.parse(localStorage.getItem("omniusd_session")||"{}");
+        const _uid=_s.user?.id||_s.user_id||"anon";
+        localStorage.setItem(`omniusd_journal_${_uid}`,JSON.stringify(newJournal));
+      })();
         }}/>}
         {page==="journal" && <JournalPage journal={journal} onUpdate={(updated)=>{
           setJournal(updated);
-          localStorage.setItem("omniusd_journal",JSON.stringify(updated));
+          (() => {
+        const _s=JSON.parse(localStorage.getItem("omniusd_session")||"{}");
+        const _uid=_s.user?.id||_s.user_id||"anon";
+        localStorage.setItem(`omniusd_journal_${_uid}`,JSON.stringify(updated));
+      })();
         }} T={T}/>}
       </main>
       <footer style={{...S.footer, borderTop:`1px solid ${T.border}`}}>
@@ -2520,6 +2545,10 @@ function FullAnalysisPanel({ plan }) {
 }
 
 function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
+  // User-scoped storage keys — prevents session bleed between accounts on same device
+  const _session = JSON.parse(localStorage.getItem("omniusd_session") || "{}");
+  const _uid = _session.user?.id || _session.user_id || "anon";
+  const SESSION_KEY = `omniusd_active_session_${_uid}`;
   const [phase, setPhase] = useState("upload"); // upload | analyzing | plan | live
   const [appPage, setAppPage] = useState("dashboard"); // dashboard | settings
   const isMobile = useWindowWidth() <= 768;
@@ -2592,7 +2621,7 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
   // ── Restore saved session on load ─────────────────────────────────────────
   React.useEffect(() => {
     try {
-      const saved = localStorage.getItem("omniusd_active_session");
+      const saved = localStorage.getItem(SESSION_KEY);
       if (saved) {
         const s = JSON.parse(saved);
         if (s.plan && s.phase) {
@@ -2613,11 +2642,11 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
   React.useEffect(() => {
     if (!plan || phase === "upload") {
       // Clear saved session when back at upload
-      localStorage.removeItem("omniusd_active_session");
+      localStorage.removeItem(SESSION_KEY);
       return;
     }
     try {
-      localStorage.setItem("omniusd_active_session", JSON.stringify({
+      localStorage.setItem(SESSION_KEY, JSON.stringify({
         plan, phase, instrument, tier1, tier2, sessionState, messages, sessionHistory,
         savedAt: new Date().toISOString(),
       }));
@@ -2942,7 +2971,7 @@ Return ONLY valid JSON, no markdown, no explanation:
               {isMobile ? "?" : "Help & FAQ"}
             </button>
             {phase === "live" && (
-              <button onClick={() => { setPhase("upload"); setImages(Array(5).fill(null)); setPlan(null); setMessages([]); setTier1(false); setTier2(false); setSessionState("WATCHING"); setSessionHistory([]); localStorage.removeItem("omniusd_active_session"); }}
+              <button onClick={() => { setPhase("upload"); setImages(Array(5).fill(null)); setPlan(null); setMessages([]); setTier1(false); setTier2(false); setSessionState("WATCHING"); setSessionHistory([]); localStorage.removeItem(SESSION_KEY); }}
                 style={{ fontSize: isMobile ? 13 : 9, fontWeight: 700, color: "rgba(255,255,255,0.3)", background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: isMobile ? "3px 7px" : "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
                 {isMobile ? "↩" : "NEW ANALYSIS"}
               </button>
@@ -3031,7 +3060,7 @@ Return ONLY valid JSON, no markdown, no explanation:
             {/* Resume active session if one exists */}
             {(()=>{
               try {
-                const saved = localStorage.getItem("omniusd_active_session");
+                const saved = localStorage.getItem(SESSION_KEY);
                 if (!saved) return null;
                 const s = JSON.parse(saved);
                 if (!s.plan || !s.phase || s.phase === "upload") return null;
@@ -3050,7 +3079,7 @@ Return ONLY valid JSON, no markdown, no explanation:
                         style={{ fontFamily:"'Space Mono',monospace", fontSize:10, fontWeight:700, letterSpacing:"0.08em", padding:"7px 14px", borderRadius:7, border:"none", background:"#7fff6b", color:"#0f0c1a", cursor:"pointer" }}>
                         Resume →
                       </button>
-                      <button onClick={() => { localStorage.removeItem("omniusd_active_session"); setPhase("upload"); }}
+                      <button onClick={() => { localStorage.removeItem(SESSION_KEY); setPhase("upload"); }}
                         style={{ fontFamily:"'Space Mono',monospace", fontSize:10, fontWeight:700, padding:"7px 12px", borderRadius:7, border:"1px solid rgba(255,255,255,0.1)", background:"none", color:"rgba(255,255,255,0.3)", cursor:"pointer" }}>
                         Discard
                       </button>
