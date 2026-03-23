@@ -498,13 +498,50 @@ const TF_SLOTS=[
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════
-export default function OmniUSD(){
+// ═══════════════════════════════════════════════════════════════════════════
+// ERROR BOUNDARY
+// ═══════════════════════════════════════════════════════════════════════════
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, info) {
+    console.error("OmniUSD crash:", error, info);
+  }
+  render() {
+    if (!this.state.hasError) return this.props.children;
+    return (
+      <div style={{ minHeight:"100vh", background:"#0f0c1a", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"32px 24px", fontFamily:"'Space Mono',monospace", textAlign:"center" }}>
+        <div style={{ fontSize:48, marginBottom:20 }}>⚠️</div>
+        <div style={{ fontSize:11, fontWeight:900, letterSpacing:"0.2em", color:"rgba(255,107,107,0.8)", marginBottom:12 }}>SOMETHING WENT WRONG</div>
+        <div style={{ fontSize:12, color:"rgba(255,255,255,0.5)", lineHeight:1.8, marginBottom:28, maxWidth:400 }}>
+          OmniUSD hit an unexpected error. Your session plan and history are safe.
+        </div>
+        <button
+          onClick={() => { this.setState({ hasError: false, error: null }); window.location.reload(); }}
+          style={{ padding:"12px 28px", borderRadius:10, border:"none", background:"linear-gradient(135deg,#ff6bff,#7b2fff)", color:"#fff", fontSize:12, fontWeight:700, letterSpacing:"0.1em", cursor:"pointer", fontFamily:"inherit" }}>
+          RELOAD APP →
+        </button>
+        <div style={{ marginTop:16, fontSize:9, color:"rgba(255,255,255,0.2)" }}>
+          If this keeps happening, email support@omniusd.pro
+        </div>
+      </div>
+    );
+  }
+}
+
+function OmniUSDApp(){
   const [ready,setReady]=useState(false);
-  const [authUser,setAuthUser]=useState(null);   // Supabase user object
-  const [profile,setProfile]=useState(null);     // app profile (tier, tz, etc)
-  const [view,setView]=useState("landing");      // "landing"|"auth"|"app"
+  const [authUser,setAuthUser]=useState(null);
+  const [profile,setProfile]=useState(null);
+  const [view,setView]=useState("landing");      // "landing"|"auth"|"app"|"privacy"|"terms"|"reset_password"
   const [page,setPage]=useState("home");
   const [planResult,setPlanResult]=useState(null);
+  const [resetToken,setResetToken]=useState(null);
   const [journal,setJournal]=useState(()=>{
     try{
       const _s=JSON.parse(localStorage.getItem("omniusd_session")||"{}");
@@ -517,6 +554,21 @@ export default function OmniUSD(){
   useEffect(()=>{
     async function init(){
       try{
+        // ── Check for Supabase password recovery link ──────────────────────
+        // Supabase redirects to: omniusd.pro/#access_token=...&type=recovery
+        const hash = window.location.hash;
+        if (hash && hash.includes("type=recovery")) {
+          const hashParams = new URLSearchParams(hash.replace("#",""));
+          const accessToken = hashParams.get("access_token");
+          if (accessToken) {
+            window.history.replaceState({}, document.title, "/");
+            setResetToken(accessToken);
+            setView("reset_password");
+            setReady(true);
+            return;
+          }
+        }
+
         // Check for Stripe payment return
         const params=new URLSearchParams(window.location.search);
         const payment=params.get("payment");
@@ -660,10 +712,19 @@ export default function OmniUSD(){
     </div>
   );
 
+  // ── LEGAL PAGES ──
+  if(view==="privacy") return <PrivacyPolicyPage onBack={()=>setView("landing")}/>;
+  if(view==="terms") return <TermsOfServicePage onBack={()=>setView("landing")}/>;
+
+  // ── PASSWORD RESET ──
+  if(view==="reset_password") return <ResetPasswordPage token={resetToken} onDone={()=>setView("auth_login")}/>;
+
   // ── LANDING ──
   if(view==="landing") return <LandingPage 
     onEnterApp={()=>setView("pricing")} 
     onLogin={()=>setView("auth_login")}
+    onPrivacy={()=>setView("privacy")}
+    onTerms={()=>setView("terms")}
   />;
 
   // ── PRICING ──
@@ -1527,7 +1588,9 @@ function Onboarding({onSelect}){
 
             {/* Disclaimer */}
             <p style={{fontSize:11,color:"rgba(255,255,255,0.2)",textAlign:"center",lineHeight:1.6,margin:0}}>
-              OmniUSD is an execution framework, not financial advice. Trade at your own risk.
+              OmniUSD is an execution framework, not financial advice. Trade at your own risk. By continuing you agree to our{" "}
+              <a href="/terms" style={{color:"rgba(255,255,255,0.3)",textDecoration:"underline"}}>Terms of Service</a>{" "}and{" "}
+              <a href="/privacy" style={{color:"rgba(255,255,255,0.3)",textDecoration:"underline"}}>Privacy Policy</a>.
             </p>
           </div>
         )}
@@ -2938,6 +3001,169 @@ function BulkUploadZone({ images, setImages, readSlotFile, dragOverSlot, setDrag
   );
 }
 
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SESSION HISTORY PAGE
+// ═══════════════════════════════════════════════════════════════════════════
+function HistoryPage({ uid, onClose }) {
+  const HISTORY_KEY = `omniusd_aplus_history_${uid}`;
+  const [entries, setEntries] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]"); } catch { return []; }
+  });
+  const [expanded, setExpanded] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null);
+
+  function deleteEntry(id) {
+    const updated = entries.filter(e => e.id !== id);
+    setEntries(updated);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
+    setConfirmDelete(null);
+    if (expanded === id) setExpanded(null);
+  }
+
+  const biasColor = (bias) => bias === "SHORT" ? "#ff6b6b" : bias === "LONG" ? "#7fff6b" : "#ffd166";
+
+  return (
+    <div style={{ flex:1, overflowY:"auto", padding:"28px 20px", animation:"fadein 0.3s ease both" }}>
+      <div style={{ maxWidth:600, margin:"0 auto" }}>
+
+        {/* Header */}
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:24 }}>
+          <div>
+            <div style={{ fontSize:9, color:"rgba(127,255,107,0.7)", letterSpacing:"0.18em", fontFamily:"'Space Mono',monospace", marginBottom:6 }}>A+ HISTORY</div>
+            <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:20, fontWeight:800, color:"#f0ecff", margin:0 }}>Saved A+ Setups</h2>
+          </div>
+          <button onClick={onClose} style={{ fontFamily:"'Space Mono',monospace", fontSize:9, fontWeight:700, color:"#8878aa", background:"none", border:"1px solid rgba(255,255,255,0.08)", borderRadius:6, padding:"6px 12px", cursor:"pointer" }}>
+            {"<- Back"}
+          </button>
+        </div>
+
+        {/* Empty state */}
+        {entries.length === 0 && (
+          <div style={{ textAlign:"center", padding:"48px 24px" }}>
+            <div style={{ fontSize:32, marginBottom:16 }}>📋</div>
+            <div style={{ fontSize:12, fontWeight:700, color:"rgba(255,255,255,0.4)", marginBottom:8 }}>No saved setups yet</div>
+            <div style={{ fontSize:10, color:"rgba(255,255,255,0.25)", fontFamily:"'Space Mono',monospace", lineHeight:1.8 }}>
+              When you get an A+ plan, hit "Save to History" to keep a record of it here.
+            </div>
+          </div>
+        )}
+
+        {/* Stats bar */}
+        {entries.length > 0 && (
+          <div style={{ display:"flex", gap:8, marginBottom:20, flexWrap:"wrap" }}>
+            <div style={{ padding:"8px 14px", background:"rgba(127,255,107,0.06)", border:"1px solid rgba(127,255,107,0.2)", borderRadius:8 }}>
+              <div style={{ fontSize:8, color:"rgba(127,255,107,0.6)", letterSpacing:"0.12em", fontFamily:"'Space Mono',monospace", marginBottom:3 }}>SAVED</div>
+              <div style={{ fontSize:16, fontWeight:900, color:"#7fff6b" }}>{entries.length}</div>
+            </div>
+            {["LONG","SHORT"].map(bias => {
+              const count = entries.filter(e => e.bias === bias).length;
+              if (!count) return null;
+              return (
+                <div key={bias} style={{ padding:"8px 14px", background:`${biasColor(bias)}08`, border:`1px solid ${biasColor(bias)}22`, borderRadius:8 }}>
+                  <div style={{ fontSize:8, color:biasColor(bias), letterSpacing:"0.12em", fontFamily:"'Space Mono',monospace", marginBottom:3, opacity:0.7 }}>{bias}</div>
+                  <div style={{ fontSize:16, fontWeight:900, color:biasColor(bias) }}>{count}</div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Entry list */}
+        <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+          {entries.map(entry => {
+            const isOpen = expanded === entry.id;
+            const bColor = biasColor(entry.bias);
+            return (
+              <div key={entry.id} style={{ background:"rgba(255,255,255,0.03)", border:`1px solid ${isOpen ? "rgba(127,255,107,0.25)" : "rgba(255,255,255,0.07)"}`, borderRadius:12, overflow:"hidden", transition:"border 0.2s" }}>
+
+                {/* Row header */}
+                <div style={{ display:"flex", alignItems:"center", gap:12, padding:"14px 16px", cursor:"pointer" }}
+                  onClick={() => setExpanded(isOpen ? null : entry.id)}>
+
+                  {/* Grade badge */}
+                  <div style={{ width:36, height:36, borderRadius:8, background:"rgba(127,255,107,0.1)", border:"1px solid rgba(127,255,107,0.3)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                    <span style={{ fontSize:11, fontWeight:900, color:"#7fff6b" }}>A+</span>
+                  </div>
+
+                  {/* Info */}
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4, flexWrap:"wrap" }}>
+                      <span style={{ fontSize:12, fontWeight:700, color:"#f0ecff" }}>{entry.instrument}</span>
+                      <span style={{ fontSize:9, fontWeight:700, padding:"1px 7px", borderRadius:4, background:`${bColor}14`, border:`1px solid ${bColor}33`, color:bColor }}>{entry.bias}</span>
+                      {entry.session && <span style={{ fontSize:9, color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace" }}>{entry.session}</span>}
+                    </div>
+                    <div style={{ fontSize:9, color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace" }}>{entry.date}</div>
+                  </div>
+
+                  {/* Key level */}
+                  <div style={{ textAlign:"right", flexShrink:0 }}>
+                    <div style={{ fontSize:8, color:"rgba(255,255,255,0.25)", fontFamily:"'Space Mono',monospace", marginBottom:2 }}>TRIGGER</div>
+                    <div style={{ fontSize:13, fontWeight:700, color:bColor, fontFamily:"monospace" }}>{entry.trigger_level}</div>
+                  </div>
+
+                  {/* Chevron */}
+                  <span style={{ fontSize:14, color:"rgba(255,255,255,0.2)", flexShrink:0, transform:isOpen?"rotate(180deg)":"none", transition:"transform 0.2s" }}>▾</span>
+                </div>
+
+                {/* Expanded plan */}
+                {isOpen && (
+                  <div style={{ borderTop:"1px solid rgba(255,255,255,0.06)", padding:"16px" }}>
+
+                    {/* Summary */}
+                    {entry.summary && (
+                      <div style={{ padding:"10px 14px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:8, marginBottom:14, fontSize:11, color:"#ccc4e8", lineHeight:1.8 }}>
+                        {entry.summary}
+                      </div>
+                    )}
+
+                    {/* Levels grid */}
+                    <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:6, marginBottom:14 }}>
+                      {[
+                        { label:"TRIGGER", val:entry.trigger_level, color:bColor },
+                        { label:"STOP",    val:entry.stop_loss,     color:"#ff6b6b" },
+                        { label:"TP1",     val:entry.tp1,           color:"#7fff6b" },
+                        { label:"TP2",     val:entry.tp2,           color:"#7fff6b" },
+                        { label:"RUNNER",  val:entry.runner,        color:"#00e5ff" },
+                        { label:"RETEST",  val:entry.retest_zone,   color:"#ffd166" },
+                      ].map(r => r.val ? (
+                        <div key={r.label} style={{ padding:"8px 10px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:7 }}>
+                          <div style={{ fontSize:7, color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace", letterSpacing:"0.1em", marginBottom:3 }}>{r.label}</div>
+                          <div style={{ fontSize:12, fontWeight:700, color:r.color, fontFamily:"monospace" }}>{r.val}</div>
+                        </div>
+                      ) : null)}
+                    </div>
+
+                    {/* Delete */}
+                    {confirmDelete === entry.id ? (
+                      <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+                        <span style={{ fontSize:10, color:"rgba(255,107,107,0.8)", fontFamily:"'Space Mono',monospace" }}>Delete this entry?</span>
+                        <button onClick={() => deleteEntry(entry.id)}
+                          style={{ fontSize:9, fontWeight:700, padding:"4px 12px", borderRadius:6, border:"1px solid rgba(255,107,107,0.4)", background:"rgba(255,107,107,0.1)", color:"#ff6b6b", cursor:"pointer", fontFamily:"inherit" }}>
+                          Delete
+                        </button>
+                        <button onClick={() => setConfirmDelete(null)}
+                          style={{ fontSize:9, fontWeight:700, padding:"4px 12px", borderRadius:6, border:"1px solid rgba(255,255,255,0.1)", background:"none", color:"#8878aa", cursor:"pointer", fontFamily:"inherit" }}>
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button onClick={() => setConfirmDelete(entry.id)}
+                        style={{ fontSize:9, color:"rgba(255,107,107,0.4)", background:"none", border:"none", cursor:"pointer", fontFamily:"'Space Mono',monospace", letterSpacing:"0.06em" }}>
+                        🗑 Delete
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function FullAnalysisPanel({ plan }) {
   const [open, setOpen] = useState(false);
   if (!plan) return null;
@@ -3127,6 +3353,30 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
   }
   // Cooldown check — 2 hours from savedAt
   const COOLDOWN_MS_LOCAL = 2 * 60 * 60 * 1000;
+
+  function saveToHistory(planObj) {
+    try {
+      const existing = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+      const entry = {
+        id: Date.now(),
+        date: new Date().toLocaleDateString("en-US", { weekday:"short", month:"short", day:"numeric", year:"numeric" }),
+        instrument: planObj.instrument,
+        grade: "A+",
+        bias: planObj.bias,
+        session: selectedSession,
+        trigger_level: planObj.trigger_level,
+        stop_loss: planObj.stop_loss,
+        tp1: planObj.tp1,
+        tp2: planObj.tp2,
+        runner: planObj.runner,
+        retest_zone: planObj.retest_zone,
+        summary: planObj.summary,
+        confidence_score: planObj.confidence_score,
+      };
+      const updated = [entry, ...existing];
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
+    } catch(e) {}
+  }
   function getCooldownRemaining(instr) {
     const s = getSessionForInstrument(instr);
     if (!s?.savedAt) return 0;
@@ -3140,8 +3390,9 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
     return h > 0 ? `${h}h ${m}m` : `${m}m`;
   }
   const [phase, setPhase] = useState("upload"); // upload | analyzing | plan | live
-  const [appPage, setAppPage] = useState("dashboard"); // dashboard | settings
-  const [selectedSession, setSelectedSession] = useState("NY"); // NY | LONDON | ASIAN | LONDON_NY
+  const [appPage, setAppPage] = useState("dashboard"); // dashboard | settings | history
+  const [selectedSession, setSelectedSession] = useState("NY");
+  const HISTORY_KEY = `omniusd_aplus_history_${_uid}`; // NY | LONDON | ASIAN | LONDON_NY
   const isMobile = useWindowWidth() <= 768;
   const isTablet = useWindowWidth() <= 1024;
 
@@ -3158,19 +3409,23 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
 
   function readSlotFile(file, i) {
     if (!file) return;
-    // Convert to JPEG via canvas — handles HEIC, HEIF, WEBP, and any format
-    // the Anthropic API may not accept
     const img = new Image();
     const objectUrl = URL.createObjectURL(file);
     img.onload = () => {
+      // ── Compress: max 1200px wide, JPEG 0.82 quality ──────────────────────
+      // Full-res screenshots are 2-4MB on modern phones — this cuts to ~150-300KB
+      // while keeping chart details fully readable for AI analysis
+      const MAX_W = 1200;
+      const scale = img.width > MAX_W ? MAX_W / img.width : 1;
+      const w = Math.round(img.width * scale);
+      const h = Math.round(img.height * scale);
       const canvas = document.createElement("canvas");
-      canvas.width = img.width;
-      canvas.height = img.height;
+      canvas.width = w;
+      canvas.height = h;
       const ctx = canvas.getContext("2d");
-      ctx.drawImage(img, 0, 0);
-      const jpeg = canvas.toDataURL("image/jpeg", 0.92);
+      ctx.drawImage(img, 0, 0, w, h);
+      const jpeg = canvas.toDataURL("image/jpeg", 0.82);
       URL.revokeObjectURL(objectUrl);
-      // Create a synthetic file-like object so media_type is correct
       const syntheticFile = { type: "image/jpeg", name: file.name };
       setImages(prev => {
         const next = [...prev];
@@ -3179,7 +3434,6 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
       });
     };
     img.onerror = () => {
-      // Fallback to original FileReader if canvas fails
       URL.revokeObjectURL(objectUrl);
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -3611,7 +3865,11 @@ Return ONLY valid JSON, no markdown, no explanation:
                 <span style={{ fontSize: 9, fontWeight: 700, color: windowClosed ? "#ff6b6b" : "#7fff6b" }}>{windowClosed ? "WINDOW CLOSED" : "WINDOW OPEN"}</span>
               </div>
             )}
-            {/* Settings + FAQ — both mobile and desktop */}
+            {/* Settings + FAQ + History — both mobile and desktop */}
+            <button onClick={() => setAppPage(appPage === "history" ? "dashboard" : "history")}
+              style={{ fontSize: isMobile ? 15 : 9, fontWeight: 700, color: appPage === "history" ? "#7fff6b" : "#8878aa", background: appPage === "history" ? "rgba(127,255,107,0.08)" : "none", border: `1px solid ${appPage === "history" ? "rgba(127,255,107,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: isMobile ? "3px 7px" : "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
+              {isMobile ? "📋" : "History"}
+            </button>
             <button onClick={() => setAppPage(appPage === "settings" ? "dashboard" : "settings")}
               style={{ fontSize: isMobile ? 15 : 9, fontWeight: 700, color: appPage === "settings" ? "#ff6bff" : "#8878aa", background: appPage === "settings" ? "rgba(255,107,255,0.1)" : "none", border: `1px solid ${appPage === "settings" ? "rgba(255,107,255,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: isMobile ? "3px 7px" : "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
               {isMobile ? "⚙" : "Settings"}
@@ -3646,6 +3904,11 @@ Return ONLY valid JSON, no markdown, no explanation:
       {/* ══ SETTINGS PAGE ══════════════════════════════════════════════════════ */}
       {appPage === "settings" && (
         <SettingsPage profile={profile} onSignOut={onSignOut} onClose={() => setAppPage("dashboard")} />
+      )}
+
+      {/* ══ HISTORY PAGE ═══════════════════════════════════════════════════════ */}
+      {appPage === "history" && (
+        <HistoryPage uid={_uid} onClose={() => setAppPage("dashboard")} />
       )}
 
       {/* ══ FAQ / HELP PAGE ════════════════════════════════════════════════════ */}
@@ -3978,6 +4241,13 @@ Return ONLY valid JSON, no markdown, no explanation:
             <div style={{ textAlign: "center", marginTop: 10, fontSize: 9, color: "#8878aa" }}>
               Screenshots must show the instrument ticker and timeframe clearly
             </div>
+
+            <div style={{ textAlign: "center", marginTop: 16 }}>
+              <button onClick={onSignOut}
+                style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", letterSpacing: "0.06em" }}>
+                Sign out
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -4207,6 +4477,18 @@ Return ONLY valid JSON, no markdown, no explanation:
                 <div style={{ textAlign: "center", marginTop: 8, fontSize: 9, color: "#8878aa" }}>
                   {plan.grade === "A+" ? "Live session tracks tier confirmations in real time" : "Monitor until all A+ conditions are met"}
                 </div>
+
+                {/* Save to History — A+ only */}
+                {plan.grade === "A+" && (() => {
+                  const existing = (() => { try { return JSON.parse(localStorage.getItem(HISTORY_KEY)||"[]"); } catch { return []; } })();
+                  const alreadySaved = existing.some(e => e.instrument === plan.instrument && e.date === new Date().toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"}));
+                  return (
+                    <button onClick={() => { if (!alreadySaved) saveToHistory(plan); }}
+                      style={{ width:"100%", marginTop:8, padding:"10px", borderRadius:8, border:`1px solid ${alreadySaved ? "rgba(127,255,107,0.2)" : "rgba(127,255,107,0.35)"}`, background: alreadySaved ? "rgba(127,255,107,0.04)" : "rgba(127,255,107,0.08)", color: alreadySaved ? "rgba(127,255,107,0.45)" : "#7fff6b", fontSize:10, fontWeight:700, letterSpacing:"0.1em", fontFamily:"inherit", cursor: alreadySaved ? "default" : "pointer" }}>
+                      {alreadySaved ? "✓ SAVED TO HISTORY" : "📋 SAVE TO HISTORY"}
+                    </button>
+                  );
+                })()}
 
                 {/* ── FULL ANALYSIS — collapsible ── */}
                 <FullAnalysisPanel plan={plan} />
@@ -5965,6 +6247,121 @@ function JournalPage({journal, onUpdate, T=DARK}){
   );
 }
 
+function ResetPasswordPage({ token, onDone }) {
+  const [pw, setPw] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
+  const [showPw, setShowPw] = useState(false);
+
+  async function handleReset() {
+    if (!pw || !confirm) { setError("Both fields are required."); return; }
+    if (pw.length < 8) { setError("Password must be at least 8 characters."); return; }
+    if (pw !== confirm) { setError("Passwords do not match."); return; }
+    setLoading(true); setError(null);
+    try {
+      const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": SUPABASE_KEY,
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({ password: pw }),
+      });
+      setLoading(false);
+      if (res.ok) {
+        setSuccess(true);
+        setTimeout(() => onDone(), 2500);
+      } else {
+        const d = await res.json();
+        setError(d.msg || d.error_description || d.error || "Failed to reset password. The link may have expired.");
+      }
+    } catch(e) {
+      setLoading(false);
+      setError("Connection error. Try again.");
+    }
+  }
+
+  const inputSt = {
+    width:"100%", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.12)",
+    borderRadius:10, padding:"13px 16px", fontSize:15, color:"#f4f0ff",
+    fontFamily:"inherit", outline:"none", boxSizing:"border-box",
+  };
+
+  return (
+    <div style={{ minHeight:"100vh", background:"#130d22", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"24px", position:"relative" }}>
+      <div style={{ position:"fixed", inset:0, backgroundImage:"linear-gradient(rgba(255,107,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,107,255,0.025) 1px,transparent 1px)", backgroundSize:"48px 48px", pointerEvents:"none" }}/>
+      <div style={{ position:"fixed", width:500, height:500, borderRadius:"50%", background:"#7b2fff", top:-150, left:"50%", transform:"translateX(-50%)", filter:"blur(120px)", opacity:0.12, pointerEvents:"none" }}/>
+
+      <div style={{ position:"relative", zIndex:1, width:"100%", maxWidth:420 }}>
+        <div style={{ textAlign:"center", marginBottom:40 }}>
+          <div style={{ fontFamily:"monospace", fontSize:18, fontWeight:700, letterSpacing:"0.12em", background:"linear-gradient(90deg,#ff6bff,#00e5ff)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", marginBottom:16 }}>◈ OmniUSD</div>
+          <div style={{ fontSize:22, fontWeight:800, color:"#f4f0ff", marginBottom:6, letterSpacing:"-0.01em" }}>
+            {success ? "Password updated." : "Set a new password"}
+          </div>
+          <div style={{ fontSize:13, color:"#8878aa", fontFamily:"monospace" }}>
+            {success ? "Redirecting you to login..." : "Choose a strong password for your account."}
+          </div>
+        </div>
+
+        {success ? (
+          <div style={{ padding:"20px", background:"rgba(127,255,107,0.08)", border:"1px solid rgba(127,255,107,0.25)", borderRadius:12, textAlign:"center", fontSize:14, color:"#7fff6b" }}>
+            ✅ Password updated successfully.
+          </div>
+        ) : (
+          <div style={{ background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,107,255,0.15)", borderRadius:16, padding:"32px 28px" }}>
+
+            {error && (
+              <div style={{ padding:"10px 14px", background:"rgba(255,107,107,0.08)", border:"1px solid rgba(255,107,107,0.25)", borderRadius:8, marginBottom:16, fontSize:13, color:"#ff8080", fontFamily:"monospace", lineHeight:1.5 }}>
+                {error}
+              </div>
+            )}
+
+            <div style={{ display:"flex", flexDirection:"column", gap:12, marginBottom:20 }}>
+              <div>
+                <label style={{ fontSize:11, fontWeight:700, letterSpacing:"0.1em", color:"#8878aa", display:"block", marginBottom:6, fontFamily:"monospace" }}>NEW PASSWORD</label>
+                <div style={{ position:"relative" }}>
+                  <input type={showPw ? "text" : "password"} value={pw} onChange={e=>setPw(e.target.value)}
+                    placeholder="Minimum 8 characters"
+                    style={{ ...inputSt, paddingRight:48 }}
+                    onKeyDown={e=>e.key==="Enter"&&handleReset()}
+                  />
+                  <button type="button" onClick={()=>setShowPw(p=>!p)}
+                    style={{ position:"absolute", right:14, top:"50%", transform:"translateY(-50%)", background:"none", border:"none", cursor:"pointer", fontSize:16, color:"#8878aa", padding:0 }}>
+                    {showPw ? "🙈" : "👁"}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label style={{ fontSize:11, fontWeight:700, letterSpacing:"0.1em", color:"#8878aa", display:"block", marginBottom:6, fontFamily:"monospace" }}>CONFIRM PASSWORD</label>
+                <div style={{ position:"relative" }}>
+                  <input type={showPw ? "text" : "password"} value={confirm} onChange={e=>setConfirm(e.target.value)}
+                    placeholder="Re-enter your password"
+                    style={{ ...inputSt, paddingRight:48, borderColor: confirm && confirm!==pw ? "rgba(255,107,107,0.5)" : confirm && confirm===pw ? "rgba(127,255,107,0.4)" : "rgba(255,255,255,0.12)" }}
+                    onKeyDown={e=>e.key==="Enter"&&handleReset()}
+                  />
+                  {confirm && (
+                    <div style={{ position:"absolute", right:14, top:"50%", transform:"translateY(-50%)", fontSize:14 }}>
+                      {confirm===pw ? "✅" : "❌"}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <button onClick={handleReset} disabled={loading}
+              style={{ width:"100%", background:loading?"rgba(255,255,255,0.06)":"linear-gradient(135deg,#ff6bff,#7b2fff)", border:"none", color:loading?"#8878aa":"#fff", padding:"15px", borderRadius:10, fontSize:15, fontWeight:900, letterSpacing:"0.1em", fontFamily:"inherit", cursor:loading?"not-allowed":"pointer", boxShadow:loading?"none":"0 4px 28px rgba(255,107,255,0.22)", transition:"all 0.2s" }}>
+              {loading ? "Updating..." : "SET NEW PASSWORD →"}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function AuthScreen({onBack, supabase, initialTab="signup"}){
   const [tab,setTab]=useState(initialTab);
   const loginOnly=initialTab==="login";
@@ -6253,6 +6650,93 @@ function AuthScreen({onBack, supabase, initialTab="signup"}){
 // ═══════════════════════════════════════════════════════════════════════════
 // PRICING PAGE — standalone plan picker, goes straight to Stripe
 // ═══════════════════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PRIVACY POLICY
+// ═══════════════════════════════════════════════════════════════════════════
+function LegalPage({ onBack, type }) {
+  const isPrivacy = type === "privacy";
+
+  const privacySections = [
+    { title: "1. Who We Are", body: "OmniUSD (omniusd.pro) is a trading analysis tool built on the BRC (Break-Retest-Continuation) methodology. We provide AI-powered chart analysis and session guidance for traders. References to 'we', 'us', or 'OmniUSD' in this policy refer to the operators of omniusd.pro." },
+    { title: "2. What Information We Collect", bullets: ["Email address (required for account creation)", "Password (stored securely via Supabase, never in plain text)", "Chart screenshots you upload for analysis (used solely to generate your session plan, not stored permanently)", "Payment information (processed by Stripe — we never see or store your card details)", "Usage data — which instruments you analyze, session timing, and analysis count (used to enforce fair-use limits)", "Subscription tier and billing status"] },
+    { title: "3. How We Use Your Information", body: "We use your information to provide and operate OmniUSD, generate AI-powered trading analysis from your uploaded charts, enforce usage limits to maintain service quality, process payments via Stripe, send transactional emails, and improve our analysis system. We do not sell your personal information to third parties. We do not use your data for advertising." },
+    { title: "4. Chart Uploads", body: "When you upload chart screenshots for analysis, those images are sent to Anthropic's Claude API for processing. Images are used solely to generate your session plan and are not stored on our servers after analysis is complete. Anthropic's data handling is governed by their own privacy policy at anthropic.com/privacy." },
+    { title: "5. Payment Processing", body: "All payments are processed by Stripe, Inc. OmniUSD does not store credit card numbers or payment details. When you subscribe, Stripe creates a customer record linked to your account. Your billing information is governed by Stripe's privacy policy at stripe.com/privacy." },
+    { title: "6. Data Storage", body: "Your account data is stored on Supabase, a secure cloud database provider. Data is stored in the United States. We retain your account data for as long as your account is active. You may request deletion of your account and data at any time from Settings or by emailing support@omniusd.pro." },
+    { title: "7. Cookies and Local Storage", body: "OmniUSD uses browser local storage to maintain your login session and save your active trading session between page visits. We do not use tracking cookies or third-party advertising cookies." },
+    { title: "8. Your Rights", bullets: ["Access the personal data we hold about you", "Request correction of inaccurate data", "Request deletion of your account and associated data", "Export your data", "Withdraw consent at any time by cancelling your subscription and deleting your account"] },
+    { title: "9. Children", body: "OmniUSD is not intended for users under the age of 18. We do not knowingly collect personal information from minors." },
+    { title: "10. Changes to This Policy", body: "We may update this Privacy Policy from time to time. We will notify you of material changes by email or by displaying a notice on the platform. Continued use of OmniUSD after changes constitutes acceptance of the updated policy." },
+    { title: "11. Contact", body: "For privacy-related questions or requests, contact us at: support@omniusd.pro" },
+  ];
+
+  const termsSections = [
+    { title: "1. Acceptance of Terms", body: "By accessing or using OmniUSD (omniusd.pro), you agree to be bound by these Terms of Service. If you do not agree to these terms, do not use the service." },
+    { title: "2. Not Financial Advice", body: "IMPORTANT: OmniUSD is an execution framework and educational tool, not a financial advisory service. Analysis generated by OmniUSD is based on price action patterns and should not be construed as a guarantee of future performance. All trading decisions are made solely by you. Trading financial instruments involves significant risk of loss, including the potential loss of all invested capital. By using OmniUSD, you acknowledge that you trade entirely at your own risk." },
+    { title: "3. Eligibility", body: "You must be at least 18 years old to use OmniUSD. By creating an account, you represent that you are of legal age and have the legal capacity to enter into these terms." },
+    { title: "4. Account Responsibilities", bullets: ["Maintaining the confidentiality of your account credentials", "All activity that occurs under your account", "Ensuring your account information is accurate and up to date", "Notifying us immediately of any unauthorized use at support@omniusd.pro", "You may not share your account with others or use another person's account"] },
+    { title: "5. Subscription and Billing", body: "OmniUSD is a paid subscription service. Subscriptions renew automatically unless cancelled before the renewal date. You may cancel at any time through the Settings page — access continues until the end of your paid period. Refunds are handled at our discretion. Contact support@omniusd.pro for refund requests. We reserve the right to change pricing with 30 days notice to active subscribers. All payments are processed by Stripe." },
+    { title: "6. Fair Use and Abuse", body: "OmniUSD enforces usage limits to maintain service quality: Starter 3 analyses/day, Pro 5/day, Elite 10/day. A 2-hour cooldown applies per instrument per session. A 30-message limit applies per live session. Attempts to circumvent these limits may result in account suspension." },
+    { title: "7. Acceptable Use", bullets: ["Use OmniUSD for any unlawful purpose", "Attempt to reverse engineer, scrape, or copy the platform or its methodology", "Share, resell, or redistribute session plans or analysis outputs commercially", "Impersonate another user or provide false information", "Attempt to gain unauthorized access to any part of the service"] },
+    { title: "8. Intellectual Property", body: "All content, methodology, branding, and code comprising OmniUSD is the property of OmniUSD and its operators. The BRC execution framework as implemented in OmniUSD is proprietary. You are granted a limited, non-exclusive, non-transferable license to use OmniUSD for personal trading analysis only." },
+    { title: "9. Disclaimer of Warranties", body: "OmniUSD is provided as-is without warranty of any kind. We do not warrant that the service will be uninterrupted, error-free, or that analysis will be accurate or profitable. To the fullest extent permitted by law, OmniUSD disclaims all warranties, express or implied." },
+    { title: "10. Limitation of Liability", body: "To the fullest extent permitted by law, OmniUSD and its operators shall not be liable for any trading losses incurred using analysis from OmniUSD, indirect or consequential damages, or loss of profits or data. In no event shall our liability exceed the amount you paid for the service in the 3 months preceding the claim." },
+    { title: "11. Termination", body: "We reserve the right to suspend or terminate your account at any time for violation of these terms or abuse of the service. You may delete your account at any time from Settings." },
+    { title: "12. Governing Law", body: "These Terms are governed by the laws of the United States. Any disputes shall be resolved through binding arbitration rather than in court, except where prohibited by law." },
+    { title: "13. Changes to Terms", body: "We may update these Terms at any time. Material changes will be communicated via email or in-app notice. Continued use of OmniUSD after changes constitutes acceptance." },
+    { title: "14. Contact", body: "For questions about these Terms: support@omniusd.pro — omniusd.pro" },
+  ];
+
+  const sections = isPrivacy ? privacySections : termsSections;
+  const title = isPrivacy ? "Privacy Policy" : "Terms of Service";
+
+  return (
+    <div style={{ minHeight:"100vh", background:"#0f0c1a", color:"#f0ecff", fontFamily:"'Space Mono',monospace" }}>
+      <div style={{ position:"fixed", inset:0, backgroundImage:"linear-gradient(rgba(255,107,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,107,255,0.025) 1px,transparent 1px)", backgroundSize:"48px 48px", pointerEvents:"none" }}/>
+      <div style={{ maxWidth:720, margin:"0 auto", padding:"48px 24px 80px", position:"relative", zIndex:1 }}>
+        <button onClick={onBack} style={{ background:"none", border:"none", color:"rgba(255,107,255,0.6)", cursor:"pointer", fontFamily:"inherit", fontSize:11, marginBottom:32, letterSpacing:"0.08em" }}>
+          {"<- Back"}
+        </button>
+        <div style={{ fontSize:9, color:"rgba(255,107,255,0.6)", letterSpacing:"0.2em", marginBottom:12 }}>LEGAL</div>
+        <h1 style={{ fontSize:28, fontWeight:700, marginBottom:8, letterSpacing:"-0.01em" }}>{title}</h1>
+        <div style={{ fontSize:10, color:"rgba(255,255,255,0.3)", marginBottom:40 }}>Last updated: March 2026</div>
+
+        {sections.map((section, i) => (
+          <div key={i} style={{ marginBottom:32 }}>
+            <div style={{ fontSize:11, fontWeight:700, color:"#ff6bff", marginBottom:10, letterSpacing:"0.04em" }}>{section.title}</div>
+            {section.body && (
+              <div style={{ fontSize:11, color:"rgba(255,255,255,0.55)", lineHeight:2 }}>{section.body}</div>
+            )}
+            {section.bullets && (
+              <div style={{ display:"flex", flexDirection:"column", gap:8, marginTop:4 }}>
+                {section.bullets.map((b, j) => (
+                  <div key={j} style={{ display:"flex", gap:10, alignItems:"flex-start" }}>
+                    <span style={{ color:"#ff6bff", flexShrink:0, marginTop:2 }}>-</span>
+                    <span style={{ fontSize:11, color:"rgba(255,255,255,0.55)", lineHeight:1.8 }}>{b}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+
+        <div style={{ borderTop:"1px solid rgba(255,255,255,0.06)", paddingTop:24, fontSize:9, color:"rgba(255,255,255,0.2)", lineHeight:1.8 }}>
+          {"© 2026 OmniUSD · Questions? Email support@omniusd.pro"}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PrivacyPolicyPage({ onBack }) {
+  return <LegalPage onBack={onBack} type="privacy" />;
+}
+
+function TermsOfServicePage({ onBack }) {
+  return <LegalPage onBack={onBack} type="terms" />;
+}
+
 function PricingPage({onBack, onPaid}){
   const [selected,setSelected]=useState(null);
   const [loading,setLoading]=useState(false);
@@ -6426,7 +6910,7 @@ function FaqRow({q, a, isLast}) {
   );
 }
 
-function LandingPage({onEnterApp, onLogin}){
+function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
   const [hoveredPlan,setHoveredPlan]=useState(null);
   const isMobile = useWindowWidth() <= 768;
   const plans=[
@@ -7040,6 +7524,14 @@ function LandingPage({onEnterApp, onLogin}){
             style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"rgba(255,255,255,0.3)",textDecoration:"none",letterSpacing:"0.06em"}}>
             Request an instrument
           </a>
+          <button onClick={onPrivacy}
+            style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"rgba(255,255,255,0.25)",background:"none",border:"none",cursor:"pointer",textDecoration:"none",letterSpacing:"0.06em"}}>
+            Privacy Policy
+          </button>
+          <button onClick={onTerms}
+            style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"rgba(255,255,255,0.25)",background:"none",border:"none",cursor:"pointer",textDecoration:"none",letterSpacing:"0.06em"}}>
+            Terms of Service
+          </button>
         </div>
         <div style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"#8878aa",textAlign:"right"}}>
           © 2026 OmniUSD · AI-powered trading analysis<br/>
@@ -7049,6 +7541,9 @@ function LandingPage({onEnterApp, onLogin}){
     </div>
   );
 }
+
+const WrappedOmniUSD = () => <ErrorBoundary><OmniUSDApp /></ErrorBoundary>;
+export default WrappedOmniUSD;
 
 const S={
   root:          {minHeight:"100vh",background:"var(--t-bg)",color:"var(--t-text)",fontFamily:"'Courier New',Courier,monospace",fontSize:"15px",position:"relative",overflowX:"hidden"},
