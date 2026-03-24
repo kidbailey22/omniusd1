@@ -3879,10 +3879,16 @@ Return ONLY valid JSON, no markdown, no explanation:
               {isMobile ? "?" : "Help & FAQ"}
             </button>
             {phase === "live" && (
-              <button onClick={() => { setPhase("upload"); setImages(Array(5).fill(null)); }}
-                style={{ fontSize: isMobile ? 13 : 9, fontWeight: 700, color: "rgba(255,255,255,0.3)", background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: isMobile ? "3px 7px" : "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
-                {isMobile ? "↩" : "NEW ANALYSIS"}
-              </button>
+              <>
+                <button onClick={() => setPhase("plan")}
+                  style={{ fontSize: isMobile ? 13 : 9, fontWeight: 700, color: "#ffd166", background: "rgba(255,209,102,0.08)", border: "1px solid rgba(255,209,102,0.25)", borderRadius: 6, padding: isMobile ? "3px 7px" : "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
+                  {isMobile ? "📄" : "View Plan"}
+                </button>
+                <button onClick={() => { setPhase("upload"); setImages(Array(5).fill(null)); }}
+                  style={{ fontSize: isMobile ? 13 : 9, fontWeight: 700, color: "rgba(255,255,255,0.3)", background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: isMobile ? "3px 7px" : "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
+                  {isMobile ? "↩" : "NEW ANALYSIS"}
+                </button>
+              </>
             )}
             {onSignOut && !isMobile && (
               <button onClick={onSignOut} style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", padding: "4px 6px" }}>Sign out</button>
@@ -4469,13 +4475,21 @@ Return ONLY valid JSON, no markdown, no explanation:
                   </div>
                 )}
 
-                {/* START LIVE SESSION — A+ only gets full button, others get muted version */}
-                <button onClick={startLiveSession}
-                  style={{ width: "100%", padding: "15px", borderRadius: 10, border: plan.grade === "A+" ? "none" : "1px solid rgba(255,255,255,0.1)", background: plan.grade === "A+" ? "linear-gradient(135deg,#ff6bff,#7b2fff)" : "rgba(255,255,255,0.04)", color: plan.grade === "A+" ? "#fff" : "rgba(255,255,255,0.4)", fontSize: 13, fontWeight: 700, letterSpacing: "0.12em", fontFamily: "inherit", cursor: "pointer", boxShadow: plan.grade === "A+" ? "0 4px 28px rgba(255,107,255,0.25)" : "none" }}>
-                  {plan.grade === "A+" ? "START LIVE SESSION →" : "MONITOR SETUP →"}
-                </button>
+                {/* START / RESUME LIVE SESSION */}
+                {messages.length > 0 ? (
+                  // Active session exists — show Resume button
+                  <button onClick={() => setPhase("live")}
+                    style={{ width: "100%", padding: "15px", borderRadius: 10, border: "none", background: "linear-gradient(135deg,#00e5ff,#0099bb)", color: "#fff", fontSize: 13, fontWeight: 700, letterSpacing: "0.12em", fontFamily: "inherit", cursor: "pointer", boxShadow: "0 4px 28px rgba(0,229,255,0.25)" }}>
+                    ← BACK TO LIVE SESSION
+                  </button>
+                ) : (
+                  <button onClick={startLiveSession}
+                    style={{ width: "100%", padding: "15px", borderRadius: 10, border: plan.grade === "A+" ? "none" : "1px solid rgba(255,255,255,0.1)", background: plan.grade === "A+" ? "linear-gradient(135deg,#ff6bff,#7b2fff)" : "rgba(255,255,255,0.04)", color: plan.grade === "A+" ? "#fff" : "rgba(255,255,255,0.4)", fontSize: 13, fontWeight: 700, letterSpacing: "0.12em", fontFamily: "inherit", cursor: "pointer", boxShadow: plan.grade === "A+" ? "0 4px 28px rgba(255,107,255,0.25)" : "none" }}>
+                    {plan.grade === "A+" ? "START LIVE SESSION →" : "MONITOR SETUP →"}
+                  </button>
+                )}
                 <div style={{ textAlign: "center", marginTop: 8, fontSize: 9, color: "#8878aa" }}>
-                  {plan.grade === "A+" ? "Live session tracks tier confirmations in real time" : "Monitor until all A+ conditions are met"}
+                  {messages.length > 0 ? "Your live session is still active" : plan.grade === "A+" ? "Live session tracks tier confirmations in real time" : "Monitor until all A+ conditions are met"}
                 </div>
 
                 {/* Save to History — A+ only */}
