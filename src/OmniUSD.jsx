@@ -3557,7 +3557,7 @@ RULE 2 — TIMEFRAME MUST BE VISIBLE:
 The timeframe (D, 4H, 1H, 30M, 15M) must be clearly readable on the chart — in the interval selector, title, or time axis. If the timeframe cannot be confirmed visually, set match=false.
 
 RULE 3 — NO GUESSING EVER:
-If you are not 100% certain what the instrument or timeframe is from what is visibly printed on the chart, set match=false. A wrong pass is catastrophic. A false block is acceptable. When in doubt, reject.
+If you are not 100% certain what the instrument or timeframe is from what is visibly printed on the chart, set match=false. Only block if you clearly see a DIFFERENT instrument than expected — a match where you can confirm the ticker is visible and correct should return match=true. Do not reject on uncertainty alone if the ticker appears to match.
 
 RULE 4 — INSTRUMENT MATCH:
 If instrument IS visible and does NOT match the expected instrument, set match=false and detected=what you actually see.
@@ -3574,11 +3574,16 @@ Return ONLY valid JSON, no markdown, no explanation:
       try { vResult = JSON.parse(vText.replace(/```json|```/g, "").trim()); } catch(e) {}
 
       if (!vResult.match) {
+        const detectedRaw = (vResult.detected || "").toUpperCase().trim();
+        const expectedRaw = (instrument || "").toUpperCase().trim();
+        const isInstrumentWrong = detectedRaw && detectedRaw !== expectedRaw && detectedRaw !== "NOT_VISIBLE" && detectedRaw !== "NOT VISIBLE" && detectedRaw !== "UNREADABLE";
         setPlan({
           _blocked: true,
-          _reason: vResult.detected === "not visible"
-            ? `Charts rejected. The instrument ticker and/or timeframe labels are not visible in your screenshots. OmniUSD requires that both the instrument (e.g. BTCUSD) and timeframe (e.g. 1H, 30M) are clearly visible on every chart. Re-upload with labels showing.`
-            : `Wrong charts uploaded. You selected ${instrument} but these charts show ${vResult.detected}. Upload the correct ${instrument} charts.`,
+          _reason: detectedRaw === "NOT_VISIBLE" || detectedRaw === "NOT VISIBLE" || detectedRaw === "UNREADABLE"
+            ? `Charts rejected. The instrument ticker and/or timeframe labels are not visible in your screenshots. Both must be clearly visible on every chart — re-upload with labels showing.`
+            : isInstrumentWrong
+            ? `Wrong instrument. You selected ${expectedRaw} but these charts show ${detectedRaw}. Upload your ${expectedRaw} charts.`
+            : `Charts could not be verified. Make sure the instrument ticker and timeframe labels are clearly visible on every chart.`,
           instrument,
           grade: "BLOCKED",
         });
@@ -3604,15 +3609,36 @@ Return ONLY valid JSON, no markdown, no explanation:
 
       // Secondary check — if main analysis also flags mismatch, respect it
       if (parsed.instrument_valid === false || parsed.charts_valid === false) {
-        const detected = parsed.instrument_detected || vResult.detected || "unknown";
-        setPlan({
-          _blocked: true,
-          _reason: `Wrong charts uploaded. You selected ${instrument} but these charts show ${detected}. Upload the correct ${instrument} charts.`,
-          instrument,
-          grade: "BLOCKED",
-        });
-        setPhase("plan");
-        return;
+        const detected = (parsed.instrument_detected || vResult.detected || "").toUpperCase().trim();
+        const expected = (instrument || "").toUpperCase().trim();
+        const isInstrumentMismatch = parsed.instrument_valid === false && detected && detected !== expected && detected !== "UNKNOWN" && detected !== "UNREADABLE";
+        const isTimeframeMismatch = parsed.charts_valid === false && parsed.instrument_valid !== false;
+
+        let reason = "";
+        if (isInstrumentMismatch) {
+          reason = `Wrong instrument. You selected ${expected} but these charts show ${detected}. Upload your ${expected} charts.`;
+        } else if (isTimeframeMismatch) {
+          reason = `Timeframe mismatch. OmniUSD needs Daily, 4H, 1H, 30M, and 15M — in that order. Check your chart order and re-upload.`;
+        } else {
+          // Instrument detected matches but something else flagged — don't block, let it through
+          // This prevents false positives where AI says invalid but detected = correct instrument
+          if (detected === expected || !detected) {
+            // False positive — skip the block and continue to render the plan
+          } else {
+            reason = `Charts could not be verified. Make sure the instrument ticker and timeframe are clearly visible on every chart.`;
+          }
+        }
+
+        if (reason) {
+          setPlan({
+            _blocked: true,
+            _reason: reason,
+            instrument,
+            grade: "BLOCKED",
+          });
+          setPhase("plan");
+          return;
+        }
       }
 
       // ── WEEKEND HARD OVERRIDE — force PASS regardless of AI grade ────────
@@ -3674,11 +3700,10 @@ Return ONLY valid JSON, no markdown, no explanation:
     // Build user-friendly time display
     const userTZShort = getUserTZShort();
     const isET = getUserTZ().startsWith("America/New_York") || getUserTZ().startsWith("America/Detroit");
+    // ET-only for live session instructions — one timezone, no confusion
     function candleDisplay(c) {
       if (!c) return "";
-      const local = etToLocal(c.h, c.m, false);
-      if (isET) return `${c.label}`;
-      return `${c.label} (${local} ${userTZShort})`;
+      return c.label; // Always ET — cleaner, faster to read during live execution
     }
     const nextCandleDisplay = candleDisplay(nextCandleObj);
     const remainingDisplay = remainingCandles.map(c => candleDisplay(c)).join(" → ");
@@ -3699,13 +3724,17 @@ Return ONLY valid JSON, no markdown, no explanation:
     } else if (isSunEarly) {
       openingMsg = `⛔ **Markets not yet open.**\nAsian session opens ~9:00 PM ET tonight.`;
     } else if (isPrep) {
-      // Prep window — session not open yet
-      const openTimeDisplay = sessCfg.openET ? etToLocal(sessCfg.openET.h, sessCfg.openET.m, true) : sessCfg.hours.split("–")[0] + " ET";
-      openingMsg = `📋 **PREP MODE — Session opens in ${untilStr}**\n\nPlan is locked. Study it now.\n\nTrigger: **${trigger}**\nStop: **${plan.stop_loss}**\nTP1: **${plan.tp1}**\n\nWhen the session opens at **${openTimeDisplay}** — come back and I'll guide you candle by candle.\n\n🥷 Be ready. Not early.`;
+      const h = sessCfg.openET?.h || 9;
+      const m = sessCfg.openET?.m || 30;
+      const ampm = h >= 12 ? "PM" : "AM";
+      const h12 = h > 12 ? h - 12 : h === 0 ? 12 : h;
+      const openTimeET = `${h12}:${String(m).padStart(2,"0")} ${ampm} ET`;
+      openingMsg = `📋 **PREP MODE — Session opens in ${untilStr}**\n\nPlan is locked. Study it now.\n\nTrigger: **${trigger}** · Stop: **${plan.stop_loss}** · TP1: **${plan.tp1}**\n\nCome back at **${openTimeET}** — I'll guide you candle by candle.\n\n🥷 Be ready. Not early.`;
     } else {
-      // Live — compact execution card
-      const nextCandleLocal = nextCandleObj ? candleDisplay(nextCandleObj) : nextCandleDisplay;
-      openingMsg = `**NEXT ACTION**\n\nWatch the next 30M **${plan.instrument}** close.\n\nIf it closes **${direction} ${trigger}** — tell me immediately.\nIf it does not — send me the closing price.\n\nOnly full candle closes count. Wicks do not.\n\n🕐 Next check: **${nextCandleLocal}**`;
+      // Live — ET only, no dual timezone
+      const nextCandleET = nextCandleObj ? nextCandleObj.label : nextCandleDisplay;
+
+      openingMsg = `**NEXT ACTION**\n\nWatch the next 30M **${plan.instrument}** close.\n\nIf it closes **${direction} ${trigger}** — send it now.\nIf not — send me the closing price.\n\nWicks don't count. Only closes.\n\n🕐 Next check: **${nextCandleET}**`;
 
       if (advisory) {
         openingMsg += `\n\n⚠️ ${advisory}`;
@@ -3789,6 +3818,7 @@ Return ONLY valid JSON, no markdown, no explanation:
     return text
       .replace(/\*\*(NEXT ACTION)\*\*/g, '<strong style="font-size:10px;letter-spacing:0.16em;color:rgba(255,107,255,0.7)">NEXT ACTION</strong>')
       .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#00e5ff">$1</strong>')
+      .replace(/send it now/gi, '<strong style="color:#ff6bff">send it now</strong>')
       .replace(/tell me immediately/gi, '<strong style="color:#ff6bff">tell me immediately</strong>')
       .replace(/\n/g, "<br/>");
   }
@@ -3850,17 +3880,11 @@ Return ONLY valid JSON, no markdown, no explanation:
             </div>
           </div>
 
-          {/* Row 2: secondary info strip during live session */}
+          {/* Row 2: grade + window status only during live session */}
           {plan && phase === "live" && (
             <div style={{ padding: "4px 14px 7px", display: "flex", alignItems: "center", gap: 10, borderTop: "1px solid rgba(255,255,255,0.04)" }}>
               <span style={{ fontSize: 9, fontWeight: 700, padding: "1px 7px", background: `${gradeColor}14`, border: `1px solid ${gradeColor}33`, borderRadius: 4, color: gradeColor }}>{plan.grade}</span>
-              <span style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", fontFamily: "monospace" }}>{ctTime} ET</span>
               <span style={{ fontSize: 9, fontWeight: 700, color: windowClosed ? "#ff6b6b" : "#7fff6b" }}>{windowClosed ? "⛔ CLOSED" : "✅ OPEN"}</span>
-              {/* View Plan shortcut */}
-              <button onClick={() => setPhase("plan")}
-                style={{ fontSize: 9, fontWeight: 700, color: "#ffd166", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", marginLeft: "auto" }}>
-                View Plan
-              </button>
             </div>
           )}
 
