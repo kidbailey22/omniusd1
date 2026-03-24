@@ -2019,7 +2019,17 @@ GRADING
 A+ (85-100%): All 3TF aligned. Clear BRC sequence. Price in Retest or Continuation. Clean 30M trigger. R:R min 1.5:1.
 A (70-84%): 3TF aligned but one is weak. BRC present but retest zone is messy. R:R min 1.2:1.
 B (50-69%): Only 2/3 TF aligned. Needs more confirmation. MONITOR ONLY — no execution.
-PASS: Less than 2TF aligned, counter-trend, no man's land, setup expired, post-news chaos.
+
+SOFT PASS — PRE-MARKET CONDITIONAL:
+Use SOFT PASS when: it is pre-market OR the session has not yet opened AND structure exists but direction is not yet confirmed.
+A SOFT PASS means: "No trade yet — but here are two scenarios to watch when the session opens."
+Output TWO conditional trigger levels — one bullish, one bearish.
+For each: exact price that needs to close on the 30M, what it means, and what the trade plan becomes.
+This is NOT a hard block. This is a preparation plan.
+Example: "If 30M closes above 71,082 at NY open → LONG setup activates. If 30M closes below 69,800 → SHORT setup activates."
+
+PASS (hard block):
+Less than 2TF aligned, counter-trend setup, price in no man's land with no defined levels, setup fully expired, post-news chaos, weekend. No conditional levels exist worth watching.
 
 ═══════════════════════════════════════
 TRADE PLAN RULES
@@ -2049,7 +2059,7 @@ POST-CRASH BOUNCE: Bounce after crash = possible retest short, NOT a reversal lo
 
 Return ONLY this JSON — no markdown, no explanation, no preamble:
 {
-  "grade": "A+|A|B|C|PASS",
+  "grade": "A+|A|B|C|PASS|SOFT PASS",
   "bias": "SHORT|LONG|NEUTRAL",
   "confidence": "HIGH|MEDIUM|LOW",
   "confidence_score": 0,
@@ -2068,7 +2078,21 @@ Return ONLY this JSON — no markdown, no explanation, no preamble:
   "confidence_reason": "multi-timeframe logic explaining the score",
   "session_note": "which session this targets and why",
   "friday_note": "Friday caution note if applicable, empty string otherwise",
-  "pass_reason": "if PASS — exactly why. Empty string otherwise.",
+  "pass_reason": "if hard PASS — exactly why. Empty string otherwise.",
+  "soft_pass_scenarios": {
+    "bull": {
+      "trigger": "exact price — 30M close above this = LONG setup activates",
+      "plan": "brief description of the long trade plan if triggered",
+      "stop": "exact stop price for the long",
+      "tp1": "exact TP1 for the long"
+    },
+    "bear": {
+      "trigger": "exact price — 30M close below this = SHORT setup activates",
+      "plan": "brief description of the short trade plan if triggered",
+      "stop": "exact stop price for the short",
+      "tp1": "exact TP1 for the short"
+    }
+  },
   "what_still_needed": ["condition 1 with price", "condition 2", "condition 3"],
   "plain_english": {
     "structure": "what the market is doing in plain English",
@@ -3882,7 +3906,7 @@ Return ONLY valid JSON, no markdown, no explanation:
       .replace(/\n/g, "<br/>");
   }
 
-  const gradeColor = plan ? { "A+": "#7fff6b", "A": "#00e5ff", "B": "#ffd166", "C": "#ff9a3c", "PASS": "#8878aa" }[plan.grade] || "#ffd166" : "#ffd166";
+  const gradeColor = plan ? { "A+": "#7fff6b", "A": "#00e5ff", "B": "#ffd166", "C": "#ff9a3c", "PASS": "#8878aa", "SOFT PASS": "#00e5ff" }[plan.grade] || "#ffd166" : "#ffd166";
   const biasColor = plan?.bias === "SHORT" ? "#ff6b6b" : plan?.bias === "LONG" ? "#7fff6b" : "#ffd166";
 
   return (
@@ -4520,6 +4544,7 @@ Return ONLY valid JSON, no markdown, no explanation:
               <div>
                 <div style={{ fontSize: plan.grade === "A+" ? 18 : 15, fontWeight: 700, color: plan.grade === "A+" ? "#f0ecff" : "rgba(255,255,255,0.6)", marginBottom: 4 }}>
                   {plan.grade === "PASS" ? "No active setup"
+                    : plan.grade === "SOFT PASS" ? "Pre-market — two scenarios to watch"
                     : plan.grade === "A+" ? `${plan.bias.charAt(0)+plan.bias.slice(1).toLowerCase()} setup — ready to execute`
                     : `${plan.bias.charAt(0)+plan.bias.slice(1).toLowerCase()} setup — not yet A+`}
                 </div>
@@ -4555,7 +4580,85 @@ Return ONLY valid JSON, no markdown, no explanation:
               </div>
             )}
 
-            {plan.grade !== "PASS" ? (
+            {plan.grade === "SOFT PASS" ? (
+              <>
+                {/* SOFT PASS — pre-market conditional scenarios */}
+                <div style={{ padding: "14px 16px", background: "rgba(0,229,255,0.04)", border: "1px solid rgba(0,229,255,0.2)", borderLeft: "3px solid #00e5ff", borderRadius: 0, marginBottom: 16 }}>
+                  <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: "0.16em", color: "#00e5ff", marginBottom: 8, fontFamily: "'Space Mono',monospace" }}>👁 PRE-MARKET WATCH</div>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", lineHeight: 1.7 }}>
+                    No entry yet — but structure is forming. Two scenarios to watch when the session opens. <strong style={{ color: "#f0ecff" }}>One of these will activate. The other will not.</strong>
+                  </div>
+                </div>
+
+                {/* Bull scenario */}
+                {plan.soft_pass_scenarios?.bull?.trigger && (
+                  <div style={{ padding: "14px 16px", background: "rgba(127,255,107,0.04)", border: "1px solid rgba(127,255,107,0.2)", borderRadius: 10, marginBottom: 10 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                      <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: "0.14em", color: "#7fff6b", fontFamily: "'Space Mono',monospace" }}>BULL SCENARIO</span>
+                      <span style={{ fontSize: 9, padding: "1px 7px", borderRadius: 4, background: "rgba(127,255,107,0.1)", border: "1px solid rgba(127,255,107,0.25)", color: "#7fff6b" }}>LONG</span>
+                    </div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#7fff6b", marginBottom: 6, fontFamily: "monospace" }}>
+                      30M close above {plan.soft_pass_scenarios.bull.trigger}
+                    </div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", lineHeight: 1.7, marginBottom: 10 }}>
+                      {plan.soft_pass_scenarios.bull.plan}
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 6 }}>
+                      {plan.soft_pass_scenarios.bull.stop && (
+                        <div style={{ padding: "8px 10px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 7 }}>
+                          <div style={{ fontSize: 7, color: "#8878aa", letterSpacing: "0.1em", marginBottom: 2 }}>STOP</div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: "#ff6b6b", fontFamily: "monospace" }}>{plan.soft_pass_scenarios.bull.stop}</div>
+                        </div>
+                      )}
+                      {plan.soft_pass_scenarios.bull.tp1 && (
+                        <div style={{ padding: "8px 10px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 7 }}>
+                          <div style={{ fontSize: 7, color: "#8878aa", letterSpacing: "0.1em", marginBottom: 2 }}>TP1</div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: "#7fff6b", fontFamily: "monospace" }}>{plan.soft_pass_scenarios.bull.tp1}</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Bear scenario */}
+                {plan.soft_pass_scenarios?.bear?.trigger && (
+                  <div style={{ padding: "14px 16px", background: "rgba(255,107,107,0.04)", border: "1px solid rgba(255,107,107,0.2)", borderRadius: 10, marginBottom: 16 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                      <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: "0.14em", color: "#ff6b6b", fontFamily: "'Space Mono',monospace" }}>BEAR SCENARIO</span>
+                      <span style={{ fontSize: 9, padding: "1px 7px", borderRadius: 4, background: "rgba(255,107,107,0.1)", border: "1px solid rgba(255,107,107,0.25)", color: "#ff6b6b" }}>SHORT</span>
+                    </div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#ff6b6b", marginBottom: 6, fontFamily: "monospace" }}>
+                      30M close below {plan.soft_pass_scenarios.bear.trigger}
+                    </div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", lineHeight: 1.7, marginBottom: 10 }}>
+                      {plan.soft_pass_scenarios.bear.plan}
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 6 }}>
+                      {plan.soft_pass_scenarios.bear.stop && (
+                        <div style={{ padding: "8px 10px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 7 }}>
+                          <div style={{ fontSize: 7, color: "#8878aa", letterSpacing: "0.1em", marginBottom: 2 }}>STOP</div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: "#ff6b6b", fontFamily: "monospace" }}>{plan.soft_pass_scenarios.bear.stop}</div>
+                        </div>
+                      )}
+                      {plan.soft_pass_scenarios.bear.tp1 && (
+                        <div style={{ padding: "8px 10px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 7 }}>
+                          <div style={{ fontSize: 7, color: "#8878aa", letterSpacing: "0.1em", marginBottom: 2 }}>TP1</div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: "#7fff6b", fontFamily: "monospace" }}>{plan.soft_pass_scenarios.bear.tp1}</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ padding: "10px 14px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 8, fontSize: 10, color: "rgba(255,255,255,0.35)", fontFamily: "'Space Mono',monospace", lineHeight: 1.8 }}>
+                  Come back when the session opens. One of these scenarios will confirm — the other will be off the table. Do not enter until a 30M candle closes at the trigger price.
+                </div>
+
+                {/* Full Analysis collapsible */}
+                <FullAnalysisPanel plan={plan} />
+              </>
+
+            ) : plan.grade !== "PASS" ? (
               <>
                 {/* A+ — show trigger/stop/TP1 execution cards */}
                 {plan.grade === "A+" && (
