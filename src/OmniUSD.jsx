@@ -625,6 +625,9 @@ function OmniUSDApp(){
       if(res.ok){
         const data=await res.json();
         if(data&&data.id&&data.is_paid){
+          const tzObj = data.tz ? JSON.parse(data.tz) : null;
+          // Set global TZ so all time displays use the user's selected timezone
+          if (tzObj?.iana) setUserProfileTZ(tzObj.iana);
           setProfile({
             mode:"standard",emoji:"◈",color:"#00e5ff",label:"Standard",
             tier:data.tier||"starter",
@@ -632,7 +635,7 @@ function OmniUSDApp(){
             tierColor:data.tier_color||"#ffd166",
             defaultInstrument:data.default_instrument||"XAUUSD",
             session:data.session||null,
-            tz:data.tz?JSON.parse(data.tz):null,
+            tz: tzObj,
             isPaid:true,
           });
         }
@@ -674,6 +677,8 @@ function OmniUSDApp(){
       }
       try{await window.storage.set("omniusd_profile",JSON.stringify(p));}catch(e){}
     }catch(e){console.error("Profile save failed",e);}
+    // Set global TZ so all time displays immediately use the user's selected timezone
+    if (p.tz?.iana) setUserProfileTZ(p.tz.iana);
     setProfile(p);
   }
 
@@ -1760,11 +1765,15 @@ const SESSION_STATES = {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function getCTTime() {
+  // Internal calculations still use CT/ET — but display uses user's timezone
   const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
+  const userTZ = getUserTZ();
+  const userNow = new Date();
   return {
     now,
-    str: now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", timeZone: "America/Chicago" }),
-    mins: now.getHours() * 60 + now.getMinutes(),
+    // str shows time in USER's selected timezone, not hardcoded CT
+    str: userNow.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", timeZone: userTZ }),
+    mins: now.getHours() * 60 + now.getMinutes(), // CT mins for session window logic
     isFriday: now.getDay() === 5,
     dayName: ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][now.getDay()],
     dateStr: `${["January","February","March","April","May","June","July","August","September","October","November","December"][now.getMonth()]} ${now.getDate()} ${now.getFullYear()}`,
@@ -1784,7 +1793,7 @@ function getMarketStatus(instrument, session = "NY") {
     return {
       open: false, state: "weekend",
       reason: "Markets are closed on Saturday.",
-      comeback: "Come back Sunday evening — Asian session opens ~9:00 PM ET.",
+      comeback: "Come back Sunday evening — Asian session opens ~9:00 PM.",
     };
   }
 
@@ -1795,7 +1804,7 @@ function getMarketStatus(instrument, session = "NY") {
     return {
       open: false, state: "weekend",
       reason: "Markets are not open yet.",
-      comeback: `Come back at 2:00 PM ET (${h > 0 ? `${h}h ${m}m` : `${m}m`}) to start prep for the Asian session.`,
+      comeback: `Come back at 2:00 PM local time (${h > 0 ? `${h}h ${m}m` : `${m}m`}) to start prep for the Asian session.`,
     };
   }
 
@@ -1879,9 +1888,9 @@ function getMarketStatus(instrument, session = "NY") {
 
   // Session closed
   const nextSessions = {
-    NY: "Asian session tonight ~9:00 PM ET",
-    LONDON: "NY session ~9:30 AM ET",
-    LONDON_NY: "Asian session tonight ~9:00 PM ET",
+    NY: "Asian session tonight ~9:00 PM",
+    LONDON: "NY session ~9:30 AM",
+    LONDON_NY: "Asian session tonight ~9:00 PM",
   };
   return {
     open: false, state: "closed",
@@ -2039,7 +2048,8 @@ TRIGGER: The 30M close price confirming Continuation. NOT the break level itself
 ENTRY: Limit order INSIDE the retest zone — not at the trigger.
 STOP: Beyond the structure that invalidates the setup. NEVER inside the retest zone.
 
-TP VALIDATION — run before outputting:
+TRIGGER LEVEL PRECISION — NON-NEGOTIABLE:
+The trigger_level MUST be the exact structural break price visible on the chart — the precise swing high, swing low, or consolidation boundary where the break occurred. Do NOT round to the nearest 50 or 100. Do NOT approximate. If the break happened at 3,847, the trigger is 3,847 — not 3,850. Read the exact price from the chart and use it.
 SHORT: TP1 < entry. TP2 < TP1. Runner < TP2. Recalculate if any fail.
 LONG: TP1 > entry. TP2 > TP1. Runner > TP2. Recalculate if any fail.
 
@@ -2160,67 +2170,78 @@ function getLivePrompt(plan, session = "NY") {
 
   const fridayNote = ct.isFriday ? " FRIDAY: protect the week — if not A+, PASS." : "";
 
-  return `You are an OmniUSD live session guide — a disciplined BRC trading coach.
-Time: ${ct.str} CT | Day: ${ct.dayName} | Session: ${windowStatus}${fridayNote}
+  return `You are a sharp, experienced trading coach running a live BRC session. You are direct, fast, and focused. This is a war room, not a FAQ page.
+
+CURRENT STATE:
+Time: ${ct.str} ET | ${ct.dayName} | ${windowStatus}${fridayNote}
 ${sessionWarning ? `\n⚠️ ${sessionWarning}\n` : ""}
 ACTIVE PLAN:
-Instrument: ${plan.instrument}
-Bias: ${plan.bias} | Grade: ${plan.grade} | Confidence: ${plan.confidence_score}%
-Trigger: ${plan.trigger_level} | Retest zone: ${plan.retest_zone}
+${plan.instrument} | ${plan.bias} | Grade: ${plan.grade} | ${plan.confidence_score}%
+Trigger: ${plan.trigger_level} | Retest: ${plan.retest_zone}
 Stop: ${plan.stop_loss} | TP1: ${plan.tp1} | TP2: ${plan.tp2} | Runner: ${plan.runner}
-Phase: ${plan.current_phase}
-Summary: ${plan.summary}
 
-RULES — NON-NEGOTIABLE:
-- Only 30M candle CLOSES matter. Wicks = noise.
-- Tier 1 = first 30M close through trigger level
-- Tier 2 = second 30M close confirms. THEN place limit order.
-- Never chase. Never enter on a wick. Never market order.
-- Weekend moves do NOT count as BRC confirmations.
-- "Pre-market movement is information — not permission."
+SESSION CANDLES (ET): ${sessCfg.candles.map(c => c.label || c).join(" → ")} — cutoff ${sessCfg.cutoff}
 
-YOUR ROLE — OmniUSD Live Session Guide:
-- You guide execution of the ACTIVE SESSION PLAN generated from the trader's uploaded charts
-- Never say "I didn't come up with this analysis" — you ARE the system. Say: "This plan came from your uploaded charts and OmniUSD rules."
-- Never be meta or self-referential. Never explain what you are.
-- Respond ONLY to what matters RIGHT NOW in the session
-- Keep ALL responses to 1-4 short lines maximum. No essays. No over-explanation.
-- Use bullets when listing more than 2 things
+━━━ HOW YOU COMMUNICATE ━━━
 
-STEP-BY-STEP CANDLE COACHING — THIS IS HOW YOU GUIDE:
-Active session: ${sessCfg.label} (${sessCfg.hours})
-Valid 30M closes for this session (ALL TIMES IN ET): ${sessCfg.candles.map(c => c.label || c).join(", ")} — Hard cutoff: ${sessCfg.cutoff}
-IMPORTANT: Always show times in ET. The trader's app shows their local time conversion automatically.
+SPEAK like a human. THINK like a coach. RESPOND like a war room.
 
-When a candle closes and it confirms Tier 1 (first close ${plan.bias==="SHORT"?"below":"above"} ${plan.trigger_level}):
-→ Ask if the close was strong or barely made it. A strong close (closed well ${plan.bias==="SHORT"?"below":"above"} the level with a solid body) = high conviction. A barely-made-it close (just crept ${plan.bias==="SHORT"?"below":"above"} by a few points) = lower conviction — note it but still valid.
-→ Say: "🚨 **Tier 1 confirmed.** Closed at [price] — ${plan.bias==="SHORT"?"below":"above"} **${plan.trigger_level}**. [Strong close = 'Solid conviction.' / Weak close = 'Barely made it — watch Tier 2 carefully.'] Do NOT enter yet. Tell me the [next candle time] close."
+- Under 4 lines when waiting for input. Always.
+- Ask ONE question per response. Never two.
+- Never repeat what the trader just told you.
+- Never re-explain the rules mid-session.
+- React to info immediately — don't restate it.
+- Match the pace of the session: fast, focused, sharp.
 
-When a candle closes but does NOT confirm (wrong direction or insufficient):
-→ Say which candle failed and why in one line
-→ Tell them the NEXT specific candle time to watch: "The 9:00 AM candle didn't close below ${plan.trigger_level}. Let's wait for the **9:30 AM close**. Keep watching your 30M chart."
-→ If it's 10:00 AM and still no confirm: "Two candles haven't confirmed. One window left — **10:30 AM**. If that doesn't confirm, we close the session for today."
-→ If 10:30 AM passes without confirm: "10:30 AM cutoff reached. No confirmation today. The plan is saved for tomorrow's session."
+WRONG: "You're right — price is below ${plan.trigger_level} right now. But we need the 30M candle to CLOSE below that level. The 10:00 AM ET candle is still forming."
+RIGHT: "Got it — what did the 10:00 AM candle actually close at?"
 
-When user reports a wick (price touched level but candle didn't close there):
-→ ONE line only: "Wick only. The candle needs to CLOSE ${plan.bias==="SHORT"?"below":"above"} **${plan.trigger_level}**. Wait for the full close — don't let the wick fool you."
+WRONG: "Great question! The BRC system requires that we wait for a 30M candle close before entering any position..."
+RIGHT: "Wick only. What's the next close time?"
 
-When Tier 2 confirms:
-→ "🚨 **Tier 2 confirmed.** Both closes through **${plan.trigger_level}**. Place your **LIMIT ORDER** at ${plan.retest_zone}. Stop at **${plan.stop_loss}**. TP1 at **${plan.tp1}**. Order in — then hands off."
+━━━ THE RULES (use, don't explain) ━━━
 
-Always refer to levels by their actual price — never say "the trigger" without including the price number.
-Never tell them to "watch the chart" without telling them EXACTLY what candle time and EXACTLY what price to watch for.
+- 30M CLOSE only. Wicks = noise. Never explain this twice.
+- Tier 1 = first 30M close ${plan.bias==="SHORT"?"below":"above"} ${plan.trigger_level}
+- Tier 2 = second 30M close confirms → THEN limit order
+- Never enter on a wick. Never chase. Never market order.
+- Weekend = no entries. Pre-market moves = information only.
 
-CONFIRMATION SIGNALS — CRITICAL:
-When a REAL tier confirmation happens (trader reports an actual 30M candle close through the trigger level), you MUST append a machine-readable signal tag at the very end of your response. This is the ONLY way the app registers a tier confirmation — do NOT emit this signal for educational questions, explanations, or hypotheticals.
+━━━ CANDLE RESPONSES ━━━
 
-Emit ONLY when a real close is reported by the trader:
-- Tier 1 confirmed: append <!--SIGNAL:{"tier1":true}--> at the end
-- Tier 2 confirmed: append <!--SIGNAL:{"tier2":true}--> at the end
-- Setup invalidated: append <!--SIGNAL:{"invalidated":true}--> at the end
-- Retest forming: append <!--SIGNAL:{"retest":true}--> at the end
+Tier 1 confirmed (strong close):
+→ "🚨 Tier 1. Closed at [price] — ${plan.bias==="SHORT"?"below":"above"} ${plan.trigger_level}. Solid. Watch the [next time] close — needs to confirm again."
 
-If the trader is asking a question, asking about tiers in general, or you are explaining the system — DO NOT emit any signal tag. Signals are only for real confirmed price events.`;
+Tier 1 confirmed (barely made it):
+→ "🚨 Tier 1 — barely. [price]. Watch Tier 2 carefully. What's the [next time] close?"
+
+Candle did NOT confirm:
+→ "[Time] didn't close ${plan.bias==="SHORT"?"below":"above"} ${plan.trigger_level}. [Next time] is the window."
+
+One candle left:
+→ "⚠️ Last window — [time]. This is it. Limit order ONLY if it confirms. No retest before ${sessCfg.cutoff}? Order expires — do NOT carry past cutoff."
+
+Cutoff hit:
+→ "Cutoff. No confirmation today. Plan holds for tomorrow."
+
+Wick reported:
+→ "Wick. Needs a full close ${plan.bias==="SHORT"?"below":"above"} ${plan.trigger_level}."
+
+Tier 2 confirmed:
+→ "🚨 Tier 2. Place limit at ${plan.retest_zone}. Stop ${plan.stop_loss}. TP1 ${plan.tp1}. Order in — hands off."
+
+Session closed / weekend:
+→ "⛔ [one line, firm. no lecture.]"
+
+━━━ SIGNALS (machine tags — never change these) ━━━
+
+Append at the END of your response ONLY when a real candle close is reported:
+- Tier 1 real close confirmed: <!--SIGNAL:{"tier1":true}-->
+- Tier 2 real close confirmed: <!--SIGNAL:{"tier2":true}-->
+- Setup invalidated: <!--SIGNAL:{"invalidated":true}-->
+- Retest forming: <!--SIGNAL:{"retest":true}-->
+
+DO NOT emit signals for questions, explanations, or hypotheticals. Real price events only.`;
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -2570,66 +2591,74 @@ function useWindowWidth() {
 
 
 
-// ── Timezone utilities ────────────────────────────────────────────────────
+// ── Timezone utilities ─────────────────────────────────────────────────────
+// Single source of truth: user's selected timezone from profile (or browser fallback)
+// ET is used ONLY for internal calculations — never shown to user unless they are in ET
+
+let _userProfileTZ = null; // Set by UnifiedDashboard when profile loads
+
 function getUserTZ() {
+  // 1. Profile-saved timezone (from onboarding) — highest priority
+  if (_userProfileTZ) return _userProfileTZ;
+  // 2. Browser timezone — fallback
   try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch { return "America/New_York"; }
 }
 
-// Convert an ET time (hour, min) to user's local time string
-function etToLocal(etHour, etMin, showTZName = true) {
+function setUserProfileTZ(ianaTimezone) {
+  if (ianaTimezone) _userProfileTZ = ianaTimezone;
+}
+
+// Get the user's TZ abbreviation (e.g. "CT", "PT", "GMT")
+function getUserTZShort() {
   try {
     const userTZ = getUserTZ();
-    // Build a date representing today at the given ET time
-    const now = new Date();
-    const etStr = now.toLocaleDateString("en-US", { timeZone: "America/New_York" });
-    const d = new Date(`${etStr} ${etHour}:${String(etMin).padStart(2,"0")}:00`);
-    // Adjust for ET offset
-    const etOffset = -5; // ET standard (close enough for display; DST handled by browser)
-    const utc = d.getTime() + (d.getTimezoneOffset() * 60000) + (etOffset * 3600000) * -1;
-    const localD = new Date(utc);
-    // Use Intl to format in user's local TZ
-    const opts = { hour: "numeric", minute: "2-digit", hour12: true, timeZone: userTZ };
-    const localStr = new Intl.DateTimeFormat("en-US", opts).format(new Date(
-      new Date().toLocaleString("en-US", { timeZone: "America/New_York" })
-    ));
-    // Actually, easier approach — format directly
+    const short = new Intl.DateTimeFormat("en-US", { timeZoneName: "short", timeZone: userTZ, hour: "numeric" })
+      .format(new Date()).split(" ").pop();
+    return short || "Local";
+  } catch { return "Local"; }
+}
+
+// Convert an ET time (hour, min) to user's timezone — returns ONLY user's local time + their TZ abbr
+// Never shows "ET" unless the user IS in ET
+function etToUserTime(etHour, etMin, showTZName = true) {
+  try {
+    const userTZ = getUserTZ();
+    // Build a UTC date for the given ET time today
     const etDate = new Date();
     const etNow = new Date(etDate.toLocaleString("en-US", { timeZone: "America/New_York" }));
     etNow.setHours(etHour, etMin, 0, 0);
-    // Now convert this ET time to actual UTC, then to user local
     const etOffsetMs = etDate.getTime() - new Date(etDate.toLocaleString("en-US", { timeZone: "America/New_York" })).getTime();
     const utcTime = new Date(etNow.getTime() + etOffsetMs);
+
     const localTime = new Intl.DateTimeFormat("en-US", {
-      hour: "numeric", minute: "2-digit", hour12: true,
-      timeZone: userTZ,
+      hour: "numeric", minute: "2-digit", hour12: true, timeZone: userTZ,
     }).format(utcTime);
+
     if (!showTZName) return localTime;
+
     const tzShort = new Intl.DateTimeFormat("en-US", {
       timeZoneName: "short", timeZone: userTZ, hour: "numeric",
     }).format(utcTime).split(" ").pop();
+
     return `${localTime} ${tzShort}`;
   } catch(e) {
-    return `${etHour}:${String(etMin).padStart(2,"0")} ${etHour < 12 ? "AM" : "PM"} ET`;
+    // Fallback: just show ET
+    const h12 = etHour > 12 ? etHour - 12 : etHour === 0 ? 12 : etHour;
+    const ampm = etHour >= 12 ? "PM" : "AM";
+    return `${h12}:${String(etMin).padStart(2,"0")} ${ampm} ET`;
   }
 }
 
-// Format session time showing ET + local
-function sessionTimeDisplay(etTimeStr, etHour, etMin) {
-  try {
-    const userTZ = getUserTZ();
-    const isET = userTZ === "America/New_York" || userTZ === "America/Detroit" || userTZ === "America/Indiana/Indianapolis";
-    if (isET) return `${etTimeStr} ET`;
-    const local = etToLocal(etHour, etMin, true);
-    return `${etTimeStr} ET (${local})`;
-  } catch { return `${etTimeStr} ET`; }
+// Keep etToLocal as alias for backward compat
+function etToLocal(etHour, etMin, showTZName = true) {
+  return etToUserTime(etHour, etMin, showTZName);
 }
 
-// Get user's timezone abbreviation
-function getUserTZShort() {
-  try {
-    return new Intl.DateTimeFormat("en-US", { timeZoneName: "short", hour: "numeric" })
-      .format(new Date()).split(" ").pop();
-  } catch { return "Local"; }
+// Format a candle time object { label: "9:30 AM ET", h: 9, m: 30 } → user's local time
+// Returns ONLY the user's time and TZ abbreviation — no "ET" unless user is in ET
+function candleToUserTime(c) {
+  if (!c) return "";
+  return etToUserTime(c.h, c.m, true);
 }
 
 // ── Session config — instrument compatibility + candle times ────────────────
@@ -3883,10 +3912,10 @@ Return ONLY valid JSON, no markdown, no explanation:
     // Build user-friendly time display
     const userTZShort = getUserTZShort();
     const isET = getUserTZ().startsWith("America/New_York") || getUserTZ().startsWith("America/Detroit");
-    // ET-only for live session instructions — one timezone, no confusion
+    // Always show user's timezone — never ET unless user IS in ET
     function candleDisplay(c) {
       if (!c) return "";
-      return c.label; // Always ET — cleaner, faster to read during live execution
+      return candleToUserTime(c);
     }
     const nextCandleDisplay = candleDisplay(nextCandleObj);
     const remainingDisplay = remainingCandles.map(c => candleDisplay(c)).join(" → ");
@@ -3916,8 +3945,13 @@ Return ONLY valid JSON, no markdown, no explanation:
     } else {
       // Live — ET only, no dual timezone
       const nextCandleET = nextCandleObj ? nextCandleObj.label : nextCandleDisplay;
+      const isLastCandle = remainingCandles.length === 1;
 
       openingMsg = `**NEXT ACTION**\n\nWatch the next 30M **${plan.instrument}** close.\n\nIf it closes **${direction} ${trigger}** — send it now.\nIf not — send me the closing price.\n\nWicks don't count. Only closes.\n\n🕐 Next check: **${nextCandleET}**`;
+
+      if (isLastCandle) {
+        openingMsg += `\n\n⚠️ **LATE SESSION ALERT**\nThis signal is valid but you have **ONE candle remaining** before ${sessCfg.cutoff} cutoff. Limit order ONLY. No chasing. If retest doesn't happen before ${sessCfg.cutoff} — order expires. **DO NOT carry this setup past cutoff.**`;
+      }
 
       if (advisory) {
         openingMsg += `\n\n⚠️ ${advisory}`;
@@ -4137,7 +4171,7 @@ Return ONLY valid JSON, no markdown, no explanation:
             )}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ fontSize: 9, color: "#8878aa" }}><span style={{ color: "#00e5ff", fontWeight: 700 }}>{ctTime}</span> ET</div>
+            <div style={{ fontSize: 9, color: "#8878aa" }}><span style={{ color: "#00e5ff", fontWeight: 700 }}>{ctTime}</span> {getUserTZShort()}</div>
             {onOpenJournal && <button onClick={onOpenJournal} style={{ fontSize: 9, fontWeight: 700, color: "#8878aa", background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>Journal</button>}
             {phase === "live" && (
               <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
@@ -4399,10 +4433,8 @@ Return ONLY valid JSON, no markdown, no explanation:
                       const isBlocked = instrFit === "block";
                       const isBest = instrFit === "best";
                       const userTZShort = getUserTZShort();
-                      const isET = getUserTZ().startsWith("America/New_York") || getUserTZ().startsWith("America/Detroit");
-                      // Show local time for session open
-                      const localOpen = cfg.openET ? etToLocal(cfg.openET.h, cfg.openET.m, false) : null;
-                      const timeDisplay = isET ? cfg.hours : `${cfg.openET ? `${localOpen} ${userTZShort}` : cfg.hours}`;
+                      const localOpen = cfg.openET ? etToUserTime(cfg.openET.h, cfg.openET.m, false) : null;
+                      const timeDisplay = localOpen ? `${localOpen} ${userTZShort}` : cfg.hours;
                       return (
                         <button key={key}
                           onClick={() => !isBlocked && setSelectedSession(key)}
@@ -4668,7 +4700,7 @@ Return ONLY valid JSON, no markdown, no explanation:
               if (!isWeekend) return null;
               return (
                 <div style={{ padding: "10px 14px", background: "rgba(0,229,255,0.05)", border: "1px solid rgba(0,229,255,0.2)", borderLeft: "3px solid #00e5ff", borderRadius: 0, marginBottom: 16, fontSize: 11, color: "#00e5ff", lineHeight: 1.7 }}>
-                  <span style={{ fontWeight: 700 }}>Weekend session:</span> {plan.session_note || (day===6 ? "Next valid BRC window — Asian session Sunday ~8:00 PM CT or NY session Monday ~8:30 AM CT." : "Asian session opens tonight ~8:00 PM CT. NY session Monday ~8:30 AM CT.")}
+                  <span style={{ fontWeight: 700 }}>Weekend session:</span> {plan.session_note || (day===6 ? "Next valid BRC window — Asian session Sunday ~8:00 PM CT or NY session Monday ~8:30 AM CT." : "Asian session opens tonight. NY session Monday morning.")}
                 </div>
               );
             })()}
