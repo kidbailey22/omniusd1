@@ -3392,7 +3392,8 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
   const [phase, setPhase] = useState("upload"); // upload | analyzing | plan | live
   const [appPage, setAppPage] = useState("dashboard"); // dashboard | settings | history
   const [selectedSession, setSelectedSession] = useState("NY");
-  const HISTORY_KEY = `omniusd_aplus_history_${_uid}`; // NY | LONDON | ASIAN | LONDON_NY
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const HISTORY_KEY = `omniusd_aplus_history_${_uid}`;
   const isMobile = useWindowWidth() <= 768;
   const isTablet = useWindowWidth() <= 1024;
 
@@ -3817,93 +3818,136 @@ Return ONLY valid JSON, no markdown, no explanation:
       {/* ── NAV ── */}
       <header style={{ position: "relative", zIndex: 1, background: "rgba(255,255,255,0.025)", borderBottom: "1px solid rgba(255,107,255,0.22)", boxShadow: "0 1px 20px rgba(123,47,255,0.08)", flexShrink: 0 }}>
 
-        {/* Primary row */}
-        <div style={{ padding: isMobile ? "10px 14px" : "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          {/* Left: logo + instrument + bias on mobile */}
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: isMobile ? 15 : 18, color: "#ff6bff" }}>◈</span>
-            <span style={{ fontSize: isMobile ? 11 : 12, fontWeight: 700, letterSpacing: "0.1em", background: "linear-gradient(90deg,#ff6bff,#00e5ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>OmniUSD</span>
-            {/* Mobile: instrument + bias only */}
-            {isMobile && plan && phase !== "upload" && (
-              <div style={{ display: "flex", gap: 5 }}>
-                <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 7px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, color: "#8878aa" }}>{plan.instrument}</span>
-                <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 7px", background: `${biasColor}14`, border: `1px solid ${biasColor}44`, borderRadius: 4, color: biasColor }}>{plan.bias}</span>
-              </div>
-            )}
-            {/* Desktop: tier + grade + bias + instrument */}
-            {!isMobile && (<>
-              <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.1em", padding: "2px 8px", borderRadius: 4, background: `${(TIER_CONFIG[profile?.tier]||TIER_CONFIG.starter).color}18`, border: `1px solid ${(TIER_CONFIG[profile?.tier]||TIER_CONFIG.starter).color}44`, color: (TIER_CONFIG[profile?.tier]||TIER_CONFIG.starter).color }}>
-                {(TIER_CONFIG[profile?.tier]||TIER_CONFIG.starter).label.toUpperCase()}
-              </span>
+        {/* ── MOBILE COCKPIT HEADER ── */}
+        {isMobile ? (<>
+          {/* Row 1: Logo | Instrument | Bias | Status | ☰ */}
+          <div style={{ padding: "10px 14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            {/* Left: logo */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 15, color: "#ff6bff" }}>◈</span>
+              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", background: "linear-gradient(90deg,#ff6bff,#00e5ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>OmniUSD</span>
+              {/* Instrument + Bias — only when plan exists */}
               {plan && phase !== "upload" && (
-                <div style={{ display: "flex", gap: 6 }}>
-                  <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", background: `${gradeColor}14`, border: `1px solid ${gradeColor}44`, borderRadius: 4, color: gradeColor }}>{plan.grade}</span>
-                  <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", background: `${biasColor}14`, border: `1px solid ${biasColor}44`, borderRadius: 4, color: biasColor }}>{plan.bias}</span>
-                  <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, color: "#8878aa" }}>{plan.instrument}</span>
+                <div style={{ display: "flex", gap: 5, marginLeft: 2 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: "#f0ecff" }}>{plan.instrument}</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: "1px 6px", borderRadius: 4, background: `${biasColor}14`, border: `1px solid ${biasColor}44`, color: biasColor }}>{plan.bias}</span>
                 </div>
               )}
-            </>)}
+            </div>
+            {/* Right: status badge + hamburger */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {phase === "live" && (
+                <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "3px 9px", borderRadius: 20, background: `${stateObj.color}14`, border: `1px solid ${stateObj.color}33` }}>
+                  <span style={{ width: 5, height: 5, borderRadius: "50%", background: stateObj.color, display: "inline-block", animation: stateObj.dot ? "pulse 1.5s ease infinite" : "none" }}/>
+                  <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: "0.06em", color: stateObj.color }}>{stateObj.label}</span>
+                </div>
+              )}
+              {/* Hamburger ☰ */}
+              <button onClick={() => setDrawerOpen(o => !o)}
+                style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 7, padding: "5px 9px", cursor: "pointer", color: "#f0ecff", fontSize: 15, lineHeight: 1, fontFamily: "inherit" }}>
+                ☰
+              </button>
+            </div>
           </div>
 
-          {/* Right: status badge on mobile, full controls on desktop */}
-          <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 6 : 10 }}>
-            {/* Mobile: status badge */}
-            {isMobile && phase === "live" && (
-              <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "3px 8px", borderRadius: 20, background: `${stateObj.color}14`, border: `1px solid ${stateObj.color}33` }}>
-                <span style={{ width: 5, height: 5, borderRadius: "50%", background: stateObj.color, display: "inline-block", animation: stateObj.dot ? "pulse 1.5s ease infinite" : "none" }}/>
-                <span style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.06em", color: stateObj.color }}>{stateObj.label}</span>
+          {/* Row 2: secondary info strip during live session */}
+          {plan && phase === "live" && (
+            <div style={{ padding: "4px 14px 7px", display: "flex", alignItems: "center", gap: 10, borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+              <span style={{ fontSize: 9, fontWeight: 700, padding: "1px 7px", background: `${gradeColor}14`, border: `1px solid ${gradeColor}33`, borderRadius: 4, color: gradeColor }}>{plan.grade}</span>
+              <span style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", fontFamily: "monospace" }}>{ctTime} ET</span>
+              <span style={{ fontSize: 9, fontWeight: 700, color: windowClosed ? "#ff6b6b" : "#7fff6b" }}>{windowClosed ? "⛔ CLOSED" : "✅ OPEN"}</span>
+              {/* View Plan shortcut */}
+              <button onClick={() => setPhase("plan")}
+                style={{ fontSize: 9, fontWeight: 700, color: "#ffd166", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", marginLeft: "auto" }}>
+                View Plan
+              </button>
+            </div>
+          )}
+
+          {/* Drawer overlay */}
+          {drawerOpen && (
+            <div style={{ position: "fixed", inset: 0, zIndex: 200 }} onClick={() => setDrawerOpen(false)}>
+              {/* Backdrop */}
+              <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}/>
+              {/* Drawer panel */}
+              <div onClick={e => e.stopPropagation()}
+                style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: 240, background: "#130d22", borderLeft: "1px solid rgba(255,107,255,0.2)", display: "flex", flexDirection: "column", animation: "slide 0.2s ease both" }}>
+
+                {/* Drawer header */}
+                <div style={{ padding: "18px 20px 14px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", background: "linear-gradient(90deg,#ff6bff,#00e5ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>◈ OmniUSD</span>
+                  <button onClick={() => setDrawerOpen(false)} style={{ background: "none", border: "none", color: "#8878aa", cursor: "pointer", fontSize: 18, lineHeight: 1 }}>×</button>
+                </div>
+
+                {/* Drawer nav items */}
+                <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 0" }}>
+                  {[
+                    { label: "Dashboard", icon: "◈", action: () => { setAppPage("dashboard"); setDrawerOpen(false); }, active: appPage === "dashboard" },
+                    { label: "History", icon: "📋", action: () => { setAppPage("history"); setDrawerOpen(false); }, active: appPage === "history", color: "#7fff6b" },
+                    { label: "Settings", icon: "⚙", action: () => { setAppPage("settings"); setDrawerOpen(false); }, active: appPage === "settings", color: "#ff6bff" },
+                    { label: "Help & FAQ", icon: "?", action: () => { setAppPage("faq"); setDrawerOpen(false); }, active: appPage === "faq", color: "#00e5ff" },
+                    ...(phase === "live" ? [
+                      { label: "View Plan", icon: "📄", action: () => { setPhase("plan"); setDrawerOpen(false); }, color: "#ffd166" },
+                      { label: "New Analysis", icon: "↩", action: () => { setPhase("upload"); setImages(Array(5).fill(null)); setDrawerOpen(false); }, color: "rgba(255,255,255,0.3)" },
+                    ] : []),
+                  ].map((item, i) => (
+                    <button key={i} onClick={item.action}
+                      style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px 20px", background: item.active ? "rgba(255,107,255,0.08)" : "none", border: "none", cursor: "pointer", fontFamily: "inherit", textAlign: "left", borderLeft: item.active ? "2px solid #ff6bff" : "2px solid transparent", transition: "all 0.15s" }}>
+                      <span style={{ fontSize: 14, width: 20, textAlign: "center", flexShrink: 0 }}>{item.icon}</span>
+                      <span style={{ fontSize: 12, fontWeight: item.active ? 700 : 500, color: item.active ? "#f0ecff" : (item.color || "#8878aa") }}>{item.label}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Drawer footer — sign out */}
+                <div style={{ padding: "14px 20px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                  {onSignOut && (
+                    <button onClick={() => { onSignOut(); setDrawerOpen(false); }}
+                      style={{ fontSize: 11, color: "rgba(255,107,107,0.6)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", letterSpacing: "0.06em" }}>
+                      Sign out
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </>) : (
+
+        /* ── DESKTOP HEADER — unchanged ── */
+        <div style={{ padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 18, color: "#ff6bff" }}>◈</span>
+            <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", background: "linear-gradient(90deg,#ff6bff,#00e5ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>OmniUSD</span>
+            <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.1em", padding: "2px 8px", borderRadius: 4, background: `${(TIER_CONFIG[profile?.tier]||TIER_CONFIG.starter).color}18`, border: `1px solid ${(TIER_CONFIG[profile?.tier]||TIER_CONFIG.starter).color}44`, color: (TIER_CONFIG[profile?.tier]||TIER_CONFIG.starter).color }}>
+              {(TIER_CONFIG[profile?.tier]||TIER_CONFIG.starter).label.toUpperCase()}
+            </span>
+            {plan && phase !== "upload" && (
+              <div style={{ display: "flex", gap: 6 }}>
+                <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", background: `${gradeColor}14`, border: `1px solid ${gradeColor}44`, borderRadius: 4, color: gradeColor }}>{plan.grade}</span>
+                <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", background: `${biasColor}14`, border: `1px solid ${biasColor}44`, borderRadius: 4, color: biasColor }}>{plan.bias}</span>
+                <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, color: "#8878aa" }}>{plan.instrument}</span>
               </div>
             )}
-            {/* Desktop: time + journal + window */}
-            {!isMobile && <div style={{ fontSize: 9, color: "#8878aa" }}><span style={{ color: "#00e5ff", fontWeight: 700 }}>{ctTime}</span> CT</div>}
-            {!isMobile && onOpenJournal && (
-              <button onClick={onOpenJournal} style={{ fontSize: 9, fontWeight: 700, color: "#8878aa", background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>Journal</button>
-            )}
-            {!isMobile && phase === "live" && (
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ fontSize: 9, color: "#8878aa" }}><span style={{ color: "#00e5ff", fontWeight: 700 }}>{ctTime}</span> ET</div>
+            {onOpenJournal && <button onClick={onOpenJournal} style={{ fontSize: 9, fontWeight: 700, color: "#8878aa", background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>Journal</button>}
+            {phase === "live" && (
               <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
                 <span style={{ width: 6, height: 6, borderRadius: "50%", background: windowClosed ? "#ff6b6b" : "#7fff6b", animation: windowOpen ? "pulse 1.5s ease infinite" : "none" }}/>
                 <span style={{ fontSize: 9, fontWeight: 700, color: windowClosed ? "#ff6b6b" : "#7fff6b" }}>{windowClosed ? "WINDOW CLOSED" : "WINDOW OPEN"}</span>
               </div>
             )}
-            {/* Settings + FAQ + History — both mobile and desktop */}
-            <button onClick={() => setAppPage(appPage === "history" ? "dashboard" : "history")}
-              style={{ fontSize: isMobile ? 15 : 9, fontWeight: 700, color: appPage === "history" ? "#7fff6b" : "#8878aa", background: appPage === "history" ? "rgba(127,255,107,0.08)" : "none", border: `1px solid ${appPage === "history" ? "rgba(127,255,107,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: isMobile ? "3px 7px" : "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
-              {isMobile ? "📋" : "History"}
-            </button>
-            <button onClick={() => setAppPage(appPage === "settings" ? "dashboard" : "settings")}
-              style={{ fontSize: isMobile ? 15 : 9, fontWeight: 700, color: appPage === "settings" ? "#ff6bff" : "#8878aa", background: appPage === "settings" ? "rgba(255,107,255,0.1)" : "none", border: `1px solid ${appPage === "settings" ? "rgba(255,107,255,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: isMobile ? "3px 7px" : "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
-              {isMobile ? "⚙" : "Settings"}
-            </button>
-            <button onClick={() => setAppPage(appPage === "faq" ? "dashboard" : "faq")}
-              style={{ fontSize: isMobile ? 15 : 9, fontWeight: 700, color: appPage === "faq" ? "#00e5ff" : "#8878aa", background: appPage === "faq" ? "rgba(0,229,255,0.08)" : "none", border: `1px solid ${appPage === "faq" ? "rgba(0,229,255,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: isMobile ? "3px 7px" : "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
-              {isMobile ? "?" : "Help & FAQ"}
-            </button>
-            {phase === "live" && (
-              <>
-                <button onClick={() => setPhase("plan")}
-                  style={{ fontSize: isMobile ? 13 : 9, fontWeight: 700, color: "#ffd166", background: "rgba(255,209,102,0.08)", border: "1px solid rgba(255,209,102,0.25)", borderRadius: 6, padding: isMobile ? "3px 7px" : "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
-                  {isMobile ? "📄" : "View Plan"}
-                </button>
-                <button onClick={() => { setPhase("upload"); setImages(Array(5).fill(null)); }}
-                  style={{ fontSize: isMobile ? 13 : 9, fontWeight: 700, color: "rgba(255,255,255,0.3)", background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: isMobile ? "3px 7px" : "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
-                  {isMobile ? "↩" : "NEW ANALYSIS"}
-                </button>
-              </>
-            )}
-            {onSignOut && !isMobile && (
-              <button onClick={onSignOut} style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", padding: "4px 6px" }}>Sign out</button>
-            )}
+            <button onClick={() => setAppPage(appPage === "history" ? "dashboard" : "history")} style={{ fontSize: 9, fontWeight: 700, color: appPage === "history" ? "#7fff6b" : "#8878aa", background: appPage === "history" ? "rgba(127,255,107,0.08)" : "none", border: `1px solid ${appPage === "history" ? "rgba(127,255,107,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>History</button>
+            <button onClick={() => setAppPage(appPage === "settings" ? "dashboard" : "settings")} style={{ fontSize: 9, fontWeight: 700, color: appPage === "settings" ? "#ff6bff" : "#8878aa", background: appPage === "settings" ? "rgba(255,107,255,0.1)" : "none", border: `1px solid ${appPage === "settings" ? "rgba(255,107,255,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>Settings</button>
+            <button onClick={() => setAppPage(appPage === "faq" ? "dashboard" : "faq")} style={{ fontSize: 9, fontWeight: 700, color: appPage === "faq" ? "#00e5ff" : "#8878aa", background: appPage === "faq" ? "rgba(0,229,255,0.08)" : "none", border: `1px solid ${appPage === "faq" ? "rgba(0,229,255,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>Help & FAQ</button>
+            {phase === "live" && (<>
+              <button onClick={() => setPhase("plan")} style={{ fontSize: 9, fontWeight: 700, color: "#ffd166", background: "rgba(255,209,102,0.08)", border: "1px solid rgba(255,209,102,0.25)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>View Plan</button>
+              <button onClick={() => { setPhase("upload"); setImages(Array(5).fill(null)); }} style={{ fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.3)", background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>NEW ANALYSIS</button>
+            </>)}
+            {onSignOut && <button onClick={onSignOut} style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", padding: "4px 6px" }}>Sign out</button>}
           </div>
         </div>
-
-        {/* Mobile secondary strip — grade, time, window, sign out */}
-        {isMobile && plan && phase !== "upload" && (
-          <div style={{ padding: "5px 14px 7px", display: "flex", alignItems: "center", gap: 8, borderTop: "1px solid rgba(255,255,255,0.04)" }}>
-            <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 7px", background: `${gradeColor}14`, border: `1px solid ${gradeColor}33`, borderRadius: 4, color: gradeColor }}>{plan.grade}</span>
-            <span style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", fontFamily: "monospace" }}>{ctTime} CT</span>
-            {phase === "live" && <span style={{ fontSize: 9, fontWeight: 700, color: windowClosed ? "#ff6b6b" : "#7fff6b" }}>{windowClosed ? "⛔ CLOSED" : "✅ OPEN"}</span>}
-            {onSignOut && <button onClick={onSignOut} style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", marginLeft: "auto" }}>Sign out</button>}
-          </div>
         )}
       </header>
 
