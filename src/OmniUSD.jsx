@@ -388,9 +388,9 @@ Keep it under 200 words. Respond in plain text, no JSON, no markdown headers.`;
 const DEV_MODE = false;
 
 const TIER_CONFIG = {
-  starter: { label:"Starter", price:"$29/mo", priceId:"price_1TCPQoEIHuTqoOi9n3oejBYy", instruments:["XAUUSD","BTCUSD"],         dailyCap:3,  color:"#ffd166" },
-  pro:     { label:"Pro",     price:"$39/mo", priceId:"price_1TCPRLEIHuTqoOi9uVChc1LE", instruments:["XAUUSD","BTCUSD","NAS100","US30"], dailyCap:5,  color:"#00e5ff" },
-  elite:   { label:"Elite",   price:"$59/mo", priceId:"price_1TCPRpEIHuTqoOi9xA9MIiH7", instruments:["XAUUSD","BTCUSD","NAS100","US30","USOIL","US500"], dailyCap:10, color:"#ff6bff" },
+  starter: { label:"Starter", price:"$29/mo", priceId:"price_1TEyC2EOq82Vh8foSZIKCsG9", instruments:["XAUUSD","BTCUSD"],         dailyCap:3,  color:"#ffd166" },
+  pro:     { label:"Pro",     price:"$39/mo", priceId:"price_1TEyEmEOq82Vh8foLEEFkBbV", instruments:["XAUUSD","BTCUSD","NAS100","US30"], dailyCap:5,  color:"#00e5ff" },
+  elite:   { label:"Elite",   price:"$59/mo", priceId:"price_1TEyHFEOq82Vh8fokJEvZNFn", instruments:["XAUUSD","BTCUSD","NAS100","US30","USOIL","US500"], dailyCap:10, color:"#ff6bff" },
 };
 
 // Current user tier — hardcoded for now, will come from Stripe/auth later
