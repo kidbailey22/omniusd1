@@ -423,8 +423,8 @@ if(typeof document!=="undefined"){
 
     textarea:focus,input:focus{outline:none;}
     :root{
-      --t-bg:#1a1030;
-      --t-navBg:rgba(20,12,35,0.97);
+      --t-bg:#1e1a35;
+      --t-navBg:rgba(28,22,50,0.97);
       --t-text:#fdf9ff;
       --t-subtext:#ede5ff;
       --t-border:rgba(255,107,255,0.16);
@@ -436,7 +436,7 @@ if(typeof document!=="undefined"){
       --t-c5:rgba(255,255,255,0.10);
       --t-c6:rgba(255,255,255,0.13);
       --t-c7:rgba(255,255,255,0.15);
-      --t-cardBg:rgba(255,255,255,0.08);
+      --t-cardBg:rgba(255,255,255,0.10);
       --t-cardBorder:rgba(255,255,255,0.13);
       --t-inputBg:rgba(255,255,255,0.12);
       --t-inputBorder:rgba(255,107,255,0.22);
@@ -445,7 +445,7 @@ if(typeof document!=="undefined"){
       --t-muted3:#d8ccf4;
       --t-muted4:#c4b4e0;
       --t-muted5:#a080c8;
-      --t-tableBg:#160e2a;
+      --t-tableBg:#221d3a;
     }
   `;
   document.head.appendChild(s);
@@ -515,7 +515,7 @@ class ErrorBoundary extends React.Component {
   render() {
     if (!this.state.hasError) return this.props.children;
     return (
-      <div style={{ minHeight:"100vh", background:"#0f0c1a", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"32px 24px", fontFamily:"'Space Mono',monospace", textAlign:"center" }}>
+      <div style={{ minHeight:"100vh", background:"#1e1a35", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"32px 24px", fontFamily:"'Space Mono',monospace", textAlign:"center" }}>
         <div style={{ fontSize:48, marginBottom:20 }}>⚠️</div>
         <div style={{ fontSize:14, fontWeight:900, letterSpacing:"0.2em", color:"rgba(255,107,107,0.8)", marginBottom:12 }}>SOMETHING WENT WRONG</div>
         <div style={{ fontSize:14, color:"rgba(255,255,255,0.8)", lineHeight:1.8, marginBottom:28, maxWidth:400 }}>
@@ -808,7 +808,6 @@ function OmniUSDApp(){
         <div style={{display:"flex",gap:4,position:"absolute",left:"50%",transform:"translateX(-50%)"}}>
           {[
             {id:"home",label:"Dashboard"},
-            {id:"journal",label:journal.length>0?"Journal ("+journal.length+")":"Journal"},
           ].map(tab=>(
             <button key={tab.id} onClick={()=>setPage(tab.id)}
               style={{fontFamily:"inherit",fontSize:14,fontWeight:700,letterSpacing:"0.06em",
@@ -6760,8 +6759,8 @@ function Spinner({size=24}){
 
 // ─── Theme tokens ───────────────────────────────────────────────────────────
 const DARK={
-  bg:"#1a1030",
-  navBg:"rgba(20,12,35,0.97)",
+  bg:"#1e1a35",
+  navBg:"rgba(28,22,50,0.97)",
   text:"#fdf9ff",
   subtext:"#ede5ff",
   border:"rgba(255,107,255,0.16)",
@@ -6773,7 +6772,7 @@ const DARK={
   c5:"rgba(255,255,255,0.10)",
   c6:"rgba(255,255,255,0.13)",
   c7:"rgba(255,255,255,0.15)",
-  cardBg:"rgba(255,255,255,0.08)",
+  cardBg:"rgba(255,255,255,0.10)",
   cardBorder:"rgba(255,255,255,0.13)",
   inputBg:"rgba(255,255,255,0.12)",
   inputBorder:"rgba(255,107,255,0.22)",
@@ -6783,7 +6782,7 @@ const DARK={
   muted4:"#c4b4e0",
   muted5:"#a080c8",
   navLinkColor:"#f8f4ff",
-  tableBg:"#160e2a",
+  tableBg:"#221d3a",
   scrollThumb:"rgba(255,107,255,0.3)",
 };
 const LIGHT={
@@ -7489,7 +7488,7 @@ function LegalPage({ onBack, type }) {
   const title = isPrivacy ? "Privacy Policy" : "Terms of Service";
 
   return (
-    <div style={{ minHeight:"100vh", background:"#0f0c1a", color:"#f0ecff", fontFamily:"'Space Mono',monospace" }}>
+    <div style={{ minHeight:"100vh", background:"#1e1a35", color:"#f0ecff", fontFamily:"'Space Mono',monospace" }}>
       <div style={{ position:"fixed", inset:0, backgroundImage:"linear-gradient(rgba(255,107,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,107,255,0.025) 1px,transparent 1px)", backgroundSize:"48px 48px", pointerEvents:"none" }}/>
       <div style={{ maxWidth:720, margin:"0 auto", padding:"48px 24px 80px", position:"relative", zIndex:1 }}>
         <button onClick={onBack} style={{ background:"none", border:"none", color:"rgba(255,107,255,0.6)", cursor:"pointer", fontFamily:"inherit", fontSize:14, marginBottom:32, letterSpacing:"0.08em" }}>
