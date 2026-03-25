@@ -7615,11 +7615,6 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
             style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,letterSpacing:"0.1em",color:"#130d22",background:"#ff6bff",border:"none",padding:"9px 18px",borderRadius:6,cursor:"pointer",transition:"all 0.2s"}}>
             CREATE ACCOUNT
           </button>
-          {/* DEV TOGGLE */}
-          <button onClick={onEnterApp}
-            style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,color:"#ffd166",background:"rgba(255,209,102,0.08)",border:"1px solid rgba(255,209,102,0.25)",borderRadius:6,padding:"8px 14px",cursor:"pointer",marginLeft:8}}>
-            → App
-          </button>
         </div>
       </nav>
 
