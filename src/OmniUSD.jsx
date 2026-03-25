@@ -388,9 +388,9 @@ Keep it under 200 words. Respond in plain text, no JSON, no markdown headers.`;
 const DEV_MODE = false;
 
 const TIER_CONFIG = {
-  starter: { label:"Starter", price:"$29/mo", priceId:"price_1TEyC2EOq82Vh8foSZIKCsG9", instruments:["XAUUSD","BTCUSD"],         dailyCap:3,  color:"#ffd166" },
-  pro:     { label:"Pro",     price:"$39/mo", priceId:"price_1TEyEmEOq82Vh8foLEEFkBbV", instruments:["XAUUSD","BTCUSD","NAS100","US30"], dailyCap:5,  color:"#00e5ff" },
-  elite:   { label:"Elite",   price:"$59/mo", priceId:"price_1TEyHFEOq82Vh8fokJEvZNFn", instruments:["XAUUSD","BTCUSD","NAS100","US30","USOIL","US500"], dailyCap:10, color:"#ff6bff" },
+  starter: { label:"Starter", price:"$29/mo", priceId:"price_1TCPQoEIHuTqoOi9n3oejBYy", instruments:["XAUUSD","BTCUSD"],         dailyCap:3,  color:"#ffd166" },
+  pro:     { label:"Pro",     price:"$39/mo", priceId:"price_1TCPRLEIHuTqoOi9uVChc1LE", instruments:["XAUUSD","BTCUSD","NAS100","US30"], dailyCap:5,  color:"#00e5ff" },
+  elite:   { label:"Elite",   price:"$59/mo", priceId:"price_1TCPRpEIHuTqoOi9xA9MIiH7", instruments:["XAUUSD","BTCUSD","NAS100","US30","USOIL","US500"], dailyCap:10, color:"#ff6bff" },
 };
 
 // Current user tier — hardcoded for now, will come from Stripe/auth later
@@ -624,9 +624,25 @@ function OmniUSDApp(){
       );
       if(res.ok){
         const data=await res.json();
+
+        // ── DEV BYPASS — owner account gets Elite access always ──────────
+        const _session = JSON.parse(localStorage.getItem("omniusd_session")||"{}");
+        const _email = _session?.user?.email || data?.email || "";
+        if (_email === "bailey.charles024@gmail.com") {
+          const tzObj = data?.tz ? JSON.parse(data.tz) : null;
+          if (tzObj?.iana) setUserProfileTZ(tzObj.iana);
+          setProfile({
+            mode:"standard", emoji:"◈", color:"#00e5ff", label:"Standard",
+            tier:"elite", tierLabel:"Elite", tierColor:"#ff6bff",
+            defaultInstrument:"XAUUSD", session:data?.session||null,
+            tz: tzObj, isPaid:true, _devBypass:true,
+          });
+          return;
+        }
+        // ── END BYPASS ───────────────────────────────────────────────────
+
         if(data&&data.id&&data.is_paid){
           const tzObj = data.tz ? JSON.parse(data.tz) : null;
-          // Set global TZ so all time displays use the user's selected timezone
           if (tzObj?.iana) setUserProfileTZ(tzObj.iana);
           setProfile({
             mode:"standard",emoji:"◈",color:"#00e5ff",label:"Standard",
