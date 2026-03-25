@@ -753,7 +753,7 @@ function OmniUSDApp(){
 
   // ── PAYMENT SUCCESS ──
   if(view==="payment_success") return (
-    <div style={{minHeight:"100vh",background:"#130d22",display:"flex",alignItems:"center",justifyContent:"center",padding:"24px",fontFamily:"'Syne',sans-serif"}}>
+    <div style={{minHeight:"100vh",background:"#1e1a35",display:"flex",alignItems:"center",justifyContent:"center",padding:"24px",fontFamily:"'Syne',sans-serif"}}>
       <div style={{maxWidth:480,textAlign:"center"}}>
         <div style={{fontSize:64,marginBottom:24}}>✅</div>
         <h1 style={{fontSize:32,fontWeight:800,color:"#f4f0ff",marginBottom:12,letterSpacing:"-0.02em"}}>Payment confirmed!</h1>
@@ -1424,7 +1424,7 @@ function Onboarding({onSelect}){
                   The most widely used charting platform. Free plan works perfectly for OmniUSD — Daily, 4H, 1H, 30M, and 15M charts available on all instruments.
                 </div>
                 <a href="https://www.tradingview.com/OmniUSD?aff_id=164890" target="_blank" rel="noopener noreferrer"
-                  style={{display:"block",width:"100%",padding:"11px 20px",borderRadius:9,background:"linear-gradient(135deg,#00e5ff,#0099bb)",color:"#0f0c1a",fontSize:13,fontWeight:900,letterSpacing:"0.08em",fontFamily:"inherit",textDecoration:"none",textAlign:"center",cursor:"pointer",boxSizing:"border-box"}}>
+                  style={{display:"block",width:"100%",padding:"11px 20px",borderRadius:9,background:"linear-gradient(135deg,#00e5ff,#0099bb)",color:"#1e1a35",fontSize:13,fontWeight:900,letterSpacing:"0.08em",fontFamily:"inherit",textDecoration:"none",textAlign:"center",cursor:"pointer",boxSizing:"border-box"}}>
                   GET TRADINGVIEW →
                 </a>
               </div>
@@ -4477,7 +4477,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
   const biasColor = plan?.bias === "SHORT" ? "#ff6b6b" : plan?.bias === "LONG" ? "#7fff6b" : "#ffd166";
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0f0c1a", color: "#f0ecff", fontFamily: "'Space Mono', monospace", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
+    <div style={{ minHeight: "100vh", background: "#1e1a35", color: "#f0ecff", fontFamily: "'Space Mono', monospace", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
         @media (max-width:768px){.omni-hide-mobile{display:none!important;}.omni-stack{flex-direction:column!important;}.omni-full{width:100%!important;}}
@@ -4545,7 +4545,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
               <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}/>
               {/* Drawer panel */}
               <div onClick={e => e.stopPropagation()}
-                style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: 240, background: "#130d22", borderLeft: "1px solid rgba(255,107,255,0.2)", display: "flex", flexDirection: "column", animation: "slide 0.2s ease both" }}>
+                style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: 240, background: "#1e1a35", borderLeft: "1px solid rgba(255,107,255,0.2)", display: "flex", flexDirection: "column", animation: "slide 0.2s ease both" }}>
 
                 {/* Drawer header */}
                 <div style={{ padding: "18px 20px 14px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -4605,7 +4605,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ fontSize: 13, color: "#8878aa" }}><span style={{ color: "#00e5ff", fontWeight: 700 }}>{ctTime}</span> {getUserTZShort()}</div>
-            {onOpenJournal && <button onClick={onOpenJournal} style={{ fontSize: 13, fontWeight: 700, color: "#8878aa", background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>Journal</button>}
+            
             {phase === "live" && (
               <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
                 <span style={{ width: 6, height: 6, borderRadius: "50%", background: windowClosed ? "#ff6b6b" : "#7fff6b", animation: windowOpen ? "pulse 1.5s ease infinite" : "none" }}/>
@@ -4871,7 +4871,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                       : mkt.state === "london" ? "linear-gradient(135deg,#00e5ff,#0099bb)"
                       : "linear-gradient(135deg,#ff6bff,#7b2fff)"
                       : "rgba(255,107,255,0.06)",
-                    color: canGenerate ? (mkt.state === "prep" || mkt.state === "london" ? "#0f0c1a" : "#fff") : "rgba(255,107,255,0.35)",
+                    color: canGenerate ? (mkt.state === "prep" || mkt.state === "london" ? "#1e1a35" : "#fff") : "rgba(255,107,255,0.35)",
                     fontSize: 13, fontWeight: 700, letterSpacing: "0.1em", fontFamily: "inherit",
                     cursor: canGenerate ? "pointer" : "default",
                     boxShadow: canGenerate ? "0 4px 32px rgba(255,107,255,0.3)" : "none",
@@ -6329,7 +6329,7 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
                       </p>
                       {tradeState==="IN_TRADE"&&(
                         <div style={{display:"flex",gap:8}}>
-                          <button onClick={()=>advanceTo("COMPLETE")} style={{...S.generateBtn,alignSelf:"flex-start",padding:"10px 20px",fontSize:14,background:"linear-gradient(135deg,#7fff6b,#00c46b)",color:"#130d22"}}>✓ TRADE CLOSED</button>
+                          <button onClick={()=>advanceTo("COMPLETE")} style={{...S.generateBtn,alignSelf:"flex-start",padding:"10px 20px",fontSize:14,background:"linear-gradient(135deg,#7fff6b,#00c46b)",color:"#1e1a35"}}>✓ TRADE CLOSED</button>
                           <button onClick={()=>advanceTo("INVALIDATED")} style={{background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.3)",color:"#ff8080",padding:"10px 14px",borderRadius:10,cursor:"pointer",fontFamily:"inherit",fontSize:14,fontWeight:900}}>🚫 Stopped out</button>
                         </div>
                       )}
@@ -7087,7 +7087,7 @@ function ResetPasswordPage({ token, onDone }) {
   };
 
   return (
-    <div style={{ minHeight:"100vh", background:"#130d22", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"24px", position:"relative" }}>
+    <div style={{ minHeight:"100vh", background:"#1e1a35", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"24px", position:"relative" }}>
       <div style={{ position:"fixed", inset:0, backgroundImage:"linear-gradient(rgba(255,107,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,107,255,0.025) 1px,transparent 1px)", backgroundSize:"48px 48px", pointerEvents:"none" }}/>
       <div style={{ position:"fixed", width:500, height:500, borderRadius:"50%", background:"#7b2fff", top:-150, left:"50%", transform:"translateX(-50%)", filter:"blur(120px)", opacity:0.12, pointerEvents:"none" }}/>
 
@@ -7271,7 +7271,7 @@ function AuthScreen({onBack, supabase, initialTab="signup"}){
   };
 
   return(
-    <div style={{minHeight:"100vh",background:"#130d22",display:"flex",flexDirection:"column",
+    <div style={{minHeight:"100vh",background:"#1e1a35",display:"flex",flexDirection:"column",
       alignItems:"center",justifyContent:"center",padding:"24px",position:"relative",overflowY:"auto"}}>
 
       {/* Grid bg */}
@@ -7578,7 +7578,7 @@ function PricingPage({onBack, onPaid}){
   }
 
   return(
-    <div style={{minHeight:"100vh",background:"#130d22",color:"#f4f0ff",fontFamily:"'Syne',sans-serif",position:"relative",overflowX:"hidden"}}>
+    <div style={{minHeight:"100vh",background:"#1e1a35",color:"#f4f0ff",fontFamily:"'Syne',sans-serif",position:"relative",overflowX:"hidden"}}>
       <div style={{position:"fixed",inset:0,backgroundImage:"linear-gradient(rgba(255,107,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,107,255,0.025) 1px,transparent 1px)",backgroundSize:"48px 48px",pointerEvents:"none"}}/>
       <div style={{position:"fixed",width:500,height:500,borderRadius:"50%",background:"#7b2fff",top:-150,left:"50%",transform:"translateX(-50%)",filter:"blur(120px)",opacity:0.12,pointerEvents:"none"}}/>
 
@@ -7754,7 +7754,7 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
         <div style={{display:"flex",alignItems:"center",gap:10}}>
           <button onClick={onLogin||onEnterApp} style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,letterSpacing:"0.1em",color:"var(--muted,#ccc4e8)",background:"none",border:"none",cursor:"pointer",padding:"8px 14px"}}>LOG IN</button>
           <button onClick={onEnterApp}
-            style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,letterSpacing:"0.1em",color:"#130d22",background:"#ff6bff",border:"none",padding:"9px 18px",borderRadius:6,cursor:"pointer",transition:"all 0.2s"}}>
+            style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,letterSpacing:"0.1em",color:"#1e1a35",background:"#ff6bff",border:"none",padding:"9px 18px",borderRadius:6,cursor:"pointer",transition:"all 0.2s"}}>
             CREATE ACCOUNT
           </button>
         </div>
@@ -8161,7 +8161,7 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
               meaning:"Price resumes in the original direction after the retest. This is where execution becomes valid.",
             },
           ].map((p,i)=>(
-            <div key={i} style={{background:"#130d22",padding:"36px 28px",position:"relative"}}>
+            <div key={i} style={{background:"#1a1535",padding:"36px 28px",position:"relative"}}>
               <div style={{display:"flex",alignItems:"baseline",gap:12,marginBottom:20}}>
                 <span style={{fontFamily:"'Syne',sans-serif",fontSize:56,fontWeight:800,lineHeight:1,color:p.color,opacity:0.25,letterSpacing:"-0.04em"}}>{p.phase}</span>
                 <div>
@@ -8285,7 +8285,7 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
               onMouseEnter={()=>setHoveredPlan(p.tier)}
               onMouseLeave={()=>setHoveredPlan(null)}
               style={{position:"relative",background:p.popular?"rgba(255,107,255,0.05)":"rgba(255,255,255,0.03)",border:`1px solid ${p.popular?"rgba(255,107,255,0.3)":"rgba(255,255,255,0.08)"}`,borderRadius:14,padding:"32px 28px",transition:"all 0.2s",transform:hoveredPlan===p.tier?"translateY(-3px)":"none",boxShadow:p.popular?"0 0 40px rgba(255,107,255,0.1)":undefined}}>
-              {p.popular&&<div style={{position:"absolute",top:-11,left:"50%",transform:"translateX(-50%)",fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,letterSpacing:"0.12em",color:"#130d22",background:"#ff6bff",padding:"3px 14px",borderRadius:100,whiteSpace:"nowrap"}}>MOST POPULAR</div>}
+              {p.popular&&<div style={{position:"absolute",top:-11,left:"50%",transform:"translateX(-50%)",fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,letterSpacing:"0.12em",color:"#1e1a35",background:"#ff6bff",padding:"3px 14px",borderRadius:100,whiteSpace:"nowrap"}}>MOST POPULAR</div>}
               <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,letterSpacing:"0.16em",color:p.color,marginBottom:14}}>{p.tier}</div>
               <div style={{fontFamily:"'Syne',sans-serif",fontSize:42,fontWeight:800,lineHeight:1,color:p.color,marginBottom:4}}>{p.price}</div>
               <div style={{fontFamily:"'Space Mono',monospace",fontSize:14,color:"#8878aa",marginBottom:24}}>per month</div>
@@ -8306,7 +8306,7 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
                 style={{width:"100%",fontFamily:"'Space Mono',monospace",fontSize:14,fontWeight:700,letterSpacing:"0.1em",padding:13,borderRadius:8,cursor:"pointer",transition:"all 0.2s",
                   background:p.popular?"linear-gradient(135deg,#ff6bff,#7b2fff)":"none",
                   border:p.popular?"none":"1px solid rgba(255,255,255,0.15)",
-                  color:p.popular?"#130d22":"#ccc4e8"}}>
+                  color:p.popular?"#1e1a35":"#ccc4e8"}}>
                 GET STARTED {p.popular&&"→"}
               </button>
             </div>
