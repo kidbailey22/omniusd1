@@ -2237,7 +2237,12 @@ Stop: ${plan.stop_loss} | TP1: ${plan.tp1} | TP2: ${plan.tp2} | Runner: ${plan.r
 SESSION CANDLES (user's local time): ${sessCfg.candles.map(c => candleToUserTime(c)).join(" → ")} — cutoff ${sessCfg.cutoff}
 Minutes until next 30M close: ${(() => { const ctNow = new Date(new Date().toLocaleString("en-US",{timeZone:"America/Chicago"})); const m = ctNow.getMinutes(); return m < 30 ? 30 - m : 60 - m; })()} minutes
 
-━━━ HOW YOU COMMUNICATE ━━━
+CRITICAL TIME RULE:
+Every user message starts with a [CURRENT TIME — UPDATED NOW] block.
+Use ONLY that time. Never calculate time yourself. Never reference earlier times from conversation history. They are stale.
+When referencing the next candle — always use the "Next 30M close" time from that block.
+
+
 
 SPEAK like a human. THINK like a coach. RESPOND like a war room.
 
@@ -4161,15 +4166,28 @@ Return ONLY valid JSON, no markdown, no explanation:
   // ── STEP 3: Live chat ───────────────────────────────────────────────────────
   async function sendMessage() {
     if (!input.trim() || loading) return;
-    // Chat message cap — 30 per session
     const userMsgCount = messages.filter(m => m.role === "user").length;
     if (userMsgCount >= 30) return;
     const userMsg = input.trim();
     setInput("");
     const ct = getCTTime();
 
-    const newHistory = [...sessionHistory, { role: "user", content: userMsg }];
-    setMessages(prev => [...prev, { role: "user", content: userMsg, time: ct.str }]);
+    // ── Build fresh time context injected into EVERY message ──────────────
+    // This prevents the AI from using stale times from earlier in the conversation
+    const ctNow = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
+    const minsLeft = ctNow.getMinutes() < 30 ? 30 - ctNow.getMinutes() : 60 - ctNow.getMinutes();
+    const nextCloseLocal = getNextClose();
+    const tzShort = getUserTZShort();
+    const freshTimeBlock = `[CURRENT TIME — UPDATED NOW]
+Time: ${ct.str} ${tzShort} | Next 30M close: ${nextCloseLocal} (in ${minsLeft}m)
+Use ONLY these times. All earlier time references in this conversation are stale.
+---
+`;
+
+    // Inject fresh time at top of user message — visible to AI, hidden from user display
+    const msgWithTime = `${freshTimeBlock}${userMsg}`;
+    const newHistory = [...sessionHistory, { role: "user", content: msgWithTime }];
+    setMessages(prev => [...prev, { role: "user", content: userMsg, time: ct.str }]); // display without time block
     setLoading(true);
 
     try {
@@ -4178,7 +4196,7 @@ Return ONLY valid JSON, no markdown, no explanation:
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
-          max_tokens: 400,
+          max_tokens: 600,
           system: getLivePrompt(plan, selectedSession),
           messages: newHistory,
         }),
@@ -5343,6 +5361,23 @@ Return ONLY valid JSON, no markdown, no explanation:
                 )}
                 <div ref={bottomRef}/>
               </div>
+
+              {/* Live time strip — next candle countdown */}
+              {(() => {
+                const ctNow = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
+                const minsLeft = ctNow.getMinutes() < 30 ? 30 - ctNow.getMinutes() : 60 - ctNow.getMinutes();
+                const tzShort = getUserTZShort();
+                return (
+                  <div style={{ padding:"5px 16px 6px", display:"flex", alignItems:"center", gap:10, borderTop:"1px solid rgba(255,255,255,0.04)", background:"rgba(0,229,255,0.025)" }}>
+                    <span style={{ width:6, height:6, borderRadius:"50%", background:"#00e5ff", display:"inline-block", animation:"pulse 1.5s ease infinite", flexShrink:0 }}/>
+                    <span style={{ fontSize:9, fontWeight:700, color:"#00e5ff", fontFamily:"'Space Mono',monospace" }}>{ctTime} {tzShort}</span>
+                    <span style={{ fontSize:9, color:"rgba(255,255,255,0.2)" }}>|</span>
+                    <span style={{ fontSize:9, color:"rgba(255,255,255,0.45)", fontFamily:"'Space Mono',monospace" }}>
+                      Next 30M close: <strong style={{ color:"#ffd166" }}>{nextClose}</strong> (in {minsLeft}m)
+                    </span>
+                  </div>
+                );
+              })()}
 
               {/* Input */}
               <div style={{ padding: "8px 16px 14px", borderTop: "1px solid rgba(255,255,255,0.06)", display: "flex", gap: 8, flexShrink: 0 }}>
