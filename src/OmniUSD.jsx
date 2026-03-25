@@ -8175,6 +8175,26 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
         <div style={{display:"flex",flexDirection:"column",gap:0,border:"1px solid rgba(255,255,255,0.07)",borderRadius:16,overflow:"hidden"}}>
           {[
             {
+              q:"Why only the New York session?",
+              a:"The NY session is the only window where all three conditions for BRC are met simultaneously — institutional order flow, tight spreads, and reliable level respect. London creates the setup. Asian session creates noise. NY session executes the trade. We built OmniUSD around the one window that consistently produces A+ setups worth taking.",
+            },
+            {
+              q:"Why does BRC work best during NY session?",
+              a:"BRC depends on institutional participation to create clean breaks, clean retests, and clean continuation. Outside the NY session, retail volume dominates — levels break randomly, retests fail without follow-through, and false signals damage accounts. During NY open, the institutions that set those levels are actively defending and breaking them. That is what makes the BRC sequence reliable.",
+            },
+            {
+              q:"Why not trade London, Asian, and NY for more opportunities?",
+              a:"More sessions equals more trades equals more losses. Every session outside NY adds noise, not edge. Traders who chase every session spread their focus across four 90-minute windows — and get mediocre results in all of them. OmniUSD is built on a different philosophy: master one window, execute it perfectly, and compound the results. Six quality NY session trades per month outperforms thirty random trades across all sessions every time.",
+            },
+            {
+              q:"What if I miss the NY session?",
+              a:"You wait for tomorrow. OmniUSD is built on quality over quantity. If you miss today's window, the market will be there tomorrow. Chasing a setup outside the execution window is exactly how traders turn a good system into a losing one. The hard cutoff at 10:30 AM CT is not a limitation — it is the discipline that protects the account.",
+            },
+            {
+              q:"Why not trade London for BTCUSD and XAUUSD?",
+              a:"London open analysis is allowed for BTCUSD and XAUUSD because these two instruments maintain enough volume outside NY to produce readable structure. But the maximum grade is B+ — never A+. London creates the setup. NY confirms and executes it. Entering during London means entering before the institutional confirmation that makes BRC work. OmniUSD waits for the confirmation, not the setup.",
+            },
+            {
               q:"Is this just another signal service?",
               a:"No. You upload your own charts, the system reads the structure, and you decide. There are no alerts, no calls, and no black-box recommendations. If the setup is not valid, OmniUSD says PASS and shows nothing else.",
             },
