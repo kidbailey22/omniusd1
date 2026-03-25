@@ -1408,35 +1408,10 @@ function Onboarding({onSelect}){
                 <div style={{fontSize:13,color:"var(--t-muted3)",lineHeight:1.7,marginBottom:16}}>
                   The most widely used charting platform. Free plan works perfectly for OmniUSD — Daily, 4H, 1H, 30M, and 15M charts available on all instruments.
                 </div>
-                <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-                  <a href="https://www.tradingview.com/OmniUSD?aff_id=164890" target="_blank" rel="noopener noreferrer"
-                    style={{flex:1,minWidth:140,padding:"11px 20px",borderRadius:9,background:"linear-gradient(135deg,#00e5ff,#0099bb)",color:"#0f0c1a",fontSize:13,fontWeight:900,letterSpacing:"0.08em",fontFamily:"inherit",textDecoration:"none",textAlign:"center",display:"block",cursor:"pointer"}}>
-                    GET TRADINGVIEW →
-                  </a>
-                </div>
-              </div>
-
-              {/* Liquid Brokers */}
-              <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:16,padding:"22px 24px"}}>
-                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12,flexWrap:"wrap",gap:10}}>
-                  <div style={{display:"flex",alignItems:"center",gap:12}}>
-                    <div style={{width:36,height:36,borderRadius:10,background:"rgba(255,107,255,0.1)",border:"1px solid rgba(255,107,255,0.25)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>💧</div>
-                    <div>
-                      <div style={{fontSize:16,fontWeight:900,color:"var(--t-text)"}}>Liquid Brokers</div>
-                      <div style={{fontSize:13,color:"var(--t-muted4)"}}>Broker + integrated charts</div>
-                    </div>
-                  </div>
-                  <span style={{fontSize:11,fontWeight:900,padding:"3px 10px",borderRadius:20,background:"rgba(255,107,255,0.08)",border:"1px solid rgba(255,107,255,0.2)",color:"#ff6bff",letterSpacing:"0.08em",fontFamily:"'Space Mono',monospace"}}>BROKER + CHARTS</span>
-                </div>
-                <div style={{fontSize:13,color:"var(--t-muted3)",lineHeight:1.7,marginBottom:16}}>
-                  Trade and chart in one platform. Supports all OmniUSD instruments — XAUUSD, BTCUSD, NAS100, US30, USOIL, US500. Built-in candlestick charts on all timeframes.
-                </div>
-                <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-                  <a href="https://my.liquidbrokers.com/auth/register?partner_code=9454489" target="_blank" rel="noopener noreferrer"
-                    style={{flex:1,minWidth:140,padding:"11px 20px",borderRadius:9,background:"linear-gradient(135deg,#ff6bff,#7b2fff)",color:"#fff",fontSize:13,fontWeight:900,letterSpacing:"0.08em",fontFamily:"inherit",textDecoration:"none",textAlign:"center",display:"block",cursor:"pointer"}}>
-                    OPEN LIQUID ACCOUNT →
-                  </a>
-                </div>
+                <a href="https://www.tradingview.com/OmniUSD?aff_id=164890" target="_blank" rel="noopener noreferrer"
+                  style={{display:"block",width:"100%",padding:"11px 20px",borderRadius:9,background:"linear-gradient(135deg,#00e5ff,#0099bb)",color:"#0f0c1a",fontSize:13,fontWeight:900,letterSpacing:"0.08em",fontFamily:"inherit",textDecoration:"none",textAlign:"center",cursor:"pointer",boxSizing:"border-box"}}>
+                  GET TRADINGVIEW →
+                </a>
               </div>
 
             </div>
