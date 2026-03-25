@@ -1900,11 +1900,16 @@ function getMarketStatus(instrument, session = "NY") {
 }
 
 function getNextClose() {
-  const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
-  const m = now.getMinutes();
+  const now = new Date();
+  const ctNow = new Date(now.toLocaleString("en-US", { timeZone: "America/Chicago" }));
+  const m = ctNow.getMinutes();
   const minsToNext = m < 30 ? 30 - m : 60 - m;
-  const next = new Date(now.getTime() + minsToNext * 60000);
-  return next.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", timeZone: "America/Chicago" });
+  const nextUTC = new Date(now.getTime() + minsToNext * 60000);
+  // Show in user's selected timezone
+  const userTZ = getUserTZ();
+  const tzShort = new Intl.DateTimeFormat("en-US", { timeZoneName:"short", timeZone: userTZ, hour:"numeric" }).format(nextUTC).split(" ").pop();
+  const timeStr = new Intl.DateTimeFormat("en-US", { hour:"2-digit", minute:"2-digit", hour12:true, timeZone: userTZ }).format(nextUTC);
+  return `${timeStr} ${tzShort}`;
 }
 
 function getAnalysisPrompt(instrument, session = "NY") {
@@ -1948,13 +1953,26 @@ DAILY = The General (controls overall bias — NEVER trade against it)
 30M = The Trigger (the ONLY candle that gives entry permission)
 
 CURRENT CONTEXT:
-Today: ${ct.dayName} ${ct.dateStr} at ${ct.str} Chicago Time
-Session: ${sessionContext}${fridayNote}
+Today: ${ct.dayName} ${ct.dateStr}
+Current Time (CT): ${ct.str} CT | User Local: ${etToUserTime(now.getHours(), now.getMinutes(), true)}
+User Timezone: ${getUserTZ()}
 Instrument: ${instrument}
-Trading Session Selected: ${sessCfg.label} (${sessCfg.hours})
+Selected Session: ${sessCfg.label} (${sessCfg.hours})
+Window Status: ${sessionContext}${fridayNote}
 Session Candle Windows: ${sessCfg.candles.map(c => c.label || c).join(" → ")} — Hard cutoff: ${sessCfg.cutoff}
-${advisory ? `⚠️ SESSION ADVISORY: ${advisory}` : `✅ ${instrument} is well-suited for the ${sessCfg.label} session.`}
+Minutes Until Next 30M Close: ${(() => { const m = now.getMinutes(); return m < 30 ? 30 - m : 60 - m; })()} minutes
+Next 30M Candle Close (CT): ${getNextClose()}
+${advisory ? `⚠️ SESSION ADVISORY: ${advisory}` : `✅ ${instrument} suits the ${sessCfg.label} session.`}
 ${sessionWarning ? `⚠️ WARNING: ${sessionWarning}` : ""}
+
+WINDOW RULES — APPLY AUTOMATICALLY:
+- Window Status = "NY SESSION LIVE" → Full A+ execution analysis allowed
+- Window Status = "PRE-MARKET" → SOFT PASS only. Output conditional triggers, not executable plan.
+- Window Status = "NY SESSION CLOSED" → Grade = PASS. Scout mode only. Note levels for next session.
+- Window Status = "SATURDAY" or "SUNDAY" → Grade = PASS. No entries.
+- NEVER output A+ grade when window is closed or it is pre-market.
+- Always reference CT time for candles. Always show user's local time in brackets.
+- Always tell user exactly how many minutes until next 30M close.
 
 ═══════════════════════════════════════
 CORE RULES — NEVER VIOLATE THESE
@@ -2216,7 +2234,8 @@ ${plan.instrument} | ${plan.bias} | Grade: ${plan.grade} | ${plan.confidence_sco
 Trigger: ${plan.trigger_level} | Retest: ${plan.retest_zone}
 Stop: ${plan.stop_loss} | TP1: ${plan.tp1} | TP2: ${plan.tp2} | Runner: ${plan.runner}
 
-SESSION CANDLES (ET): ${sessCfg.candles.map(c => c.label || c).join(" → ")} — cutoff ${sessCfg.cutoff}
+SESSION CANDLES (user's local time): ${sessCfg.candles.map(c => candleToUserTime(c)).join(" → ")} — cutoff ${sessCfg.cutoff}
+Minutes until next 30M close: ${(() => { const ctNow = new Date(new Date().toLocaleString("en-US",{timeZone:"America/Chicago"})); const m = ctNow.getMinutes(); return m < 30 ? 30 - m : 60 - m; })()} minutes
 
 ━━━ HOW YOU COMMUNICATE ━━━
 
@@ -3989,11 +4008,15 @@ Return ONLY valid JSON, no markdown, no explanation:
       const openTimeET = `${h12}:${String(m).padStart(2,"0")} ${ampm} ET`;
       openingMsg = `📋 **PREP MODE — Session opens in ${untilStr}**\n\nPlan is locked. Study it now.\n\nTrigger: **${trigger}** · Stop: **${plan.stop_loss}** · TP1: **${plan.tp1}**\n\nCome back at **${openTimeET}** — I'll guide you candle by candle.\n\n🥷 Be ready. Not early.`;
     } else {
-      // Live — ET only, no dual timezone
+      // Live — show user's local time + minutes countdown
       const nextCandleET = nextCandleObj ? nextCandleObj.label : nextCandleDisplay;
+      const ctNow = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
+      const minsLeft = ctNow.getMinutes() < 30 ? 30 - ctNow.getMinutes() : 60 - ctNow.getMinutes();
       const isLastCandle = remainingCandles.length === 1;
 
-      openingMsg = `**NEXT ACTION**\n\nWatch the next 30M **${plan.instrument}** close.\n\nIf it closes **${direction} ${trigger}** — send it now.\nIf not — send me the closing price.\n\nWicks don't count. Only closes.\n\n🕐 Next check: **${nextCandleET}**`;
+      const nextCandleLocal = nextCandleObj ? candleToUserTime(nextCandleObj) : nextCandleET;
+
+      openingMsg = `**NEXT ACTION**\n\nWatch the next 30M **${plan.instrument}** close.\n\nIf it closes **${direction} ${trigger}** — send it now.\nIf not — send me the closing price.\n\nWicks don't count. Only closes.\n\n🕐 Next check: **${nextCandleLocal}** (in ${minsLeft}m)`;
 
       if (isLastCandle) {
         openingMsg += `\n\n⚠️ **LATE SESSION ALERT**\nThis signal is valid but you have **ONE candle remaining** before ${sessCfg.cutoff} cutoff. Limit order ONLY. No chasing. If retest doesn't happen before ${sessCfg.cutoff} — order expires. **DO NOT carry this setup past cutoff.**`;
