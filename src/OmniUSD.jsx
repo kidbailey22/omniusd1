@@ -3337,46 +3337,45 @@ function SoftPassScenariosPanel({ plan, onActivate }) {
     const isConfirming = confirming === bias;
 
     return (
-      <div style={{ padding:"14px 16px", background:`${color}08`, border:`1px solid ${isConfirming ? color : color+"33"}`, borderRadius:10, marginBottom:10, transition:"border 0.2s" }}>
-        <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10 }}>
-          <span style={{ fontSize:13, fontWeight:900, letterSpacing:"0.14em", color, fontFamily:"'Space Mono',monospace" }}>{isBull ? "🟢 BULL SCENARIO" : "🔴 BEAR SCENARIO"}</span>
-          <span style={{ fontSize:13, padding:"1px 7px", borderRadius:4, background:`${color}14`, border:`1px solid ${color}33`, color }}>{bias}</span>
+      <div style={{ padding:"10px 14px", background:`${color}08`, border:`1px solid ${isConfirming ? color : color+"33"}`, borderRadius:10, marginBottom:8, transition:"border 0.2s" }}>
+        {/* Header row */}
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
+          <span style={{ fontSize:11, fontWeight:900, letterSpacing:"0.12em", color, fontFamily:"'Space Mono',monospace" }}>{isBull ? "🟢 BULL" : "🔴 BEAR"}</span>
+          <span style={{ fontSize:11, padding:"2px 8px", borderRadius:4, background:`${color}14`, border:`1px solid ${color}33`, color, fontFamily:"'Space Mono',monospace", fontWeight:700 }}>{bias}</span>
         </div>
-        <div style={{ fontSize:14, fontWeight:700, color, marginBottom:6, fontFamily:"monospace" }}>
-          30M close {dir} {s.trigger}
+        {/* Trigger line — simplified */}
+        <div style={{ fontSize:14, fontWeight:700, color, marginBottom:8, fontFamily:"monospace" }}>
+          30M close {dir} {s.trigger} activates {bias}
         </div>
-        {s.plan && <div style={{ fontSize:14, color:"rgba(255,255,255,0.85)", lineHeight:1.7, marginBottom:12 }}>{s.plan}</div>}
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:6, marginBottom:14 }}>
-          {s.stop && <div style={{ padding:"8px 10px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:7 }}>
-            <div style={{ fontSize:7, color:"#8878aa", letterSpacing:"0.1em", marginBottom:2 }}>STOP</div>
+        {/* Level cards — tighter */}
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:5, marginBottom:10 }}>
+          {s.stop && <div style={{ padding:"6px 10px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:7 }}>
+            <div style={{ fontSize:9, color:"#8878aa", letterSpacing:"0.1em", marginBottom:2 }}>STOP</div>
             <div style={{ fontSize:14, fontWeight:700, color:"#ff6b6b", fontFamily:"monospace" }}>{s.stop}</div>
           </div>}
-          {s.tp1 && <div style={{ padding:"8px 10px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:7 }}>
-            <div style={{ fontSize:7, color:"#8878aa", letterSpacing:"0.1em", marginBottom:2 }}>TP1</div>
+          {s.tp1 && <div style={{ padding:"6px 10px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:7 }}>
+            <div style={{ fontSize:9, color:"#8878aa", letterSpacing:"0.1em", marginBottom:2 }}>TP1</div>
             <div style={{ fontSize:14, fontWeight:700, color:"#7fff6b", fontFamily:"monospace" }}>{s.tp1}</div>
           </div>}
         </div>
         {isConfirming && (
-          <div style={{ padding:"10px 12px", background:"rgba(255,209,102,0.08)", border:"1px solid rgba(255,209,102,0.3)", borderRadius:8, marginBottom:10, fontSize:13, color:"rgba(255,209,102,0.9)", lineHeight:1.7, fontFamily:"'Space Mono',monospace" }}>
-            {"⚠ You're activating based on pre-market structure. If session opens with different price action — trust the charts, not this plan. Tap again to confirm."}
+          <div style={{ padding:"8px 12px", background:"rgba(255,209,102,0.08)", border:"1px solid rgba(255,209,102,0.3)", borderRadius:8, marginBottom:8, fontSize:11, color:"rgba(255,209,102,0.9)", lineHeight:1.7, fontFamily:"'Space Mono',monospace" }}>
+            ⚠ Based on pre-market structure. If price opens differently — trust the charts. Tap again to confirm.
           </div>
         )}
-        <button
-          onClick={() => handleActivate(s, bias)}
-          style={{
-            width:"100%", padding:"11px", borderRadius:8,
+        <button onClick={() => handleActivate(s, bias)}
+          style={{ width:"100%", padding:"10px", borderRadius:8,
             background: isConfirming ? (isBull ? "linear-gradient(135deg,#7fff6b,#00bb66)" : "linear-gradient(135deg,#ff6b6b,#bb0000)") : `${color}18`,
             color: isConfirming ? "#fff" : color,
-            fontSize:14, fontWeight:700, letterSpacing:"0.1em",
+            fontSize:12, fontWeight:700, letterSpacing:"0.06em",
             fontFamily:"inherit", cursor:"pointer",
             border: isConfirming ? "none" : `1px solid ${color}44`,
-            transition:"all 0.2s",
-          }}>
-          {isConfirming ? `CONFIRM — ACTIVATE ${bias} →` : `ACTIVATE ${bias} SCENARIO →`}
+            transition:"all 0.2s" }}>
+          {isConfirming ? `Confirm ${bias === "LONG" ? "Long" : "Short"} →` : `Confirm ${bias === "LONG" ? "Long" : "Short"} Scenario`}
         </button>
         {isConfirming && (
           <button onClick={() => setConfirming(null)}
-            style={{ width:"100%", marginTop:6, padding:"7px", borderRadius:6, border:"none", background:"none", color:"rgba(255,255,255,0.75)", fontSize:13, cursor:"pointer", fontFamily:"inherit" }}>
+            style={{ width:"100%", marginTop:5, padding:"6px", borderRadius:6, border:"none", background:"none", color:"rgba(255,255,255,0.48)", fontSize:12, cursor:"pointer", fontFamily:"inherit" }}>
             Cancel
           </button>
         )}
@@ -3390,17 +3389,17 @@ function SoftPassScenariosPanel({ plan, onActivate }) {
         style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 16px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.08)", borderRadius: open ? "10px 10px 0 0" : 10, cursor:"pointer", fontFamily:"inherit", transition:"all 0.2s" }}>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
           <span style={{ fontSize:14 }}>🟡</span>
-          <span style={{ fontSize:14, fontWeight:700, color:"#f0ecff", letterSpacing:"0.04em" }}>Soft Pass Scenarios</span>
-          <span style={{ fontSize:13, color:"#8878aa", fontFamily:"'Space Mono',monospace" }}>Tap to {open ? "close" : "expand"}</span>
+          <span style={{ fontSize:13, fontWeight:700, color:"#f0ecff", letterSpacing:"0.04em" }}>If Price Confirms</span>
+          <span style={{ fontSize:11, color:"#8878aa", fontFamily:"'Space Mono',monospace" }}>Tap to {open ? "close" : "expand"}</span>
         </div>
         <span style={{ fontSize:16, color:"#00e5ff", transition:"transform 0.2s", transform: open ? "rotate(45deg)" : "none", display:"inline-block" }}>+</span>
       </button>
       {open && (
-        <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.08)", borderTop:"none", borderRadius:"0 0 10px 10px", padding:"16px", animation:"fadein 0.25s ease both" }}>
+        <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.08)", borderTop:"none", borderRadius:"0 0 10px 10px", padding:"14px", animation:"fadein 0.25s ease both" }}>
           <ScenarioCard s={bull} type="bull" />
           <ScenarioCard s={bear} type="bear" />
-          <div style={{ padding:"10px 14px", background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:8, fontSize:13, color:"rgba(255,255,255,0.75)", fontFamily:"'Space Mono',monospace", lineHeight:1.8 }}>
-            Only activate when you see the 30M candle actually close at the trigger price. Wicks do not count.
+          <div style={{ padding:"8px 12px", background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:8, fontSize:11, color:"rgba(255,255,255,0.48)", fontFamily:"'Space Mono',monospace", lineHeight:1.7 }}>
+            Only confirm after the 30M candle fully closes at the trigger. Wicks don't count.
           </div>
         </div>
       )}
@@ -4330,7 +4329,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 {/* Drawer nav items */}
                 <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 0" }}>
                   {[
-                    { label: "Dashboard", icon: "◈", action: () => { setAppPage("dashboard"); setDrawerOpen(false); }, active: appPage === "dashboard" },
+                    { label: "Dashboard", icon: "◈", action: () => { setAppPage("dashboard"); setPhase("upload"); setImages(Array(5).fill(null)); setDrawerOpen(false); }, active: appPage === "dashboard" },
                     { label: "History", icon: "📋", action: () => { setAppPage("history"); setDrawerOpen(false); }, active: appPage === "history", color: "#7fff6b" },
                     { label: "Settings", icon: "⚙", action: () => { setAppPage("settings"); setDrawerOpen(false); }, active: appPage === "settings", color: "#ff6bff" },
                     { label: "Help & FAQ", icon: "?", action: () => { setAppPage("faq"); setDrawerOpen(false); }, active: appPage === "faq", color: "#00e5ff" },
@@ -4465,57 +4464,20 @@ Use ONLY these times. All earlier time references in this conversation are stale
 
       {/* ══ PHASE: UPLOAD ══════════════════════════════════════════════════════ */}
       {appPage === "dashboard" && phase === "upload" && (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", padding: isMobile ? "24px 16px 24px" : "48px 24px 32px", animation: "fadein 0.3s ease both" }}>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", padding: isMobile ? "28px 16px 32px" : "48px 24px 32px", animation: "fadein 0.3s ease both" }}>
           <div style={{ width: "100%", maxWidth: 560 }}>
 
-            {/* Session state banner */}
-            {(()=>{
-              if (!instrument) return null;
-              const status = getMarketStatus(instrument, selectedSession);
-
-              if (status.state === "closed") return (
-                <div style={{ padding:"14px 16px", background:"rgba(255,107,107,0.05)", border:"1px solid rgba(255,107,107,0.2)", borderLeft:"3px solid #ff6b6b", borderRadius:0, marginBottom:16 }}>
-                  <div style={{ fontSize:14, fontWeight:700, color:"#ff6b6b", marginBottom:4 }}>🔴 {status.reason}</div>
-                  <div style={{ fontSize:13, color:"rgba(255,255,255,0.75)", lineHeight:1.7 }}>{status.comeback}</div>
-                </div>
-              );
-
-              if (status.state === "wrong_session") return (
-                <div style={{ padding:"14px 16px", background:"rgba(255,107,107,0.05)", border:"1px solid rgba(255,107,107,0.2)", borderLeft:"3px solid #ff6b6b", borderRadius:0, marginBottom:16 }}>
-                  <div style={{ fontSize:14, fontWeight:700, color:"#ff6b6b", marginBottom:4 }}>🔴 {status.reason}</div>
-                  <div style={{ fontSize:13, color:"rgba(255,255,255,0.75)", lineHeight:1.7 }}>{status.comeback}</div>
-                  <div style={{ marginTop:8, fontSize:13, color:"rgba(255,255,255,0.75)", fontFamily:"'Space Mono',monospace", fontStyle:"italic" }}>
-                    "OmniUSD is precision built for the NY session — the highest conviction window in the market. We don't trade every session. We trade the RIGHT session."
-                  </div>
-                </div>
-              );
-
-              if (status.state === "prep") return (
-                <div style={{ padding:"14px 16px", background:"rgba(255,209,102,0.04)", border:"1px solid rgba(255,209,102,0.2)", borderLeft:"3px solid #ffd166", borderRadius:0, marginBottom:16 }}>
-                  <div style={{ fontSize:14, fontWeight:700, color:"#ffd166", marginBottom:4 }}>🟡 {status.reason}</div>
-                  <div style={{ fontSize:13, color:"rgba(255,255,255,0.8)", lineHeight:1.7 }}>{status.comeback}</div>
-                </div>
-              );
-
-              if (status.state === "london") return (
-                <div style={{ padding:"14px 16px", background:"rgba(0,229,255,0.04)", border:"1px solid rgba(0,229,255,0.2)", borderLeft:"3px solid #00e5ff", borderRadius:0, marginBottom:16 }}>
-                  <div style={{ fontSize:14, fontWeight:700, color:"#00e5ff", marginBottom:4 }}>🟡 {status.reason}</div>
-                  <div style={{ fontSize:13, color:"rgba(255,255,255,0.8)", lineHeight:1.7 }}>{status.comeback}</div>
-                </div>
-              );
-
-              return null;
-            })()}
-
             {/* Header */}
-            <div style={{ marginBottom: 20 }}>
-              <h1 style={{ fontSize: 26, fontWeight: 700, lineHeight: 1.2, marginBottom: 10, letterSpacing: "-0.01em" }}>Upload your charts.<br/>Start the session.</h1>
-              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", lineHeight: 1.7 }}>
-                Select one instrument · Upload all 5 timeframes once · Every screenshot must show the <span style={{ color: "rgba(255,255,255,0.75)" }}>ticker</span> and <span style={{ color: "rgba(255,255,255,0.75)" }}>timeframe</span>
+            <div style={{ marginBottom: 24 }}>
+              <h1 style={{ fontSize: 26, fontWeight: 700, lineHeight: 1.2, marginBottom: 8, letterSpacing: "-0.01em" }}>
+                Upload your charts.<br/>Start the session.
+              </h1>
+              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.6 }}>
+                Select one instrument and upload all 5 timeframes.
               </div>
             </div>
 
-            {/* Smart instrument selector — session aware */}
+            {/* Instrument pills */}
             {(() => {
               const userTier = profile?.tier || "starter";
               const tierCfg = TIER_CONFIG[userTier] || TIER_CONFIG.starter;
@@ -4525,11 +4487,6 @@ Use ONLY these times. All earlier time references in this conversation are stale
 
               return (
                 <div style={{ marginBottom: 24 }}>
-                  <div style={{ marginBottom: 8, textAlign: "center" }}>
-                    <span style={{ fontFamily:"'Space Mono',monospace", fontSize:13, color: instrument ? "rgba(255,255,255,0.38)" : "rgba(255,107,255,0.7)", letterSpacing:"0.12em" }}>
-                      {instrument ? `INSTRUMENT: ${instrument}` : "SELECT YOUR INSTRUMENT"}
-                    </span>
-                  </div>
                   <div style={{ display: "flex", gap: 6, justifyContent: "center", flexWrap: "wrap" }}>
                     {allInstruments.map(sym => {
                       const isLocked = !allowed.includes(sym);
@@ -4540,194 +4497,150 @@ Use ONLY these times. All earlier time references in this conversation are stale
                       const inCooldown = cooldownMs > 0 && !hasActivePlan;
                       const cooldownLabel = formatCountdown(cooldownMs);
 
-                      // Status:
-                      // 1. tier-locked (⊘)
-                      // 2. has active plan (ACTIVE — tap to resume)
-                      // 3. in cooldown but no active plan (timer)
-                      // 4. available
-
                       let borderColor, bgColor, textColor, cursor, label, subLabel;
 
                       if (isLocked) {
-                        borderColor = "rgba(255,255,255,0.05)";
-                        bgColor = "rgba(255,255,255,0.02)";
-                        textColor = "rgba(255,255,255,0.80)";
-                        cursor = "not-allowed";
-                        label = `⊘ ${sym}`;
-                        subLabel = null;
+                        borderColor = "rgba(255,255,255,0.05)"; bgColor = "rgba(255,255,255,0.02)";
+                        textColor = "rgba(255,255,255,0.22)"; cursor = "not-allowed";
+                        label = `⊘ ${sym}`; subLabel = null;
                       } else if (hasActivePlan) {
                         const gradeC = sess.plan.grade === "A+" ? "#7fff6b" : sess.plan.grade === "PASS" ? "#ff6b6b" : "#ffd166";
-                        borderColor = `${gradeC}55`;
-                        bgColor = `${gradeC}12`;
-                        textColor = gradeC;
-                        cursor = "pointer";
-                        label = sym;
-                        subLabel = `${sess.plan.grade} · ${sess.plan.bias}`;
+                        borderColor = `${gradeC}55`; bgColor = `${gradeC}12`;
+                        textColor = gradeC; cursor = "pointer";
+                        label = sym; subLabel = `${sess.plan.grade} · RESUME`;
                       } else if (inCooldown) {
-                        borderColor = "rgba(255,154,60,0.3)";
-                        bgColor = "rgba(255,154,60,0.06)";
-                        textColor = "rgba(255,154,60,0.6)";
-                        cursor = "not-allowed";
-                        label = sym;
-                        subLabel = `🔒 ${cooldownLabel}`;
+                        borderColor = "rgba(255,154,60,0.3)"; bgColor = "rgba(255,154,60,0.06)";
+                        textColor = "rgba(255,154,60,0.6)"; cursor = "default";
+                        label = sym; subLabel = `🔒 ${cooldownLabel}`;
                       } else {
                         borderColor = isSelected ? "rgba(255,107,255,0.6)" : "rgba(255,255,255,0.1)";
                         bgColor = isSelected ? "rgba(255,107,255,0.18)" : "rgba(255,255,255,0.04)";
-                        textColor = isSelected ? "#ff6bff" : "#8878aa";
-                        cursor = "pointer";
-                        label = sym;
-                        subLabel = null;
+                        textColor = isSelected ? "#ff6bff" : "rgba(255,255,255,0.7)";
+                        cursor = "pointer"; label = sym; subLabel = null;
                       }
 
                       return (
-                        <button key={sym}
+                        <button key={sym} disabled={isLocked}
                           onClick={() => {
-                            if (isLocked || inCooldown) return;
+                            if (isLocked) return;
                             if (hasActivePlan) {
-                              // Resume this instrument's session
-                              setPlan(sess.plan);
-                              setPhase(sess.phase);
-                              setInstrument(sym);
-                              setTier1(sess.tier1 || false);
-                              setTier2(sess.tier2 || false);
+                              setPlan(sess.plan); setPhase(sess.phase); setInstrument(sym);
+                              setTier1(sess.tier1 || false); setTier2(sess.tier2 || false);
                               setSessionState(sess.sessionState || "WATCHING");
-                              setMessages(sess.messages || []);
-                              setSessionHistory(sess.sessionHistory || []);
+                              setMessages(sess.messages || []); setSessionHistory(sess.sessionHistory || []);
                             } else {
-                              setInstrument(sym);
-                              setPlan(null);
-                              setMessages([]);
-                              setTier1(false);
-                              setTier2(false);
+                              setInstrument(sym); setPlan(null); setMessages([]);
+                              setTier1(false); setTier2(false);
                             }
                           }}
-                          title={isLocked ? `Upgrade to access ${sym}` : hasActivePlan ? `Resume ${sym} session` : inCooldown ? `${sym} available in ${cooldownLabel}` : sym}
-                          style={{ fontSize: 13, fontWeight: 700, padding: subLabel ? "5px 10px 7px" : "5px 10px", borderRadius: 6, border: `1px solid ${borderColor}`, background: bgColor, color: textColor, cursor, fontFamily: "inherit", opacity: isLocked ? 0.5 : 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2, boxShadow: isSelected && !hasActivePlan ? "0 0 12px rgba(255,107,255,0.15)" : "none", transition: "all 0.15s" }}>
+                          style={{ fontSize: 13, fontWeight: 700, padding: subLabel ? "5px 10px 7px" : "6px 12px", borderRadius: 7, border: `1px solid ${borderColor}`, background: bgColor, color: textColor, cursor, fontFamily: "inherit", opacity: isLocked ? 0.4 : 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2, boxShadow: isSelected && !hasActivePlan ? "0 0 12px rgba(255,107,255,0.15)" : "none", transition: "all 0.15s" }}>
                           <span>{label}</span>
-                          {subLabel && <span style={{ fontSize: 7, fontWeight: 900, letterSpacing: "0.06em", opacity: 0.85 }}>{subLabel}</span>}
+                          {subLabel && <span style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.06em", opacity: 0.9 }}>{subLabel}</span>}
                         </button>
                       );
                     })}
                   </div>
-                  {/* Legend */}
-                  <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 8, flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 8, color: "rgba(255,255,255,0.80)", fontFamily: "'Space Mono',monospace" }}>✦ Tap active plan to resume · 🔒 Cooldown resets in 2h</span>
-                  </div>
                 </div>
               );
             })()}
 
-            {/* Session indicator — NY primary, London exception for BTC/XAU */}
-            {(() => {
-              const isLondonEligible = instrument === "BTCUSD" || instrument === "XAUUSD";
-              const mktStatus = instrument ? getMarketStatus(instrument, selectedSession) : null;
-              const tzShort = getUserTZShort();
-              const nyOpenLocal = etToUserTime(8, 30, false);
-              const nyCloseLocal = etToUserTime(10, 30, false);
-              const londonOpenLocal = etToUserTime(2, 0, false);
-              const londonCloseLocal = etToUserTime(4, 0, false);
+            {/* London session toggle — only for BTC/XAU */}
+            {(instrument === "BTCUSD" || instrument === "XAUUSD") && (
+              <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 20 }}>
+                {[
+                  { key: "NY", label: "NY SESSION", sub: `${etToUserTime(8,30,false)}–${etToUserTime(10,30,false)} ${getUserTZShort()}`, color: "#7fff6b" },
+                  { key: "LONDON", label: "LONDON", sub: `${etToUserTime(2,0,false)}–${etToUserTime(4,0,false)} ${getUserTZShort()} · MAX B+`, color: "#00e5ff" },
+                ].map(s => (
+                  <button key={s.key} onClick={() => setSelectedSession(s.key)}
+                    style={{ fontSize: 11, fontWeight: 700, padding: "6px 14px", borderRadius: 7, fontFamily: "inherit", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
+                      border: selectedSession === s.key ? `1px solid ${s.color}55` : "1px solid rgba(255,255,255,0.08)",
+                      background: selectedSession === s.key ? `${s.color}14` : "rgba(255,255,255,0.03)",
+                      color: selectedSession === s.key ? s.color : "rgba(255,255,255,0.4)" }}>
+                    <span>{s.label}</span>
+                    <span style={{ fontSize: 9, opacity: 0.7 }}>{s.sub}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Session status — only when not live */}
+            {instrument && (() => {
+              const status = getMarketStatus(instrument, selectedSession);
+              if (status.state === "live") return null;
+              const isWarn = status.state === "prep" || status.state === "london";
+              const color = isWarn ? "#ffd166" : "#ff6b6b";
+              const emoji = status.state === "prep" || status.state === "london" ? "🟡" : "🔴";
               return (
-                <div style={{ marginBottom:16 }}>
-                  <div style={{ fontSize:13, color:"rgba(255,255,255,0.38)", fontFamily:"'Space Mono',monospace", letterSpacing:"0.12em", marginBottom:8, textAlign:"center" }}>SESSION WINDOW</div>
-                  <div style={{ display:"flex", gap:6, justifyContent:"center", flexWrap:"wrap" }}>
-                    {/* NY Session — always available */}
-                    <button onClick={() => setSelectedSession("NY")}
-                      style={{ fontSize:13, fontWeight:700, padding:"6px 14px", borderRadius:6, fontFamily:"inherit", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:2, minWidth:90,
-                        border: selectedSession==="NY" ? "1px solid rgba(127,255,107,0.5)" : "1px solid rgba(255,255,255,0.1)",
-                        background: selectedSession==="NY" ? "rgba(127,255,107,0.12)" : "rgba(255,255,255,0.04)",
-                        color: selectedSession==="NY" ? "#7fff6b" : "#8878aa" }}>
-                      <span>NY SESSION</span>
-                      <span style={{ fontSize:7, opacity:0.7 }}>{nyOpenLocal}–{nyCloseLocal} {tzShort}</span>
-                      <span style={{ fontSize:6, color:"#7fff6b", fontWeight:900, letterSpacing:"0.08em" }}>PRIMARY</span>
-                    </button>
-                    {/* London — only shown for BTCUSD/XAUUSD */}
-                    {isLondonEligible && (
-                      <button onClick={() => setSelectedSession("LONDON")}
-                        style={{ fontSize:13, fontWeight:700, padding:"6px 14px", borderRadius:6, fontFamily:"inherit", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:2, minWidth:90,
-                          border: selectedSession==="LONDON" ? "1px solid rgba(0,229,255,0.5)" : "1px solid rgba(255,255,255,0.08)",
-                          background: selectedSession==="LONDON" ? "rgba(0,229,255,0.1)" : "rgba(255,255,255,0.03)",
-                          color: selectedSession==="LONDON" ? "#00e5ff" : "rgba(255,255,255,0.75)" }}>
-                        <span>LONDON</span>
-                        <span style={{ fontSize:7, opacity:0.7 }}>{londonOpenLocal}–{londonCloseLocal} {tzShort}</span>
-                        <span style={{ fontSize:6, color:"#ffd166", fontWeight:900, letterSpacing:"0.08em" }}>BTC/XAU ONLY · MAX B+</span>
-                      </button>
-                    )}
-                  </div>
-                  <div style={{ textAlign:"center", marginTop:8, fontSize:13, color:"rgba(255,255,255,0.80)", fontFamily:"'Space Mono',monospace", fontStyle:"italic" }}>
-                    Pre-market scout: 7:00–8:30 AM CT · Execution: 8:30–10:30 AM CT
-                  </div>
+                <div style={{ padding: "10px 14px", background: `${color}08`, border: `1px solid ${color}22`, borderLeft: `3px solid ${color}`, borderRadius: 0, marginBottom: 16 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color, marginBottom: 2 }}>{emoji} {status.reason}</div>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", lineHeight: 1.6 }}>{status.comeback}</div>
                 </div>
               );
             })()}
 
-            {/* Progress bar */}
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: images.filter(Boolean).length === 5 ? "#7fff6b" : "#8878aa", letterSpacing: "0.1em" }}>
-                  {images.filter(Boolean).length === 5 ? "✓ ALL 5 CHARTS READY" : `${images.filter(Boolean).length} / 5 CHARTS UPLOADED`}
-                </span>
-                <span style={{ fontSize: 13, color: "#8878aa" }}>{instrument}</span>
-              </div>
-              <div style={{ height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2, overflow: "hidden" }}>
-                <div style={{ height: "100%", width: `${(images.filter(Boolean).length / 5) * 100}%`, background: images.filter(Boolean).length === 5 ? "#7fff6b" : "linear-gradient(90deg,#ff6bff,#00e5ff)", borderRadius: 2, transition: "width 0.3s ease" }}/>
-              </div>
-            </div>
-
-            {/* Re-upload warning — shows when user has already used their free re-upload */}
+            {/* Re-upload warning */}
             {instrument && (uploadCounts[instrument] || 0) >= 1 && (
-              <div style={{ padding:"12px 16px", background:"rgba(255,107,107,0.06)", border:"1px solid rgba(255,107,107,0.25)", borderLeft:"3px solid #ff6b6b", borderRadius:0, marginBottom:16 }}>
-                <div style={{ fontSize:14, fontWeight:700, color:"#ff6b6b", marginBottom:4 }}>⚠ LAST FREE RE-UPLOAD</div>
-                <div style={{ fontSize:13, color:"rgba(255,255,255,0.8)", lineHeight:1.7 }}>
-                  You've already re-uploaded {instrument} once this session. This is your final upload for this instrument — <strong style={{ color:"#ff6b6b" }}>cooldown will be fully active after this.</strong>
+              <div style={{ padding: "10px 14px", background: "rgba(255,107,107,0.06)", border: "1px solid rgba(255,107,107,0.25)", borderLeft: "3px solid #ff6b6b", borderRadius: 0, marginBottom: 16 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#ff6b6b", marginBottom: 2 }}>⚠ LAST FREE RE-UPLOAD</div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", lineHeight: 1.6 }}>
+                  Final upload for {instrument} this session — <strong style={{ color: "#ff6b6b" }}>cooldown activates after this.</strong>
                 </div>
               </div>
             )}
+
+            {/* Upload zone */}
             <BulkUploadZone images={images} setImages={setImages} readSlotFile={readSlotFile} dragOverSlot={dragOverSlot} setDragOverSlot={setDragOverSlot} />
 
-            {/* CTA */}
-            {(()=>{
-              const mkt = getMarketStatus(instrument, selectedSession);
-              const chartsReady = images.filter(Boolean).length === 5;
-              const canGenerate = chartsReady && (mkt.state === "live" || mkt.state === "prep" || mkt.state === "london");
+            {/* Progress indicator — only shows after first chart added */}
+            {images.filter(Boolean).length > 0 && images.filter(Boolean).length < 5 && (
+              <div style={{ marginTop: 12 }}>
+                <div style={{ height: 3, background: "rgba(255,255,255,0.08)", borderRadius: 2, overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${(images.filter(Boolean).length / 5) * 100}%`, background: "linear-gradient(90deg,#ff6bff,#00e5ff)", borderRadius: 2, transition: "width 0.3s ease" }}/>
+                </div>
+                <div style={{ textAlign: "center", fontSize: 11, color: "rgba(255,255,255,0.48)", marginTop: 6 }}>
+                  {images.filter(Boolean).length} of 5 charts added
+                </div>
+              </div>
+            )}
 
-              let btnLabel = "SELECT YOUR 5 CHARTS";
-              if (mkt.state === "closed") btnLabel = "WINDOW CLOSED — COME BACK AT 8:30 AM CT";
-              else if (mkt.state === "wrong_session") btnLabel = `${instrument} — NY SESSION ONLY`;
-              else if (!chartsReady && images.filter(Boolean).length === 0) btnLabel = "SELECT YOUR 5 CHARTS";
-              else if (!chartsReady) btnLabel = `${images.filter(Boolean).length} / 5 CHARTS — ADD ${5 - images.filter(Boolean).length} MORE`;
-              else if (mkt.state === "prep") btnLabel = "GENERATE SCOUT PLAN →";
-              else if (mkt.state === "london") btnLabel = "GENERATE LONDON PLAN →";
-              else btnLabel = "GENERATE SESSION PLAN →";
+            {/* CTA */}
+            {(() => {
+              const mkt = instrument ? getMarketStatus(instrument, selectedSession) : { state: "closed" };
+              const chartsReady = images.filter(Boolean).length === 5;
+              const canGenerate = chartsReady && instrument && (mkt.state === "live" || mkt.state === "prep" || mkt.state === "london");
+
+              const btnLabel = !instrument ? "SELECT AN INSTRUMENT ABOVE"
+                : !chartsReady ? (images.filter(Boolean).length === 0 ? "SELECT YOUR 5 CHARTS" : `ADD ${5 - images.filter(Boolean).length} MORE CHART${5 - images.filter(Boolean).length !== 1 ? "S" : ""}`)
+                : mkt.state === "closed" ? "WINDOW CLOSED — COME BACK AT 8:30 AM CT"
+                : mkt.state === "wrong_session" ? `${instrument} — NY SESSION ONLY`
+                : mkt.state === "prep" ? "GENERATE SCOUT PLAN →"
+                : mkt.state === "london" ? "GENERATE LONDON PLAN →"
+                : "GENERATE SESSION PLAN →";
 
               return (
-                <button onClick={analyzeCharts} disabled={!canGenerate}
-                  style={{ width:"100%", padding:"14px", borderRadius:10,
-                    border: canGenerate ? "none" : "1px solid rgba(255,107,255,0.2)",
+                <button onClick={canGenerate ? analyzeCharts : undefined} disabled={!canGenerate}
+                  style={{ width: "100%", marginTop: 16, padding: "15px", borderRadius: 10,
+                    border: canGenerate ? "none" : "1px solid rgba(255,107,255,0.15)",
                     background: canGenerate
                       ? mkt.state === "prep" ? "linear-gradient(135deg,#ffd166,#cc8800)"
                       : mkt.state === "london" ? "linear-gradient(135deg,#00e5ff,#0099bb)"
                       : "linear-gradient(135deg,#ff6bff,#7b2fff)"
-                      : "rgba(255,107,255,0.08)",
-                    color: canGenerate ? (mkt.state === "prep" || mkt.state === "london" ? "#0f0c1a" : "#fff") : "rgba(255,107,255,0.45)",
-                    fontSize:14, fontWeight:700, letterSpacing:"0.12em", fontFamily:"inherit",
+                      : "rgba(255,107,255,0.06)",
+                    color: canGenerate ? (mkt.state === "prep" || mkt.state === "london" ? "#0f0c1a" : "#fff") : "rgba(255,107,255,0.35)",
+                    fontSize: 13, fontWeight: 700, letterSpacing: "0.1em", fontFamily: "inherit",
                     cursor: canGenerate ? "pointer" : "default",
-                    boxShadow: canGenerate ? "0 4px 32px rgba(255,107,255,0.35)" : "none",
-                    transition:"all 0.2s" }}>
+                    boxShadow: canGenerate ? "0 4px 32px rgba(255,107,255,0.3)" : "none",
+                    transition: "all 0.2s" }}>
                   {btnLabel}
                 </button>
               );
             })()}
 
-            <div style={{ textAlign: "center", marginTop: 10, fontSize: 13, color: "#8878aa" }}>
-              Screenshots must show the instrument ticker and timeframe clearly
+            {/* Requirement line */}
+            <div style={{ textAlign: "center", marginTop: 12, fontSize: 11, color: "rgba(255,255,255,0.35)" }}>
+              Screenshots must clearly show the instrument ticker and timeframe.
             </div>
 
-            <div style={{ textAlign: "center", marginTop: 16 }}>
-              <button onClick={onSignOut}
-                style={{ fontSize: 13, color: "rgba(255,255,255,0.80)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", letterSpacing: "0.06em" }}>
-                Sign out
-              </button>
-            </div>
           </div>
         </div>
       )}
