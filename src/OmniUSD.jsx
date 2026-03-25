@@ -7895,7 +7895,7 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
         <div style={{marginBottom:48}}>
           <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,107,255,0.7)",letterSpacing:"0.22em",marginBottom:14}}>WHY TRADERS USE OMNIUSD</div>
           <h2 style={{fontFamily:"'Syne',sans-serif",fontSize:"clamp(20px,2.8vw,34px)",fontWeight:800,lineHeight:1.15,letterSpacing:"-0.02em",color:"#f0ecff",maxWidth:520}}>
-            Built for the New York open.<br/>The only session that consistently delivers.
+            The methodology is yours.<br/>The execution is where it breaks down.
           </h2>
         </div>
 
