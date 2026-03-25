@@ -3331,27 +3331,40 @@ function HistoryPage({ uid, onClose }) {
   );
 }
 
-function SoftPassScenariosPanel({ plan }) {
+function SoftPassScenariosPanel({ plan, onActivate }) {
   const [open, setOpen] = useState(false);
+  const [confirming, setConfirming] = useState(null);
   if (!plan?.soft_pass_scenarios) return null;
   const { bull, bear } = plan.soft_pass_scenarios;
+
+  function handleActivate(s, bias) {
+    if (confirming === bias) {
+      setConfirming(null);
+      onActivate && onActivate(s, bias);
+    } else {
+      setConfirming(bias);
+    }
+  }
 
   const ScenarioCard = ({ s, type }) => {
     if (!s?.trigger) return null;
     const isBull = type === "bull";
     const color = isBull ? "#7fff6b" : "#ff6b6b";
+    const bias = isBull ? "LONG" : "SHORT";
     const dir = isBull ? "above" : "below";
+    const isConfirming = confirming === bias;
+
     return (
-      <div style={{ padding:"14px 16px", background:`${color}08`, border:`1px solid ${color}33`, borderRadius:10, marginBottom:10 }}>
+      <div style={{ padding:"14px 16px", background:`${color}08`, border:`1px solid ${isConfirming ? color : color+"33"}`, borderRadius:10, marginBottom:10, transition:"border 0.2s" }}>
         <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10 }}>
-          <span style={{ fontSize:9, fontWeight:900, letterSpacing:"0.14em", color, fontFamily:"'Space Mono',monospace" }}>{isBull?"🟢 BULL SCENARIO":"🔴 BEAR SCENARIO"}</span>
-          <span style={{ fontSize:9, padding:"1px 7px", borderRadius:4, background:`${color}14`, border:`1px solid ${color}33`, color }}>{isBull?"LONG":"SHORT"}</span>
+          <span style={{ fontSize:9, fontWeight:900, letterSpacing:"0.14em", color, fontFamily:"'Space Mono',monospace" }}>{isBull ? "🟢 BULL SCENARIO" : "🔴 BEAR SCENARIO"}</span>
+          <span style={{ fontSize:9, padding:"1px 7px", borderRadius:4, background:`${color}14`, border:`1px solid ${color}33`, color }}>{bias}</span>
         </div>
         <div style={{ fontSize:13, fontWeight:700, color, marginBottom:6, fontFamily:"monospace" }}>
           30M close {dir} {s.trigger}
         </div>
-        {s.plan && <div style={{ fontSize:11, color:"rgba(255,255,255,0.55)", lineHeight:1.7, marginBottom:10 }}>{s.plan}</div>}
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:6 }}>
+        {s.plan && <div style={{ fontSize:11, color:"rgba(255,255,255,0.55)", lineHeight:1.7, marginBottom:12 }}>{s.plan}</div>}
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:6, marginBottom:14 }}>
           {s.stop && <div style={{ padding:"8px 10px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:7 }}>
             <div style={{ fontSize:7, color:"#8878aa", letterSpacing:"0.1em", marginBottom:2 }}>STOP</div>
             <div style={{ fontSize:12, fontWeight:700, color:"#ff6b6b", fontFamily:"monospace" }}>{s.stop}</div>
@@ -3361,6 +3374,30 @@ function SoftPassScenariosPanel({ plan }) {
             <div style={{ fontSize:12, fontWeight:700, color:"#7fff6b", fontFamily:"monospace" }}>{s.tp1}</div>
           </div>}
         </div>
+        {isConfirming && (
+          <div style={{ padding:"10px 12px", background:"rgba(255,209,102,0.08)", border:"1px solid rgba(255,209,102,0.3)", borderRadius:8, marginBottom:10, fontSize:10, color:"rgba(255,209,102,0.9)", lineHeight:1.7, fontFamily:"'Space Mono',monospace" }}>
+            {"⚠ You're activating based on pre-market structure. If session opens with different price action — trust the charts, not this plan. Tap again to confirm."}
+          </div>
+        )}
+        <button
+          onClick={() => handleActivate(s, bias)}
+          style={{
+            width:"100%", padding:"11px", borderRadius:8,
+            background: isConfirming ? (isBull ? "linear-gradient(135deg,#7fff6b,#00bb66)" : "linear-gradient(135deg,#ff6b6b,#bb0000)") : `${color}18`,
+            color: isConfirming ? "#fff" : color,
+            fontSize:11, fontWeight:700, letterSpacing:"0.1em",
+            fontFamily:"inherit", cursor:"pointer",
+            border: isConfirming ? "none" : `1px solid ${color}44`,
+            transition:"all 0.2s",
+          }}>
+          {isConfirming ? `CONFIRM — ACTIVATE ${bias} →` : `ACTIVATE ${bias} SCENARIO →`}
+        </button>
+        {isConfirming && (
+          <button onClick={() => setConfirming(null)}
+            style={{ width:"100%", marginTop:6, padding:"7px", borderRadius:6, border:"none", background:"none", color:"rgba(255,255,255,0.3)", fontSize:10, cursor:"pointer", fontFamily:"inherit" }}>
+            Cancel
+          </button>
+        )}
       </div>
     );
   };
@@ -3380,8 +3417,8 @@ function SoftPassScenariosPanel({ plan }) {
         <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.08)", borderTop:"none", borderRadius:"0 0 10px 10px", padding:"16px", animation:"fadein 0.25s ease both" }}>
           <ScenarioCard s={bull} type="bull" />
           <ScenarioCard s={bear} type="bear" />
-          <div style={{ padding:"10px 14px", background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:8, fontSize:10, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace", lineHeight:1.8 }}>
-            Come back when the session opens. Do not enter until a 30M candle closes at the trigger price.
+          <div style={{ padding:"10px 14px", background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:8, fontSize:10, color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace", lineHeight:1.8 }}>
+            Only activate when you see the 30M candle actually close at the trigger price. Wicks do not count.
           </div>
         </div>
       )}
@@ -4030,7 +4067,8 @@ Return ONLY valid JSON, no markdown, no explanation:
   }
 
   // ── STEP 2: Start live session ──────────────────────────────────────────────
-  function startLiveSession() {
+  function startLiveSession(planOverride) {
+    const activePlan = planOverride || plan;
     setPhase("live");
     const ct = getCTTime();
     const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
@@ -4040,8 +4078,8 @@ Return ONLY valid JSON, no markdown, no explanation:
     const isSunEarly = day === 0 && nowMins < 20 * 60;
 
     const sessCfg = SESSION_CONFIG[selectedSession] || SESSION_CONFIG.NY;
-    const direction = plan.bias === "SHORT" ? "below" : "above";
-    const trigger = plan.trigger_level || "the trigger level";
+    const direction = activePlan.bias === "SHORT" ? "below" : "above";
+    const trigger = activePlan.trigger_level || "the trigger level";
 
     // Find next valid candle close for this session
     const candleObjs = sessCfg.candles || [];
@@ -4058,10 +4096,8 @@ Return ONLY valid JSON, no markdown, no explanation:
       }
     }
 
-    // Build user-friendly time display
     const userTZShort = getUserTZShort();
     const isET = getUserTZ().startsWith("America/New_York") || getUserTZ().startsWith("America/Detroit");
-    // Always show user's timezone — never ET unless user IS in ET
     function candleDisplay(c) {
       if (!c) return "";
       return candleToUserTime(c);
@@ -4069,9 +4105,9 @@ Return ONLY valid JSON, no markdown, no explanation:
     const nextCandleDisplay = candleDisplay(nextCandleObj);
     const remainingDisplay = remainingCandles.map(c => candleDisplay(c)).join(" → ");
 
-    const advisory = SESSION_ADVISORIES[plan.instrument]?.[selectedSession];
+    const advisory = SESSION_ADVISORIES[activePlan.instrument]?.[selectedSession];
 
-    const mktStatus = getMarketStatus(plan.instrument, selectedSession);
+    const mktStatus = getMarketStatus(activePlan.instrument, selectedSession);
     const isPrep = mktStatus.state === "prep";
     const minsUntilOpen = mktStatus.minsUntilOpen || 0;
     const hUntil = Math.floor(minsUntilOpen / 60);
@@ -4090,7 +4126,7 @@ Return ONLY valid JSON, no markdown, no explanation:
       const ampm = h >= 12 ? "PM" : "AM";
       const h12 = h > 12 ? h - 12 : h === 0 ? 12 : h;
       const openTimeET = `${h12}:${String(m).padStart(2,"0")} ${ampm} ET`;
-      openingMsg = `📋 **PREP MODE — Session opens in ${untilStr}**\n\nPlan is locked. Study it now.\n\nTrigger: **${trigger}** · Stop: **${plan.stop_loss}** · TP1: **${plan.tp1}**\n\nCome back at **${openTimeET}** — I'll guide you candle by candle.\n\n🥷 Be ready. Not early.`;
+      openingMsg = `📋 **PREP MODE — Session opens in ${untilStr}**\n\nPlan is locked. Study it now.\n\nTrigger: **${trigger}** · Stop: **${activePlan.stop_loss}** · TP1: **${activePlan.tp1}**\n\nCome back at **${openTimeET}** — I'll guide you candle by candle.\n\n🥷 Be ready. Not early.`;
     } else {
       // Live — show user's local time + minutes countdown
       const nextCandleET = nextCandleObj ? nextCandleObj.label : nextCandleDisplay;
@@ -4100,7 +4136,11 @@ Return ONLY valid JSON, no markdown, no explanation:
 
       const nextCandleLocal = nextCandleObj ? candleToUserTime(nextCandleObj) : nextCandleET;
 
-      openingMsg = `**NEXT ACTION**\n\nWatch the next 30M **${plan.instrument}** close.\n\nIf it closes **${direction} ${trigger}** — send it now.\nIf not — send me the closing price.\n\nWicks don't count. Only closes.\n\n🕐 Next check: **${nextCandleLocal}** (in ${minsLeft}m)`;
+      openingMsg = `**NEXT ACTION**\n\nWatch the next 30M **${activePlan.instrument}** close.\n\nIf it closes **${direction} ${trigger}** — send it now.\nIf not — send me the closing price.\n\nWicks don't count. Only closes.\n\n🕐 Next check: **${nextCandleLocal}** (in ${minsLeft}m)`;
+
+      if (activePlan._activatedFromSoftPass) {
+        openingMsg += `\n\n📋 Activated from Soft Pass scenario. If session opens with different structure — trust the charts over this plan.`;
+      }
 
       if (isLastCandle) {
         openingMsg += `\n\n⚠️ **LATE SESSION ALERT**\nThis signal is valid but you have **ONE candle remaining** before ${sessCfg.cutoff} cutoff. Limit order ONLY. No chasing. If retest doesn't happen before ${sessCfg.cutoff} — order expires. **DO NOT carry this setup past cutoff.**`;
@@ -4914,7 +4954,25 @@ Return ONLY valid JSON, no markdown, no explanation:
                 </div>
 
                 {/* Scenarios — collapsible dropdown (proper component, no IIFE) */}
-                <SoftPassScenariosPanel plan={plan} />
+                <SoftPassScenariosPanel plan={plan} onActivate={(scenario, bias) => {
+                  // Build a live-session-compatible plan from the activated scenario
+                  const activatedPlan = {
+                    ...plan,
+                    grade: "A+",
+                    bias,
+                    trigger_level: scenario.trigger,
+                    stop_loss: scenario.stop,
+                    tp1: scenario.tp1,
+                    tp2: scenario.tp2 || "",
+                    runner: scenario.runner || "",
+                    retest_zone: scenario.trigger,
+                    summary: scenario.plan || plan.summary,
+                    _activatedFromSoftPass: true,
+                  };
+                  // Set plan first, then start session with the activated plan directly
+                  setPlan(activatedPlan);
+                  startLiveSession(activatedPlan);
+                }} />
 
                 {/* Nav buttons */}
                 <div style={{ display:"flex", gap:8, marginBottom:8 }}>
