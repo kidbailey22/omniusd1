@@ -3727,6 +3727,8 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
   const [ctTime, setCtTime] = useState(getCTTime().str);
   const [nextClose, setNextClose] = useState(getNextClose());
   const [dragOverSlot, setDragOverSlot] = useState(null);
+  // Track uploads per instrument this session — allows one free re-upload, warns on second
+  const [uploadCounts, setUploadCounts] = useState({}); // { "BTCUSD": 1, "XAUUSD": 2 }
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
   const fileRef = useRef(null);
@@ -3784,8 +3786,29 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
     const userTier = profile?.tier || "starter";
 
     if (userId && token) {
+      const instrumentCount = (uploadCounts[instrument] || 0);
       const limitCheck = await checkUsageLimits(userId, token, instrument, userTier);
-      if (!limitCheck.allowed) {
+
+      // If cooldown active — check if user has already used their free re-upload
+      if (!limitCheck.allowed && limitCheck.type === "cooldown") {
+        if (instrumentCount >= 1) {
+          // They've already done one re-upload — hard block now
+          const prevSession = getSessionForInstrument(instrument);
+          setPlan({
+            _blocked: true,
+            _reason: limitCheck.detail,
+            _limitType: limitCheck.type,
+            _prevPlan: prevSession?.plan || null,
+            instrument,
+            grade: "BLOCKED",
+          });
+          setPhase("plan");
+          return;
+        }
+        // First re-upload during cooldown — allow it but increment counter + warn
+        setUploadCounts(prev => ({ ...prev, [instrument]: (prev[instrument] || 0) + 1 }));
+        // Continue to analysis — warning shown on upload screen via uploadCounts state
+      } else if (!limitCheck.allowed) {
         setPlan({
           _blocked: true,
           _reason: limitCheck.detail,
@@ -3795,6 +3818,9 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
         });
         setPhase("plan");
         return;
+      } else {
+        // Normal upload — increment counter
+        setUploadCounts(prev => ({ ...prev, [instrument]: (prev[instrument] || 0) + 1 }));
       }
     }
 
@@ -4557,7 +4583,19 @@ Return ONLY valid JSON, no markdown, no explanation:
               </div>
             </div>
 
-            {/* ── BULK UPLOAD ZONE ── */}
+            {/* Re-upload warning — shows when user has already used their free re-upload */}
+            {instrument && (uploadCounts[instrument] || 0) >= 1 && (() => {
+              const session = JSON.parse(localStorage.getItem("omniusd_session") || "{}");
+              const token = session.access_token;
+              return (
+                <div style={{ padding:"12px 16px", background:"rgba(255,107,107,0.06)", border:"1px solid rgba(255,107,107,0.25)", borderLeft:"3px solid #ff6b6b", borderRadius:0, marginBottom:16 }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:"#ff6b6b", marginBottom:4 }}>⚠ LAST FREE RE-UPLOAD</div>
+                  <div style={{ fontSize:10, color:"rgba(255,255,255,0.5)", lineHeight:1.7 }}>
+                    You've already re-uploaded {instrument} once this session. This is your final upload for this instrument — <strong style={{ color:"#ff6b6b" }}>cooldown will be fully active after this.</strong>
+                  </div>
+                </div>
+              );
+            })()}
             <BulkUploadZone images={images} setImages={setImages} readSlotFile={readSlotFile} dragOverSlot={dragOverSlot} setDragOverSlot={setDragOverSlot} />
 
             {/* CTA */}
@@ -4695,16 +4733,44 @@ Return ONLY valid JSON, no markdown, no explanation:
 
           {/* ── BLOCKED STATE — instrument mismatch or chart error ── */}
           {plan._blocked && (
-            <div style={{ textAlign:"center", animation:"fadein 0.4s ease both" }}>
-              <div style={{ fontSize:52, marginBottom:14 }}>
-                {plan._limitType === "cap" ? "⏱" : plan._limitType === "cooldown" ? "🔒" : "🚫"}
+            <div style={{ animation:"fadein 0.4s ease both" }}>
+              <div style={{ textAlign:"center", marginBottom:24 }}>
+                <div style={{ fontSize:52, marginBottom:14 }}>
+                  {plan._limitType === "cap" ? "⏱" : plan._limitType === "cooldown" ? "🔒" : "🚫"}
+                </div>
+                <div style={{ fontFamily:"'Space Mono',monospace", fontSize:11, fontWeight:900, letterSpacing:"0.2em", color: plan._limitType ? "#ffd166" : "#ff6b6b", marginBottom:14 }}>
+                  {plan._limitType === "cap" ? "DAILY LIMIT REACHED" : plan._limitType === "cooldown" ? "COOLDOWN ACTIVE" : "UPLOAD REJECTED"}
+                </div>
+                <div style={{ fontSize:13, fontWeight:700, color:"#f0ecff", marginBottom:16, lineHeight:1.6 }}>{plan._reason}</div>
               </div>
-              <div style={{ fontFamily:"'Space Mono',monospace", fontSize:11, fontWeight:900, letterSpacing:"0.2em", color: plan._limitType ? "#ffd166" : "#ff6b6b", marginBottom:14 }}>
-                {plan._limitType === "cap" ? "DAILY LIMIT REACHED" : plan._limitType === "cooldown" ? "COOLDOWN ACTIVE" : "UPLOAD REJECTED"}
-              </div>
-              <div style={{ fontSize:13, fontWeight:700, color:"#f0ecff", marginBottom:16, lineHeight:1.6, maxWidth:400, margin:"0 auto 16px" }}>{plan._reason}</div>
+
+              {/* Show previous plan during cooldown */}
+              {plan._limitType === "cooldown" && plan._prevPlan && (
+                <div style={{ marginBottom:20 }}>
+                  <div style={{ fontSize:9, fontWeight:900, letterSpacing:"0.14em", color:"#8878aa", marginBottom:12, fontFamily:"'Space Mono',monospace" }}>YOUR LAST {plan.instrument} ANALYSIS</div>
+                  <div style={{ padding:"12px 14px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:10, marginBottom:10, fontSize:11, color:"#ccc4e8", lineHeight:1.7 }}>
+                    {plan._prevPlan.summary}
+                  </div>
+                  <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:6, marginBottom:10 }}>
+                    {[
+                      { label:"TRIGGER", val:plan._prevPlan.trigger_level, color: plan._prevPlan.bias==="SHORT"?"#ff6b6b":"#7fff6b" },
+                      { label:"STOP",    val:plan._prevPlan.stop_loss,     color:"#ff6b6b" },
+                      { label:"TP1",     val:plan._prevPlan.tp1,           color:"#7fff6b" },
+                    ].map(r => r.val && (
+                      <div key={r.label} style={{ padding:"8px 10px", background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:7, opacity:0.75 }}>
+                        <div style={{ fontSize:7, color:"#8878aa", letterSpacing:"0.1em", marginBottom:3 }}>{r.label}</div>
+                        <div style={{ fontSize:13, fontWeight:700, color:r.color, fontFamily:"monospace" }}>{r.val}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ fontSize:9, color:"rgba(255,255,255,0.25)", fontFamily:"'Space Mono',monospace", textAlign:"center" }}>
+                    Grade: {plan._prevPlan.grade} · {plan._prevPlan.bias} · {plan._prevPlan.confidence_score}% confidence
+                  </div>
+                </div>
+              )}
+
               {!plan._limitType && (
-                <div style={{ padding:"12px 16px", background:"rgba(255,209,102,0.06)", border:"1px solid rgba(255,209,102,0.2)", borderRadius:8, marginBottom:24, textAlign:"left", maxWidth:400, margin:"0 auto 24px" }}>
+                <div style={{ padding:"12px 16px", background:"rgba(255,209,102,0.06)", border:"1px solid rgba(255,209,102,0.2)", borderRadius:8, marginBottom:24, textAlign:"left" }}>
                   <div style={{ fontSize:9, fontWeight:900, letterSpacing:"0.16em", color:"#ffd166", marginBottom:8 }}>HOW TO FIX THIS</div>
                   <div style={{ fontSize:11, color:"rgba(255,255,255,0.6)", lineHeight:1.8 }}>
                     1. Open your broker platform<br/>
@@ -4715,17 +4781,19 @@ Return ONLY valid JSON, no markdown, no explanation:
                 </div>
               )}
               {plan._limitType === "cap" && (
-                <div style={{ marginBottom:20 }}>
+                <div style={{ marginBottom:20, textAlign:"center" }}>
                   <button onClick={() => window.open("https://omniusd.pro/#pricing","_blank")}
                     style={{ fontFamily:"'Space Mono',monospace", fontSize:10, fontWeight:700, letterSpacing:"0.1em", padding:"10px 22px", borderRadius:8, border:"none", background:"linear-gradient(135deg,#ff6bff,#7b2fff)", color:"#fff", cursor:"pointer" }}>
                     ↑ Upgrade for more analyses →
                   </button>
                 </div>
               )}
-              <button onClick={() => { setPhase("upload"); setImages(Array(5).fill(null)); }}
-                style={{ fontFamily:"inherit", fontSize:11, fontWeight:700, letterSpacing:"0.1em", padding:"10px 24px", borderRadius:8, border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.04)", color:"#8878aa", cursor:"pointer" }}>
-                ← Back
-              </button>
+              <div style={{ textAlign:"center" }}>
+                <button onClick={() => { setPhase("upload"); setImages(Array(5).fill(null)); }}
+                  style={{ fontFamily:"inherit", fontSize:11, fontWeight:700, letterSpacing:"0.1em", padding:"10px 24px", borderRadius:8, border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.04)", color:"#8878aa", cursor:"pointer" }}>
+                  ← Back
+                </button>
+              </div>
             </div>
           )}
 
