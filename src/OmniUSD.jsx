@@ -1783,119 +1783,82 @@ function getCTTime() {
 function getMarketStatus(instrument, session = "NY") {
   if (!instrument) return { open: false, state: "no_instrument", reason: "Select an instrument first.", comeback: "" };
 
-  const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
-  const day = now.getDay(); // ET day
-  const mins = now.getHours() * 60 + now.getMinutes(); // minutes since midnight ET
+  // All timing in CT (Chicago Time) — master clock for OmniUSD
+  const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
+  const day = now.getDay();
+  const mins = now.getHours() * 60 + now.getMinutes();
   const isBTC = instrument === "BTCUSD";
+  const isXAU = instrument === "XAUUSD";
+  const londonEligible = isBTC || isXAU;
 
-  // Saturday — all traditional markets closed
-  if (day === 6 && !isBTC) {
+  // ── WEEKEND ────────────────────────────────────────────────────────────
+  if (day === 6) {
+    return { open: false, state: "closed", reason: "Markets are closed on Saturday.", comeback: "Next NY session: Monday at 8:30 AM CT." };
+  }
+  if (day === 0 && mins < 7 * 60) {
+    return { open: false, state: "closed", reason: "Markets are closed.", comeback: "Next NY session: Monday at 8:30 AM CT." };
+  }
+
+  // ── LONDON OPEN — BTCUSD + XAUUSD ONLY (2:00–4:00 AM CT) ─────────────
+  if (mins >= 2 * 60 && mins < 4 * 60) {
+    if (londonEligible) {
+      return {
+        open: true, state: "london",
+        reason: "LONDON OPEN — REDUCED CONVICTION",
+        comeback: instrument + " analysis allowed. Max grade B+. Reduce size.",
+        maxGrade: "B",
+        label: "LONDON OPEN",
+        color: "#00e5ff",
+      };
+    }
     return {
-      open: false, state: "weekend",
-      reason: "Markets are closed on Saturday.",
-      comeback: "Come back Sunday evening — Asian session opens ~9:00 PM.",
+      open: false, state: "wrong_session",
+      reason: instrument + " is NY session only.",
+      comeback: "OmniUSD is built for NY session execution. The window opens at 8:30 AM CT. Come back then with fresh charts for A+ analysis.",
     };
   }
 
-  // Sunday before 2 PM ET — too early for any session prep
-  if (day === 0 && mins < 14 * 60 && !isBTC) {
-    const minsLeft = 14 * 60 - mins;
+  // ── BEFORE 7:00 AM CT — fully closed ──────────────────────────────────
+  if (mins < 7 * 60) {
+    const minsLeft = 7 * 60 - mins;
     const h = Math.floor(minsLeft / 60), m = minsLeft % 60;
     return {
-      open: false, state: "weekend",
-      reason: "Markets are not open yet.",
-      comeback: `Come back at 2:00 PM local time (${h > 0 ? `${h}h ${m}m` : `${m}m`}) to start prep for the Asian session.`,
-    };
-  }
-
-  // BTC always open
-  if (isBTC) return { open: true, state: "live" };
-
-  const sessCfg = SESSION_CONFIG[session] || SESSION_CONFIG.NY;
-
-  // Session boundaries in ET minutes
-  const openMins = sessCfg.openET ? sessCfg.openET.h * 60 + sessCfg.openET.m : sessCfg.openMins;
-  const cutoffMins = sessCfg.cutoffET ? sessCfg.cutoffET.h * 60 + sessCfg.cutoffET.m : sessCfg.cutoffMins;
-
-  // Asian session crosses midnight — handle separately
-  const isAsian = session === "ASIAN";
-  if (isAsian) {
-    const asianOpen = 21 * 60;   // 9:00 PM ET
-    const asianPrep = 19 * 60;   // 7:00 PM ET (2hrs before)
-    const asianCutoff = 24 * 60; // midnight ET
-
-    if (mins >= asianOpen && mins < asianCutoff) {
-      return { open: true, state: "live" };
-    }
-    if (mins >= asianPrep && mins < asianOpen) {
-      const minsLeft = asianOpen - mins;
-      const h = Math.floor(minsLeft / 60), m = minsLeft % 60;
-      return {
-        open: true, state: "prep",
-        reason: `Asian session opens in ${h > 0 ? `${h}h ${m}m` : `${m}m`}`,
-        comeback: "Upload now and study your plan before the session opens at 9:00 PM.",
-        minsUntilOpen: minsLeft,
-      };
-    }
-    if (mins < asianPrep) {
-      const minsLeft = asianPrep - mins;
-      const h = Math.floor(minsLeft / 60), m = minsLeft % 60;
-      const openTimeLocal = etToLocal(21, 0, true);
-      return {
-        open: false, state: "too_early",
-        reason: `Asian session opens at ${etToUserTime(21, 0, true)}.`,
-        comeback: `Come back at 7:00 PM ET to upload your charts — 2 hours before open. That gives you time to study the plan before the session starts.`,
-        minsUntilPrep: minsLeft,
-      };
-    }
-    // Past midnight = session closed
-    return {
       open: false, state: "closed",
-      reason: "Asian session is closed.",
-      comeback: "Come back tonight at 7:00 PM to prep for tomorrow's Asian session.",
+      reason: "Market closed — NY opens in " + (h > 0 ? h + "h " + m + "m" : m + "m"),
+      comeback: "Pre-market scouting available from 7:00 AM CT.",
     };
   }
 
-  // All other sessions
-  const prepMins = openMins - 2 * 60; // 2 hours before open
-
-  if (mins >= openMins && mins <= cutoffMins) {
-    return { open: true, state: "live" };
-  }
-
-  if (mins >= prepMins && mins < openMins) {
-    const minsLeft = openMins - mins;
+  // ── PRE-MARKET SCOUT (7:00–8:30 AM CT) ────────────────────────────────
+  if (mins >= 7 * 60 && mins < 8 * 60 + 30) {
+    const minsLeft = (8 * 60 + 30) - mins;
     const h = Math.floor(minsLeft / 60), m = minsLeft % 60;
     return {
       open: true, state: "prep",
-      reason: `${sessCfg.label} session opens in ${h > 0 ? `${h}h ${m}m` : `${m}m`}`,
-      comeback: `Upload now and study your plan before the session opens. The structure you see is fresh and valid.`,
+      reason: "PRE-MARKET SCOUT",
+      comeback: "NY execution window opens in " + (h > 0 ? h + "h " + m + "m" : m + "m") + ". Upload now and study your plan.",
       minsUntilOpen: minsLeft,
+      label: "PRE-MARKET SCOUT",
+      color: "#ffd166",
     };
   }
 
-  if (mins < prepMins) {
-    const minsLeft = prepMins - mins;
-    const h = Math.floor(minsLeft / 60), m = minsLeft % 60;
-    const openTimeDisplay = sessCfg.openET ? etToLocal(sessCfg.openET.h, sessCfg.openET.m, true) : sessCfg.hours.split("–")[0];
+  // ── NY SESSION OPEN (8:30–10:30 AM CT) ────────────────────────────────
+  if (mins >= 8 * 60 + 30 && mins <= 10 * 60 + 30) {
     return {
-      open: false, state: "too_early",
-      reason: `${sessCfg.label} session opens at ${sessCfg.hours.split("–")[0]} ET.`,
-      comeback: `Come back in ${h > 0 ? `${h}h ${m}m` : `${m}m`} to upload your charts — 2 hours before session open gives you time to study the plan properly.`,
-      minsUntilPrep: minsLeft,
+      open: true, state: "live",
+      reason: "NY SESSION OPEN — EXECUTION WINDOW",
+      comeback: "Full analysis available. A+ setups executable.",
+      label: "NY SESSION OPEN",
+      color: "#7fff6b",
     };
   }
 
-  // Session closed
-  const nextSessions = {
-    NY: "Asian session tonight ~9:00 PM",
-    LONDON: "NY session ~9:30 AM",
-    LONDON_NY: "Asian session tonight ~9:00 PM",
-  };
+  // ── WINDOW CLOSED (after 10:30 AM CT) ─────────────────────────────────
   return {
     open: false, state: "closed",
-    reason: `${sessCfg.label} session is closed. Cutoff was ${sessCfg.cutoff}.`,
-    comeback: `Next: ${nextSessions[session] || "check tomorrow"}. Switch sessions or come back then.`,
+    reason: "WINDOW CLOSED",
+    comeback: "NY session closed. Next window opens tomorrow at 8:30 AM CT. Rest up.",
   };
 }
 
@@ -2032,10 +1995,20 @@ Daily says bull = LONG setups only.
 Daily says bear = SHORT setups only.
 Counter-trend setups = automatic PASS regardless of lower TF.
 
-RULE 6 — SESSION WINDOW
-Execution window: ${sessCfg.label} session — ${sessCfg.hours}.
-If session window is CLOSED → grade="PASS" with pass_reason="Session window closed. Scout mode only — levels noted for next session."
-Never output an executable A+ plan on a closed session window.
+RULE 6 — SESSION RESTRICTION — NON-NEGOTIABLE
+OmniUSD is a NEW YORK SESSION product. This is permanent and non-negotiable.
+
+PRIMARY EXECUTION WINDOW: NY Session ONLY — 8:30–10:30 AM CT. Hard cutoff 10:30 AM CT.
+PRE-MARKET SCOUT: 7:00–8:30 AM CT — analysis allowed, SCOUT grade only, no executable plan.
+LONDON EXCEPTION: BTCUSD and XAUUSD ONLY may be analyzed during London open (2:00–4:00 AM CT). Maximum grade B+. Always add size warning: "LONDON OPEN — Lower conviction than NY session. Reduce size."
+
+OUTSIDE NY WINDOW (all other instruments, all other times):
+- grade = "PASS"
+- pass_reason = "OmniUSD is built for NY session execution. The window opens at 8:30 AM CT. Come back then with fresh charts for A+ analysis. Pre-market scouting available from 7:00 AM CT."
+- Never show executable A+ plan outside NY window
+- Show watchlist levels only
+
+Current window: ${sessionContext}${fridayNote}
 
 RULE 7 — WEEKEND HARD BLOCK
 If today is Saturday OR Sunday before 8:00 PM ET → grade="PASS" regardless of structure. Weekend volume is thin and unreliable.
@@ -3877,7 +3850,7 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
   async function analyzeCharts() {
     if (images.filter(Boolean).length < 5) return;
     const mktStatus = getMarketStatus(instrument, selectedSession);
-    if (mktStatus.state === "too_early" || mktStatus.state === "closed" || mktStatus.state === "weekend") return;
+    if (mktStatus.state === "closed" || mktStatus.state === "wrong_session") return;
 
     // ── Usage limit checks ────────────────────────────────────────────────
     const session = JSON.parse(localStorage.getItem("omniusd_session") || "{}");
@@ -4044,13 +4017,32 @@ Return ONLY valid JSON, no markdown, no explanation:
         parsed.pass_reason = "Weekend — markets are thin and unreliable. No valid BRC execution window until Sunday Asian session or Monday NY session. Structure noted — come back when a proper session opens.";
       }
 
-      // ── SESSION WINDOW CLOSED GATE ────────────────────────────────────────
-      // If the session window is closed and AI returned A+, downgrade to SCOUT MODE.
-      // An A+ plan on a closed window is dangerous — user might act on it.
+      // ── SESSION WINDOW GATE ────────────────────────────────────────────
       const _mktStatus = getMarketStatus(instrument, selectedSession);
+
+      // London open — cap grade at B for BTCUSD/XAUUSD
+      if (_mktStatus.state === "london" && parsed.grade === "A+") {
+        parsed.grade = "B";
+        parsed.what_still_needed = [
+          "Wait for NY session open (8:30 AM CT) for A+ execution grade",
+          "London open has lower institutional conviction than NY",
+          "Re-upload charts at NY open for full A+ analysis",
+          ...(parsed.what_still_needed || []),
+        ];
+        parsed._londonMode = true;
+      }
+
+      // Window closed — downgrade to SCOUT MODE
       if (_mktStatus.state === "closed" && parsed.grade === "A+") {
         parsed.grade = "PASS";
-        parsed.pass_reason = `SCOUT MODE — Session window is closed. The structure and levels below are valid for your next session. No execution today. Come back when the ${SESSION_CONFIG[selectedSession]?.label || "next"} session opens.`;
+        parsed.pass_reason = `SCOUT MODE — Session window is closed. These levels are valid for your next NY session (8:30 AM CT). No execution today.`;
+        parsed._scoutMode = true;
+      }
+
+      // Wrong session — hard block
+      if (_mktStatus.state === "wrong_session") {
+        parsed.grade = "PASS";
+        parsed.pass_reason = `OmniUSD is built for NY session execution. The window opens at 8:30 AM CT. Come back then with fresh charts for A+ analysis. Pre-market scouting available from 7:00 AM CT.`;
         parsed._scoutMode = true;
       }
 
@@ -4476,39 +4468,35 @@ Use ONLY these times. All earlier time references in this conversation are stale
             {(()=>{
               if (!instrument) return null;
               const status = getMarketStatus(instrument, selectedSession);
-              const sessCfg = SESSION_CONFIG[selectedSession] || SESSION_CONFIG.NY;
 
-              if (status.state === "too_early") return (
+              if (status.state === "closed") return (
                 <div style={{ padding:"14px 16px", background:"rgba(255,107,107,0.05)", border:"1px solid rgba(255,107,107,0.2)", borderLeft:"3px solid #ff6b6b", borderRadius:0, marginBottom:16 }}>
-                  <div style={{ fontSize:11, fontWeight:700, color:"#ff6b6b", marginBottom:4 }}>⏳ {status.reason}</div>
+                  <div style={{ fontSize:11, fontWeight:700, color:"#ff6b6b", marginBottom:4 }}>🔴 {status.reason}</div>
                   <div style={{ fontSize:10, color:"rgba(255,255,255,0.45)", lineHeight:1.7 }}>{status.comeback}</div>
-                  <div style={{ marginTop:8, fontSize:10, color:"rgba(255,209,102,0.6)" }}>
-                    💡 Switch to a different session — or{" "}
-                    <span style={{ color:"#ffd166", fontWeight:700, cursor:"pointer" }} onClick={()=>setSelectedSession("ASIAN")}>Asian</span>{" · "}
-                    <span style={{ color:"#ffd166", fontWeight:700, cursor:"pointer" }} onClick={()=>setSelectedSession("LONDON")}>London</span>{" · "}
-                    <span style={{ color:"#ffd166", fontWeight:700, cursor:"pointer" }} onClick={()=>setSelectedSession("NY")}>NY</span>
+                </div>
+              );
+
+              if (status.state === "wrong_session") return (
+                <div style={{ padding:"14px 16px", background:"rgba(255,107,107,0.05)", border:"1px solid rgba(255,107,107,0.2)", borderLeft:"3px solid #ff6b6b", borderRadius:0, marginBottom:16 }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:"#ff6b6b", marginBottom:4 }}>🔴 {status.reason}</div>
+                  <div style={{ fontSize:10, color:"rgba(255,255,255,0.45)", lineHeight:1.7 }}>{status.comeback}</div>
+                  <div style={{ marginTop:8, fontSize:10, color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace", fontStyle:"italic" }}>
+                    "OmniUSD is precision built for the NY session — the highest conviction window in the market. We don't trade every session. We trade the RIGHT session."
                   </div>
                 </div>
               );
 
               if (status.state === "prep") return (
-                <div style={{ padding:"14px 16px", background:"rgba(0,229,255,0.04)", border:"1px solid rgba(0,229,255,0.2)", borderLeft:"3px solid #00e5ff", borderRadius:0, marginBottom:16 }}>
-                  <div style={{ fontSize:11, fontWeight:700, color:"#00e5ff", marginBottom:4 }}>📋 {status.reason} — Prep window open</div>
+                <div style={{ padding:"14px 16px", background:"rgba(255,209,102,0.04)", border:"1px solid rgba(255,209,102,0.2)", borderLeft:"3px solid #ffd166", borderRadius:0, marginBottom:16 }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:"#ffd166", marginBottom:4 }}>🟡 {status.reason}</div>
                   <div style={{ fontSize:10, color:"rgba(255,255,255,0.5)", lineHeight:1.7 }}>{status.comeback}</div>
                 </div>
               );
 
-              if (status.state === "closed") return (
-                <div style={{ padding:"14px 16px", background:"rgba(255,107,107,0.05)", border:"1px solid rgba(255,107,107,0.15)", borderLeft:"3px solid #ff6b6b", borderRadius:0, marginBottom:16 }}>
-                  <div style={{ fontSize:11, fontWeight:700, color:"#ff6b6b", marginBottom:4 }}>🔴 {status.reason}</div>
-                  <div style={{ fontSize:10, color:"rgba(255,255,255,0.4)", lineHeight:1.7 }}>{status.comeback}</div>
-                </div>
-              );
-
-              if (status.state === "weekend") return (
-                <div style={{ padding:"14px 16px", background:"rgba(255,107,107,0.05)", border:"1px solid rgba(255,107,107,0.15)", borderLeft:"3px solid #ff6b6b", borderRadius:0, marginBottom:16 }}>
-                  <div style={{ fontSize:11, fontWeight:700, color:"#ff6b6b", marginBottom:4 }}>{status.reason}</div>
-                  <div style={{ fontSize:10, color:"rgba(255,255,255,0.4)", lineHeight:1.7 }}>{status.comeback}</div>
+              if (status.state === "london") return (
+                <div style={{ padding:"14px 16px", background:"rgba(0,229,255,0.04)", border:"1px solid rgba(0,229,255,0.2)", borderLeft:"3px solid #00e5ff", borderRadius:0, marginBottom:16 }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:"#00e5ff", marginBottom:4 }}>🟡 {status.reason}</div>
+                  <div style={{ fontSize:10, color:"rgba(255,255,255,0.5)", lineHeight:1.7 }}>{status.comeback}</div>
                 </div>
               );
 
@@ -4625,63 +4613,45 @@ Use ONLY these times. All earlier time references in this conversation are stale
               );
             })()}
 
-            {/* Session selector */}
+            {/* Session indicator — NY primary, London exception for BTC/XAU */}
             {(() => {
-              const fit = instrument ? (SESSION_INSTRUMENT_FIT[instrument] || {}) : {};
-              const blocked = instrument && selectedSession && fit[selectedSession] === "block";
-              const advisory = instrument && selectedSession && fit[selectedSession] === "ok"
-                ? SESSION_ADVISORIES[instrument]?.[selectedSession]
-                : null;
-              const blockMsg = instrument && selectedSession && SESSION_BLOCKS[instrument]?.[selectedSession];
-
+              const isLondonEligible = instrument === "BTCUSD" || instrument === "XAUUSD";
+              const mktStatus = instrument ? getMarketStatus(instrument, selectedSession) : null;
+              const tzShort = getUserTZShort();
+              const nyOpenLocal = etToUserTime(8, 30, false);
+              const nyCloseLocal = etToUserTime(10, 30, false);
+              const londonOpenLocal = etToUserTime(2, 0, false);
+              const londonCloseLocal = etToUserTime(4, 0, false);
               return (
-                <div style={{ marginBottom: 16 }}>
-                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", fontFamily: "'Space Mono',monospace", letterSpacing: "0.12em", marginBottom: 8, textAlign: "center" }}>SELECT SESSION</div>
-                  <div style={{ display: "flex", gap: 6, justifyContent: "center", flexWrap: "wrap", marginBottom: 10 }}>
-                    {Object.entries(SESSION_CONFIG).map(([key, cfg]) => {
-                      const isSelected = selectedSession === key;
-                      const instrFit = instrument ? (SESSION_INSTRUMENT_FIT[instrument]?.[key]) : null;
-                      const isBlocked = instrFit === "block";
-                      const isBest = instrFit === "best";
-                      const userTZShort = getUserTZShort();
-                      const localOpen = cfg.openET ? etToUserTime(cfg.openET.h, cfg.openET.m, false) : null;
-                      const timeDisplay = localOpen ? `${localOpen} ${userTZShort}` : cfg.hours;
-                      return (
-                        <button key={key}
-                          onClick={() => !isBlocked && setSelectedSession(key)}
-                          style={{
-                            fontSize: 9, fontWeight: 700, padding: "6px 12px", borderRadius: 6, fontFamily: "inherit",
-                            cursor: isBlocked ? "not-allowed" : "pointer",
-                            border: `1px solid ${isSelected ? `${cfg.color}66` : isBlocked ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.1)"}`,
-                            background: isSelected ? `${cfg.color}18` : isBlocked ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.04)",
-                            color: isSelected ? cfg.color : isBlocked ? "rgba(255,255,255,0.2)" : "#8878aa",
-                            opacity: isBlocked ? 0.45 : 1,
-                            display: "flex", flexDirection: "column", alignItems: "center", gap: 2, minWidth: 68,
-                          }}>
-                          <span>{cfg.short}</span>
-                          <span style={{ fontSize: 7, opacity: 0.7, whiteSpace: "nowrap" }}>{timeDisplay}</span>
-                          {isBest && !isBlocked && <span style={{ fontSize: 6, color: cfg.color, fontWeight: 900, letterSpacing: "0.08em" }}>BEST</span>}
-                          {isBlocked && <span style={{ fontSize: 6, color: "#ff6b6b", fontWeight: 900 }}>🚫 CLOSED</span>}
-                        </button>
-                      );
-                    })}
+                <div style={{ marginBottom:16 }}>
+                  <div style={{ fontSize:9, color:"rgba(255,255,255,0.25)", fontFamily:"'Space Mono',monospace", letterSpacing:"0.12em", marginBottom:8, textAlign:"center" }}>SESSION WINDOW</div>
+                  <div style={{ display:"flex", gap:6, justifyContent:"center", flexWrap:"wrap" }}>
+                    {/* NY Session — always available */}
+                    <button onClick={() => setSelectedSession("NY")}
+                      style={{ fontSize:9, fontWeight:700, padding:"6px 14px", borderRadius:6, fontFamily:"inherit", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:2, minWidth:90,
+                        border: selectedSession==="NY" ? "1px solid rgba(127,255,107,0.5)" : "1px solid rgba(255,255,255,0.1)",
+                        background: selectedSession==="NY" ? "rgba(127,255,107,0.12)" : "rgba(255,255,255,0.04)",
+                        color: selectedSession==="NY" ? "#7fff6b" : "#8878aa" }}>
+                      <span>NY SESSION</span>
+                      <span style={{ fontSize:7, opacity:0.7 }}>{nyOpenLocal}–{nyCloseLocal} {tzShort}</span>
+                      <span style={{ fontSize:6, color:"#7fff6b", fontWeight:900, letterSpacing:"0.08em" }}>PRIMARY</span>
+                    </button>
+                    {/* London — only shown for BTCUSD/XAUUSD */}
+                    {isLondonEligible && (
+                      <button onClick={() => setSelectedSession("LONDON")}
+                        style={{ fontSize:9, fontWeight:700, padding:"6px 14px", borderRadius:6, fontFamily:"inherit", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:2, minWidth:90,
+                          border: selectedSession==="LONDON" ? "1px solid rgba(0,229,255,0.5)" : "1px solid rgba(255,255,255,0.08)",
+                          background: selectedSession==="LONDON" ? "rgba(0,229,255,0.1)" : "rgba(255,255,255,0.03)",
+                          color: selectedSession==="LONDON" ? "#00e5ff" : "rgba(255,255,255,0.3)" }}>
+                        <span>LONDON</span>
+                        <span style={{ fontSize:7, opacity:0.7 }}>{londonOpenLocal}–{londonCloseLocal} {tzShort}</span>
+                        <span style={{ fontSize:6, color:"#ffd166", fontWeight:900, letterSpacing:"0.08em" }}>BTC/XAU ONLY · MAX B+</span>
+                      </button>
+                    )}
                   </div>
-
-                  {/* Hard block message */}
-                  {blocked && blockMsg && (
-                    <div style={{ padding: "12px 14px", background: "rgba(255,107,107,0.06)", border: "1px solid rgba(255,107,107,0.25)", borderLeft: "3px solid #ff6b6b", borderRadius: 0, fontSize: 11, color: "rgba(255,255,255,0.6)", lineHeight: 1.7 }}>
-                      <span style={{ color: "#ff6b6b", fontWeight: 700, fontFamily: "'Space Mono',monospace", fontSize: 9, letterSpacing: "0.12em", display: "block", marginBottom: 6 }}>🚫 SESSION BLOCKED</span>
-                      {blockMsg} <span style={{ color: "#ffd166" }}>Switch to NY or London/NY Overlap to trade {instrument}.</span>
-                    </div>
-                  )}
-
-                  {/* Advisory message */}
-                  {!blocked && advisory && (
-                    <div style={{ padding: "10px 14px", background: "rgba(255,209,102,0.04)", border: "1px solid rgba(255,209,102,0.2)", borderLeft: "3px solid #ffd166", borderRadius: 0, fontSize: 11, color: "rgba(255,255,255,0.55)", lineHeight: 1.7 }}>
-                      <span style={{ color: "#ffd166", fontWeight: 700, fontFamily: "'Space Mono',monospace", fontSize: 9, letterSpacing: "0.12em", display: "block", marginBottom: 5 }}>⚠ SESSION ADVISORY</span>
-                      {advisory}
-                    </div>
-                  )}
+                  <div style={{ textAlign:"center", marginTop:8, fontSize:9, color:"rgba(255,255,255,0.2)", fontFamily:"'Space Mono',monospace", fontStyle:"italic" }}>
+                    Pre-market scout: 7:00–8:30 AM CT · Execution: 8:30–10:30 AM CT
+                  </div>
                 </div>
               );
             })()}
@@ -4713,18 +4683,16 @@ Use ONLY these times. All earlier time references in this conversation are stale
             {/* CTA */}
             {(()=>{
               const mkt = getMarketStatus(instrument, selectedSession);
-              const sessionBlocked = instrument && selectedSession && SESSION_INSTRUMENT_FIT[instrument]?.[selectedSession] === "block";
               const chartsReady = images.filter(Boolean).length === 5;
-              const canGenerate = chartsReady && (mkt.state === "live" || mkt.state === "prep") && !sessionBlocked;
+              const canGenerate = chartsReady && (mkt.state === "live" || mkt.state === "prep" || mkt.state === "london");
 
               let btnLabel = "SELECT YOUR 5 CHARTS";
-              if (sessionBlocked) btnLabel = `${instrument} UNAVAILABLE IN ${SESSION_CONFIG[selectedSession]?.short} SESSION`;
-              else if (mkt.state === "too_early") btnLabel = `COME BACK ${SESSION_CONFIG[selectedSession]?.openET ? `AT ${SESSION_CONFIG[selectedSession].openET.h > 12 ? SESSION_CONFIG[selectedSession].openET.h - 12 : SESSION_CONFIG[selectedSession].openET.h}:${String(SESSION_CONFIG[selectedSession].openET.m).padStart(2,"0")} ${SESSION_CONFIG[selectedSession].openET.h >= 12 ? "PM" : "AM"} ET` : "LATER"}`;
-              else if (mkt.state === "closed") btnLabel = "SESSION CLOSED — SWITCH SESSION";
-              else if (mkt.state === "weekend") btnLabel = "COME BACK SUNDAY";
+              if (mkt.state === "closed") btnLabel = "WINDOW CLOSED — COME BACK AT 8:30 AM CT";
+              else if (mkt.state === "wrong_session") btnLabel = `${instrument} — NY SESSION ONLY`;
               else if (!chartsReady && images.filter(Boolean).length === 0) btnLabel = "SELECT YOUR 5 CHARTS";
               else if (!chartsReady) btnLabel = `${images.filter(Boolean).length} / 5 CHARTS — ADD ${5 - images.filter(Boolean).length} MORE`;
-              else if (mkt.state === "prep") btnLabel = "GENERATE PREP PLAN →";
+              else if (mkt.state === "prep") btnLabel = "GENERATE SCOUT PLAN →";
+              else if (mkt.state === "london") btnLabel = "GENERATE LONDON PLAN →";
               else btnLabel = "GENERATE SESSION PLAN →";
 
               return (
@@ -4732,11 +4700,11 @@ Use ONLY these times. All earlier time references in this conversation are stale
                   style={{ width:"100%", padding:"14px", borderRadius:10,
                     border: canGenerate ? "none" : "1px solid rgba(255,107,255,0.2)",
                     background: canGenerate
-                      ? mkt.state === "prep"
-                        ? "linear-gradient(135deg,#00e5ff,#0099bb)"
-                        : "linear-gradient(135deg,#ff6bff,#7b2fff)"
+                      ? mkt.state === "prep" ? "linear-gradient(135deg,#ffd166,#cc8800)"
+                      : mkt.state === "london" ? "linear-gradient(135deg,#00e5ff,#0099bb)"
+                      : "linear-gradient(135deg,#ff6bff,#7b2fff)"
                       : "rgba(255,107,255,0.08)",
-                    color: canGenerate ? "#fff" : "rgba(255,107,255,0.45)",
+                    color: canGenerate ? (mkt.state === "prep" || mkt.state === "london" ? "#0f0c1a" : "#fff") : "rgba(255,107,255,0.45)",
                     fontSize:12, fontWeight:700, letterSpacing:"0.12em", fontFamily:"inherit",
                     cursor: canGenerate ? "pointer" : "default",
                     boxShadow: canGenerate ? "0 4px 32px rgba(255,107,255,0.35)" : "none",
