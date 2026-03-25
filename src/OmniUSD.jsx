@@ -628,6 +628,7 @@ function OmniUSDApp(){
         // ── DEV BYPASS — owner account gets Elite access always ──────────
         const _session = JSON.parse(localStorage.getItem("omniusd_session")||"{}");
         const _email = _session?.user?.email || data?.email || "";
+        const _preferredName = _session?.user?.user_metadata?.preferred_name || data?.preferred_name || "";
         if (_email === "bailey.charles024@gmail.com") {
           const tzObj = data?.tz ? JSON.parse(data.tz) : null;
           if (tzObj?.iana) setUserProfileTZ(tzObj.iana);
@@ -636,6 +637,7 @@ function OmniUSDApp(){
             tier:"elite", tierLabel:"Elite", tierColor:"#ff6bff",
             defaultInstrument:"XAUUSD", session:data?.session||null,
             tz: tzObj, isPaid:true, _devBypass:true,
+            preferredName: _preferredName || "Chalie",
           });
           return;
         }
@@ -644,6 +646,8 @@ function OmniUSDApp(){
         if(data&&data.id&&data.is_paid){
           const tzObj = data.tz ? JSON.parse(data.tz) : null;
           if (tzObj?.iana) setUserProfileTZ(tzObj.iana);
+          const _sess2 = JSON.parse(localStorage.getItem("omniusd_session")||"{}");
+          const _name = _sess2?.user?.user_metadata?.preferred_name || data?.preferred_name || "";
           setProfile({
             mode:"standard",emoji:"◈",color:"#00e5ff",label:"Standard",
             tier:data.tier||"starter",
@@ -653,6 +657,7 @@ function OmniUSDApp(){
             session:data.session||null,
             tz: tzObj,
             isPaid:true,
+            preferredName: _name,
           });
         }
         // No row, or is_paid=false = needs onboarding/payment — profile stays null
@@ -4353,7 +4358,7 @@ Return ONLY valid JSON, no markdown, no explanation:
       const ampm = h >= 12 ? "PM" : "AM";
       const h12 = h > 12 ? h - 12 : h === 0 ? 12 : h;
       const openTimeET = `${h12}:${String(m).padStart(2,"0")} ${ampm} ET`;
-      openingMsg = `📋 **PREP MODE — Session opens in ${untilStr}**\n\nPlan is locked. Study it now.\n\nTrigger: **${trigger}** · Stop: **${activePlan.stop_loss}** · TP1: **${activePlan.tp1}**\n\nCome back at **${openTimeET}** — I'll guide you candle by candle.\n\n🥷 Be ready. Not early.`;
+      openingMsg = `📋 **PREP MODE — Session opens in ${untilStr}**\n\nPlan is locked. Study it now.\n\nTrigger: **${trigger}** · Stop: **${activePlan.stop_loss}** · TP1: **${activePlan.tp1}**\n\nCome back at **${openTimeET}** — I'll guide you candle by candle.\n\n🥷${profile?.preferredName ? ` ${profile.preferredName} —` : ""} Be ready. Not early.`;
     } else {
       // Live — show user's local time + minutes countdown
       const nextCandleET = nextCandleObj ? nextCandleObj.label : nextCandleDisplay;
@@ -4363,7 +4368,7 @@ Return ONLY valid JSON, no markdown, no explanation:
 
       const nextCandleLocal = nextCandleObj ? candleToUserTime(nextCandleObj) : nextCandleET;
 
-      openingMsg = `**NEXT ACTION**\n\nWatch the next 30M **${activePlan.instrument}** close.\n\nIf it closes **${direction} ${trigger}** — send it now.\nIf not — send me the closing price.\n\nWicks don't count. Only closes.\n\n🕐 Next check: **${nextCandleLocal}** (in ${minsLeft}m)`;
+      openingMsg = `**NEXT ACTION**${profile?.preferredName ? ` — ${profile.preferredName}` : ""}\n\nWatch the next 30M **${activePlan.instrument}** close.\n\nIf it closes **${direction} ${trigger}** — send it now.\nIf not — send me the closing price.\n\nWicks don't count. Only closes.\n\n🕐 Next check: **${nextCandleLocal}** (in ${minsLeft}m)`;
 
       if (activePlan._activatedFromSoftPass) {
         openingMsg += `\n\n📋 Activated from Soft Pass scenario. If session opens with different structure — trust the charts over this plan.`;
@@ -4696,6 +4701,15 @@ Use ONLY these times. All earlier time references in this conversation are stale
 
             {/* Header */}
             <div style={{ marginBottom: 20 }}>
+              {profile?.preferredName && (
+                <div style={{ fontSize:11, color:"rgba(255,107,255,0.7)", fontFamily:"'Space Mono',monospace", letterSpacing:"0.14em", marginBottom:6 }}>
+                  {(() => {
+                    const h = new Date().getHours();
+                    const greeting = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
+                    return `${greeting}, ${profile.preferredName}.`;
+                  })()}
+                </div>
+              )}
               <h1 style={{ fontSize: 26, fontWeight: 700, lineHeight: 1.2, marginBottom: 8, letterSpacing: "-0.01em" }}>
                 Upload your charts.<br/>Start the session.
               </h1>
@@ -7164,6 +7178,7 @@ function AuthScreen({onBack, supabase, initialTab="signup"}){
   const [email,setEmail]=useState("");
   const [password,setPassword]=useState("");
   const [confirmPassword,setConfirmPassword]=useState("");
+  const [preferredName,setPreferredName]=useState("");
   const [loading,setLoading]=useState(false);
   const [error,setError]=useState(null);
   const [success,setSuccess]=useState(null);
@@ -7172,6 +7187,7 @@ function AuthScreen({onBack, supabase, initialTab="signup"}){
   const [resetSent,setResetSent]=useState(false);
 
   async function handleSignUp(){
+    if(!preferredName.trim()){setError("Please enter your first name.");return;}
     if(!email||!password){setError("Email and password are required.");return;}
     if(password.length<8){setError("Password must be at least 8 characters.");return;}
     if(password!==confirmPassword){setError("Passwords do not match. Please check and try again.");return;}
@@ -7180,7 +7196,10 @@ function AuthScreen({onBack, supabase, initialTab="signup"}){
       const res=await fetch(`${SUPABASE_URL}/auth/v1/signup`,{
         method:"POST",
         headers:{"Content-Type":"application/json","apikey":SUPABASE_KEY},
-        body:JSON.stringify({email,password}),
+        body:JSON.stringify({
+          email, password,
+          data: { preferred_name: preferredName.trim() }
+        }),
       });
       const data=await res.json();
       if(!res.ok){
@@ -7334,6 +7353,18 @@ function AuthScreen({onBack, supabase, initialTab="signup"}){
 
           {/* Fields */}
           <div style={{display:"flex",flexDirection:"column",gap:12,marginBottom:20}}>
+
+            {/* Preferred name — signup only */}
+            {tab==="signup"&&(
+              <div>
+                <label style={{fontSize:14,fontWeight:700,letterSpacing:"0.1em",color:"#8878aa",display:"block",marginBottom:6,fontFamily:"monospace"}}>FIRST NAME</label>
+                <input type="text" value={preferredName} onChange={e=>setPreferredName(e.target.value)}
+                  placeholder="What should we call you?"
+                  style={inputStyle}
+                  onKeyDown={e=>e.key==="Enter"&&handleSignUp()}
+                />
+              </div>
+            )}
 
             {/* Email */}
             <div>
