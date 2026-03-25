@@ -3331,6 +3331,64 @@ function HistoryPage({ uid, onClose }) {
   );
 }
 
+function SoftPassScenariosPanel({ plan }) {
+  const [open, setOpen] = useState(false);
+  if (!plan?.soft_pass_scenarios) return null;
+  const { bull, bear } = plan.soft_pass_scenarios;
+
+  const ScenarioCard = ({ s, type }) => {
+    if (!s?.trigger) return null;
+    const isBull = type === "bull";
+    const color = isBull ? "#7fff6b" : "#ff6b6b";
+    const dir = isBull ? "above" : "below";
+    return (
+      <div style={{ padding:"14px 16px", background:`${color}08`, border:`1px solid ${color}33`, borderRadius:10, marginBottom:10 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10 }}>
+          <span style={{ fontSize:9, fontWeight:900, letterSpacing:"0.14em", color, fontFamily:"'Space Mono',monospace" }}>{isBull?"🟢 BULL SCENARIO":"🔴 BEAR SCENARIO"}</span>
+          <span style={{ fontSize:9, padding:"1px 7px", borderRadius:4, background:`${color}14`, border:`1px solid ${color}33`, color }}>{isBull?"LONG":"SHORT"}</span>
+        </div>
+        <div style={{ fontSize:13, fontWeight:700, color, marginBottom:6, fontFamily:"monospace" }}>
+          30M close {dir} {s.trigger}
+        </div>
+        {s.plan && <div style={{ fontSize:11, color:"rgba(255,255,255,0.55)", lineHeight:1.7, marginBottom:10 }}>{s.plan}</div>}
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:6 }}>
+          {s.stop && <div style={{ padding:"8px 10px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:7 }}>
+            <div style={{ fontSize:7, color:"#8878aa", letterSpacing:"0.1em", marginBottom:2 }}>STOP</div>
+            <div style={{ fontSize:12, fontWeight:700, color:"#ff6b6b", fontFamily:"monospace" }}>{s.stop}</div>
+          </div>}
+          {s.tp1 && <div style={{ padding:"8px 10px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:7 }}>
+            <div style={{ fontSize:7, color:"#8878aa", letterSpacing:"0.1em", marginBottom:2 }}>TP1</div>
+            <div style={{ fontSize:12, fontWeight:700, color:"#7fff6b", fontFamily:"monospace" }}>{s.tp1}</div>
+          </div>}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ marginBottom:16 }}>
+      <button onClick={() => setOpen(o => !o)}
+        style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 16px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.08)", borderRadius: open ? "10px 10px 0 0" : 10, cursor:"pointer", fontFamily:"inherit", transition:"all 0.2s" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <span style={{ fontSize:14 }}>🟡</span>
+          <span style={{ fontSize:11, fontWeight:700, color:"#f0ecff", letterSpacing:"0.04em" }}>Soft Pass Scenarios</span>
+          <span style={{ fontSize:9, color:"#8878aa", fontFamily:"'Space Mono',monospace" }}>Tap to {open ? "close" : "expand"}</span>
+        </div>
+        <span style={{ fontSize:16, color:"#00e5ff", transition:"transform 0.2s", transform: open ? "rotate(45deg)" : "none", display:"inline-block" }}>+</span>
+      </button>
+      {open && (
+        <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.08)", borderTop:"none", borderRadius:"0 0 10px 10px", padding:"16px", animation:"fadein 0.25s ease both" }}>
+          <ScenarioCard s={bull} type="bull" />
+          <ScenarioCard s={bear} type="bear" />
+          <div style={{ padding:"10px 14px", background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:8, fontSize:10, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace", lineHeight:1.8 }}>
+            Come back when the session opens. Do not enter until a 30M candle closes at the trigger price.
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function FullAnalysisPanel({ plan }) {
   const [open, setOpen] = useState(false);
   if (!plan) return null;
@@ -4584,18 +4642,14 @@ Return ONLY valid JSON, no markdown, no explanation:
             </div>
 
             {/* Re-upload warning — shows when user has already used their free re-upload */}
-            {instrument && (uploadCounts[instrument] || 0) >= 1 && (() => {
-              const session = JSON.parse(localStorage.getItem("omniusd_session") || "{}");
-              const token = session.access_token;
-              return (
-                <div style={{ padding:"12px 16px", background:"rgba(255,107,107,0.06)", border:"1px solid rgba(255,107,107,0.25)", borderLeft:"3px solid #ff6b6b", borderRadius:0, marginBottom:16 }}>
-                  <div style={{ fontSize:11, fontWeight:700, color:"#ff6b6b", marginBottom:4 }}>⚠ LAST FREE RE-UPLOAD</div>
-                  <div style={{ fontSize:10, color:"rgba(255,255,255,0.5)", lineHeight:1.7 }}>
-                    You've already re-uploaded {instrument} once this session. This is your final upload for this instrument — <strong style={{ color:"#ff6b6b" }}>cooldown will be fully active after this.</strong>
-                  </div>
+            {instrument && (uploadCounts[instrument] || 0) >= 1 && (
+              <div style={{ padding:"12px 16px", background:"rgba(255,107,107,0.06)", border:"1px solid rgba(255,107,107,0.25)", borderLeft:"3px solid #ff6b6b", borderRadius:0, marginBottom:16 }}>
+                <div style={{ fontSize:11, fontWeight:700, color:"#ff6b6b", marginBottom:4 }}>⚠ LAST FREE RE-UPLOAD</div>
+                <div style={{ fontSize:10, color:"rgba(255,255,255,0.5)", lineHeight:1.7 }}>
+                  You've already re-uploaded {instrument} once this session. This is your final upload for this instrument — <strong style={{ color:"#ff6b6b" }}>cooldown will be fully active after this.</strong>
                 </div>
-              );
-            })()}
+              </div>
+            )}
             <BulkUploadZone images={images} setImages={setImages} readSlotFile={readSlotFile} dragOverSlot={dragOverSlot} setDragOverSlot={setDragOverSlot} />
 
             {/* CTA */}
@@ -4859,92 +4913,8 @@ Return ONLY valid JSON, no markdown, no explanation:
                   </div>
                 </div>
 
-                {/* Scenarios — collapsible dropdown */}
-                {(() => {
-                  const [spOpen, setSpOpen] = useState(false);
-                  return (
-                    <div style={{ marginBottom:16 }}>
-                      <button onClick={() => setSpOpen(o => !o)}
-                        style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 16px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.08)", borderRadius: spOpen ? "10px 10px 0 0" : 10, cursor:"pointer", fontFamily:"inherit", transition:"all 0.2s" }}>
-                        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                          <span style={{ fontSize:14 }}>🟡</span>
-                          <span style={{ fontSize:11, fontWeight:700, color:"#f0ecff", letterSpacing:"0.04em" }}>Soft Pass Scenarios</span>
-                          <span style={{ fontSize:9, color:"#8878aa", fontFamily:"'Space Mono',monospace" }}>Tap to {spOpen ? "close" : "expand"}</span>
-                        </div>
-                        <span style={{ fontSize:16, color:"#00e5ff", transition:"transform 0.2s", transform: spOpen ? "rotate(45deg)" : "none", display:"inline-block" }}>+</span>
-                      </button>
-
-                      {spOpen && (
-                        <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.08)", borderTop:"none", borderRadius:"0 0 10px 10px", padding:"16px", animation:"fadein 0.25s ease both" }}>
-
-                          {/* Bull scenario */}
-                          {plan.soft_pass_scenarios?.bull?.trigger && (
-                            <div style={{ padding:"14px 16px", background:"rgba(127,255,107,0.04)", border:"1px solid rgba(127,255,107,0.2)", borderRadius:10, marginBottom:10 }}>
-                              <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10 }}>
-                                <span style={{ fontSize:9, fontWeight:900, letterSpacing:"0.14em", color:"#7fff6b", fontFamily:"'Space Mono',monospace" }}>🟢 BULL SCENARIO</span>
-                                <span style={{ fontSize:9, padding:"1px 7px", borderRadius:4, background:"rgba(127,255,107,0.1)", border:"1px solid rgba(127,255,107,0.25)", color:"#7fff6b" }}>LONG</span>
-                              </div>
-                              <div style={{ fontSize:13, fontWeight:700, color:"#7fff6b", marginBottom:6, fontFamily:"monospace" }}>
-                                30M close above {plan.soft_pass_scenarios.bull.trigger}
-                              </div>
-                              <div style={{ fontSize:11, color:"rgba(255,255,255,0.55)", lineHeight:1.7, marginBottom:10 }}>
-                                {plan.soft_pass_scenarios.bull.plan}
-                              </div>
-                              <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:6 }}>
-                                {plan.soft_pass_scenarios.bull.stop && (
-                                  <div style={{ padding:"8px 10px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:7 }}>
-                                    <div style={{ fontSize:7, color:"#8878aa", letterSpacing:"0.1em", marginBottom:2 }}>STOP</div>
-                                    <div style={{ fontSize:12, fontWeight:700, color:"#ff6b6b", fontFamily:"monospace" }}>{plan.soft_pass_scenarios.bull.stop}</div>
-                                  </div>
-                                )}
-                                {plan.soft_pass_scenarios.bull.tp1 && (
-                                  <div style={{ padding:"8px 10px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:7 }}>
-                                    <div style={{ fontSize:7, color:"#8878aa", letterSpacing:"0.1em", marginBottom:2 }}>TP1</div>
-                                    <div style={{ fontSize:12, fontWeight:700, color:"#7fff6b", fontFamily:"monospace" }}>{plan.soft_pass_scenarios.bull.tp1}</div>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Bear scenario */}
-                          {plan.soft_pass_scenarios?.bear?.trigger && (
-                            <div style={{ padding:"14px 16px", background:"rgba(255,107,107,0.04)", border:"1px solid rgba(255,107,107,0.2)", borderRadius:10, marginBottom:10 }}>
-                              <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10 }}>
-                                <span style={{ fontSize:9, fontWeight:900, letterSpacing:"0.14em", color:"#ff6b6b", fontFamily:"'Space Mono',monospace" }}>🔴 BEAR SCENARIO</span>
-                                <span style={{ fontSize:9, padding:"1px 7px", borderRadius:4, background:"rgba(255,107,107,0.1)", border:"1px solid rgba(255,107,107,0.25)", color:"#ff6b6b" }}>SHORT</span>
-                              </div>
-                              <div style={{ fontSize:13, fontWeight:700, color:"#ff6b6b", marginBottom:6, fontFamily:"monospace" }}>
-                                30M close below {plan.soft_pass_scenarios.bear.trigger}
-                              </div>
-                              <div style={{ fontSize:11, color:"rgba(255,255,255,0.55)", lineHeight:1.7, marginBottom:10 }}>
-                                {plan.soft_pass_scenarios.bear.plan}
-                              </div>
-                              <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:6 }}>
-                                {plan.soft_pass_scenarios.bear.stop && (
-                                  <div style={{ padding:"8px 10px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:7 }}>
-                                    <div style={{ fontSize:7, color:"#8878aa", letterSpacing:"0.1em", marginBottom:2 }}>STOP</div>
-                                    <div style={{ fontSize:12, fontWeight:700, color:"#ff6b6b", fontFamily:"monospace" }}>{plan.soft_pass_scenarios.bear.stop}</div>
-                                  </div>
-                                )}
-                                {plan.soft_pass_scenarios.bear.tp1 && (
-                                  <div style={{ padding:"8px 10px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:7 }}>
-                                    <div style={{ fontSize:7, color:"#8878aa", letterSpacing:"0.1em", marginBottom:2 }}>TP1</div>
-                                    <div style={{ fontSize:12, fontWeight:700, color:"#7fff6b", fontFamily:"monospace" }}>{plan.soft_pass_scenarios.bear.tp1}</div>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          )}
-
-                          <div style={{ padding:"10px 14px", background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:8, fontSize:10, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace", lineHeight:1.8 }}>
-                            Come back when the session opens. Do not enter until a 30M candle closes at the trigger price.
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
+                {/* Scenarios — collapsible dropdown (proper component, no IIFE) */}
+                <SoftPassScenariosPanel plan={plan} />
 
                 {/* Nav buttons */}
                 <div style={{ display:"flex", gap:8, marginBottom:8 }}>
