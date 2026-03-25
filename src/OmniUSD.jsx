@@ -3240,66 +3240,123 @@ function BulkUploadZone({ images, setImages, readSlotFile, dragOverSlot, setDrag
 // SESSION HISTORY PAGE
 // ═══════════════════════════════════════════════════════════════════════════
 function HistoryPage({ uid, onClose }) {
-  const HISTORY_KEY = `omniusd_aplus_history_${uid}`;
-  const [entries, setEntries] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]"); } catch { return []; }
+  const SESSION_PLANS_KEY = `omniusd_session_plans_${uid}`;
+  const EXEC_JOURNAL_KEY  = `omniusd_exec_journal_${uid}`;
+  const THIRTY_DAYS_MS    = 30 * 24 * 60 * 60 * 1000;
+
+  function pruneOld(arr) {
+    return arr.filter(e => e.savedAt > Date.now() - THIRTY_DAYS_MS);
+  }
+
+  const [tab, setTab] = useState("plans"); // plans | journal
+  const [plans, setPlans] = useState(() => {
+    try { return pruneOld(JSON.parse(localStorage.getItem(SESSION_PLANS_KEY) || "[]")); } catch { return []; }
+  });
+  const [journal, setJournal] = useState(() => {
+    try { return pruneOld(JSON.parse(localStorage.getItem(EXEC_JOURNAL_KEY) || "[]")); } catch { return []; }
   });
   const [expanded, setExpanded] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
 
+  const entries = tab === "plans" ? plans : journal;
+  const storageKey = tab === "plans" ? SESSION_PLANS_KEY : EXEC_JOURNAL_KEY;
+
   function deleteEntry(id) {
     const updated = entries.filter(e => e.id !== id);
-    setEntries(updated);
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
+    if (tab === "plans") setPlans(updated);
+    else setJournal(updated);
+    localStorage.setItem(storageKey, JSON.stringify(updated));
     setConfirmDelete(null);
     if (expanded === id) setExpanded(null);
   }
 
-  const biasColor = (bias) => bias === "SHORT" ? "#ff6b6b" : bias === "LONG" ? "#7fff6b" : "#ffd166";
+  const gradeColor = (g) => {
+    if (g === "A+") return "#7fff6b";
+    if (g === "PASS" || g === "HARD PASS") return "#ff6b6b";
+    if (g === "SOFT PASS") return "#00e5ff";
+    return "#ffd166";
+  };
+  const biasColor = (b) => b === "SHORT" ? "#ff6b6b" : b === "LONG" ? "#7fff6b" : "#ffd166";
+
+  const daysLeft = (savedAt) => {
+    const remaining = THIRTY_DAYS_MS - (Date.now() - savedAt);
+    return Math.max(0, Math.ceil(remaining / (24*60*60*1000)));
+  };
 
   return (
     <div style={{ flex:1, overflowY:"auto", padding:"28px 20px", animation:"fadein 0.3s ease both" }}>
       <div style={{ maxWidth:600, margin:"0 auto" }}>
 
         {/* Header */}
-        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:24 }}>
-          <div>
-            <div style={{ fontSize:13, color:"rgba(127,255,107,0.7)", letterSpacing:"0.18em", fontFamily:"'Space Mono',monospace", marginBottom:6 }}>A+ HISTORY</div>
-            <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:20, fontWeight:800, color:"#f0ecff", margin:0 }}>Saved A+ Setups</h2>
-          </div>
-          <button onClick={onClose} style={{ fontFamily:"'Space Mono',monospace", fontSize:13, fontWeight:700, color:"#8878aa", background:"none", border:"1px solid rgba(255,255,255,0.08)", borderRadius:6, padding:"6px 12px", cursor:"pointer" }}>
-            {"<- Back"}
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
+          <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:20, fontWeight:800, color:"#f0ecff", margin:0 }}>History</h2>
+          <button onClick={onClose} style={{ fontFamily:"'Space Mono',monospace", fontSize:12, fontWeight:700, color:"#8878aa", background:"none", border:"1px solid rgba(255,255,255,0.08)", borderRadius:6, padding:"6px 12px", cursor:"pointer" }}>
+            ← Back
           </button>
         </div>
+
+        {/* 30-day notice */}
+        <div style={{ fontSize:10, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace", marginBottom:20, lineHeight:1.6 }}>
+          Plans are automatically saved for 30 days, then deleted. Export or screenshot anything you want to keep.
+        </div>
+
+        {/* Tabs */}
+        <div style={{ display:"flex", gap:0, marginBottom:20, border:"1px solid rgba(255,255,255,0.08)", borderRadius:8, overflow:"hidden" }}>
+          {[
+            { key:"plans",   label:"Session Plans",     count: plans.length },
+            { key:"journal", label:"Execution Journal", count: journal.length },
+          ].map(t => (
+            <button key={t.key} onClick={() => { setTab(t.key); setExpanded(null); }}
+              style={{ flex:1, padding:"10px 8px", border:"none", cursor:"pointer", fontFamily:"'Space Mono',monospace", fontSize:11, fontWeight:700, letterSpacing:"0.06em", transition:"all 0.2s",
+                background: tab === t.key ? "rgba(255,107,255,0.12)" : "rgba(255,255,255,0.02)",
+                color: tab === t.key ? "#ff6bff" : "rgba(255,255,255,0.4)",
+                borderRight: t.key === "plans" ? "1px solid rgba(255,255,255,0.08)" : "none" }}>
+              {t.label}
+              <span style={{ marginLeft:6, fontSize:10, padding:"1px 6px", borderRadius:10,
+                background: tab === t.key ? "rgba(255,107,255,0.2)" : "rgba(255,255,255,0.06)",
+                color: tab === t.key ? "#ff6bff" : "rgba(255,255,255,0.35)" }}>
+                {t.count}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {/* Tab description */}
+        <div style={{ fontSize:11, color:"rgba(255,255,255,0.38)", fontFamily:"'Space Mono',monospace", marginBottom:16, lineHeight:1.7 }}>
+          {tab === "plans"
+            ? "Every plan you've generated — all grades, auto-saved. One per instrument per day."
+            : "Setups you went live with. Saved automatically when you start a live session."}
+        </div>
+
+        {/* Stats bar */}
+        {entries.length > 0 && (
+          <div style={{ display:"flex", gap:6, marginBottom:16, flexWrap:"wrap" }}>
+            {[
+              { label:"TOTAL", val: entries.length, color:"#ff6bff" },
+              { label:"A+",    val: entries.filter(e=>e.grade==="A+").length, color:"#7fff6b" },
+              { label:"PASS",  val: entries.filter(e=>e.grade==="PASS"||e.grade==="HARD PASS").length, color:"#ff6b6b" },
+              { label:"OTHER", val: entries.filter(e=>e.grade!=="A+"&&e.grade!=="PASS"&&e.grade!=="HARD PASS").length, color:"#ffd166" },
+            ].filter(s => s.val > 0).map(s => (
+              <div key={s.label} style={{ padding:"6px 12px", background:`${s.color}08`, border:`1px solid ${s.color}22`, borderRadius:7 }}>
+                <div style={{ fontSize:8, color:`${s.color}99`, letterSpacing:"0.12em", fontFamily:"'Space Mono',monospace", marginBottom:2 }}>{s.label}</div>
+                <div style={{ fontSize:15, fontWeight:900, color:s.color }}>{s.val}</div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Empty state */}
         {entries.length === 0 && (
           <div style={{ textAlign:"center", padding:"48px 24px" }}>
-            <div style={{ fontSize:32, marginBottom:16 }}>📋</div>
-            <div style={{ fontSize:14, fontWeight:700, color:"rgba(255,255,255,0.85)", marginBottom:8 }}>No saved setups yet</div>
-            <div style={{ fontSize:13, color:"rgba(255,255,255,0.38)", fontFamily:"'Space Mono',monospace", lineHeight:1.8 }}>
-              When you get an A+ plan, hit "Save to History" to keep a record of it here.
+            <div style={{ fontSize:32, marginBottom:16 }}>{tab === "plans" ? "📊" : "⚡"}</div>
+            <div style={{ fontSize:13, fontWeight:700, color:"rgba(255,255,255,0.7)", marginBottom:8 }}>
+              {tab === "plans" ? "No session plans yet" : "No live sessions yet"}
             </div>
-          </div>
-        )}
-
-        {/* Stats bar */}
-        {entries.length > 0 && (
-          <div style={{ display:"flex", gap:8, marginBottom:20, flexWrap:"wrap" }}>
-            <div style={{ padding:"8px 14px", background:"rgba(127,255,107,0.06)", border:"1px solid rgba(127,255,107,0.2)", borderRadius:8 }}>
-              <div style={{ fontSize:8, color:"rgba(127,255,107,0.6)", letterSpacing:"0.12em", fontFamily:"'Space Mono',monospace", marginBottom:3 }}>SAVED</div>
-              <div style={{ fontSize:16, fontWeight:900, color:"#7fff6b" }}>{entries.length}</div>
+            <div style={{ fontSize:11, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace", lineHeight:1.8 }}>
+              {tab === "plans"
+                ? "Every plan you generate is automatically saved here."
+                : "Plans you go live with are saved here automatically."}
             </div>
-            {["LONG","SHORT"].map(bias => {
-              const count = entries.filter(e => e.bias === bias).length;
-              if (!count) return null;
-              return (
-                <div key={bias} style={{ padding:"8px 14px", background:`${biasColor(bias)}08`, border:`1px solid ${biasColor(bias)}22`, borderRadius:8 }}>
-                  <div style={{ fontSize:8, color:biasColor(bias), letterSpacing:"0.12em", fontFamily:"'Space Mono',monospace", marginBottom:3, opacity:0.7 }}>{bias}</div>
-                  <div style={{ fontSize:16, fontWeight:900, color:biasColor(bias) }}>{count}</div>
-                </div>
-              );
-            })}
           </div>
         )}
 
@@ -3307,83 +3364,106 @@ function HistoryPage({ uid, onClose }) {
         <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
           {entries.map(entry => {
             const isOpen = expanded === entry.id;
-            const bColor = biasColor(entry.bias);
+            const gc = gradeColor(entry.grade);
+            const bc = biasColor(entry.bias);
+            const dl = daysLeft(entry.savedAt);
             return (
-              <div key={entry.id} style={{ background:"rgba(255,255,255,0.03)", border:`1px solid ${isOpen ? "rgba(127,255,107,0.25)" : "rgba(255,255,255,0.07)"}`, borderRadius:12, overflow:"hidden", transition:"border 0.2s" }}>
+              <div key={entry.id} style={{ background:"rgba(255,255,255,0.03)", border:`1px solid ${isOpen ? `${gc}33` : "rgba(255,255,255,0.07)"}`, borderRadius:12, overflow:"hidden", transition:"border 0.2s" }}>
 
                 {/* Row header */}
-                <div style={{ display:"flex", alignItems:"center", gap:12, padding:"14px 16px", cursor:"pointer" }}
+                <div style={{ display:"flex", alignItems:"center", gap:10, padding:"12px 14px", cursor:"pointer" }}
                   onClick={() => setExpanded(isOpen ? null : entry.id)}>
 
                   {/* Grade badge */}
-                  <div style={{ width:36, height:36, borderRadius:8, background:"rgba(127,255,107,0.1)", border:"1px solid rgba(127,255,107,0.3)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                    <span style={{ fontSize:14, fontWeight:900, color:"#7fff6b" }}>A+</span>
+                  <div style={{ width:38, height:38, borderRadius:8, background:`${gc}12`, border:`1px solid ${gc}33`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                    <span style={{ fontSize:11, fontWeight:900, color:gc, fontFamily:"'Space Mono',monospace", textAlign:"center", lineHeight:1.1 }}>
+                      {entry.grade === "SOFT PASS" ? "SOFT\nPASS" : entry.grade}
+                    </span>
                   </div>
 
                   {/* Info */}
                   <div style={{ flex:1, minWidth:0 }}>
-                    <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4, flexWrap:"wrap" }}>
-                      <span style={{ fontSize:14, fontWeight:700, color:"#f0ecff" }}>{entry.instrument}</span>
-                      <span style={{ fontSize:13, fontWeight:700, padding:"1px 7px", borderRadius:4, background:`${bColor}14`, border:`1px solid ${bColor}33`, color:bColor }}>{entry.bias}</span>
-                      {entry.session && <span style={{ fontSize:13, color:"rgba(255,255,255,0.75)", fontFamily:"'Space Mono',monospace" }}>{entry.session}</span>}
+                    <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:3, flexWrap:"wrap" }}>
+                      <span style={{ fontSize:13, fontWeight:700, color:"#f0ecff" }}>{entry.instrument}</span>
+                      <span style={{ fontSize:11, fontWeight:700, padding:"1px 6px", borderRadius:4, background:`${bc}14`, border:`1px solid ${bc}33`, color:bc }}>{entry.bias}</span>
+                      {entry._scoutMode && <span style={{ fontSize:9, color:"#00e5ff", fontFamily:"'Space Mono',monospace" }}>🔭 SCOUT</span>}
+                      {entry._londonMode && <span style={{ fontSize:9, color:"#00e5ff", fontFamily:"'Space Mono',monospace" }}>🌐 LONDON</span>}
                     </div>
-                    <div style={{ fontSize:13, color:"rgba(255,255,255,0.75)", fontFamily:"'Space Mono',monospace" }}>{entry.date}</div>
+                    <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+                      <span style={{ fontSize:11, color:"rgba(255,255,255,0.4)", fontFamily:"'Space Mono',monospace" }}>{entry.date}</span>
+                      <span style={{ fontSize:9, color:"rgba(255,255,255,0.2)", fontFamily:"'Space Mono',monospace" }}>{entry.time} {getUserTZShort()}</span>
+                    </div>
                   </div>
 
-                  {/* Key level */}
+                  {/* Trigger + days left */}
                   <div style={{ textAlign:"right", flexShrink:0 }}>
-                    <div style={{ fontSize:8, color:"rgba(255,255,255,0.38)", fontFamily:"'Space Mono',monospace", marginBottom:2 }}>TRIGGER</div>
-                    <div style={{ fontSize:14, fontWeight:700, color:bColor, fontFamily:"monospace" }}>{entry.trigger_level}</div>
+                    {entry.trigger_level && (
+                      <>
+                        <div style={{ fontSize:8, color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace", marginBottom:1 }}>TRIGGER</div>
+                        <div style={{ fontSize:13, fontWeight:700, color:bc, fontFamily:"monospace" }}>{entry.trigger_level}</div>
+                      </>
+                    )}
+                    <div style={{ fontSize:9, color: dl <= 3 ? "#ff9a3c" : "rgba(255,255,255,0.2)", fontFamily:"'Space Mono',monospace", marginTop:2 }}>
+                      {dl <= 3 ? `⚠ ${dl}d left` : `${dl}d left`}
+                    </div>
                   </div>
 
-                  {/* Chevron */}
-                  <span style={{ fontSize:14, color:"rgba(255,255,255,0.80)", flexShrink:0, transform:isOpen?"rotate(180deg)":"none", transition:"transform 0.2s" }}>▾</span>
+                  <span style={{ fontSize:13, color:"rgba(255,255,255,0.4)", flexShrink:0, transform:isOpen?"rotate(180deg)":"none", transition:"transform 0.2s" }}>▾</span>
                 </div>
 
-                {/* Expanded plan */}
+                {/* Expanded */}
                 {isOpen && (
-                  <div style={{ borderTop:"1px solid rgba(255,255,255,0.06)", padding:"16px" }}>
+                  <div style={{ borderTop:"1px solid rgba(255,255,255,0.06)", padding:"14px" }}>
 
                     {/* Summary */}
                     {entry.summary && (
-                      <div style={{ padding:"10px 14px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:8, marginBottom:14, fontSize:14, color:"#ccc4e8", lineHeight:1.8 }}>
+                      <div style={{ padding:"10px 12px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:8, marginBottom:12, fontSize:12, color:"rgba(255,255,255,0.62)", lineHeight:1.8 }}>
                         {entry.summary}
                       </div>
                     )}
 
+                    {/* Confidence */}
+                    {entry.confidence_score && (
+                      <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:12 }}>
+                        <span style={{ fontSize:10, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace" }}>CONFIDENCE</span>
+                        <span style={{ fontSize:13, fontWeight:700, color:"#ffd166", fontFamily:"monospace" }}>{entry.confidence_score}%</span>
+                        {entry.session && <span style={{ fontSize:10, color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace" }}>· {entry.session} SESSION</span>}
+                      </div>
+                    )}
+
                     {/* Levels grid */}
-                    <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:6, marginBottom:14 }}>
+                    <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:5, marginBottom:12 }}>
                       {[
-                        { label:"TRIGGER", val:entry.trigger_level, color:bColor },
+                        { label:"TRIGGER", val:entry.trigger_level, color:bc },
                         { label:"STOP",    val:entry.stop_loss,     color:"#ff6b6b" },
                         { label:"TP1",     val:entry.tp1,           color:"#7fff6b" },
                         { label:"TP2",     val:entry.tp2,           color:"#7fff6b" },
                         { label:"RUNNER",  val:entry.runner,        color:"#00e5ff" },
                         { label:"RETEST",  val:entry.retest_zone,   color:"#ffd166" },
-                      ].map(r => r.val ? (
-                        <div key={r.label} style={{ padding:"8px 10px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:7 }}>
-                          <div style={{ fontSize:7, color:"rgba(255,255,255,0.75)", fontFamily:"'Space Mono',monospace", letterSpacing:"0.1em", marginBottom:3 }}>{r.label}</div>
-                          <div style={{ fontSize:14, fontWeight:700, color:r.color, fontFamily:"monospace" }}>{r.val}</div>
+                      ].filter(r => r.val).map(r => (
+                        <div key={r.label} style={{ padding:"6px 8px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:7 }}>
+                          <div style={{ fontSize:7, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace", letterSpacing:"0.1em", marginBottom:2 }}>{r.label}</div>
+                          <div style={{ fontSize:13, fontWeight:700, color:r.color, fontFamily:"monospace" }}>{r.val}</div>
                         </div>
-                      ) : null)}
+                      ))}
                     </div>
 
                     {/* Delete */}
                     {confirmDelete === entry.id ? (
                       <div style={{ display:"flex", gap:8, alignItems:"center" }}>
-                        <span style={{ fontSize:13, color:"rgba(255,107,107,0.8)", fontFamily:"'Space Mono',monospace" }}>Delete this entry?</span>
+                        <span style={{ fontSize:11, color:"rgba(255,107,107,0.8)", fontFamily:"'Space Mono',monospace" }}>Delete this entry?</span>
                         <button onClick={() => deleteEntry(entry.id)}
-                          style={{ fontSize:13, fontWeight:700, padding:"4px 12px", borderRadius:6, border:"1px solid rgba(255,107,107,0.4)", background:"rgba(255,107,107,0.1)", color:"#ff6b6b", cursor:"pointer", fontFamily:"inherit" }}>
+                          style={{ fontSize:11, fontWeight:700, padding:"4px 10px", borderRadius:6, border:"1px solid rgba(255,107,107,0.4)", background:"rgba(255,107,107,0.1)", color:"#ff6b6b", cursor:"pointer", fontFamily:"inherit" }}>
                           Delete
                         </button>
                         <button onClick={() => setConfirmDelete(null)}
-                          style={{ fontSize:13, fontWeight:700, padding:"4px 12px", borderRadius:6, border:"1px solid rgba(255,255,255,0.1)", background:"none", color:"#8878aa", cursor:"pointer", fontFamily:"inherit" }}>
+                          style={{ fontSize:11, fontWeight:700, padding:"4px 10px", borderRadius:6, border:"1px solid rgba(255,255,255,0.1)", background:"none", color:"#8878aa", cursor:"pointer", fontFamily:"inherit" }}>
                           Cancel
                         </button>
                       </div>
                     ) : (
                       <button onClick={() => setConfirmDelete(entry.id)}
-                        style={{ fontSize:13, color:"rgba(255,107,107,0.4)", background:"none", border:"none", cursor:"pointer", fontFamily:"'Space Mono',monospace", letterSpacing:"0.06em" }}>
+                        style={{ fontSize:11, color:"rgba(255,107,107,0.4)", background:"none", border:"none", cursor:"pointer", fontFamily:"'Space Mono',monospace" }}>
                         🗑 Delete
                       </button>
                     )}
@@ -3393,6 +3473,7 @@ function HistoryPage({ uid, onClose }) {
             );
           })}
         </div>
+
       </div>
     </div>
   );
@@ -3782,28 +3863,86 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
   // Cooldown check — 2 hours from savedAt
   const COOLDOWN_MS_LOCAL = 2 * 60 * 60 * 1000;
 
-  function saveToHistory(planObj) {
+  // ── History helpers ─────────────────────────────────────────────────────────
+  const SESSION_PLANS_KEY = `omniusd_session_plans_${_uid}`;
+  const EXEC_JOURNAL_KEY  = `omniusd_exec_journal_${_uid}`;
+  const THIRTY_DAYS_MS    = 30 * 24 * 60 * 60 * 1000;
+
+  function pruneOld(entries) {
+    const cutoff = Date.now() - THIRTY_DAYS_MS;
+    return entries.filter(e => e.savedAt > cutoff);
+  }
+
+  function autoSavePlan(planObj) {
+    // Auto-saves every plan (all grades) as a lightweight summary
+    if (!planObj || planObj._blocked || planObj.grade === "BLOCKED") return;
     try {
-      const existing = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+      const raw = JSON.parse(localStorage.getItem(SESSION_PLANS_KEY) || "[]");
+      const pruned = pruneOld(raw);
       const entry = {
         id: Date.now(),
+        savedAt: Date.now(),
         date: new Date().toLocaleDateString("en-US", { weekday:"short", month:"short", day:"numeric", year:"numeric" }),
+        time: getCTTime().str,
         instrument: planObj.instrument,
-        grade: "A+",
-        bias: planObj.bias,
+        grade: planObj.grade,
+        bias: planObj.bias || "NEUTRAL",
         session: selectedSession,
-        trigger_level: planObj.trigger_level,
-        stop_loss: planObj.stop_loss,
-        tp1: planObj.tp1,
-        tp2: planObj.tp2,
-        runner: planObj.runner,
-        retest_zone: planObj.retest_zone,
-        summary: planObj.summary,
-        confidence_score: planObj.confidence_score,
+        trigger_level: planObj.trigger_level || null,
+        stop_loss: planObj.stop_loss || null,
+        tp1: planObj.tp1 || null,
+        retest_zone: planObj.retest_zone || null,
+        confidence_score: planObj.confidence_score || null,
+        summary: planObj.summary || planObj.pass_reason || null,
+        brc_phase: planObj.brc_phase || null,
+        _scoutMode: planObj._scoutMode || false,
+        _londonMode: planObj._londonMode || false,
       };
-      const updated = [entry, ...existing];
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
+      // Avoid duplicate saves for same instrument+date
+      const today = new Date().toDateString();
+      const alreadySaved = pruned.some(e =>
+        e.instrument === entry.instrument &&
+        new Date(e.savedAt).toDateString() === today
+      );
+      if (alreadySaved) return; // one plan per instrument per day
+      const updated = [entry, ...pruned].slice(0, 90); // hard cap 90 entries
+      localStorage.setItem(SESSION_PLANS_KEY, JSON.stringify(updated));
     } catch(e) {}
+  }
+
+  function saveExecutionJournal(planObj) {
+    // Saves when user starts a live session — any grade
+    if (!planObj || planObj._blocked) return;
+    try {
+      const raw = JSON.parse(localStorage.getItem(EXEC_JOURNAL_KEY) || "[]");
+      const pruned = pruneOld(raw);
+      const entry = {
+        id: Date.now(),
+        savedAt: Date.now(),
+        date: new Date().toLocaleDateString("en-US", { weekday:"short", month:"short", day:"numeric", year:"numeric" }),
+        time: getCTTime().str,
+        instrument: planObj.instrument,
+        grade: planObj.grade,
+        bias: planObj.bias || "NEUTRAL",
+        session: selectedSession,
+        trigger_level: planObj.trigger_level || null,
+        stop_loss: planObj.stop_loss || null,
+        tp1: planObj.tp1 || null,
+        tp2: planObj.tp2 || null,
+        runner: planObj.runner || null,
+        retest_zone: planObj.retest_zone || null,
+        confidence_score: planObj.confidence_score || null,
+        summary: planObj.summary || null,
+        result: null, // filled in manually later
+      };
+      const updated = [entry, ...pruned].slice(0, 90);
+      localStorage.setItem(EXEC_JOURNAL_KEY, JSON.stringify(updated));
+    } catch(e) {}
+  }
+
+  function saveToHistory(planObj) {
+    // Legacy A+ manual save — kept for backward compat but now redirects to autoSavePlan
+    autoSavePlan(planObj);
   }
   function getCooldownRemaining(instr) {
     const s = getSessionForInstrument(instr);
@@ -4137,6 +4276,8 @@ Return ONLY valid JSON, no markdown, no explanation:
       parsed.instrument = instrument;
       setPlan(parsed);
       setPhase("plan");
+      // Auto-save every plan to session history (all grades)
+      autoSavePlan({ ...parsed, instrument });
       // Log successful analysis
       if (userId && token) logUsage(userId, token, instrument);
     } catch (e) {
@@ -4154,6 +4295,8 @@ Return ONLY valid JSON, no markdown, no explanation:
   // ── STEP 2: Start live session ──────────────────────────────────────────────
   function startLiveSession(planOverride) {
     const activePlan = planOverride || plan;
+    // Save to execution journal — user committed to this setup
+    saveExecutionJournal(activePlan);
     setPhase("live");
     const ct = getCTTime();
     const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
