@@ -4468,12 +4468,30 @@ Use ONLY these times. All earlier time references in this conversation are stale
           <div style={{ width: "100%", maxWidth: 560 }}>
 
             {/* Header */}
-            <div style={{ marginBottom: 24 }}>
+            <div style={{ marginBottom: 20 }}>
               <h1 style={{ fontSize: 26, fontWeight: 700, lineHeight: 1.2, marginBottom: 8, letterSpacing: "-0.01em" }}>
                 Upload your charts.<br/>Start the session.
               </h1>
               <div style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.6 }}>
-                Select one instrument and upload all 5 timeframes.
+                Select one instrument and upload all 5 timeframes for the NY session.
+              </div>
+            </div>
+
+            {/* NY Session info block */}
+            <div style={{ padding:"10px 14px", background:"rgba(127,255,107,0.04)", border:"1px solid rgba(127,255,107,0.15)", borderLeft:"3px solid #7fff6b", borderRadius:0, marginBottom:20 }}>
+              <div style={{ fontSize:9, fontWeight:900, letterSpacing:"0.16em", color:"#7fff6b", marginBottom:8, fontFamily:"'Space Mono',monospace" }}>NY SESSION ONLY</div>
+              <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
+                {[
+                  { label:"Upload", val:"30–60 min before NY open" },
+                  { label:"Pre-scout", val:"7:00–8:30 AM CT" },
+                  { label:"Execution", val:"8:30–10:30 AM CT" },
+                  { label:"Cutoff", val:"No new entries after 10:30 AM CT" },
+                ].map(r => (
+                  <div key={r.label} style={{ display:"flex", gap:8, alignItems:"baseline" }}>
+                    <span style={{ fontSize:9, fontWeight:700, color:"rgba(127,255,107,0.6)", fontFamily:"'Space Mono',monospace", minWidth:60, flexShrink:0 }}>{r.label}</span>
+                    <span style={{ fontSize:11, color:"rgba(255,255,255,0.65)", fontFamily:"'Space Mono',monospace" }}>{r.val}</span>
+                  </div>
+                ))}
               </div>
             </div>
 
