@@ -1394,12 +1394,11 @@ function Onboarding({onSelect}){
             )}
             <div style={{marginBottom:40}}>
               <div style={{fontSize:14,fontWeight:900,letterSpacing:"0.18em",color:"#ff6bff",marginBottom:10}}>STEP 2 OF 3</div>
-              <h2 style={{fontSize:34,fontWeight:900,color:"var(--t-text)",margin:"0 0 10px",lineHeight:1.1}}>Confirm your setup</h2>
-              <p style={{fontSize:16,color:"var(--t-muted3)",margin:0,fontWeight:500,lineHeight:1.55}}>Review your selections before entering the dashboard.</p>
+              <h2 style={{fontSize:34,fontWeight:900,color:"var(--t-text)",margin:"0 0 10px",lineHeight:1.1}}>You're almost in.</h2>
+              <p style={{fontSize:16,color:"var(--t-muted3)",margin:0,fontWeight:500,lineHeight:1.55}}>Set your timezone so OmniUSD always shows times in your local time.</p>
             </div>
             <div style={{background:"rgba(255,255,255,0.035)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:18,overflow:"hidden",marginBottom:20}}>
               {(()=>{
-                console.log("selectedPlan at confirm step:", selectedTier);
                 const tier=TIER_CONFIG[selectedTier];
                 if(!tier){
                   return(
@@ -1461,6 +1460,24 @@ function Onboarding({onSelect}){
                 ));
               })()}
             </div>
+            {/* Timezone selector */}
+            <div style={{padding:"12px 16px",background:"rgba(127,255,107,0.04)",border:"1px solid rgba(127,255,107,0.15)",borderLeft:"3px solid #7fff6b",borderRadius:0,marginBottom:16}}>
+              <div style={{fontSize:9,fontWeight:900,letterSpacing:"0.16em",color:"#7fff6b",marginBottom:8,fontFamily:"'Space Mono',monospace"}}>NY SESSION ONLY</div>
+              <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                {[
+                  {label:"Upload",    val:"30–60 min before NY open"},
+                  {label:"Pre-scout", val:"7:00–8:30 AM CT"},
+                  {label:"Execution", val:"8:30–10:30 AM CT"},
+                  {label:"Cutoff",    val:"No new entries after 10:30 AM CT"},
+                ].map(r=>(
+                  <div key={r.label} style={{display:"flex",gap:8,alignItems:"baseline"}}>
+                    <span style={{fontSize:9,fontWeight:700,color:"rgba(127,255,107,0.6)",fontFamily:"'Space Mono',monospace",minWidth:68,flexShrink:0}}>{r.label}</span>
+                    <span style={{fontSize:12,color:"rgba(255,255,255,0.65)",fontFamily:"'Space Mono',monospace"}}>{r.val}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {/* Timezone selector */}
             <div style={{marginBottom:16}}>
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
@@ -1536,7 +1553,7 @@ function Onboarding({onSelect}){
                   cursor:tzObj?"pointer":"not-allowed",
                   boxShadow:tzObj?"0 6px 40px rgba(255,107,255,0.28)":"none",
                   transition:"all 0.2s"}}>
-                {tzObj?"ENTER DASHBOARD →":"Select your timezone to continue"}
+                {tzObj?"CONTINUE →":"Select your timezone to continue"}
               </button>
             </div>
           </div>
@@ -1559,23 +1576,22 @@ function Onboarding({onSelect}){
             {/* Commitments */}
             <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:32}}>
               {[
-                "Do not judge the system after two trades.",
-                "Do not skip the phases.",
-                "Do not risk real money until you can follow the process consistently.",
-                "Use demo first. Commit to 30 days of disciplined execution before going live.",
-              ].map((line,i)=>(
+                {n:"01", rule:"Upload before the session. Not during it.", detail:"Pre-market scouting opens at 7:00 AM CT. Upload your 5 charts before 8:30 AM CT so you have time to study the plan before execution begins."},
+                {n:"02", rule:"8:30 to 10:30 AM CT. Nothing outside that.", detail:"OmniUSD is built for the NY session open — the highest conviction, highest volume window in the market. Outside this window, you wait."},
+                {n:"03", rule:"A+ setups only. Pass on everything else.", detail:"You will see B-grade setups that look good. You will feel pressure to act. The system says PASS — you pass. Six A+ trades per month beats thirty B-grade trades every time."},
+                {n:"04", rule:"30M close is the trigger. Wicks are noise.", detail:"Price touching a level is information. Price wicking through a level is information. Only a 30M candle closing beyond the level gives you permission to act."},
+              ].map((item,i)=>(
                 <div key={i} style={{display:"flex",alignItems:"flex-start",gap:14,
-                  padding:"14px 18px",
+                  padding:"16px 18px",
                   background:"rgba(255,255,255,0.03)",
                   border:"1px solid rgba(255,255,255,0.07)",
+                  borderLeft:`3px solid rgba(255,107,255,0.4)`,
                   borderRadius:10}}>
-                  <div style={{width:22,height:22,borderRadius:"50%",flexShrink:0,marginTop:1,
-                    background:"rgba(255,107,255,0.1)",border:"1px solid rgba(255,107,255,0.3)",
-                    display:"flex",alignItems:"center",justifyContent:"center",
-                    fontSize:13,fontWeight:900,color:"#ff6bff"}}>
-                    {i+1}
+                  <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,fontWeight:900,color:"rgba(255,107,255,0.5)",flexShrink:0,marginTop:1,minWidth:28}}>{item.n}</div>
+                  <div>
+                    <div style={{fontSize:14,fontWeight:900,color:"var(--t-text)",marginBottom:4,lineHeight:1.2}}>{item.rule}</div>
+                    <div style={{fontSize:13,color:"var(--t-muted3)",lineHeight:1.6}}>{item.detail}</div>
                   </div>
-                  <p style={{fontSize:14,color:"var(--t-muted)",fontWeight:500,lineHeight:1.6,margin:0}}>{line}</p>
                 </div>
               ))}
             </div>
@@ -1592,10 +1608,10 @@ function Onboarding({onSelect}){
             </div>
 
             {/* Disclaimer */}
-            <p style={{fontSize:14,color:"rgba(255,255,255,0.80)",textAlign:"center",lineHeight:1.6,margin:0}}>
+            <p style={{fontSize:12,color:"rgba(255,255,255,0.45)",textAlign:"center",lineHeight:1.7,margin:0}}>
               OmniUSD is an execution framework, not financial advice. Trade at your own risk. By continuing you agree to our{" "}
-              <a href="/terms" style={{color:"rgba(255,255,255,0.75)",textDecoration:"underline"}}>Terms of Service</a>{" "}and{" "}
-              <a href="/privacy" style={{color:"rgba(255,255,255,0.75)",textDecoration:"underline"}}>Privacy Policy</a>.
+              <a href="/terms" style={{color:"rgba(255,255,255,0.5)",textDecoration:"underline"}}>Terms of Service</a>{" "}and{" "}
+              <a href="/privacy" style={{color:"rgba(255,255,255,0.5)",textDecoration:"underline"}}>Privacy Policy</a>.
             </p>
           </div>
         )}
