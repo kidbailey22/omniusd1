@@ -390,7 +390,7 @@ const DEV_MODE = false;
 const TIER_CONFIG = {
   starter: { label:"Starter", price:"$29/mo", priceId:"price_1TCPQoEIHuTqoOi9n3oejBYy", instruments:["XAUUSD","BTCUSD"],         dailyCap:3,  color:"#ffd166" },
   pro:     { label:"Pro",     price:"$39/mo", priceId:"price_1TCPRLEIHuTqoOi9uVChc1LE", instruments:["XAUUSD","BTCUSD","NAS100","US30"], dailyCap:5,  color:"#00e5ff" },
-  elite:   { label:"Elite",   price:"$59/mo", priceId:"price_1TCPRpEIHuTqoOi9xA9MIiH7", instruments:["XAUUSD","BTCUSD","NAS100","US30","USOIL","GBPUSD"], dailyCap:10, color:"#ff6bff" },
+  elite:   { label:"Elite",   price:"$59/mo", priceId:"price_1TCPRpEIHuTqoOi9xA9MIiH7", instruments:["XAUUSD","BTCUSD","NAS100","US30","USOIL","US500"], dailyCap:10, color:"#ff6bff" },
 };
 
 // Current user tier — hardcoded for now, will come from Stripe/auth later
@@ -1201,7 +1201,7 @@ function Onboarding({onSelect}){
     {id:"US30",   label:"Dow",     sub:"US30",    color:"#7fff6b"},
     {id:"BTCUSD", label:"Bitcoin", sub:"BTCUSD",  color:"#ff9a3c"},
     {id:"USOIL",  label:"Oil",     sub:"USOIL",   color:"#ff6b6b"},
-    {id:"GBPUSD", label:"Cable",   sub:"GBPUSD",  color:"#ff6bff"},
+    {id:"US500",  label:"S&P 500", sub:"US500",   color:"#ff6bff"},
   ];
 
   const modeProfile = mode && mode !== "anime" ? MODES.find(m=>m.id===mode) : null;
@@ -2789,7 +2789,7 @@ const SESSION_INSTRUMENT_FIT = {
   NAS100:  { NY:"best", LONDON:"block", ASIAN:"block", LONDON_NY:"best" },
   US30:    { NY:"best", LONDON:"block", ASIAN:"block", LONDON_NY:"best" },
   USOIL:   { NY:"best", LONDON:"ok",    ASIAN:"ok",    LONDON_NY:"best" },
-  GBPUSD:  { NY:"ok",   LONDON:"best",  ASIAN:"ok",    LONDON_NY:"best" },
+  US500:   { NY:"best", LONDON:"block", ASIAN:"block", LONDON_NY:"best" },
 };
 
 const SESSION_ADVISORIES = {
@@ -2801,9 +2801,9 @@ const SESSION_ADVISORIES = {
     LONDON: "BTCUSD trades 24/7 but London session can produce choppy moves before NY takes over. Valid for BRC but NY produces cleaner follow-through.",
     ASIAN:  null, // no advisory — BTCUSD Asian is genuinely good
   },
-  GBPUSD: {
-    NY:     "GBPUSD is a London pair. NY can produce valid setups but the best GBPUSD moves happen during London open (2:00–5:00 AM CT) and the London/NY overlap.",
-    ASIAN:  "GBPUSD has minimal movement in the Asian session. Valid BRC setups are rare here. Consider waiting for London open.",
+  US500: {
+    LONDON: "US500 is a US equity index. The US market is CLOSED during London session. No valid BRC execution here — NY session only.",
+    ASIAN:  "US500 is a US equity index. The US market is CLOSED during the Asian session. NY session only.",
   },
   USOIL: {
     LONDON: "USOIL moves in London but the biggest volume comes at the NY open — especially around the 9:30 AM EIA report. London USOIL setups are valid but lighter.",
@@ -2812,6 +2812,10 @@ const SESSION_ADVISORIES = {
 };
 
 const SESSION_BLOCKS = {
+  US500: {
+    LONDON: "US500 (S&P 500) is a US equity index. The US market is CLOSED during London session. NY session only — no valid BRC execution here.",
+    ASIAN:  "US500 (S&P 500) is a US equity index. The US market is CLOSED during the Asian session. NY session only.",
+  },
   NAS100: {
     LONDON: "NAS100 is a US equity index. The US market is CLOSED during London session. There is no valid BRC setup here — price is not being driven by real institutional volume.",
     ASIAN:  "NAS100 is a US equity index. The US market is CLOSED during the Asian session. Attempting to trade NAS100 overnight is gambling on noise, not structure.",
@@ -4515,7 +4519,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
             {(() => {
               const userTier = profile?.tier || "starter";
               const tierCfg = TIER_CONFIG[userTier] || TIER_CONFIG.starter;
-              const allInstruments = ["XAUUSD","BTCUSD","NAS100","US30","USOIL","GBPUSD"];
+              const allInstruments = ["XAUUSD","BTCUSD","NAS100","US30","USOIL","US500"];
               const allowed = tierCfg.instruments;
               const allSessions = loadSessions();
 
@@ -5463,7 +5467,7 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
   const TV_SYMBOLS={
     XAUUSD:"OANDA:XAUUSD",NAS100:"CAPITALCOM:US100",
     US30:"CAPITALCOM:US30",BTCUSD:"COINBASE:BTCUSD",
-    USOIL:"TVC:USOIL",GBPUSD:"OANDA:GBPUSD",XAGUSD:"OANDA:XAGUSD",
+    USOIL:"TVC:USOIL",US500:"OANDA:SPX500USD",XAGUSD:"OANDA:XAGUSD",
   };
   const tvSym=TV_SYMBOLS[instrument]||`OANDA:${instrument}`;
   const tvInterval=tradeState==="EXECUTABLE"?"15":"30"; // Phase 3 → 15M, else 30M
@@ -7386,7 +7390,7 @@ function PricingPage({onBack, onPaid}){
      features:["Full BRC 3-phase execution tracker","Session-aware guidance","AI session plans","Priority access to new features"],
      priceId:TIER_CONFIG.pro.priceId, popular:true},
     {key:"elite",   label:"Elite",   price:"$59", period:"/month", color:"#ff6bff",
-     instruments:["XAUUSD","BTCUSD","NAS100","US30","USOIL","GBPUSD"],
+     instruments:["XAUUSD","BTCUSD","NAS100","US30","USOIL","US500"],
      features:["Full BRC 3-phase execution tracker","Session-aware guidance","AI session plans","Early access to all new features"],
      priceId:TIER_CONFIG.elite.priceId, popular:false},
   ];
@@ -7550,7 +7554,7 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
   const plans=[
     {tier:"STARTER",color:"#ffd166",price:"$29",instruments:["XAUUSD","BTCUSD"],popular:false},
     {tier:"PRO",color:"#00e5ff",price:"$39",instruments:["XAUUSD","BTCUSD","NAS100","US30"],popular:true},
-    {tier:"ELITE",color:"#ff6bff",price:"$59",instruments:["XAUUSD","BTCUSD","NAS100","US30","USOIL","GBPUSD"],popular:false},
+    {tier:"ELITE",color:"#ff6bff",price:"$59",instruments:["XAUUSD","BTCUSD","NAS100","US30","USOIL","US500"],popular:false},
   ];
   const steps=[
     {n:"01",title:"Upload 5 charts",desc:"Daily · 4H · 1H · 30M · 15M. BRC needs all five to grade the setup correctly."},
@@ -8216,7 +8220,7 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
             },
             {
               q:"What instruments are supported?",
-              a:"BTCUSD and XAUUSD on Starter. Pro adds NAS100, US30, and more. Elite unlocks all instruments including GBPUSD and additional pairs. All instruments use the same BRC methodology.",
+              a:"BTCUSD and XAUUSD on Starter. Pro adds NAS100, US30, and more. Elite unlocks all instruments including US500 (S&P 500) and additional pairs. All instruments use the same BRC methodology.",
             },
             {
               q:"Do I need trading experience?",
