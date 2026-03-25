@@ -423,29 +423,29 @@ if(typeof document!=="undefined"){
 
     textarea:focus,input:focus{outline:none;}
     :root{
-      --t-bg:#130d22;
-      --t-navBg:rgba(13,7,24,0.96);
-      --t-text:#f8f4ff;
-      --t-subtext:#c8bede;
-      --t-border:rgba(255,107,255,0.12);
-      --t-gridLine:rgba(255,107,255,0.014);
-      --t-c1:rgba(255,255,255,0.04);
-      --t-c2:rgba(255,255,255,0.07);
-      --t-c3:rgba(255,255,255,0.10);
-      --t-c4:rgba(255,255,255,0.12);
-      --t-c5:rgba(255,255,255,0.08);
-      --t-c6:rgba(255,255,255,0.10);
-      --t-c7:rgba(255,255,255,0.12);
-      --t-cardBg:rgba(255,255,255,0.07);
-      --t-cardBorder:rgba(255,255,255,0.10);
-      --t-inputBg:rgba(255,255,255,0.07);
-      --t-inputBorder:rgba(255,107,255,0.18);
-      --t-muted:#f0ecff;
-      --t-muted2:#d8d0f0;
-      --t-muted3:#bcb0d8;
-      --t-muted4:#9888bb;
-      --t-muted5:#705588;
-      --t-tableBg:#0f0820;
+      --t-bg:#1a1030;
+      --t-navBg:rgba(20,12,35,0.97);
+      --t-text:#fdf9ff;
+      --t-subtext:#ede5ff;
+      --t-border:rgba(255,107,255,0.16);
+      --t-gridLine:rgba(255,107,255,0.04);
+      --t-c1:rgba(255,255,255,0.07);
+      --t-c2:rgba(255,255,255,0.11);
+      --t-c3:rgba(255,255,255,0.15);
+      --t-c4:rgba(255,255,255,0.18);
+      --t-c5:rgba(255,255,255,0.10);
+      --t-c6:rgba(255,255,255,0.13);
+      --t-c7:rgba(255,255,255,0.15);
+      --t-cardBg:rgba(255,255,255,0.08);
+      --t-cardBorder:rgba(255,255,255,0.13);
+      --t-inputBg:rgba(255,255,255,0.12);
+      --t-inputBorder:rgba(255,107,255,0.22);
+      --t-muted:#fdf9ff;
+      --t-muted2:#ede5ff;
+      --t-muted3:#d8ccf4;
+      --t-muted4:#c4b4e0;
+      --t-muted5:#a080c8;
+      --t-tableBg:#160e2a;
     }
   `;
   document.head.appendChild(s);
@@ -517,16 +517,16 @@ class ErrorBoundary extends React.Component {
     return (
       <div style={{ minHeight:"100vh", background:"#0f0c1a", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"32px 24px", fontFamily:"'Space Mono',monospace", textAlign:"center" }}>
         <div style={{ fontSize:48, marginBottom:20 }}>⚠️</div>
-        <div style={{ fontSize:11, fontWeight:900, letterSpacing:"0.2em", color:"rgba(255,107,107,0.8)", marginBottom:12 }}>SOMETHING WENT WRONG</div>
-        <div style={{ fontSize:12, color:"rgba(255,255,255,0.5)", lineHeight:1.8, marginBottom:28, maxWidth:400 }}>
+        <div style={{ fontSize:14, fontWeight:900, letterSpacing:"0.2em", color:"rgba(255,107,107,0.8)", marginBottom:12 }}>SOMETHING WENT WRONG</div>
+        <div style={{ fontSize:14, color:"rgba(255,255,255,0.8)", lineHeight:1.8, marginBottom:28, maxWidth:400 }}>
           OmniUSD hit an unexpected error. Your session plan and history are safe.
         </div>
         <button
           onClick={() => { this.setState({ hasError: false, error: null }); window.location.reload(); }}
-          style={{ padding:"12px 28px", borderRadius:10, border:"none", background:"linear-gradient(135deg,#ff6bff,#7b2fff)", color:"#fff", fontSize:12, fontWeight:700, letterSpacing:"0.1em", cursor:"pointer", fontFamily:"inherit" }}>
+          style={{ padding:"12px 28px", borderRadius:10, border:"none", background:"linear-gradient(135deg,#ff6bff,#7b2fff)", color:"#fff", fontSize:14, fontWeight:700, letterSpacing:"0.1em", cursor:"pointer", fontFamily:"inherit" }}>
           RELOAD APP →
         </button>
-        <div style={{ marginTop:16, fontSize:9, color:"rgba(255,255,255,0.2)" }}>
+        <div style={{ marginTop:16, fontSize:13, color:"rgba(255,255,255,0.80)" }}>
           If this keeps happening, email support@omniusd.pro
         </div>
       </div>
@@ -795,7 +795,7 @@ function OmniUSDApp(){
             {id:"journal",label:journal.length>0?"Journal ("+journal.length+")":"Journal"},
           ].map(tab=>(
             <button key={tab.id} onClick={()=>setPage(tab.id)}
-              style={{fontFamily:"inherit",fontSize:11,fontWeight:700,letterSpacing:"0.06em",
+              style={{fontFamily:"inherit",fontSize:14,fontWeight:700,letterSpacing:"0.06em",
                 padding:"5px 16px",borderRadius:8,border:"none",cursor:"pointer",
                 background:page===tab.id?"rgba(255,107,255,0.15)":"none",
                 color:page===tab.id?"#ff6bff":"var(--t-muted4)"}}>
@@ -806,7 +806,7 @@ function OmniUSDApp(){
         <div style={S.navRight}>
           {/* Sign out */}
           <button onClick={signOut}
-            style={{fontSize:10,fontWeight:700,letterSpacing:"0.08em",
+            style={{fontSize:13,fontWeight:700,letterSpacing:"0.08em",
               color:"var(--t-muted4)",background:"rgba(255,255,255,0.04)",
               border:"1px solid rgba(255,255,255,0.08)",borderRadius:6,
               padding:"5px 12px",cursor:"pointer",fontFamily:"inherit"}}>
@@ -820,8 +820,8 @@ function OmniUSDApp(){
               transition:"all 0.15s"}}
             title="Change setup">
             <span style={{width:6,height:6,borderRadius:"50%",background:profile.tierColor||"#00e5ff",flexShrink:0}}/>
-            <span style={{fontSize:11,fontWeight:700,letterSpacing:"0.06em",color:profile.tierColor||"#00e5ff"}}>{profile.tierLabel||"Starter"}</span>
-            <span style={{fontSize:9,color:"var(--t-muted4)"}}>✎</span>
+            <span style={{fontSize:14,fontWeight:700,letterSpacing:"0.06em",color:profile.tierColor||"#00e5ff"}}>{profile.tierLabel||"Starter"}</span>
+            <span style={{fontSize:13,color:"var(--t-muted4)"}}>✎</span>
           </button>
         </div>
       </header>
@@ -846,7 +846,7 @@ function OmniUSDApp(){
       </main>
       <footer style={{...S.footer, borderTop:`1px solid ${T.border}`}}>
         <span style={{color:T.subtext}}>© 2026 OmniUSD · AI-powered trading analysis</span>
-        <span style={{color:"rgba(255,107,107,0.5)",fontWeight:500,fontSize:10,letterSpacing:"0.04em"}}>⚠ Trade at your own risk · Results not guaranteed</span>
+        <span style={{color:"rgba(255,107,107,0.5)",fontWeight:500,fontSize:13,letterSpacing:"0.04em"}}>⚠ Trade at your own risk · Results not guaranteed</span>
       </footer>
     </div>
   );
@@ -1268,11 +1268,11 @@ function Onboarding({onSelect}){
                       background:done?"#ff6bff":active?"rgba(255,107,255,0.18)":"rgba(255,255,255,0.06)",
                       border:`1.5px solid ${done||active?"#ff6bff":"rgba(255,255,255,0.12)"}`,
                       display:"flex",alignItems:"center",justifyContent:"center",
-                      fontSize:11,fontWeight:900,color:done?"#fff":active?"#ff6bff":"var(--t-muted4)",
+                      fontSize:14,fontWeight:900,color:done?"#fff":active?"#ff6bff":"var(--t-muted4)",
                       transition:"all 0.3s",flexShrink:0}}>
                       {done?"✓":n}
                     </div>
-                    <span style={{fontSize:12,fontWeight:active?800:500,
+                    <span style={{fontSize:14,fontWeight:active?800:500,
                       color:active?"var(--t-text)":done?"rgba(255,107,255,0.7)":"var(--t-muted3)",
                       letterSpacing:"0.05em",transition:"all 0.3s"}}>
                       {l}
@@ -1289,7 +1289,7 @@ function Onboarding({onSelect}){
         {step===1&&(
           <div style={{animation:"icc-slide 0.35s ease both",maxWidth:800,margin:"0 auto"}}>
             <div style={{marginBottom:48}}>
-              <div style={{fontSize:12,fontWeight:900,letterSpacing:"0.2em",color:"#ff6bff",marginBottom:12}}>STEP 1 OF 3</div>
+              <div style={{fontSize:14,fontWeight:900,letterSpacing:"0.2em",color:"#ff6bff",marginBottom:12}}>STEP 1 OF 3</div>
               <h2 style={{fontSize:36,fontWeight:900,color:"var(--t-text)",margin:"0 0 14px",lineHeight:1.1}}>Choose your access level</h2>
               <p style={{fontSize:17,color:"var(--t-muted2)",margin:0,fontWeight:500,lineHeight:1.6,maxWidth:480}}>Pick the plan that matches how many markets you want to trade.</p>
             </div>
@@ -1309,7 +1309,7 @@ function Onboarding({onSelect}){
                     {isPopular&&(
                       <div style={{position:"absolute",top:-13,left:"50%",transform:"translateX(-50%)",
                         background:"linear-gradient(135deg,#00e5ff,#7b2fff)",color:"#fff",
-                        fontSize:10,fontWeight:900,letterSpacing:"0.12em",
+                        fontSize:13,fontWeight:900,letterSpacing:"0.12em",
                         padding:"4px 16px",borderRadius:20,whiteSpace:"nowrap",
                         boxShadow:"0 2px 12px rgba(0,229,255,0.3)"}}>
                         MOST POPULAR
@@ -1318,12 +1318,12 @@ function Onboarding({onSelect}){
                     {isSel&&(
                       <div style={{position:"absolute",top:14,right:14,width:22,height:22,borderRadius:"50%",
                         background:tier.color,display:"flex",alignItems:"center",justifyContent:"center",
-                        fontSize:11,color:"#000",fontWeight:900}}>✓</div>
+                        fontSize:14,color:"#000",fontWeight:900}}>✓</div>
                     )}
                     <div style={{marginBottom:20}}>
-                      <div style={{fontSize:11,fontWeight:900,color:isSel?tier.color:"var(--t-muted4)",letterSpacing:"0.14em",marginBottom:8}}>{tier.label.toUpperCase()}</div>
+                      <div style={{fontSize:14,fontWeight:900,color:isSel?tier.color:"var(--t-muted4)",letterSpacing:"0.14em",marginBottom:8}}>{tier.label.toUpperCase()}</div>
                       <div style={{fontSize:34,fontWeight:900,color:isSel?tier.color:"var(--t-text)",lineHeight:1,marginBottom:3}}>{tier.price}</div>
-                      <div style={{fontSize:12,color:"var(--t-muted4)",fontWeight:500}}>per month</div>
+                      <div style={{fontSize:14,color:"var(--t-muted4)",fontWeight:500}}>per month</div>
                     </div>
                     <div style={{width:"100%",height:1,background:"rgba(255,255,255,0.06)",marginBottom:18}}/>
                     <div style={{display:"flex",flexDirection:"column",gap:10}}>
@@ -1333,7 +1333,7 @@ function Onboarding({onSelect}){
                           <div key={sym} style={{display:"flex",alignItems:"center",gap:10}}>
                             <div style={{width:7,height:7,borderRadius:"50%",background:inst?.color||tier.color,flexShrink:0}}/>
                             <span style={{fontSize:14,color:isSel?"var(--t-muted)":"var(--t-muted2)",fontWeight:700}}>{inst?.label||sym}</span>
-                            <span style={{fontSize:11,color:"var(--t-muted4)",fontWeight:500,marginLeft:"auto"}}>{sym}</span>
+                            <span style={{fontSize:14,color:"var(--t-muted4)",fontWeight:500,marginLeft:"auto"}}>{sym}</span>
                           </div>
                         );
                       })}
@@ -1352,12 +1352,12 @@ function Onboarding({onSelect}){
                 const t=TIER_CONFIG[selectedTier];
                 return(
                   <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:12,animation:"icc-slide 0.25s ease both"}}>
-                    <div style={{display:"flex",alignItems:"center",gap:8,fontSize:13,color:"var(--t-muted3)",fontWeight:600}}>
+                    <div style={{display:"flex",alignItems:"center",gap:8,fontSize:14,color:"var(--t-muted3)",fontWeight:600}}>
                       <span style={{color:t.color}}>✓</span>
                       <span>{t.label} — {t.price}/month</span>
                     </div>
                     {checkoutError&&(
-                      <div style={{fontSize:12,color:"#ff8080",background:"rgba(255,107,107,0.08)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:8,padding:"8px 14px",textAlign:"center"}}>
+                      <div style={{fontSize:14,color:"#ff8080",background:"rgba(255,107,107,0.08)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:8,padding:"8px 14px",textAlign:"center"}}>
                         {checkoutError}
                       </div>
                     )}
@@ -1371,7 +1371,7 @@ function Onboarding({onSelect}){
                         boxShadow:checkoutLoading?"none":"0 4px 28px rgba(255,107,255,0.22)",transition:"all 0.2s"}}>
                       {checkoutLoading?"Setting up checkout...":"CONTINUE TO PAYMENT →"}
                     </button>
-                    <div style={{fontSize:11,color:"var(--t-muted4)",fontFamily:"monospace"}}>
+                    <div style={{fontSize:14,color:"var(--t-muted4)",fontFamily:"monospace"}}>
                       Paid plans start at $29/month · Secure checkout via Stripe
                     </div>
                   </div>
@@ -1393,7 +1393,7 @@ function Onboarding({onSelect}){
               </div>
             )}
             <div style={{marginBottom:40}}>
-              <div style={{fontSize:11,fontWeight:900,letterSpacing:"0.18em",color:"#ff6bff",marginBottom:10}}>STEP 2 OF 3</div>
+              <div style={{fontSize:14,fontWeight:900,letterSpacing:"0.18em",color:"#ff6bff",marginBottom:10}}>STEP 2 OF 3</div>
               <h2 style={{fontSize:34,fontWeight:900,color:"var(--t-text)",margin:"0 0 10px",lineHeight:1.1}}>Confirm your setup</h2>
               <p style={{fontSize:16,color:"var(--t-muted3)",margin:0,fontWeight:500,lineHeight:1.55}}>Review your selections before entering the dashboard.</p>
             </div>
@@ -1430,7 +1430,7 @@ function Onboarding({onSelect}){
                     gap:20}}>
                     {/* Label */}
                     <span style={{
-                      fontSize:12,fontWeight:700,color:"var(--t-muted4)",
+                      fontSize:14,fontWeight:700,color:"var(--t-muted4)",
                       flexShrink:0,letterSpacing:"0.04em",
                       paddingTop:row.type==="pills"?3:0,
                       minWidth:64}}>
@@ -1441,7 +1441,7 @@ function Onboarding({onSelect}){
                       <div style={{display:"flex",flexWrap:"wrap",gap:4,justifyContent:"flex-end"}}>
                         {row.pills.map(p=>(
                           <span key={p.label} style={{
-                            fontSize:11,fontWeight:700,
+                            fontSize:14,fontWeight:700,
                             color:p.color,
                             background:`${p.color}12`,
                             border:`1px solid ${p.color}28`,
@@ -1454,7 +1454,7 @@ function Onboarding({onSelect}){
                     ):(
                       <div style={{textAlign:"right"}}>
                         <div style={{fontSize:16,fontWeight:900,color:row.color,lineHeight:1.2}}>{row.val}</div>
-                        {row.sub&&<div style={{fontSize:11,color:"var(--t-muted4)",marginTop:3,fontWeight:500,letterSpacing:"0.02em"}}>{row.sub}</div>}
+                        {row.sub&&<div style={{fontSize:14,color:"var(--t-muted4)",marginTop:3,fontWeight:500,letterSpacing:"0.02em"}}>{row.sub}</div>}
                       </div>
                     )}
                   </div>
@@ -1464,9 +1464,9 @@ function Onboarding({onSelect}){
             {/* Timezone selector */}
             <div style={{marginBottom:16}}>
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
-                <div style={{fontSize:12,fontWeight:700,color:"var(--t-muted3)",letterSpacing:"0.04em"}}>YOUR TIMEZONE</div>
+                <div style={{fontSize:14,fontWeight:700,color:"var(--t-muted3)",letterSpacing:"0.04em"}}>YOUR TIMEZONE</div>
                 <button onClick={autoDetectTz}
-                  style={{fontSize:11,fontWeight:700,color:"#00e5ff",background:"rgba(0,229,255,0.06)",
+                  style={{fontSize:14,fontWeight:700,color:"#00e5ff",background:"rgba(0,229,255,0.06)",
                     border:"1px solid rgba(0,229,255,0.18)",borderRadius:6,padding:"4px 12px",
                     cursor:"pointer",fontFamily:"inherit",letterSpacing:"0.04em"}}>
                   {tzDetecting?"Detecting...":"⟳ Auto-detect"}
@@ -1480,10 +1480,10 @@ function Onboarding({onSelect}){
                   <span style={{fontSize:18}}>✓</span>
                   <div style={{flex:1}}>
                     <div style={{fontSize:14,fontWeight:900,color:"#00e5ff"}}>{tzObj.city}</div>
-                    <div style={{fontSize:11,color:"rgba(0,229,255,0.7)",fontWeight:600,marginTop:2}}>{tzObj.label}</div>
+                    <div style={{fontSize:14,color:"rgba(0,229,255,0.7)",fontWeight:600,marginTop:2}}>{tzObj.label}</div>
                   </div>
                   <button onClick={()=>{setTzObj(null);setTzSearch("");}}
-                    style={{fontSize:11,fontWeight:700,color:"var(--t-muted3)",background:"rgba(255,255,255,0.06)",
+                    style={{fontSize:14,fontWeight:700,color:"var(--t-muted3)",background:"rgba(255,255,255,0.06)",
                       border:"1px solid rgba(255,255,255,0.1)",borderRadius:6,padding:"4px 10px",
                       cursor:"pointer",fontFamily:"inherit",letterSpacing:"0.04em"}}>
                     Change
@@ -1514,8 +1514,8 @@ function Onboarding({onSelect}){
                           style={{width:"100%",textAlign:"left",padding:"10px 14px",
                             background:"none",border:"none",cursor:"pointer",
                             fontFamily:"inherit",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
-                          <div style={{fontSize:13,fontWeight:700,color:"var(--t-text)"}}>{t.city}</div>
-                          <div style={{fontSize:11,color:"var(--t-muted4)"}}>{t.label}</div>
+                          <div style={{fontSize:14,fontWeight:700,color:"var(--t-text)"}}>{t.city}</div>
+                          <div style={{fontSize:14,color:"var(--t-muted4)"}}>{t.label}</div>
                         </button>
                       ))}
                     </div>
@@ -1548,7 +1548,7 @@ function Onboarding({onSelect}){
         {/* STEP 3 — COMMIT */}
         {step===3&&(
           <div style={{animation:"icc-slide 0.35s ease both",maxWidth:520,margin:"0 auto"}}>
-            <div style={{fontSize:11,fontWeight:900,letterSpacing:"0.2em",color:"#ff6bff",marginBottom:14}}>STEP 3 OF 3</div>
+            <div style={{fontSize:14,fontWeight:900,letterSpacing:"0.2em",color:"#ff6bff",marginBottom:14}}>STEP 3 OF 3</div>
             <h2 style={{fontSize:34,fontWeight:900,color:"var(--t-text)",lineHeight:1.1,margin:"0 0 10px",letterSpacing:"-0.01em"}}>
               Before you begin.
             </h2>
@@ -1572,7 +1572,7 @@ function Onboarding({onSelect}){
                   <div style={{width:22,height:22,borderRadius:"50%",flexShrink:0,marginTop:1,
                     background:"rgba(255,107,255,0.1)",border:"1px solid rgba(255,107,255,0.3)",
                     display:"flex",alignItems:"center",justifyContent:"center",
-                    fontSize:10,fontWeight:900,color:"#ff6bff"}}>
+                    fontSize:13,fontWeight:900,color:"#ff6bff"}}>
                     {i+1}
                   </div>
                   <p style={{fontSize:14,color:"var(--t-muted)",fontWeight:500,lineHeight:1.6,margin:0}}>{line}</p>
@@ -1592,10 +1592,10 @@ function Onboarding({onSelect}){
             </div>
 
             {/* Disclaimer */}
-            <p style={{fontSize:11,color:"rgba(255,255,255,0.2)",textAlign:"center",lineHeight:1.6,margin:0}}>
+            <p style={{fontSize:14,color:"rgba(255,255,255,0.80)",textAlign:"center",lineHeight:1.6,margin:0}}>
               OmniUSD is an execution framework, not financial advice. Trade at your own risk. By continuing you agree to our{" "}
-              <a href="/terms" style={{color:"rgba(255,255,255,0.3)",textDecoration:"underline"}}>Terms of Service</a>{" "}and{" "}
-              <a href="/privacy" style={{color:"rgba(255,255,255,0.3)",textDecoration:"underline"}}>Privacy Policy</a>.
+              <a href="/terms" style={{color:"rgba(255,255,255,0.75)",textDecoration:"underline"}}>Terms of Service</a>{" "}and{" "}
+              <a href="/privacy" style={{color:"rgba(255,255,255,0.75)",textDecoration:"underline"}}>Privacy Policy</a>.
             </p>
           </div>
         )}
@@ -1628,8 +1628,8 @@ function TrustPanel({anime}){
           {n:"3",icon:"⚡",title:"Execute by the Rules",desc:"Follow the Live Tracker step by step — Tier 1, Tier 2, Retest, then limit order",color:"#7fff6b"},
         ].map((step,i)=>(
           <div key={i} style={{flex:1,padding:"16px 18px",borderRight:i<2?"1px solid rgba(255,255,255,0.05)":"none",display:"flex",gap:10,alignItems:"flex-start"}}>
-            <div style={{width:24,height:24,borderRadius:"50%",background:step.color+"14",border:`1px solid ${step.color}33`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:900,color:step.color,flexShrink:0}}>{step.n}</div>
-            <div><div style={{fontSize:11,fontWeight:900,color:"var(--t-text)",marginBottom:3}}>{step.icon} {step.title}</div><div style={{fontSize:10,color:"var(--t-muted3)",lineHeight:1.6}}>{step.desc}</div></div>
+            <div style={{width:24,height:24,borderRadius:"50%",background:step.color+"14",border:`1px solid ${step.color}33`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:900,color:step.color,flexShrink:0}}>{step.n}</div>
+            <div><div style={{fontSize:14,fontWeight:900,color:"var(--t-text)",marginBottom:3}}>{step.icon} {step.title}</div><div style={{fontSize:13,color:"var(--t-muted3)",lineHeight:1.6}}>{step.desc}</div></div>
           </div>
         ))}
       </div>
@@ -1638,17 +1638,17 @@ function TrustPanel({anime}){
       <button onClick={()=>setOpen(o=>!o)}
         style={{width:"100%",background:"var(--t-c2)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:"11px 18px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center",fontFamily:"inherit",marginBottom:open?8:0}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
-          <span style={{fontSize:11}}>🔎</span>
-          <span style={{fontSize:10,letterSpacing:"0.16em",color:"var(--t-muted2)",fontWeight:900}}>HOW THIS ENGINE MAKES DECISIONS — 6 rules it applies to every chart</span>
+          <span style={{fontSize:14}}>🔎</span>
+          <span style={{fontSize:13,letterSpacing:"0.16em",color:"var(--t-muted2)",fontWeight:900}}>HOW THIS ENGINE MAKES DECISIONS — 6 rules it applies to every chart</span>
         </div>
-        <span style={{fontSize:10,color:"var(--t-muted3)"}}>{open?"▲ CLOSE":"▼ SEE THE RULES"}</span>
+        <span style={{fontSize:13,color:"var(--t-muted3)"}}>{open?"▲ CLOSE":"▼ SEE THE RULES"}</span>
       </button>
 
       {open&&(
         <div style={{animation:"icc-slide 0.25s ease both",background:"var(--t-c1)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:12,overflow:"hidden"}}>
           {/* Engine identity */}
           <div style={{padding:"16px 20px",borderBottom:"1px solid rgba(255,255,255,0.05)",background:"var(--t-c2)"}}>
-            <p style={{fontSize:12,color:"var(--t-muted)",margin:0,lineHeight:1.75}}>
+            <p style={{fontSize:14,color:"var(--t-muted)",margin:0,lineHeight:1.75}}>
               This is a <strong style={{color:"var(--t-text)"}}>rules-based execution engine</strong> built on the BRC / Smart Money Concepts methodology.
               It reads chart structure across 5 timeframes and applies the same 6 rules on every single analysis — no exceptions, no overrides.
               The output is a structured trade plan, not a prediction. <strong style={{color:"var(--t-text)"}}>You are still responsible for your own execution and risk management.</strong>
@@ -1660,20 +1660,20 @@ function TrustPanel({anime}){
               <div key={i} style={{display:"flex",gap:16,padding:"14px 20px",borderBottom:i<rules.length-1?"1px solid rgba(255,255,255,0.04)":"none",alignItems:"flex-start"}}>
                 <div style={{width:32,height:32,borderRadius:8,background:r.color+"10",border:`1px solid ${r.color}28`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,flexShrink:0}}>{r.icon}</div>
                 <div>
-                  <div style={{fontSize:11,fontWeight:900,color:"#c8bcd8",marginBottom:4,letterSpacing:"0.04em"}}>{r.label}</div>
-                  <p style={{fontSize:12,color:"#6858a0",margin:0,lineHeight:1.7}}>{r.desc}</p>
+                  <div style={{fontSize:14,fontWeight:900,color:"#c8bcd8",marginBottom:4,letterSpacing:"0.04em"}}>{r.label}</div>
+                  <p style={{fontSize:14,color:"#6858a0",margin:0,lineHeight:1.7}}>{r.desc}</p>
                 </div>
               </div>
             ))}
           </div>
           {/* What grade means */}
           <div style={{padding:"14px 20px",borderTop:"1px solid rgba(255,255,255,0.05)",background:"var(--t-c2)"}}>
-            <div style={{fontSize:9,letterSpacing:"0.16em",color:"var(--t-muted3)",fontWeight:900,marginBottom:10}}>WHAT THE GRADE MEANS</div>
+            <div style={{fontSize:13,letterSpacing:"0.16em",color:"var(--t-muted3)",fontWeight:900,marginBottom:10}}>WHAT THE GRADE MEANS</div>
             <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
               {[{g:"A+",c:"#7fff6b",d:"All 3 TF aligned. Full BRC sequence. Execute."},{g:"A",c:"#7fff6b",d:"Strong setup, minor hesitation on one TF."},{g:"B",c:"#ffd166",d:"Setup forming. Wait for more confirmation."},{g:"C",c:"#ff9a3c",d:"Weak structure. Reduce size or skip."},{g:"SKIP",c:"#ff6b6b",d:"No valid setup. Skip this session."}].map(item=>(
                 <div key={item.g} style={{display:"flex",gap:8,alignItems:"flex-start",flex:"1 1 180px",background:"var(--t-c2)",border:`1px solid ${item.c}18`,borderLeft:`3px solid ${item.c}`,borderRadius:8,padding:"8px 12px"}}>
-                  <span style={{fontSize:13,fontWeight:900,color:item.c,minWidth:28}}>{item.g}</span>
-                  <span style={{fontSize:11,color:"var(--t-muted2)",lineHeight:1.5}}>{item.d}</span>
+                  <span style={{fontSize:14,fontWeight:900,color:item.c,minWidth:28}}>{item.g}</span>
+                  <span style={{fontSize:14,color:"var(--t-muted2)",lineHeight:1.5}}>{item.d}</span>
                 </div>
               ))}
             </div>
@@ -1720,7 +1720,7 @@ function LoadingScreen({T=DARK}){
       <div style={{textAlign:"center"}}>
         <p style={{fontSize:16,fontWeight:900,letterSpacing:"0.18em",color:"var(--t-text)",margin:"0 0 10px"}}>ANALYZING CHARTS</p>
         <p style={{
-          fontSize:13,color:"#00e5ff",margin:0,fontWeight:600,
+          fontSize:14,color:"#00e5ff",margin:0,fontWeight:600,
           transition:"opacity 0.3s ease",
           opacity:fade?1:0,
           letterSpacing:"0.04em"
@@ -1736,11 +1736,11 @@ function LoadingScreen({T=DARK}){
               background:slot.color,
               animation:`icc-pulse ${0.8+i*0.2}s ease ${i*0.15}s infinite`
             }}/>
-            <span style={{fontSize:9,fontWeight:900,color:slot.color,letterSpacing:"0.08em",opacity:0.8}}>{slot.short}</span>
+            <span style={{fontSize:13,fontWeight:900,color:slot.color,letterSpacing:"0.08em",opacity:0.8}}>{slot.short}</span>
           </div>
         ))}
       </div>
-      <p style={{fontSize:11,color:"var(--t-muted4)",margin:0,letterSpacing:"0.06em"}}>This takes about 10–20 seconds</p>
+      <p style={{fontSize:14,color:"var(--t-muted4)",margin:0,letterSpacing:"0.06em"}}>This takes about 10–20 seconds</p>
     </div>
   );
 }
@@ -2284,13 +2284,13 @@ function DashFaqRow({item, isLast}) {
     <div style={{ borderBottom: isLast ? "none" : "1px solid rgba(255,255,255,0.06)", background: item.highlight ? "rgba(0,229,255,0.02)" : "transparent" }}>
       <button onClick={() => setOpen(o => !o)}
         style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"18px 22px", background:"none", border:"none", cursor:"pointer", fontFamily:"inherit", textAlign:"left", gap:16 }}>
-        <span style={{ fontFamily:"'Space Mono',monospace", fontSize:13, fontWeight:700, color: item.highlight ? "#00e5ff" : "#f0ecff", lineHeight:1.4 }}>
+        <span style={{ fontFamily:"'Space Mono',monospace", fontSize:14, fontWeight:700, color: item.highlight ? "#00e5ff" : "#f0ecff", lineHeight:1.4 }}>
           {item.highlight && <span style={{ marginRight:8 }}>📌</span>}{item.q}
         </span>
         <span style={{ fontSize:18, color:"#ff6bff", flexShrink:0, transition:"transform 0.2s", transform: open ? "rotate(45deg)" : "rotate(0deg)", display:"inline-block" }}>+</span>
       </button>
       {open && (
-        <div style={{ padding:"0 22px 18px", fontFamily:"'Space Mono',monospace", fontSize:12, color:"rgba(255,255,255,0.6)", lineHeight:1.9 }}>
+        <div style={{ padding:"0 22px 18px", fontFamily:"'Space Mono',monospace", fontSize:14, color:"rgba(255,255,255,0.75)", lineHeight:1.9 }}>
           {item.a}
         </div>
       )}
@@ -2412,8 +2412,8 @@ function SettingsPage({profile, onSignOut, onClose}) {
   }
 
   const card = {background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:12,padding:"22px 24px",marginBottom:14};
-  const lbl = {fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,letterSpacing:"0.14em",color:"rgba(255,255,255,0.35)",marginBottom:10,display:"block"};
-  const inputSt = {width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"10px 14px",fontSize:12,color:"#f0ecff",fontFamily:"'Space Mono',monospace",outline:"none",boxSizing:"border-box"};
+  const lbl = {fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,letterSpacing:"0.14em",color:"rgba(255,255,255,0.8)",marginBottom:10,display:"block"};
+  const inputSt = {width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"10px 14px",fontSize:14,color:"#f0ecff",fontFamily:"'Space Mono',monospace",outline:"none",boxSizing:"border-box"};
 
   return (
     <div style={{flex:1,overflowY:"auto",padding:isMobile?"20px 16px":"32px 24px",animation:"fadein 0.3s ease both"}}>
@@ -2422,10 +2422,10 @@ function SettingsPage({profile, onSignOut, onClose}) {
         {/* Header */}
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:24}}>
           <div>
-            <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,107,255,0.7)",letterSpacing:"0.18em",marginBottom:6}}>SETTINGS</div>
+            <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"rgba(255,107,255,0.7)",letterSpacing:"0.18em",marginBottom:6}}>SETTINGS</div>
             <h2 style={{fontFamily:"'Syne',sans-serif",fontSize:22,fontWeight:800,color:"#f0ecff",margin:0}}>Account & Plan</h2>
           </div>
-          <button onClick={onClose} style={{fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,color:"#8878aa",background:"none",border:"1px solid rgba(255,255,255,0.08)",borderRadius:6,padding:"6px 12px",cursor:"pointer"}}>
+          <button onClick={onClose} style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,color:"#8878aa",background:"none",border:"1px solid rgba(255,255,255,0.08)",borderRadius:6,padding:"6px 12px",cursor:"pointer"}}>
             ← Back
           </button>
         </div>
@@ -2434,7 +2434,7 @@ function SettingsPage({profile, onSignOut, onClose}) {
         <div style={{display:"flex",gap:4,marginBottom:20,background:"rgba(255,255,255,0.03)",padding:4,borderRadius:10,overflowX:"auto"}}>
           {[{id:"account",l:"Account"},{id:"plan",l:"Plan"},{id:"preferences",l:"Preferences"},{id:"danger",l:"Danger Zone"}].map(t=>(
             <button key={t.id} onClick={()=>setSection(t.id)}
-              style={{flex:1,padding:"7px 4px",borderRadius:7,border:"none",fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,letterSpacing:"0.06em",cursor:"pointer",transition:"all 0.15s",
+              style={{flex:1,padding:"7px 4px",borderRadius:7,border:"none",fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,letterSpacing:"0.06em",cursor:"pointer",transition:"all 0.15s",
                 background:section===t.id?"rgba(255,107,255,0.12)":"none",
                 color:section===t.id?"#ff6bff":"#8878aa"}}>
               {t.l}
@@ -2446,7 +2446,7 @@ function SettingsPage({profile, onSignOut, onClose}) {
         {section === "account" && (<>
           <div style={card}>
             <span style={lbl}>EMAIL ADDRESS</span>
-            <div style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:"#f0ecff",padding:"10px 14px",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:8}}>
+            <div style={{fontFamily:"'Space Mono',monospace",fontSize:14,color:"#f0ecff",padding:"10px 14px",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:8}}>
               {profile?.email || "—"}
             </div>
           </div>
@@ -2456,9 +2456,9 @@ function SettingsPage({profile, onSignOut, onClose}) {
               <input type="password" placeholder="New password (min 8 characters)" value={pwNew} onChange={e=>setPwNew(e.target.value)} style={inputSt}/>
               <input type="password" placeholder="Confirm new password" value={pwConfirm} onChange={e=>setPwConfirm(e.target.value)}
                 style={{...inputSt,borderColor:pwConfirm&&pwConfirm!==pwNew?"rgba(255,107,107,0.4)":pwConfirm&&pwConfirm===pwNew?"rgba(127,255,107,0.3)":"rgba(255,255,255,0.1)"}}/>
-              {pwMsg && <div style={{fontSize:11,color:pwMsg.type==="error"?"#ff8080":"#7fff6b",fontFamily:"'Space Mono',monospace"}}>{pwMsg.text}</div>}
+              {pwMsg && <div style={{fontSize:14,color:pwMsg.type==="error"?"#ff8080":"#7fff6b",fontFamily:"'Space Mono',monospace"}}>{pwMsg.text}</div>}
               <button onClick={handleChangePassword} disabled={pwLoading}
-                style={{padding:"10px 20px",borderRadius:8,border:"none",background:pwLoading?"rgba(255,255,255,0.05)":"rgba(255,107,255,0.15)",color:pwLoading?"#8878aa":"#ff6bff",fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,letterSpacing:"0.08em",cursor:pwLoading?"not-allowed":"pointer",alignSelf:"flex-start"}}>
+                style={{padding:"10px 20px",borderRadius:8,border:"none",background:pwLoading?"rgba(255,255,255,0.05)":"rgba(255,107,255,0.15)",color:pwLoading?"#8878aa":"#ff6bff",fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,letterSpacing:"0.08em",cursor:pwLoading?"not-allowed":"pointer",alignSelf:"flex-start"}}>
                 {pwLoading ? "Updating..." : "UPDATE PASSWORD →"}
               </button>
             </div>
@@ -2475,11 +2475,11 @@ function SettingsPage({profile, onSignOut, onClose}) {
             </div>
             <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:16}}>
               {tierCfg.instruments.map(sym=>(
-                <span key={sym} style={{fontFamily:"'Space Mono',monospace",fontSize:9,padding:"3px 9px",borderRadius:4,background:`${tierCfg.color}14`,border:`1px solid ${tierCfg.color}33`,color:tierCfg.color}}>{sym}</span>
+                <span key={sym} style={{fontFamily:"'Space Mono',monospace",fontSize:13,padding:"3px 9px",borderRadius:4,background:`${tierCfg.color}14`,border:`1px solid ${tierCfg.color}33`,color:tierCfg.color}}>{sym}</span>
               ))}
             </div>
             <button onClick={openBillingPortal} disabled={portalLoading}
-              style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,padding:"9px 18px",borderRadius:7,border:"1px solid rgba(255,255,255,0.12)",background:"rgba(255,255,255,0.05)",color:"#f0ecff",cursor:portalLoading?"not-allowed":"pointer",letterSpacing:"0.08em"}}>
+              style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,padding:"9px 18px",borderRadius:7,border:"1px solid rgba(255,255,255,0.12)",background:"rgba(255,255,255,0.05)",color:"#f0ecff",cursor:portalLoading?"not-allowed":"pointer",letterSpacing:"0.08em"}}>
               {portalLoading ? "Opening..." : "MANAGE BILLING & INVOICES →"}
             </button>
           </div>
@@ -2487,7 +2487,7 @@ function SettingsPage({profile, onSignOut, onClose}) {
           {tier !== "elite" && (
             <div style={{...card,border:"1px solid rgba(255,107,255,0.2)",background:"rgba(255,107,255,0.03)"}}>
               <span style={lbl}>UPGRADE YOUR PLAN</span>
-              <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,255,255,0.3)",lineHeight:1.7,marginBottom:14}}>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"rgba(255,255,255,0.75)",lineHeight:1.7,marginBottom:14}}>
                 Upgrades are prorated — you only pay the difference for the remaining days in your billing cycle.
               </div>
               <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:14}}>
@@ -2498,7 +2498,7 @@ function SettingsPage({profile, onSignOut, onClose}) {
                   <div key={key} style={{padding:"14px 16px",borderRadius:8,background:"rgba(255,255,255,0.03)",border:`1px solid ${t.color}22`,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                     <div>
                       <div style={{fontFamily:"'Syne',sans-serif",fontSize:15,fontWeight:800,color:t.color,marginBottom:3}}>{t.label} — {t.price}</div>
-                      <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,255,255,0.35)"}}>
+                      <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"rgba(255,255,255,0.8)"}}>
                         Unlocks: {t.instruments.filter(i=>!tierCfg.instruments.includes(i)).join(" · ")}
                       </div>
                     </div>
@@ -2506,7 +2506,7 @@ function SettingsPage({profile, onSignOut, onClose}) {
                 ))}
               </div>
               <button onClick={openBillingPortal} disabled={portalLoading}
-                style={{width:"100%",padding:"12px",borderRadius:8,border:"none",background:portalLoading?"rgba(255,255,255,0.05)":"linear-gradient(135deg,#ff6bff,#7b2fff)",color:portalLoading?"#8878aa":"#fff",fontFamily:"'Space Mono',monospace",fontSize:11,fontWeight:700,letterSpacing:"0.1em",cursor:portalLoading?"not-allowed":"pointer"}}>
+                style={{width:"100%",padding:"12px",borderRadius:8,border:"none",background:portalLoading?"rgba(255,255,255,0.05)":"linear-gradient(135deg,#ff6bff,#7b2fff)",color:portalLoading?"#8878aa":"#fff",fontFamily:"'Space Mono',monospace",fontSize:14,fontWeight:700,letterSpacing:"0.1em",cursor:portalLoading?"not-allowed":"pointer"}}>
                 {portalLoading ? "Opening..." : "UPGRADE PLAN →"}
               </button>
             </div>
@@ -2515,22 +2515,22 @@ function SettingsPage({profile, onSignOut, onClose}) {
           <div style={card}>
             <span style={lbl}>CANCEL SUBSCRIPTION</span>
             {cancelStep === 0 && (<>
-              <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"rgba(255,255,255,0.4)",lineHeight:1.8,marginBottom:14}}>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:14,color:"rgba(255,255,255,0.85)",lineHeight:1.8,marginBottom:14}}>
                 Your access continues until the end of your current billing period. You will not be charged again.
               </div>
               <button onClick={()=>setCancelStep(1)}
-                style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,padding:"8px 16px",borderRadius:7,border:"1px solid rgba(255,107,107,0.2)",background:"rgba(255,107,107,0.04)",color:"rgba(255,107,107,0.6)",cursor:"pointer"}}>
+                style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,padding:"8px 16px",borderRadius:7,border:"1px solid rgba(255,107,107,0.2)",background:"rgba(255,107,107,0.04)",color:"rgba(255,107,107,0.6)",cursor:"pointer"}}>
                 Cancel subscription
               </button>
             </>)}
             {cancelStep === 1 && (<>
-              <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"#ff8080",lineHeight:1.8,marginBottom:14,fontWeight:700}}>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:14,color:"#ff8080",lineHeight:1.8,marginBottom:14,fontWeight:700}}>
                 Are you sure? You will lose access at the end of your billing period.
               </div>
               <div style={{display:"flex",gap:8}}>
-                <button onClick={()=>setCancelStep(0)} style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,padding:"8px 16px",borderRadius:7,border:"1px solid rgba(255,255,255,0.08)",background:"rgba(255,255,255,0.04)",color:"#8878aa",cursor:"pointer"}}>Keep my plan</button>
+                <button onClick={()=>setCancelStep(0)} style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,padding:"8px 16px",borderRadius:7,border:"1px solid rgba(255,255,255,0.08)",background:"rgba(255,255,255,0.04)",color:"#8878aa",cursor:"pointer"}}>Keep my plan</button>
                 <button onClick={openBillingPortal} disabled={portalLoading}
-                  style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,padding:"8px 16px",borderRadius:7,border:"1px solid rgba(255,107,107,0.4)",background:"rgba(255,107,107,0.08)",color:"#ff6b6b",cursor:"pointer"}}>
+                  style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,padding:"8px 16px",borderRadius:7,border:"1px solid rgba(255,107,107,0.4)",background:"rgba(255,107,107,0.08)",color:"#ff6b6b",cursor:"pointer"}}>
                   {portalLoading ? "Opening..." : "Yes, cancel →"}
                 </button>
               </div>
@@ -2542,7 +2542,7 @@ function SettingsPage({profile, onSignOut, onClose}) {
         {section === "preferences" && (
           <div style={card}>
             <span style={lbl}>TIMEZONE</span>
-            <div style={{marginBottom:10,fontFamily:"'Space Mono',monospace",fontSize:10,color:"rgba(255,255,255,0.4)"}}>
+            <div style={{marginBottom:10,fontFamily:"'Space Mono',monospace",fontSize:13,color:"rgba(255,255,255,0.85)"}}>
               Currently: <span style={{color:"#f0ecff"}}>{tzObj?.label || "Not set"}</span>
             </div>
             <input
@@ -2558,14 +2558,14 @@ function SettingsPage({profile, onSignOut, onClose}) {
                     background:tzObj?.iana===t.iana?"rgba(255,107,255,0.12)":"rgba(255,255,255,0.03)",
                     border:`1px solid ${tzObj?.iana===t.iana?"rgba(255,107,255,0.35)":"rgba(255,255,255,0.06)"}`,
                     transition:"all 0.15s"}}>
-                  <span style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:tzObj?.iana===t.iana?"#ff6bff":"#f0ecff"}}>{t.label}</span>
-                  <span style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,255,255,0.3)"}}>{t.offset}</span>
+                  <span style={{fontFamily:"'Space Mono',monospace",fontSize:14,color:tzObj?.iana===t.iana?"#ff6bff":"#f0ecff"}}>{t.label}</span>
+                  <span style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"rgba(255,255,255,0.75)"}}>{t.offset}</span>
                 </div>
               ))}
             </div>
-            {tzSaved && <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"#7fff6b",marginBottom:10}}>✓ Timezone saved.</div>}
+            {tzSaved && <div style={{fontFamily:"'Space Mono',monospace",fontSize:14,color:"#7fff6b",marginBottom:10}}>✓ Timezone saved.</div>}
             <button onClick={handleSaveTz} disabled={!tzObj}
-              style={{padding:"10px 20px",borderRadius:8,border:"none",background:tzObj?"rgba(255,107,255,0.15)":"rgba(255,255,255,0.04)",color:tzObj?"#ff6bff":"#8878aa",fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,letterSpacing:"0.08em",cursor:tzObj?"pointer":"not-allowed"}}>
+              style={{padding:"10px 20px",borderRadius:8,border:"none",background:tzObj?"rgba(255,107,255,0.15)":"rgba(255,255,255,0.04)",color:tzObj?"#ff6bff":"#8878aa",fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,letterSpacing:"0.08em",cursor:tzObj?"pointer":"not-allowed"}}>
               SAVE TIMEZONE →
             </button>
           </div>
@@ -2575,16 +2575,16 @@ function SettingsPage({profile, onSignOut, onClose}) {
         {section === "danger" && (
           <div style={{...card,border:"1px solid rgba(255,107,107,0.2)"}}>
             <span style={{...lbl,color:"rgba(255,107,107,0.6)"}}>DELETE ACCOUNT</span>
-            <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"rgba(255,255,255,0.4)",lineHeight:1.8,marginBottom:16}}>
+            <div style={{fontFamily:"'Space Mono',monospace",fontSize:14,color:"rgba(255,255,255,0.85)",lineHeight:1.8,marginBottom:16}}>
               This permanently deletes your account, profile, and all session history. This cannot be undone.
             </div>
             {deleteStep === 0 && (
-              <button onClick={()=>setDeleteStep(1)} style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,padding:"8px 16px",borderRadius:7,border:"1px solid rgba(255,107,107,0.3)",background:"rgba(255,107,107,0.06)",color:"rgba(255,107,107,0.6)",cursor:"pointer"}}>
+              <button onClick={()=>setDeleteStep(1)} style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,padding:"8px 16px",borderRadius:7,border:"1px solid rgba(255,107,107,0.3)",background:"rgba(255,107,107,0.06)",color:"rgba(255,107,107,0.6)",cursor:"pointer"}}>
                 Delete my account
               </button>
             )}
             {deleteStep === 1 && (<>
-              <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"#ff8080",marginBottom:12,lineHeight:1.7}}>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:14,color:"#ff8080",marginBottom:12,lineHeight:1.7}}>
                 Type <strong>DELETE</strong> to confirm. This cannot be undone.
               </div>
               <input value={deleteConfirm} onChange={e=>setDeleteConfirm(e.target.value)}
@@ -2592,9 +2592,9 @@ function SettingsPage({profile, onSignOut, onClose}) {
                 style={{...inputSt,marginBottom:10,borderColor:deleteConfirm==="DELETE"?"rgba(255,107,107,0.5)":"rgba(255,255,255,0.1)"}}
               />
               <div style={{display:"flex",gap:8}}>
-                <button onClick={()=>{setDeleteStep(0);setDeleteConfirm("");}} style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,padding:"8px 16px",borderRadius:7,border:"1px solid rgba(255,255,255,0.08)",background:"rgba(255,255,255,0.04)",color:"#8878aa",cursor:"pointer"}}>Cancel</button>
+                <button onClick={()=>{setDeleteStep(0);setDeleteConfirm("");}} style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,padding:"8px 16px",borderRadius:7,border:"1px solid rgba(255,255,255,0.08)",background:"rgba(255,255,255,0.04)",color:"#8878aa",cursor:"pointer"}}>Cancel</button>
                 <button onClick={handleDeleteAccount} disabled={deleteConfirm!=="DELETE"}
-                  style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,padding:"8px 16px",borderRadius:7,border:"1px solid rgba(255,107,107,0.5)",background:deleteConfirm==="DELETE"?"rgba(255,107,107,0.15)":"rgba(255,107,107,0.04)",color:deleteConfirm==="DELETE"?"#ff6b6b":"rgba(255,107,107,0.3)",cursor:deleteConfirm==="DELETE"?"pointer":"not-allowed"}}>
+                  style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,padding:"8px 16px",borderRadius:7,border:"1px solid rgba(255,107,107,0.5)",background:deleteConfirm==="DELETE"?"rgba(255,107,107,0.15)":"rgba(255,107,107,0.04)",color:deleteConfirm==="DELETE"?"#ff6b6b":"rgba(255,107,107,0.3)",cursor:deleteConfirm==="DELETE"?"pointer":"not-allowed"}}>
                   Permanently delete →
                 </button>
               </div>
@@ -3035,10 +3035,10 @@ function BulkUploadZone({ images, setImages, readSlotFile, dragOverSlot, setDrag
             <div style={{ fontSize: 14, fontWeight: 700, color: isDragOver ? "#ff6bff" : "#f0ecff", marginBottom: 6 }}>
               {isDragOver ? "Drop all 5 charts here" : "Select or drop all 5 charts at once"}
             </div>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", lineHeight: 1.6 }}>
               Daily · 4H · 1H · 30M · 15M — select all at once or one by one
             </div>
-            <div style={{ fontSize: 9, color: "rgba(255,107,255,0.5)", marginTop: 8, fontFamily: "'Space Mono',monospace" }}>
+            <div style={{ fontSize: 13, color: "rgba(255,107,255,0.5)", marginTop: 8, fontFamily: "'Space Mono',monospace" }}>
               Timeframes auto-detected from filename
             </div>
           </div>
@@ -3075,7 +3075,7 @@ function BulkUploadZone({ images, setImages, readSlotFile, dragOverSlot, setDrag
 
                 {/* TF badge */}
                 <div style={{ width: 38, height: 38, flexShrink: 0, borderRadius: 8, background: hasImage ? `${slot.color}14` : "rgba(255,255,255,0.04)", border: `1px solid ${hasImage ? `${slot.color}44` : "rgba(255,255,255,0.08)"}`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", transition: "all 0.3s" }}>
-                  <span style={{ fontSize: 10, fontWeight: 900, color: hasImage ? slot.color : "rgba(255,255,255,0.25)", lineHeight: 1 }}>{slot.label}</span>
+                  <span style={{ fontSize: 13, fontWeight: 900, color: hasImage ? slot.color : "rgba(255,255,255,0.38)", lineHeight: 1 }}>{slot.label}</span>
                   <span style={{ fontSize: 6, color: hasImage ? `${slot.color}88` : "rgba(255,255,255,0.15)", marginTop: 2, fontFamily: "'Space Mono',monospace" }}>{slot.role}</span>
                 </div>
 
@@ -3095,8 +3095,8 @@ function BulkUploadZone({ images, setImages, readSlotFile, dragOverSlot, setDrag
 
                 {/* Label */}
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: hasImage ? "#f0ecff" : "rgba(255,255,255,0.3)", marginBottom: 2 }}>{slot.tf} Chart</div>
-                  <div style={{ fontSize: 9, color: hasImage ? `${slot.color}88` : "rgba(255,255,255,0.2)" }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: hasImage ? "#f0ecff" : "rgba(255,255,255,0.75)", marginBottom: 2 }}>{slot.tf} Chart</div>
+                  <div style={{ fontSize: 13, color: hasImage ? `${slot.color}88` : "rgba(255,255,255,0.80)" }}>
                     {hasImage ? "✓ Uploaded" : "Waiting..."}
                   </div>
                 </div>
@@ -3124,11 +3124,11 @@ function BulkUploadZone({ images, setImages, readSlotFile, dragOverSlot, setDrag
         <div style={{ padding: "10px 14px", background: "rgba(127,255,107,0.06)", border: "1px solid rgba(127,255,107,0.3)", borderRadius: 8, display: "flex", alignItems: "center", gap: 10, animation: "readyGlow 2s ease infinite" }}>
           <span style={{ fontSize: 16 }}>✅</span>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#7fff6b" }}>All 5 charts ready</div>
-            <div style={{ fontSize: 9, color: "rgba(127,255,107,0.6)", fontFamily: "'Space Mono',monospace" }}>Hit generate to build your session plan</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#7fff6b" }}>All 5 charts ready</div>
+            <div style={{ fontSize: 13, color: "rgba(127,255,107,0.6)", fontFamily: "'Space Mono',monospace" }}>Hit generate to build your session plan</div>
           </div>
           <button onClick={() => { setImages(Array(5).fill(null)); }}
-            style={{ marginLeft: "auto", fontSize: 8, fontWeight: 700, padding: "3px 9px", borderRadius: 5, border: "1px solid rgba(255,255,255,0.1)", background: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}>
+            style={{ marginLeft: "auto", fontSize: 8, fontWeight: 700, padding: "3px 9px", borderRadius: 5, border: "1px solid rgba(255,255,255,0.1)", background: "none", color: "rgba(255,255,255,0.75)", cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}>
             Clear all
           </button>
         </div>
@@ -3138,8 +3138,8 @@ function BulkUploadZone({ images, setImages, readSlotFile, dragOverSlot, setDrag
       {uploadedCount > 0 && uploadedCount < 5 && (
         <div style={{ marginTop: 10 }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-            <span style={{ fontSize: 9, color: "#8878aa", fontFamily: "'Space Mono',monospace" }}>{uploadedCount} / 5 charts</span>
-            <span style={{ fontSize: 9, color: "#8878aa", fontFamily: "'Space Mono',monospace" }}>{5 - uploadedCount} remaining</span>
+            <span style={{ fontSize: 13, color: "#8878aa", fontFamily: "'Space Mono',monospace" }}>{uploadedCount} / 5 charts</span>
+            <span style={{ fontSize: 13, color: "#8878aa", fontFamily: "'Space Mono',monospace" }}>{5 - uploadedCount} remaining</span>
           </div>
           <div style={{ height: 3, background: "rgba(255,255,255,0.06)", borderRadius: 2, overflow: "hidden" }}>
             <div style={{ height: "100%", width: `${(uploadedCount/5)*100}%`, background: "linear-gradient(90deg,#ff6bff,#00e5ff)", borderRadius: 2, transition: "width 0.4s ease" }}/>
@@ -3179,10 +3179,10 @@ function HistoryPage({ uid, onClose }) {
         {/* Header */}
         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:24 }}>
           <div>
-            <div style={{ fontSize:9, color:"rgba(127,255,107,0.7)", letterSpacing:"0.18em", fontFamily:"'Space Mono',monospace", marginBottom:6 }}>A+ HISTORY</div>
+            <div style={{ fontSize:13, color:"rgba(127,255,107,0.7)", letterSpacing:"0.18em", fontFamily:"'Space Mono',monospace", marginBottom:6 }}>A+ HISTORY</div>
             <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:20, fontWeight:800, color:"#f0ecff", margin:0 }}>Saved A+ Setups</h2>
           </div>
-          <button onClick={onClose} style={{ fontFamily:"'Space Mono',monospace", fontSize:9, fontWeight:700, color:"#8878aa", background:"none", border:"1px solid rgba(255,255,255,0.08)", borderRadius:6, padding:"6px 12px", cursor:"pointer" }}>
+          <button onClick={onClose} style={{ fontFamily:"'Space Mono',monospace", fontSize:13, fontWeight:700, color:"#8878aa", background:"none", border:"1px solid rgba(255,255,255,0.08)", borderRadius:6, padding:"6px 12px", cursor:"pointer" }}>
             {"<- Back"}
           </button>
         </div>
@@ -3191,8 +3191,8 @@ function HistoryPage({ uid, onClose }) {
         {entries.length === 0 && (
           <div style={{ textAlign:"center", padding:"48px 24px" }}>
             <div style={{ fontSize:32, marginBottom:16 }}>📋</div>
-            <div style={{ fontSize:12, fontWeight:700, color:"rgba(255,255,255,0.4)", marginBottom:8 }}>No saved setups yet</div>
-            <div style={{ fontSize:10, color:"rgba(255,255,255,0.25)", fontFamily:"'Space Mono',monospace", lineHeight:1.8 }}>
+            <div style={{ fontSize:14, fontWeight:700, color:"rgba(255,255,255,0.85)", marginBottom:8 }}>No saved setups yet</div>
+            <div style={{ fontSize:13, color:"rgba(255,255,255,0.38)", fontFamily:"'Space Mono',monospace", lineHeight:1.8 }}>
               When you get an A+ plan, hit "Save to History" to keep a record of it here.
             </div>
           </div>
@@ -3232,27 +3232,27 @@ function HistoryPage({ uid, onClose }) {
 
                   {/* Grade badge */}
                   <div style={{ width:36, height:36, borderRadius:8, background:"rgba(127,255,107,0.1)", border:"1px solid rgba(127,255,107,0.3)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                    <span style={{ fontSize:11, fontWeight:900, color:"#7fff6b" }}>A+</span>
+                    <span style={{ fontSize:14, fontWeight:900, color:"#7fff6b" }}>A+</span>
                   </div>
 
                   {/* Info */}
                   <div style={{ flex:1, minWidth:0 }}>
                     <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4, flexWrap:"wrap" }}>
-                      <span style={{ fontSize:12, fontWeight:700, color:"#f0ecff" }}>{entry.instrument}</span>
-                      <span style={{ fontSize:9, fontWeight:700, padding:"1px 7px", borderRadius:4, background:`${bColor}14`, border:`1px solid ${bColor}33`, color:bColor }}>{entry.bias}</span>
-                      {entry.session && <span style={{ fontSize:9, color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace" }}>{entry.session}</span>}
+                      <span style={{ fontSize:14, fontWeight:700, color:"#f0ecff" }}>{entry.instrument}</span>
+                      <span style={{ fontSize:13, fontWeight:700, padding:"1px 7px", borderRadius:4, background:`${bColor}14`, border:`1px solid ${bColor}33`, color:bColor }}>{entry.bias}</span>
+                      {entry.session && <span style={{ fontSize:13, color:"rgba(255,255,255,0.75)", fontFamily:"'Space Mono',monospace" }}>{entry.session}</span>}
                     </div>
-                    <div style={{ fontSize:9, color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace" }}>{entry.date}</div>
+                    <div style={{ fontSize:13, color:"rgba(255,255,255,0.75)", fontFamily:"'Space Mono',monospace" }}>{entry.date}</div>
                   </div>
 
                   {/* Key level */}
                   <div style={{ textAlign:"right", flexShrink:0 }}>
-                    <div style={{ fontSize:8, color:"rgba(255,255,255,0.25)", fontFamily:"'Space Mono',monospace", marginBottom:2 }}>TRIGGER</div>
-                    <div style={{ fontSize:13, fontWeight:700, color:bColor, fontFamily:"monospace" }}>{entry.trigger_level}</div>
+                    <div style={{ fontSize:8, color:"rgba(255,255,255,0.38)", fontFamily:"'Space Mono',monospace", marginBottom:2 }}>TRIGGER</div>
+                    <div style={{ fontSize:14, fontWeight:700, color:bColor, fontFamily:"monospace" }}>{entry.trigger_level}</div>
                   </div>
 
                   {/* Chevron */}
-                  <span style={{ fontSize:14, color:"rgba(255,255,255,0.2)", flexShrink:0, transform:isOpen?"rotate(180deg)":"none", transition:"transform 0.2s" }}>▾</span>
+                  <span style={{ fontSize:14, color:"rgba(255,255,255,0.80)", flexShrink:0, transform:isOpen?"rotate(180deg)":"none", transition:"transform 0.2s" }}>▾</span>
                 </div>
 
                 {/* Expanded plan */}
@@ -3261,7 +3261,7 @@ function HistoryPage({ uid, onClose }) {
 
                     {/* Summary */}
                     {entry.summary && (
-                      <div style={{ padding:"10px 14px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:8, marginBottom:14, fontSize:11, color:"#ccc4e8", lineHeight:1.8 }}>
+                      <div style={{ padding:"10px 14px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:8, marginBottom:14, fontSize:14, color:"#ccc4e8", lineHeight:1.8 }}>
                         {entry.summary}
                       </div>
                     )}
@@ -3277,8 +3277,8 @@ function HistoryPage({ uid, onClose }) {
                         { label:"RETEST",  val:entry.retest_zone,   color:"#ffd166" },
                       ].map(r => r.val ? (
                         <div key={r.label} style={{ padding:"8px 10px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:7 }}>
-                          <div style={{ fontSize:7, color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace", letterSpacing:"0.1em", marginBottom:3 }}>{r.label}</div>
-                          <div style={{ fontSize:12, fontWeight:700, color:r.color, fontFamily:"monospace" }}>{r.val}</div>
+                          <div style={{ fontSize:7, color:"rgba(255,255,255,0.75)", fontFamily:"'Space Mono',monospace", letterSpacing:"0.1em", marginBottom:3 }}>{r.label}</div>
+                          <div style={{ fontSize:14, fontWeight:700, color:r.color, fontFamily:"monospace" }}>{r.val}</div>
                         </div>
                       ) : null)}
                     </div>
@@ -3286,19 +3286,19 @@ function HistoryPage({ uid, onClose }) {
                     {/* Delete */}
                     {confirmDelete === entry.id ? (
                       <div style={{ display:"flex", gap:8, alignItems:"center" }}>
-                        <span style={{ fontSize:10, color:"rgba(255,107,107,0.8)", fontFamily:"'Space Mono',monospace" }}>Delete this entry?</span>
+                        <span style={{ fontSize:13, color:"rgba(255,107,107,0.8)", fontFamily:"'Space Mono',monospace" }}>Delete this entry?</span>
                         <button onClick={() => deleteEntry(entry.id)}
-                          style={{ fontSize:9, fontWeight:700, padding:"4px 12px", borderRadius:6, border:"1px solid rgba(255,107,107,0.4)", background:"rgba(255,107,107,0.1)", color:"#ff6b6b", cursor:"pointer", fontFamily:"inherit" }}>
+                          style={{ fontSize:13, fontWeight:700, padding:"4px 12px", borderRadius:6, border:"1px solid rgba(255,107,107,0.4)", background:"rgba(255,107,107,0.1)", color:"#ff6b6b", cursor:"pointer", fontFamily:"inherit" }}>
                           Delete
                         </button>
                         <button onClick={() => setConfirmDelete(null)}
-                          style={{ fontSize:9, fontWeight:700, padding:"4px 12px", borderRadius:6, border:"1px solid rgba(255,255,255,0.1)", background:"none", color:"#8878aa", cursor:"pointer", fontFamily:"inherit" }}>
+                          style={{ fontSize:13, fontWeight:700, padding:"4px 12px", borderRadius:6, border:"1px solid rgba(255,255,255,0.1)", background:"none", color:"#8878aa", cursor:"pointer", fontFamily:"inherit" }}>
                           Cancel
                         </button>
                       </div>
                     ) : (
                       <button onClick={() => setConfirmDelete(entry.id)}
-                        style={{ fontSize:9, color:"rgba(255,107,107,0.4)", background:"none", border:"none", cursor:"pointer", fontFamily:"'Space Mono',monospace", letterSpacing:"0.06em" }}>
+                        style={{ fontSize:13, color:"rgba(255,107,107,0.4)", background:"none", border:"none", cursor:"pointer", fontFamily:"'Space Mono',monospace", letterSpacing:"0.06em" }}>
                         🗑 Delete
                       </button>
                     )}
@@ -3339,25 +3339,25 @@ function SoftPassScenariosPanel({ plan, onActivate }) {
     return (
       <div style={{ padding:"14px 16px", background:`${color}08`, border:`1px solid ${isConfirming ? color : color+"33"}`, borderRadius:10, marginBottom:10, transition:"border 0.2s" }}>
         <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10 }}>
-          <span style={{ fontSize:9, fontWeight:900, letterSpacing:"0.14em", color, fontFamily:"'Space Mono',monospace" }}>{isBull ? "🟢 BULL SCENARIO" : "🔴 BEAR SCENARIO"}</span>
-          <span style={{ fontSize:9, padding:"1px 7px", borderRadius:4, background:`${color}14`, border:`1px solid ${color}33`, color }}>{bias}</span>
+          <span style={{ fontSize:13, fontWeight:900, letterSpacing:"0.14em", color, fontFamily:"'Space Mono',monospace" }}>{isBull ? "🟢 BULL SCENARIO" : "🔴 BEAR SCENARIO"}</span>
+          <span style={{ fontSize:13, padding:"1px 7px", borderRadius:4, background:`${color}14`, border:`1px solid ${color}33`, color }}>{bias}</span>
         </div>
-        <div style={{ fontSize:13, fontWeight:700, color, marginBottom:6, fontFamily:"monospace" }}>
+        <div style={{ fontSize:14, fontWeight:700, color, marginBottom:6, fontFamily:"monospace" }}>
           30M close {dir} {s.trigger}
         </div>
-        {s.plan && <div style={{ fontSize:11, color:"rgba(255,255,255,0.55)", lineHeight:1.7, marginBottom:12 }}>{s.plan}</div>}
+        {s.plan && <div style={{ fontSize:14, color:"rgba(255,255,255,0.85)", lineHeight:1.7, marginBottom:12 }}>{s.plan}</div>}
         <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:6, marginBottom:14 }}>
           {s.stop && <div style={{ padding:"8px 10px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:7 }}>
             <div style={{ fontSize:7, color:"#8878aa", letterSpacing:"0.1em", marginBottom:2 }}>STOP</div>
-            <div style={{ fontSize:12, fontWeight:700, color:"#ff6b6b", fontFamily:"monospace" }}>{s.stop}</div>
+            <div style={{ fontSize:14, fontWeight:700, color:"#ff6b6b", fontFamily:"monospace" }}>{s.stop}</div>
           </div>}
           {s.tp1 && <div style={{ padding:"8px 10px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:7 }}>
             <div style={{ fontSize:7, color:"#8878aa", letterSpacing:"0.1em", marginBottom:2 }}>TP1</div>
-            <div style={{ fontSize:12, fontWeight:700, color:"#7fff6b", fontFamily:"monospace" }}>{s.tp1}</div>
+            <div style={{ fontSize:14, fontWeight:700, color:"#7fff6b", fontFamily:"monospace" }}>{s.tp1}</div>
           </div>}
         </div>
         {isConfirming && (
-          <div style={{ padding:"10px 12px", background:"rgba(255,209,102,0.08)", border:"1px solid rgba(255,209,102,0.3)", borderRadius:8, marginBottom:10, fontSize:10, color:"rgba(255,209,102,0.9)", lineHeight:1.7, fontFamily:"'Space Mono',monospace" }}>
+          <div style={{ padding:"10px 12px", background:"rgba(255,209,102,0.08)", border:"1px solid rgba(255,209,102,0.3)", borderRadius:8, marginBottom:10, fontSize:13, color:"rgba(255,209,102,0.9)", lineHeight:1.7, fontFamily:"'Space Mono',monospace" }}>
             {"⚠ You're activating based on pre-market structure. If session opens with different price action — trust the charts, not this plan. Tap again to confirm."}
           </div>
         )}
@@ -3367,7 +3367,7 @@ function SoftPassScenariosPanel({ plan, onActivate }) {
             width:"100%", padding:"11px", borderRadius:8,
             background: isConfirming ? (isBull ? "linear-gradient(135deg,#7fff6b,#00bb66)" : "linear-gradient(135deg,#ff6b6b,#bb0000)") : `${color}18`,
             color: isConfirming ? "#fff" : color,
-            fontSize:11, fontWeight:700, letterSpacing:"0.1em",
+            fontSize:14, fontWeight:700, letterSpacing:"0.1em",
             fontFamily:"inherit", cursor:"pointer",
             border: isConfirming ? "none" : `1px solid ${color}44`,
             transition:"all 0.2s",
@@ -3376,7 +3376,7 @@ function SoftPassScenariosPanel({ plan, onActivate }) {
         </button>
         {isConfirming && (
           <button onClick={() => setConfirming(null)}
-            style={{ width:"100%", marginTop:6, padding:"7px", borderRadius:6, border:"none", background:"none", color:"rgba(255,255,255,0.3)", fontSize:10, cursor:"pointer", fontFamily:"inherit" }}>
+            style={{ width:"100%", marginTop:6, padding:"7px", borderRadius:6, border:"none", background:"none", color:"rgba(255,255,255,0.75)", fontSize:13, cursor:"pointer", fontFamily:"inherit" }}>
             Cancel
           </button>
         )}
@@ -3390,8 +3390,8 @@ function SoftPassScenariosPanel({ plan, onActivate }) {
         style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 16px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.08)", borderRadius: open ? "10px 10px 0 0" : 10, cursor:"pointer", fontFamily:"inherit", transition:"all 0.2s" }}>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
           <span style={{ fontSize:14 }}>🟡</span>
-          <span style={{ fontSize:11, fontWeight:700, color:"#f0ecff", letterSpacing:"0.04em" }}>Soft Pass Scenarios</span>
-          <span style={{ fontSize:9, color:"#8878aa", fontFamily:"'Space Mono',monospace" }}>Tap to {open ? "close" : "expand"}</span>
+          <span style={{ fontSize:14, fontWeight:700, color:"#f0ecff", letterSpacing:"0.04em" }}>Soft Pass Scenarios</span>
+          <span style={{ fontSize:13, color:"#8878aa", fontFamily:"'Space Mono',monospace" }}>Tap to {open ? "close" : "expand"}</span>
         </div>
         <span style={{ fontSize:16, color:"#00e5ff", transition:"transform 0.2s", transform: open ? "rotate(45deg)" : "none", display:"inline-block" }}>+</span>
       </button>
@@ -3399,7 +3399,7 @@ function SoftPassScenariosPanel({ plan, onActivate }) {
         <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.08)", borderTop:"none", borderRadius:"0 0 10px 10px", padding:"16px", animation:"fadein 0.25s ease both" }}>
           <ScenarioCard s={bull} type="bull" />
           <ScenarioCard s={bear} type="bear" />
-          <div style={{ padding:"10px 14px", background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:8, fontSize:10, color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace", lineHeight:1.8 }}>
+          <div style={{ padding:"10px 14px", background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:8, fontSize:13, color:"rgba(255,255,255,0.75)", fontFamily:"'Space Mono',monospace", lineHeight:1.8 }}>
             Only activate when you see the 30M candle actually close at the trigger price. Wicks do not count.
           </div>
         </div>
@@ -3421,13 +3421,13 @@ function FullAnalysisPanel({ plan }) {
 
   const Row = ({ label, value, color="#f0ecff" }) => (
     <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", padding:"7px 0", borderBottom:"1px solid rgba(255,255,255,0.04)" }}>
-      <span style={{ fontSize:11, color:"rgba(255,255,255,0.4)", fontFamily:"'Space Mono',monospace" }}>{label}</span>
-      <span style={{ fontSize:12, fontWeight:700, color, fontFamily:"monospace" }}>{value || "—"}</span>
+      <span style={{ fontSize:14, color:"rgba(255,255,255,0.85)", fontFamily:"'Space Mono',monospace" }}>{label}</span>
+      <span style={{ fontSize:14, fontWeight:700, color, fontFamily:"monospace" }}>{value || "—"}</span>
     </div>
   );
 
   const SectionHeader = ({ icon, label, color="#8878aa" }) => (
-    <div style={{ fontSize:9, fontWeight:900, letterSpacing:"0.16em", color, marginBottom:12, marginTop:20, fontFamily:"'Space Mono',monospace", display:"flex", alignItems:"center", gap:6 }}>
+    <div style={{ fontSize:13, fontWeight:900, letterSpacing:"0.16em", color, marginBottom:12, marginTop:20, fontFamily:"'Space Mono',monospace", display:"flex", alignItems:"center", gap:6 }}>
       <span>{icon}</span> {label}
     </div>
   );
@@ -3438,8 +3438,8 @@ function FullAnalysisPanel({ plan }) {
     const color = status === "✅" ? "#7fff6b" : status === "🔴" || status === "❌" ? "#ff6b6b" : "#ffd166";
     return (
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"7px 0", borderBottom:"1px solid rgba(255,255,255,0.04)" }}>
-        <span style={{ fontSize:11, color:"rgba(255,255,255,0.5)", fontFamily:"'Space Mono',monospace" }}>{label}</span>
-        <span style={{ fontSize:13, color }}>{status}</span>
+        <span style={{ fontSize:14, color:"rgba(255,255,255,0.8)", fontFamily:"'Space Mono',monospace" }}>{label}</span>
+        <span style={{ fontSize:14, color }}>{status}</span>
       </div>
     );
   };
@@ -3450,8 +3450,8 @@ function FullAnalysisPanel({ plan }) {
         style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 16px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.08)", borderRadius: open ? "10px 10px 0 0" : 10, cursor:"pointer", fontFamily:"inherit", transition:"all 0.2s" }}>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
           <span style={{ fontSize:14 }}>📊</span>
-          <span style={{ fontSize:11, fontWeight:700, color:"#f0ecff", letterSpacing:"0.04em" }}>Full Analysis & Breakdown</span>
-          <span style={{ fontSize:9, color:"#8878aa", fontFamily:"'Space Mono',monospace" }}>Tap to {open ? "close" : "expand"}</span>
+          <span style={{ fontSize:14, fontWeight:700, color:"#f0ecff", letterSpacing:"0.04em" }}>Full Analysis & Breakdown</span>
+          <span style={{ fontSize:13, color:"#8878aa", fontFamily:"'Space Mono',monospace" }}>Tap to {open ? "close" : "expand"}</span>
         </div>
         <span style={{ fontSize:16, color:"#ff6bff", transition:"transform 0.2s", transform: open ? "rotate(45deg)" : "none", display:"inline-block" }}>+</span>
       </button>
@@ -3461,8 +3461,8 @@ function FullAnalysisPanel({ plan }) {
 
           {/* ── HEADER ── */}
           <div style={{ padding:"12px 16px", background:"rgba(255,107,255,0.05)", border:"1px solid rgba(255,107,255,0.2)", borderRadius:8, marginBottom:20, textAlign:"center" }}>
-            <div style={{ fontSize:10, fontWeight:900, letterSpacing:"0.18em", color:"#ff6bff", marginBottom:4, fontFamily:"'Space Mono',monospace" }}>🏆 OMNIUSD — FULL ANALYSIS</div>
-            <div style={{ fontSize:10, color:"rgba(255,255,255,0.4)", fontFamily:"'Space Mono',monospace" }}>
+            <div style={{ fontSize:13, fontWeight:900, letterSpacing:"0.18em", color:"#ff6bff", marginBottom:4, fontFamily:"'Space Mono',monospace" }}>🏆 OMNIUSD — FULL ANALYSIS</div>
+            <div style={{ fontSize:13, color:"rgba(255,255,255,0.85)", fontFamily:"'Space Mono',monospace" }}>
               {plan.instrument} · {dateStr} · {plan.session_note?.split("—")[0]?.trim() || "NY Session"}
             </div>
           </div>
@@ -3485,8 +3485,8 @@ function FullAnalysisPanel({ plan }) {
               if (!text) return null;
               return (
                 <div key={tf} style={{ padding:"10px 14px", background:"rgba(255,255,255,0.02)", border:`1px solid ${color}22`, borderLeft:`3px solid ${color}`, borderRadius:0 }}>
-                  <div style={{ fontSize:9, fontWeight:900, color, letterSpacing:"0.1em", marginBottom:4, fontFamily:"'Space Mono',monospace" }}>{tf}</div>
-                  <div style={{ fontSize:11, color:"rgba(255,255,255,0.65)", lineHeight:1.8 }}>{text}</div>
+                  <div style={{ fontSize:13, fontWeight:900, color, letterSpacing:"0.1em", marginBottom:4, fontFamily:"'Space Mono',monospace" }}>{tf}</div>
+                  <div style={{ fontSize:14, color:"rgba(255,255,255,0.8)", lineHeight:1.8 }}>{text}</div>
                 </div>
               );
             })}
@@ -3494,15 +3494,15 @@ function FullAnalysisPanel({ plan }) {
 
           {/* BRC Phase steps */}
           <div style={{ marginTop:14, display:"flex", flexDirection:"column", gap:8 }}>
-            <div style={{ fontSize:9, fontWeight:900, letterSpacing:"0.12em", color:"#ff6bff", fontFamily:"'Space Mono',monospace", marginBottom:4 }}>BRC PHASE</div>
+            <div style={{ fontSize:13, fontWeight:900, letterSpacing:"0.12em", color:"#ff6bff", fontFamily:"'Space Mono',monospace", marginBottom:4 }}>BRC PHASE</div>
             {[
               { step:"Break",        price: plan.trigger_level, done: plan.brc_phase === "RETEST_COOKING" || plan.brc_phase === "CONTINUATION" },
               { step:"Correction",   price: plan.retest_zone,   done: plan.brc_phase === "CONTINUATION" },
               { step:"Continuation", price: plan.trigger_level, done: false },
             ].map(({ step, price, done }) => (
               <div key={step} style={{ display:"flex", alignItems:"center", gap:10 }}>
-                <span style={{ fontSize:13, flexShrink:0 }}>{done ? "✅" : "⏳"}</span>
-                <span style={{ fontSize:11, color: done ? "#7fff6b" : "rgba(255,255,255,0.5)", fontFamily:"'Space Mono',monospace" }}>
+                <span style={{ fontSize:14, flexShrink:0 }}>{done ? "✅" : "⏳"}</span>
+                <span style={{ fontSize:14, color: done ? "#7fff6b" : "rgba(255,255,255,0.8)", fontFamily:"'Space Mono',monospace" }}>
                   {step}{price ? `: ${price}` : ""}
                 </span>
               </div>
@@ -3523,7 +3523,7 @@ function FullAnalysisPanel({ plan }) {
                   return (
                     <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:10, padding:"8px 0", borderBottom: i < plan.key_levels.length-1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
                       <span style={{ flexShrink:0, fontSize:11 }}>{dot}</span>
-                      <span style={{ fontSize:11, color:"rgba(255,255,255,0.65)", lineHeight:1.6 }}>{lvl}</span>
+                      <span style={{ fontSize:14, color:"rgba(255,255,255,0.8)", lineHeight:1.6 }}>{lvl}</span>
                     </div>
                   );
                 })
@@ -3535,8 +3535,8 @@ function FullAnalysisPanel({ plan }) {
                   plan.tp2           && { label:"🟢 TP2",           val: plan.tp2 },
                 ].filter(Boolean).map((r, i) => (
                   <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"7px 0", borderBottom:"1px solid rgba(255,255,255,0.04)" }}>
-                    <span style={{ fontSize:11, color:"rgba(255,255,255,0.4)" }}>{r.label}</span>
-                    <span style={{ fontSize:12, fontWeight:700, color:"#ffd166", fontFamily:"monospace" }}>{r.val}</span>
+                    <span style={{ fontSize:14, color:"rgba(255,255,255,0.85)" }}>{r.label}</span>
+                    <span style={{ fontSize:14, fontWeight:700, color:"#ffd166", fontFamily:"monospace" }}>{r.val}</span>
                   </div>
                 ))
             }
@@ -3549,7 +3549,7 @@ function FullAnalysisPanel({ plan }) {
             <>
               <SectionHeader icon="⚔️" label="ACTIONABLE TRADE PLAN" color="#7fff6b"/>
 
-              <div style={{ fontSize:11, fontWeight:700, color: biasColor, marginBottom:12, display:"flex", alignItems:"center", gap:6 }}>
+              <div style={{ fontSize:14, fontWeight:700, color: biasColor, marginBottom:12, display:"flex", alignItems:"center", gap:6 }}>
                 <span style={{ fontSize:14 }}>{biasEmoji}</span>
                 BIAS: {plan.bias === "LONG" ? "BULLISH" : plan.bias === "SHORT" ? "BEARISH" : "NEUTRAL"}
               </div>
@@ -3563,11 +3563,11 @@ function FullAnalysisPanel({ plan }) {
                 ].map(({ n, label, desc }) => (
                   <div key={n} style={{ display:"flex", gap:12, padding:"10px 14px", background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:8 }}>
                     <div style={{ width:22, height:22, borderRadius:"50%", background:"rgba(255,107,255,0.15)", border:"1px solid rgba(255,107,255,0.3)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                      <span style={{ fontSize:10, fontWeight:900, color:"#ff6bff" }}>{n}</span>
+                      <span style={{ fontSize:13, fontWeight:900, color:"#ff6bff" }}>{n}</span>
                     </div>
                     <div>
-                      <div style={{ fontSize:10, fontWeight:700, color:"#f0ecff", marginBottom:2, letterSpacing:"0.06em" }}>Step {n} — {label}</div>
-                      <div style={{ fontSize:11, color:"rgba(255,255,255,0.5)", lineHeight:1.6 }}>{desc}</div>
+                      <div style={{ fontSize:13, fontWeight:700, color:"#f0ecff", marginBottom:2, letterSpacing:"0.06em" }}>Step {n} — {label}</div>
+                      <div style={{ fontSize:14, color:"rgba(255,255,255,0.8)", lineHeight:1.6 }}>{desc}</div>
                     </div>
                   </div>
                 ))}
@@ -3585,10 +3585,10 @@ function FullAnalysisPanel({ plan }) {
               {/* Alert levels */}
               {plan.alert_levels && plan.alert_levels.length > 0 && (
                 <div style={{ padding:"12px 14px", background:"rgba(255,209,102,0.04)", border:"1px solid rgba(255,209,102,0.15)", borderRadius:8, marginBottom:14 }}>
-                  <div style={{ fontSize:9, fontWeight:900, letterSpacing:"0.12em", color:"#ffd166", marginBottom:8, fontFamily:"'Space Mono',monospace" }}>🔔 ALERT LEVELS</div>
+                  <div style={{ fontSize:13, fontWeight:900, letterSpacing:"0.12em", color:"#ffd166", marginBottom:8, fontFamily:"'Space Mono',monospace" }}>🔔 ALERT LEVELS</div>
                   <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
                     {plan.alert_levels.map((a, i) => (
-                      <div key={i} style={{ fontSize:11, color:"rgba(255,255,255,0.55)", display:"flex", gap:8 }}>
+                      <div key={i} style={{ fontSize:14, color:"rgba(255,255,255,0.85)", display:"flex", gap:8 }}>
                         <span style={{ color:"#ffd166", flexShrink:0 }}>Alert {i+1}:</span>
                         <span style={{ fontFamily:"monospace", fontWeight:700, color:"#ffd166" }}>{a}</span>
                       </div>
@@ -3605,10 +3605,10 @@ function FullAnalysisPanel({ plan }) {
 
           <div style={{ padding:"12px 14px", background: plan.grade === "A+" ? "rgba(127,255,107,0.06)" : plan.grade === "PASS" ? "rgba(136,120,170,0.06)" : "rgba(255,209,102,0.06)", border:`1px solid ${plan.grade === "A+" ? "rgba(127,255,107,0.25)" : plan.grade === "PASS" ? "rgba(136,120,170,0.2)" : "rgba(255,209,102,0.2)"}`, borderRadius:8, marginBottom:14 }}>
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:10 }}>
-              <div style={{ fontSize:11, fontWeight:900, color: biasColor, letterSpacing:"0.1em", fontFamily:"'Space Mono',monospace" }}>
+              <div style={{ fontSize:14, fontWeight:900, color: biasColor, letterSpacing:"0.1em", fontFamily:"'Space Mono',monospace" }}>
                 GRADE: {plan.grade === "A+" ? "🟢 A+ EXECUTE" : plan.grade === "PASS" ? "🔴 HARD PASS" : plan.grade === "SOFT PASS" ? "🟡 SOFT PASS" : `🟡 ${plan.grade}`}
               </div>
-              <div style={{ fontSize:11, fontWeight:700, color:"#ffd166", fontFamily:"monospace" }}>
+              <div style={{ fontSize:14, fontWeight:700, color:"#ffd166", fontFamily:"monospace" }}>
                 {plan.confidence_score}%
               </div>
             </div>
@@ -3630,8 +3630,8 @@ function FullAnalysisPanel({ plan }) {
 
           {/* THE WHY */}
           <div style={{ padding:"12px 14px", background:"rgba(0,229,255,0.04)", border:"1px solid rgba(0,229,255,0.15)", borderLeft:"3px solid #00e5ff", borderRadius:0, marginBottom:14 }}>
-            <div style={{ fontSize:9, fontWeight:900, letterSpacing:"0.16em", color:"#00e5ff", marginBottom:8, fontFamily:"'Space Mono',monospace" }}>THE WHY</div>
-            <div style={{ fontSize:12, color:"rgba(255,255,255,0.65)", lineHeight:1.9 }}>
+            <div style={{ fontSize:13, fontWeight:900, letterSpacing:"0.16em", color:"#00e5ff", marginBottom:8, fontFamily:"'Space Mono',monospace" }}>THE WHY</div>
+            <div style={{ fontSize:14, color:"rgba(255,255,255,0.8)", lineHeight:1.9 }}>
               {plan.confidence_reason || plan.plain_english?.trade_plan || plan.plain_english?.verdict || plan.summary}
             </div>
           </div>
@@ -3639,10 +3639,10 @@ function FullAnalysisPanel({ plan }) {
           {/* DEDUCTIONS */}
           {plan.what_still_needed && plan.what_still_needed.length > 0 && (
             <div style={{ padding:"12px 14px", background:"rgba(255,154,60,0.04)", border:"1px solid rgba(255,154,60,0.15)", borderLeft:"3px solid #ff9a3c", borderRadius:0, marginBottom:14 }}>
-              <div style={{ fontSize:9, fontWeight:900, letterSpacing:"0.14em", color:"#ff9a3c", marginBottom:8, fontFamily:"'Space Mono',monospace" }}>DEDUCTIONS / WHAT STILL NEEDED</div>
+              <div style={{ fontSize:13, fontWeight:900, letterSpacing:"0.14em", color:"#ff9a3c", marginBottom:8, fontFamily:"'Space Mono',monospace" }}>DEDUCTIONS / WHAT STILL NEEDED</div>
               <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
                 {plan.what_still_needed.map((d, i) => (
-                  <div key={i} style={{ display:"flex", gap:8, fontSize:11, color:"rgba(255,255,255,0.55)", lineHeight:1.6 }}>
+                  <div key={i} style={{ display:"flex", gap:8, fontSize:14, color:"rgba(255,255,255,0.85)", lineHeight:1.6 }}>
                     <span style={{ color:"#ff9a3c", flexShrink:0 }}>→</span>
                     <span>{d}</span>
                   </div>
@@ -3655,8 +3655,8 @@ function FullAnalysisPanel({ plan }) {
 
           {/* ── PSYCHOLOGICAL RULE ── */}
           <div style={{ padding:"14px 16px", background:"rgba(255,107,255,0.05)", border:"1px solid rgba(255,107,255,0.2)", borderRadius:8 }}>
-            <div style={{ fontSize:9, fontWeight:900, letterSpacing:"0.16em", color:"#ff6bff", marginBottom:10, fontFamily:"'Space Mono',monospace" }}>🧠 PSYCHOLOGICAL RULE</div>
-            <div style={{ fontSize:12, color:"rgba(255,255,255,0.75)", lineHeight:2, fontStyle:"italic" }}>
+            <div style={{ fontSize:13, fontWeight:900, letterSpacing:"0.16em", color:"#ff6bff", marginBottom:10, fontFamily:"'Space Mono',monospace" }}>🧠 PSYCHOLOGICAL RULE</div>
+            <div style={{ fontSize:14, color:"rgba(255,255,255,0.75)", lineHeight:2, fontStyle:"italic" }}>
               "The 15-minute warning gets me ready. The 30-minute close puts me in the trade. No 30-minute close, no trade. Pre-market movement is information — not permission."
             </div>
           </div>
@@ -4279,12 +4279,12 @@ Use ONLY these times. All earlier time references in this conversation are stale
             {/* Left: logo */}
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <span style={{ fontSize: 15, color: "#ff6bff" }}>◈</span>
-              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", background: "linear-gradient(90deg,#ff6bff,#00e5ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>OmniUSD</span>
+              <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.1em", background: "linear-gradient(90deg,#ff6bff,#00e5ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>OmniUSD</span>
               {/* Instrument + Bias — only when plan exists */}
               {plan && phase !== "upload" && (
                 <div style={{ display: "flex", gap: 5, marginLeft: 2 }}>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: "#f0ecff" }}>{plan.instrument}</span>
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: "1px 6px", borderRadius: 4, background: `${biasColor}14`, border: `1px solid ${biasColor}44`, color: biasColor }}>{plan.bias}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: "#f0ecff" }}>{plan.instrument}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, padding: "1px 6px", borderRadius: 4, background: `${biasColor}14`, border: `1px solid ${biasColor}44`, color: biasColor }}>{plan.bias}</span>
                 </div>
               )}
             </div>
@@ -4293,7 +4293,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
               {phase === "live" && (
                 <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "3px 9px", borderRadius: 20, background: `${stateObj.color}14`, border: `1px solid ${stateObj.color}33` }}>
                   <span style={{ width: 5, height: 5, borderRadius: "50%", background: stateObj.color, display: "inline-block", animation: stateObj.dot ? "pulse 1.5s ease infinite" : "none" }}/>
-                  <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: "0.06em", color: stateObj.color }}>{stateObj.label}</span>
+                  <span style={{ fontSize: 13, fontWeight: 900, letterSpacing: "0.06em", color: stateObj.color }}>{stateObj.label}</span>
                 </div>
               )}
               {/* Hamburger ☰ */}
@@ -4307,8 +4307,8 @@ Use ONLY these times. All earlier time references in this conversation are stale
           {/* Row 2: grade + window status only during live session */}
           {plan && phase === "live" && (
             <div style={{ padding: "4px 14px 7px", display: "flex", alignItems: "center", gap: 10, borderTop: "1px solid rgba(255,255,255,0.04)" }}>
-              <span style={{ fontSize: 9, fontWeight: 700, padding: "1px 7px", background: `${gradeColor}14`, border: `1px solid ${gradeColor}33`, borderRadius: 4, color: gradeColor }}>{plan.grade}</span>
-              <span style={{ fontSize: 9, fontWeight: 700, color: windowClosed ? "#ff6b6b" : "#7fff6b" }}>{windowClosed ? "⛔ CLOSED" : "✅ OPEN"}</span>
+              <span style={{ fontSize: 13, fontWeight: 700, padding: "1px 7px", background: `${gradeColor}14`, border: `1px solid ${gradeColor}33`, borderRadius: 4, color: gradeColor }}>{plan.grade}</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: windowClosed ? "#ff6b6b" : "#7fff6b" }}>{windowClosed ? "⛔ CLOSED" : "✅ OPEN"}</span>
             </div>
           )}
 
@@ -4323,7 +4323,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
 
                 {/* Drawer header */}
                 <div style={{ padding: "18px 20px 14px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", background: "linear-gradient(90deg,#ff6bff,#00e5ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>◈ OmniUSD</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.1em", background: "linear-gradient(90deg,#ff6bff,#00e5ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>◈ OmniUSD</span>
                   <button onClick={() => setDrawerOpen(false)} style={{ background: "none", border: "none", color: "#8878aa", cursor: "pointer", fontSize: 18, lineHeight: 1 }}>×</button>
                 </div>
 
@@ -4336,13 +4336,13 @@ Use ONLY these times. All earlier time references in this conversation are stale
                     { label: "Help & FAQ", icon: "?", action: () => { setAppPage("faq"); setDrawerOpen(false); }, active: appPage === "faq", color: "#00e5ff" },
                     ...(phase === "live" ? [
                       { label: "View Plan", icon: "📄", action: () => { setPhase("plan"); setDrawerOpen(false); }, color: "#ffd166" },
-                      { label: "New Analysis", icon: "↩", action: () => { setPhase("upload"); setImages(Array(5).fill(null)); setDrawerOpen(false); }, color: "rgba(255,255,255,0.3)" },
+                      { label: "New Analysis", icon: "↩", action: () => { setPhase("upload"); setImages(Array(5).fill(null)); setDrawerOpen(false); }, color: "rgba(255,255,255,0.75)" },
                     ] : []),
                   ].map((item, i) => (
                     <button key={i} onClick={item.action}
                       style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px 20px", background: item.active ? "rgba(255,107,255,0.08)" : "none", border: "none", cursor: "pointer", fontFamily: "inherit", textAlign: "left", borderLeft: item.active ? "2px solid #ff6bff" : "2px solid transparent", transition: "all 0.15s" }}>
                       <span style={{ fontSize: 14, width: 20, textAlign: "center", flexShrink: 0 }}>{item.icon}</span>
-                      <span style={{ fontSize: 12, fontWeight: item.active ? 700 : 500, color: item.active ? "#f0ecff" : (item.color || "#8878aa") }}>{item.label}</span>
+                      <span style={{ fontSize: 13, fontWeight: item.active ? 700 : 500, color: item.active ? "#f0ecff" : (item.color || "#8878aa") }}>{item.label}</span>
                     </button>
                   ))}
                 </div>
@@ -4351,7 +4351,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 <div style={{ padding: "14px 20px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
                   {onSignOut && (
                     <button onClick={() => { onSignOut(); setDrawerOpen(false); }}
-                      style={{ fontSize: 11, color: "rgba(255,107,107,0.6)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", letterSpacing: "0.06em" }}>
+                      style={{ fontSize: 13, color: "rgba(255,107,107,0.6)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", letterSpacing: "0.06em" }}>
                       Sign out
                     </button>
                   )}
@@ -4365,35 +4365,35 @@ Use ONLY these times. All earlier time references in this conversation are stale
         <div style={{ padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ fontSize: 18, color: "#ff6bff" }}>◈</span>
-            <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", background: "linear-gradient(90deg,#ff6bff,#00e5ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>OmniUSD</span>
+            <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.1em", background: "linear-gradient(90deg,#ff6bff,#00e5ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>OmniUSD</span>
             <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.1em", padding: "2px 8px", borderRadius: 4, background: `${(TIER_CONFIG[profile?.tier]||TIER_CONFIG.starter).color}18`, border: `1px solid ${(TIER_CONFIG[profile?.tier]||TIER_CONFIG.starter).color}44`, color: (TIER_CONFIG[profile?.tier]||TIER_CONFIG.starter).color }}>
               {(TIER_CONFIG[profile?.tier]||TIER_CONFIG.starter).label.toUpperCase()}
             </span>
             {plan && phase !== "upload" && (
               <div style={{ display: "flex", gap: 6 }}>
-                <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", background: `${gradeColor}14`, border: `1px solid ${gradeColor}44`, borderRadius: 4, color: gradeColor }}>{plan.grade}</span>
-                <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", background: `${biasColor}14`, border: `1px solid ${biasColor}44`, borderRadius: 4, color: biasColor }}>{plan.bias}</span>
-                <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, color: "#8878aa" }}>{plan.instrument}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, padding: "2px 8px", background: `${gradeColor}14`, border: `1px solid ${gradeColor}44`, borderRadius: 4, color: gradeColor }}>{plan.grade}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, padding: "2px 8px", background: `${biasColor}14`, border: `1px solid ${biasColor}44`, borderRadius: 4, color: biasColor }}>{plan.bias}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, padding: "2px 8px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, color: "#8878aa" }}>{plan.instrument}</span>
               </div>
             )}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ fontSize: 9, color: "#8878aa" }}><span style={{ color: "#00e5ff", fontWeight: 700 }}>{ctTime}</span> {getUserTZShort()}</div>
-            {onOpenJournal && <button onClick={onOpenJournal} style={{ fontSize: 9, fontWeight: 700, color: "#8878aa", background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>Journal</button>}
+            <div style={{ fontSize: 13, color: "#8878aa" }}><span style={{ color: "#00e5ff", fontWeight: 700 }}>{ctTime}</span> {getUserTZShort()}</div>
+            {onOpenJournal && <button onClick={onOpenJournal} style={{ fontSize: 13, fontWeight: 700, color: "#8878aa", background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>Journal</button>}
             {phase === "live" && (
               <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
                 <span style={{ width: 6, height: 6, borderRadius: "50%", background: windowClosed ? "#ff6b6b" : "#7fff6b", animation: windowOpen ? "pulse 1.5s ease infinite" : "none" }}/>
-                <span style={{ fontSize: 9, fontWeight: 700, color: windowClosed ? "#ff6b6b" : "#7fff6b" }}>{windowClosed ? "WINDOW CLOSED" : "WINDOW OPEN"}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: windowClosed ? "#ff6b6b" : "#7fff6b" }}>{windowClosed ? "WINDOW CLOSED" : "WINDOW OPEN"}</span>
               </div>
             )}
-            <button onClick={() => setAppPage(appPage === "history" ? "dashboard" : "history")} style={{ fontSize: 9, fontWeight: 700, color: appPage === "history" ? "#7fff6b" : "#8878aa", background: appPage === "history" ? "rgba(127,255,107,0.08)" : "none", border: `1px solid ${appPage === "history" ? "rgba(127,255,107,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>History</button>
-            <button onClick={() => setAppPage(appPage === "settings" ? "dashboard" : "settings")} style={{ fontSize: 9, fontWeight: 700, color: appPage === "settings" ? "#ff6bff" : "#8878aa", background: appPage === "settings" ? "rgba(255,107,255,0.1)" : "none", border: `1px solid ${appPage === "settings" ? "rgba(255,107,255,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>Settings</button>
-            <button onClick={() => setAppPage(appPage === "faq" ? "dashboard" : "faq")} style={{ fontSize: 9, fontWeight: 700, color: appPage === "faq" ? "#00e5ff" : "#8878aa", background: appPage === "faq" ? "rgba(0,229,255,0.08)" : "none", border: `1px solid ${appPage === "faq" ? "rgba(0,229,255,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>Help & FAQ</button>
+            <button onClick={() => setAppPage(appPage === "history" ? "dashboard" : "history")} style={{ fontSize: 13, fontWeight: 700, color: appPage === "history" ? "#7fff6b" : "#8878aa", background: appPage === "history" ? "rgba(127,255,107,0.08)" : "none", border: `1px solid ${appPage === "history" ? "rgba(127,255,107,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>History</button>
+            <button onClick={() => setAppPage(appPage === "settings" ? "dashboard" : "settings")} style={{ fontSize: 13, fontWeight: 700, color: appPage === "settings" ? "#ff6bff" : "#8878aa", background: appPage === "settings" ? "rgba(255,107,255,0.1)" : "none", border: `1px solid ${appPage === "settings" ? "rgba(255,107,255,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>Settings</button>
+            <button onClick={() => setAppPage(appPage === "faq" ? "dashboard" : "faq")} style={{ fontSize: 13, fontWeight: 700, color: appPage === "faq" ? "#00e5ff" : "#8878aa", background: appPage === "faq" ? "rgba(0,229,255,0.08)" : "none", border: `1px solid ${appPage === "faq" ? "rgba(0,229,255,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>Help & FAQ</button>
             {phase === "live" && (<>
-              <button onClick={() => setPhase("plan")} style={{ fontSize: 9, fontWeight: 700, color: "#ffd166", background: "rgba(255,209,102,0.08)", border: "1px solid rgba(255,209,102,0.25)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>View Plan</button>
-              <button onClick={() => { setPhase("upload"); setImages(Array(5).fill(null)); }} style={{ fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.3)", background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>NEW ANALYSIS</button>
+              <button onClick={() => setPhase("plan")} style={{ fontSize: 13, fontWeight: 700, color: "#ffd166", background: "rgba(255,209,102,0.08)", border: "1px solid rgba(255,209,102,0.25)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>View Plan</button>
+              <button onClick={() => { setPhase("upload"); setImages(Array(5).fill(null)); }} style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.75)", background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>NEW ANALYSIS</button>
             </>)}
-            {onSignOut && <button onClick={onSignOut} style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", padding: "4px 6px" }}>Sign out</button>}
+            {onSignOut && <button onClick={onSignOut} style={{ fontSize: 13, color: "rgba(255,255,255,0.38)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", padding: "4px 6px" }}>Sign out</button>}
           </div>
         </div>
         )}
@@ -4416,11 +4416,11 @@ Use ONLY these times. All earlier time references in this conversation are stale
 
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:28 }}>
               <div>
-                <div style={{ fontFamily:"'Space Mono',monospace", fontSize:9, color:"rgba(0,229,255,0.7)", letterSpacing:"0.18em", marginBottom:6 }}>HELP & FAQ</div>
+                <div style={{ fontFamily:"'Space Mono',monospace", fontSize:13, color:"rgba(0,229,255,0.7)", letterSpacing:"0.18em", marginBottom:6 }}>HELP & FAQ</div>
                 <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:22, fontWeight:800, color:"#f0ecff", margin:0 }}>Common Questions</h2>
               </div>
               <button onClick={() => setAppPage("dashboard")}
-                style={{ fontFamily:"'Space Mono',monospace", fontSize:9, fontWeight:700, color:"#8878aa", background:"none", border:"1px solid rgba(255,255,255,0.08)", borderRadius:6, padding:"6px 12px", cursor:"pointer" }}>
+                style={{ fontFamily:"'Space Mono',monospace", fontSize:13, fontWeight:700, color:"#8878aa", background:"none", border:"1px solid rgba(255,255,255,0.08)", borderRadius:6, padding:"6px 12px", cursor:"pointer" }}>
                 ← Back
               </button>
             </div>
@@ -4428,11 +4428,11 @@ Use ONLY these times. All earlier time references in this conversation are stale
             {/* Contact banner */}
             <div style={{ padding:"14px 18px", background:"rgba(255,107,255,0.05)", border:"1px solid rgba(255,107,255,0.15)", borderRadius:10, marginBottom:24, display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:10 }}>
               <div>
-                <div style={{ fontFamily:"'Space Mono',monospace", fontSize:11, fontWeight:700, color:"#f0ecff", marginBottom:3 }}>Can't find your answer?</div>
-                <div style={{ fontFamily:"'Space Mono',monospace", fontSize:10, color:"rgba(255,255,255,0.4)" }}>Reach out — we respond within 24 hours.</div>
+                <div style={{ fontFamily:"'Space Mono',monospace", fontSize:14, fontWeight:700, color:"#f0ecff", marginBottom:3 }}>Can't find your answer?</div>
+                <div style={{ fontFamily:"'Space Mono',monospace", fontSize:13, color:"rgba(255,255,255,0.85)" }}>Reach out — we respond within 24 hours.</div>
               </div>
               <a href="mailto:support@omniusd.pro"
-                style={{ fontFamily:"'Space Mono',monospace", fontSize:10, fontWeight:700, letterSpacing:"0.08em", padding:"8px 16px", borderRadius:7, border:"1px solid rgba(255,107,255,0.3)", background:"rgba(255,107,255,0.1)", color:"#ff6bff", textDecoration:"none" }}>
+                style={{ fontFamily:"'Space Mono',monospace", fontSize:13, fontWeight:700, letterSpacing:"0.08em", padding:"8px 16px", borderRadius:7, border:"1px solid rgba(255,107,255,0.3)", background:"rgba(255,107,255,0.1)", color:"#ff6bff", textDecoration:"none" }}>
                 Contact Us →
               </a>
             </div>
@@ -4456,7 +4456,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
               ))}
             </div>
 
-            <div style={{ textAlign:"center", marginTop:24, fontFamily:"'Space Mono',monospace", fontSize:10, color:"rgba(255,255,255,0.25)" }}>
+            <div style={{ textAlign:"center", marginTop:24, fontFamily:"'Space Mono',monospace", fontSize:13, color:"rgba(255,255,255,0.38)" }}>
               Want to suggest a new instrument? <a href="mailto:support@omniusd.pro?subject=Instrument Request" style={{ color:"rgba(255,107,255,0.5)", textDecoration:"none" }}>Email us →</a>
             </div>
           </div>
@@ -4475,16 +4475,16 @@ Use ONLY these times. All earlier time references in this conversation are stale
 
               if (status.state === "closed") return (
                 <div style={{ padding:"14px 16px", background:"rgba(255,107,107,0.05)", border:"1px solid rgba(255,107,107,0.2)", borderLeft:"3px solid #ff6b6b", borderRadius:0, marginBottom:16 }}>
-                  <div style={{ fontSize:11, fontWeight:700, color:"#ff6b6b", marginBottom:4 }}>🔴 {status.reason}</div>
-                  <div style={{ fontSize:10, color:"rgba(255,255,255,0.45)", lineHeight:1.7 }}>{status.comeback}</div>
+                  <div style={{ fontSize:14, fontWeight:700, color:"#ff6b6b", marginBottom:4 }}>🔴 {status.reason}</div>
+                  <div style={{ fontSize:13, color:"rgba(255,255,255,0.75)", lineHeight:1.7 }}>{status.comeback}</div>
                 </div>
               );
 
               if (status.state === "wrong_session") return (
                 <div style={{ padding:"14px 16px", background:"rgba(255,107,107,0.05)", border:"1px solid rgba(255,107,107,0.2)", borderLeft:"3px solid #ff6b6b", borderRadius:0, marginBottom:16 }}>
-                  <div style={{ fontSize:11, fontWeight:700, color:"#ff6b6b", marginBottom:4 }}>🔴 {status.reason}</div>
-                  <div style={{ fontSize:10, color:"rgba(255,255,255,0.45)", lineHeight:1.7 }}>{status.comeback}</div>
-                  <div style={{ marginTop:8, fontSize:10, color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace", fontStyle:"italic" }}>
+                  <div style={{ fontSize:14, fontWeight:700, color:"#ff6b6b", marginBottom:4 }}>🔴 {status.reason}</div>
+                  <div style={{ fontSize:13, color:"rgba(255,255,255,0.75)", lineHeight:1.7 }}>{status.comeback}</div>
+                  <div style={{ marginTop:8, fontSize:13, color:"rgba(255,255,255,0.75)", fontFamily:"'Space Mono',monospace", fontStyle:"italic" }}>
                     "OmniUSD is precision built for the NY session — the highest conviction window in the market. We don't trade every session. We trade the RIGHT session."
                   </div>
                 </div>
@@ -4492,15 +4492,15 @@ Use ONLY these times. All earlier time references in this conversation are stale
 
               if (status.state === "prep") return (
                 <div style={{ padding:"14px 16px", background:"rgba(255,209,102,0.04)", border:"1px solid rgba(255,209,102,0.2)", borderLeft:"3px solid #ffd166", borderRadius:0, marginBottom:16 }}>
-                  <div style={{ fontSize:11, fontWeight:700, color:"#ffd166", marginBottom:4 }}>🟡 {status.reason}</div>
-                  <div style={{ fontSize:10, color:"rgba(255,255,255,0.5)", lineHeight:1.7 }}>{status.comeback}</div>
+                  <div style={{ fontSize:14, fontWeight:700, color:"#ffd166", marginBottom:4 }}>🟡 {status.reason}</div>
+                  <div style={{ fontSize:13, color:"rgba(255,255,255,0.8)", lineHeight:1.7 }}>{status.comeback}</div>
                 </div>
               );
 
               if (status.state === "london") return (
                 <div style={{ padding:"14px 16px", background:"rgba(0,229,255,0.04)", border:"1px solid rgba(0,229,255,0.2)", borderLeft:"3px solid #00e5ff", borderRadius:0, marginBottom:16 }}>
-                  <div style={{ fontSize:11, fontWeight:700, color:"#00e5ff", marginBottom:4 }}>🟡 {status.reason}</div>
-                  <div style={{ fontSize:10, color:"rgba(255,255,255,0.5)", lineHeight:1.7 }}>{status.comeback}</div>
+                  <div style={{ fontSize:14, fontWeight:700, color:"#00e5ff", marginBottom:4 }}>🟡 {status.reason}</div>
+                  <div style={{ fontSize:13, color:"rgba(255,255,255,0.8)", lineHeight:1.7 }}>{status.comeback}</div>
                 </div>
               );
 
@@ -4510,8 +4510,8 @@ Use ONLY these times. All earlier time references in this conversation are stale
             {/* Header */}
             <div style={{ marginBottom: 20 }}>
               <h1 style={{ fontSize: 26, fontWeight: 700, lineHeight: 1.2, marginBottom: 10, letterSpacing: "-0.01em" }}>Upload your charts.<br/>Start the session.</h1>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", lineHeight: 1.7 }}>
-                Select one instrument · Upload all 5 timeframes once · Every screenshot must show the <span style={{ color: "rgba(255,255,255,0.6)" }}>ticker</span> and <span style={{ color: "rgba(255,255,255,0.6)" }}>timeframe</span>
+              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", lineHeight: 1.7 }}>
+                Select one instrument · Upload all 5 timeframes once · Every screenshot must show the <span style={{ color: "rgba(255,255,255,0.75)" }}>ticker</span> and <span style={{ color: "rgba(255,255,255,0.75)" }}>timeframe</span>
               </div>
             </div>
 
@@ -4526,7 +4526,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
               return (
                 <div style={{ marginBottom: 24 }}>
                   <div style={{ marginBottom: 8, textAlign: "center" }}>
-                    <span style={{ fontFamily:"'Space Mono',monospace", fontSize:9, color: instrument ? "rgba(255,255,255,0.25)" : "rgba(255,107,255,0.7)", letterSpacing:"0.12em" }}>
+                    <span style={{ fontFamily:"'Space Mono',monospace", fontSize:13, color: instrument ? "rgba(255,255,255,0.38)" : "rgba(255,107,255,0.7)", letterSpacing:"0.12em" }}>
                       {instrument ? `INSTRUMENT: ${instrument}` : "SELECT YOUR INSTRUMENT"}
                     </span>
                   </div>
@@ -4551,7 +4551,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                       if (isLocked) {
                         borderColor = "rgba(255,255,255,0.05)";
                         bgColor = "rgba(255,255,255,0.02)";
-                        textColor = "rgba(255,255,255,0.2)";
+                        textColor = "rgba(255,255,255,0.80)";
                         cursor = "not-allowed";
                         label = `⊘ ${sym}`;
                         subLabel = null;
@@ -4602,7 +4602,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                             }
                           }}
                           title={isLocked ? `Upgrade to access ${sym}` : hasActivePlan ? `Resume ${sym} session` : inCooldown ? `${sym} available in ${cooldownLabel}` : sym}
-                          style={{ fontSize: 9, fontWeight: 700, padding: subLabel ? "5px 10px 7px" : "5px 10px", borderRadius: 6, border: `1px solid ${borderColor}`, background: bgColor, color: textColor, cursor, fontFamily: "inherit", opacity: isLocked ? 0.5 : 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2, boxShadow: isSelected && !hasActivePlan ? "0 0 12px rgba(255,107,255,0.15)" : "none", transition: "all 0.15s" }}>
+                          style={{ fontSize: 13, fontWeight: 700, padding: subLabel ? "5px 10px 7px" : "5px 10px", borderRadius: 6, border: `1px solid ${borderColor}`, background: bgColor, color: textColor, cursor, fontFamily: "inherit", opacity: isLocked ? 0.5 : 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2, boxShadow: isSelected && !hasActivePlan ? "0 0 12px rgba(255,107,255,0.15)" : "none", transition: "all 0.15s" }}>
                           <span>{label}</span>
                           {subLabel && <span style={{ fontSize: 7, fontWeight: 900, letterSpacing: "0.06em", opacity: 0.85 }}>{subLabel}</span>}
                         </button>
@@ -4611,7 +4611,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                   </div>
                   {/* Legend */}
                   <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 8, flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", fontFamily: "'Space Mono',monospace" }}>✦ Tap active plan to resume · 🔒 Cooldown resets in 2h</span>
+                    <span style={{ fontSize: 8, color: "rgba(255,255,255,0.80)", fontFamily: "'Space Mono',monospace" }}>✦ Tap active plan to resume · 🔒 Cooldown resets in 2h</span>
                   </div>
                 </div>
               );
@@ -4628,11 +4628,11 @@ Use ONLY these times. All earlier time references in this conversation are stale
               const londonCloseLocal = etToUserTime(4, 0, false);
               return (
                 <div style={{ marginBottom:16 }}>
-                  <div style={{ fontSize:9, color:"rgba(255,255,255,0.25)", fontFamily:"'Space Mono',monospace", letterSpacing:"0.12em", marginBottom:8, textAlign:"center" }}>SESSION WINDOW</div>
+                  <div style={{ fontSize:13, color:"rgba(255,255,255,0.38)", fontFamily:"'Space Mono',monospace", letterSpacing:"0.12em", marginBottom:8, textAlign:"center" }}>SESSION WINDOW</div>
                   <div style={{ display:"flex", gap:6, justifyContent:"center", flexWrap:"wrap" }}>
                     {/* NY Session — always available */}
                     <button onClick={() => setSelectedSession("NY")}
-                      style={{ fontSize:9, fontWeight:700, padding:"6px 14px", borderRadius:6, fontFamily:"inherit", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:2, minWidth:90,
+                      style={{ fontSize:13, fontWeight:700, padding:"6px 14px", borderRadius:6, fontFamily:"inherit", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:2, minWidth:90,
                         border: selectedSession==="NY" ? "1px solid rgba(127,255,107,0.5)" : "1px solid rgba(255,255,255,0.1)",
                         background: selectedSession==="NY" ? "rgba(127,255,107,0.12)" : "rgba(255,255,255,0.04)",
                         color: selectedSession==="NY" ? "#7fff6b" : "#8878aa" }}>
@@ -4643,17 +4643,17 @@ Use ONLY these times. All earlier time references in this conversation are stale
                     {/* London — only shown for BTCUSD/XAUUSD */}
                     {isLondonEligible && (
                       <button onClick={() => setSelectedSession("LONDON")}
-                        style={{ fontSize:9, fontWeight:700, padding:"6px 14px", borderRadius:6, fontFamily:"inherit", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:2, minWidth:90,
+                        style={{ fontSize:13, fontWeight:700, padding:"6px 14px", borderRadius:6, fontFamily:"inherit", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:2, minWidth:90,
                           border: selectedSession==="LONDON" ? "1px solid rgba(0,229,255,0.5)" : "1px solid rgba(255,255,255,0.08)",
                           background: selectedSession==="LONDON" ? "rgba(0,229,255,0.1)" : "rgba(255,255,255,0.03)",
-                          color: selectedSession==="LONDON" ? "#00e5ff" : "rgba(255,255,255,0.3)" }}>
+                          color: selectedSession==="LONDON" ? "#00e5ff" : "rgba(255,255,255,0.75)" }}>
                         <span>LONDON</span>
                         <span style={{ fontSize:7, opacity:0.7 }}>{londonOpenLocal}–{londonCloseLocal} {tzShort}</span>
                         <span style={{ fontSize:6, color:"#ffd166", fontWeight:900, letterSpacing:"0.08em" }}>BTC/XAU ONLY · MAX B+</span>
                       </button>
                     )}
                   </div>
-                  <div style={{ textAlign:"center", marginTop:8, fontSize:9, color:"rgba(255,255,255,0.2)", fontFamily:"'Space Mono',monospace", fontStyle:"italic" }}>
+                  <div style={{ textAlign:"center", marginTop:8, fontSize:13, color:"rgba(255,255,255,0.80)", fontFamily:"'Space Mono',monospace", fontStyle:"italic" }}>
                     Pre-market scout: 7:00–8:30 AM CT · Execution: 8:30–10:30 AM CT
                   </div>
                 </div>
@@ -4663,10 +4663,10 @@ Use ONLY these times. All earlier time references in this conversation are stale
             {/* Progress bar */}
             <div style={{ marginBottom: 20 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                <span style={{ fontSize: 9, fontWeight: 700, color: images.filter(Boolean).length === 5 ? "#7fff6b" : "#8878aa", letterSpacing: "0.1em" }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: images.filter(Boolean).length === 5 ? "#7fff6b" : "#8878aa", letterSpacing: "0.1em" }}>
                   {images.filter(Boolean).length === 5 ? "✓ ALL 5 CHARTS READY" : `${images.filter(Boolean).length} / 5 CHARTS UPLOADED`}
                 </span>
-                <span style={{ fontSize: 9, color: "#8878aa" }}>{instrument}</span>
+                <span style={{ fontSize: 13, color: "#8878aa" }}>{instrument}</span>
               </div>
               <div style={{ height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2, overflow: "hidden" }}>
                 <div style={{ height: "100%", width: `${(images.filter(Boolean).length / 5) * 100}%`, background: images.filter(Boolean).length === 5 ? "#7fff6b" : "linear-gradient(90deg,#ff6bff,#00e5ff)", borderRadius: 2, transition: "width 0.3s ease" }}/>
@@ -4676,8 +4676,8 @@ Use ONLY these times. All earlier time references in this conversation are stale
             {/* Re-upload warning — shows when user has already used their free re-upload */}
             {instrument && (uploadCounts[instrument] || 0) >= 1 && (
               <div style={{ padding:"12px 16px", background:"rgba(255,107,107,0.06)", border:"1px solid rgba(255,107,107,0.25)", borderLeft:"3px solid #ff6b6b", borderRadius:0, marginBottom:16 }}>
-                <div style={{ fontSize:11, fontWeight:700, color:"#ff6b6b", marginBottom:4 }}>⚠ LAST FREE RE-UPLOAD</div>
-                <div style={{ fontSize:10, color:"rgba(255,255,255,0.5)", lineHeight:1.7 }}>
+                <div style={{ fontSize:14, fontWeight:700, color:"#ff6b6b", marginBottom:4 }}>⚠ LAST FREE RE-UPLOAD</div>
+                <div style={{ fontSize:13, color:"rgba(255,255,255,0.8)", lineHeight:1.7 }}>
                   You've already re-uploaded {instrument} once this session. This is your final upload for this instrument — <strong style={{ color:"#ff6b6b" }}>cooldown will be fully active after this.</strong>
                 </div>
               </div>
@@ -4709,7 +4709,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                       : "linear-gradient(135deg,#ff6bff,#7b2fff)"
                       : "rgba(255,107,255,0.08)",
                     color: canGenerate ? (mkt.state === "prep" || mkt.state === "london" ? "#0f0c1a" : "#fff") : "rgba(255,107,255,0.45)",
-                    fontSize:12, fontWeight:700, letterSpacing:"0.12em", fontFamily:"inherit",
+                    fontSize:14, fontWeight:700, letterSpacing:"0.12em", fontFamily:"inherit",
                     cursor: canGenerate ? "pointer" : "default",
                     boxShadow: canGenerate ? "0 4px 32px rgba(255,107,255,0.35)" : "none",
                     transition:"all 0.2s" }}>
@@ -4718,13 +4718,13 @@ Use ONLY these times. All earlier time references in this conversation are stale
               );
             })()}
 
-            <div style={{ textAlign: "center", marginTop: 10, fontSize: 9, color: "#8878aa" }}>
+            <div style={{ textAlign: "center", marginTop: 10, fontSize: 13, color: "#8878aa" }}>
               Screenshots must show the instrument ticker and timeframe clearly
             </div>
 
             <div style={{ textAlign: "center", marginTop: 16 }}>
               <button onClick={onSignOut}
-                style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", letterSpacing: "0.06em" }}>
+                style={{ fontSize: 13, color: "rgba(255,255,255,0.80)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", letterSpacing: "0.06em" }}>
                 Sign out
               </button>
             </div>
@@ -4758,8 +4758,8 @@ Use ONLY these times. All earlier time references in this conversation are stale
             {/* Top bar */}
             <div style={{ padding: "10px 16px", borderBottom: "1px solid rgba(255,107,255,0.1)", display: "flex", alignItems: "center", gap: 8, background: "rgba(255,107,255,0.04)" }}>
               <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#ff6bff", animation: "pulse 1s ease infinite" }}/>
-              <span style={{ fontFamily: "'Space Mono',monospace", fontSize: 9, fontWeight: 700, letterSpacing: "0.16em", color: "#ff6bff" }}>OMNIUSD ANALYSIS ENGINE</span>
-              <span style={{ fontFamily: "'Space Mono',monospace", fontSize: 9, color: "#8878aa", marginLeft: "auto" }}>
+              <span style={{ fontFamily: "'Space Mono',monospace", fontSize: 13, fontWeight: 700, letterSpacing: "0.16em", color: "#ff6bff" }}>OMNIUSD ANALYSIS ENGINE</span>
+              <span style={{ fontFamily: "'Space Mono',monospace", fontSize: 13, color: "#8878aa", marginLeft: "auto" }}>
                 {instrument} <span style={{ animation: "blink 1s step-end infinite", color: "#ff6bff" }}>|</span>
               </span>
             </div>
@@ -4787,7 +4787,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                   animationDelay: item.delay,
                 }}>
                   <div style={{ width: 4, height: 4, borderRadius: "50%", background: item.color, flexShrink: 0 }}/>
-                  <span style={{ fontFamily: "'Space Mono',monospace", fontSize: 11, color: item.color, lineHeight: 1.5 }}>{item.msg}</span>
+                  <span style={{ fontFamily: "'Space Mono',monospace", fontSize: 13, color: item.color, lineHeight: 1.5 }}>{item.msg}</span>
                 </div>
               ))}
             </div>
@@ -4803,7 +4803,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
           </div>
 
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontFamily: "'Space Mono',monospace", fontSize: 10, color: "rgba(255,255,255,0.3)", lineHeight: 1.8 }}>
+            <div style={{ fontFamily: "'Space Mono',monospace", fontSize: 13, color: "rgba(255,255,255,0.75)", lineHeight: 1.8 }}>
               Do not close this tab — analysis in progress
             </div>
           </div>
@@ -4822,17 +4822,17 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 <div style={{ fontSize:52, marginBottom:14 }}>
                   {plan._limitType === "cap" ? "⏱" : plan._limitType === "cooldown" ? "🔒" : "🚫"}
                 </div>
-                <div style={{ fontFamily:"'Space Mono',monospace", fontSize:11, fontWeight:900, letterSpacing:"0.2em", color: plan._limitType ? "#ffd166" : "#ff6b6b", marginBottom:14 }}>
+                <div style={{ fontFamily:"'Space Mono',monospace", fontSize:14, fontWeight:900, letterSpacing:"0.2em", color: plan._limitType ? "#ffd166" : "#ff6b6b", marginBottom:14 }}>
                   {plan._limitType === "cap" ? "DAILY LIMIT REACHED" : plan._limitType === "cooldown" ? "COOLDOWN ACTIVE" : "UPLOAD REJECTED"}
                 </div>
-                <div style={{ fontSize:13, fontWeight:700, color:"#f0ecff", marginBottom:16, lineHeight:1.6 }}>{plan._reason}</div>
+                <div style={{ fontSize:14, fontWeight:700, color:"#f0ecff", marginBottom:16, lineHeight:1.6 }}>{plan._reason}</div>
               </div>
 
               {/* Show previous plan during cooldown */}
               {plan._limitType === "cooldown" && plan._prevPlan && (
                 <div style={{ marginBottom:20 }}>
-                  <div style={{ fontSize:9, fontWeight:900, letterSpacing:"0.14em", color:"#8878aa", marginBottom:12, fontFamily:"'Space Mono',monospace" }}>YOUR LAST {plan.instrument} ANALYSIS</div>
-                  <div style={{ padding:"12px 14px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:10, marginBottom:10, fontSize:11, color:"#ccc4e8", lineHeight:1.7 }}>
+                  <div style={{ fontSize:13, fontWeight:900, letterSpacing:"0.14em", color:"#8878aa", marginBottom:12, fontFamily:"'Space Mono',monospace" }}>YOUR LAST {plan.instrument} ANALYSIS</div>
+                  <div style={{ padding:"12px 14px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:10, marginBottom:10, fontSize:14, color:"#ccc4e8", lineHeight:1.7 }}>
                     {plan._prevPlan.summary}
                   </div>
                   <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:6, marginBottom:10 }}>
@@ -4843,11 +4843,11 @@ Use ONLY these times. All earlier time references in this conversation are stale
                     ].map(r => r.val && (
                       <div key={r.label} style={{ padding:"8px 10px", background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:7, opacity:0.75 }}>
                         <div style={{ fontSize:7, color:"#8878aa", letterSpacing:"0.1em", marginBottom:3 }}>{r.label}</div>
-                        <div style={{ fontSize:13, fontWeight:700, color:r.color, fontFamily:"monospace" }}>{r.val}</div>
+                        <div style={{ fontSize:14, fontWeight:700, color:r.color, fontFamily:"monospace" }}>{r.val}</div>
                       </div>
                     ))}
                   </div>
-                  <div style={{ fontSize:9, color:"rgba(255,255,255,0.25)", fontFamily:"'Space Mono',monospace", textAlign:"center" }}>
+                  <div style={{ fontSize:13, color:"rgba(255,255,255,0.38)", fontFamily:"'Space Mono',monospace", textAlign:"center" }}>
                     Grade: {plan._prevPlan.grade} · {plan._prevPlan.bias} · {plan._prevPlan.confidence_score}% confidence
                   </div>
                 </div>
@@ -4855,8 +4855,8 @@ Use ONLY these times. All earlier time references in this conversation are stale
 
               {!plan._limitType && (
                 <div style={{ padding:"12px 16px", background:"rgba(255,209,102,0.06)", border:"1px solid rgba(255,209,102,0.2)", borderRadius:8, marginBottom:24, textAlign:"left" }}>
-                  <div style={{ fontSize:9, fontWeight:900, letterSpacing:"0.16em", color:"#ffd166", marginBottom:8 }}>HOW TO FIX THIS</div>
-                  <div style={{ fontSize:11, color:"rgba(255,255,255,0.6)", lineHeight:1.8 }}>
+                  <div style={{ fontSize:13, fontWeight:900, letterSpacing:"0.16em", color:"#ffd166", marginBottom:8 }}>HOW TO FIX THIS</div>
+                  <div style={{ fontSize:14, color:"rgba(255,255,255,0.75)", lineHeight:1.8 }}>
                     1. Open your broker platform<br/>
                     2. Make sure the <span style={{ color:"#ffd166" }}>instrument ticker</span> is visible in the chart title<br/>
                     3. Make sure the <span style={{ color:"#ffd166" }}>timeframe</span> (D, 4H, 1H, 30M, 15M) is visible<br/>
@@ -4867,14 +4867,14 @@ Use ONLY these times. All earlier time references in this conversation are stale
               {plan._limitType === "cap" && (
                 <div style={{ marginBottom:20, textAlign:"center" }}>
                   <button onClick={() => window.open("https://omniusd.pro/#pricing","_blank")}
-                    style={{ fontFamily:"'Space Mono',monospace", fontSize:10, fontWeight:700, letterSpacing:"0.1em", padding:"10px 22px", borderRadius:8, border:"none", background:"linear-gradient(135deg,#ff6bff,#7b2fff)", color:"#fff", cursor:"pointer" }}>
+                    style={{ fontFamily:"'Space Mono',monospace", fontSize:13, fontWeight:700, letterSpacing:"0.1em", padding:"10px 22px", borderRadius:8, border:"none", background:"linear-gradient(135deg,#ff6bff,#7b2fff)", color:"#fff", cursor:"pointer" }}>
                     ↑ Upgrade for more analyses →
                   </button>
                 </div>
               )}
               <div style={{ textAlign:"center" }}>
                 <button onClick={() => { setPhase("upload"); setImages(Array(5).fill(null)); }}
-                  style={{ fontFamily:"inherit", fontSize:11, fontWeight:700, letterSpacing:"0.1em", padding:"10px 24px", borderRadius:8, border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.04)", color:"#8878aa", cursor:"pointer" }}>
+                  style={{ fontFamily:"inherit", fontSize:14, fontWeight:700, letterSpacing:"0.1em", padding:"10px 24px", borderRadius:8, border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.04)", color:"#8878aa", cursor:"pointer" }}>
                   ← Back
                 </button>
               </div>
@@ -4895,21 +4895,21 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 opacity: plan.grade === "A+" ? 1 : 0.75,
               }}>{plan.grade}</div>
               <div>
-                <div style={{ fontSize: plan.grade === "A+" ? 18 : 15, fontWeight: 700, color: plan.grade === "A+" ? "#f0ecff" : "rgba(255,255,255,0.6)", marginBottom: 4 }}>
+                <div style={{ fontSize: plan.grade === "A+" ? 18 : 15, fontWeight: 700, color: plan.grade === "A+" ? "#f0ecff" : "rgba(255,255,255,0.75)", marginBottom: 4 }}>
                   {plan.grade === "PASS" ? "No active setup"
                     : plan.grade === "SOFT PASS" ? "Pre-market — two scenarios to watch"
                     : plan.grade === "A+" ? `${plan.bias.charAt(0)+plan.bias.slice(1).toLowerCase()} setup — ready to execute`
                     : `${plan.bias.charAt(0)+plan.bias.slice(1).toLowerCase()} setup — not yet A+`}
                 </div>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", background: `${biasColor}14`, border: `1px solid ${biasColor}44`, borderRadius: 4, color: biasColor }}>{plan.bias}</span>
-                  <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", background: "rgba(255,209,102,0.1)", border: "1px solid rgba(255,209,102,0.3)", borderRadius: 4, color: "#ffd166" }}>{plan.confidence} CONFIDENCE · {plan.confidence_score}%</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, padding: "2px 8px", background: `${biasColor}14`, border: `1px solid ${biasColor}44`, borderRadius: 4, color: biasColor }}>{plan.bias}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, padding: "2px 8px", background: "rgba(255,209,102,0.1)", border: "1px solid rgba(255,209,102,0.3)", borderRadius: 4, color: "#ffd166" }}>{plan.confidence} CONFIDENCE · {plan.confidence_score}%</span>
                 </div>
               </div>
             </div>
 
             {/* Summary */}
-            <div style={{ padding: "14px 16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10, marginBottom: 16, fontSize: 12, color: "#ccc4e8", lineHeight: 1.7 }}>
+            <div style={{ padding: "14px 16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10, marginBottom: 16, fontSize: 13, color: "#ccc4e8", lineHeight: 1.7 }}>
               {plan.summary}
             </div>
 
@@ -4920,7 +4920,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
               const isWeekend = day === 0 || day === 6;
               if (!isWeekend) return null;
               return (
-                <div style={{ padding: "10px 14px", background: "rgba(0,229,255,0.05)", border: "1px solid rgba(0,229,255,0.2)", borderLeft: "3px solid #00e5ff", borderRadius: 0, marginBottom: 16, fontSize: 11, color: "#00e5ff", lineHeight: 1.7 }}>
+                <div style={{ padding: "10px 14px", background: "rgba(0,229,255,0.05)", border: "1px solid rgba(0,229,255,0.2)", borderLeft: "3px solid #00e5ff", borderRadius: 0, marginBottom: 16, fontSize: 13, color: "#00e5ff", lineHeight: 1.7 }}>
                   <span style={{ fontWeight: 700 }}>Weekend session:</span> {plan.session_note || (day===6 ? "Next valid BRC window — Asian session Sunday ~8:00 PM CT or NY session Monday ~8:30 AM CT." : "Asian session opens tonight. NY session Monday morning.")}
                 </div>
               );
@@ -4928,7 +4928,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
 
             {/* Friday note */}
             {plan.friday_note && (
-              <div style={{ padding: "10px 14px", background: "rgba(255,154,60,0.06)", border: "1px solid rgba(255,154,60,0.2)", borderRadius: 8, marginBottom: 16, fontSize: 11, color: "#ff9a3c", fontWeight: 600 }}>
+              <div style={{ padding: "10px 14px", background: "rgba(255,154,60,0.06)", border: "1px solid rgba(255,154,60,0.2)", borderRadius: 8, marginBottom: 16, fontSize: 13, color: "#ff9a3c", fontWeight: 600 }}>
                 ⚠ {plan.friday_note}
               </div>
             )}
@@ -4937,8 +4937,8 @@ Use ONLY these times. All earlier time references in this conversation are stale
               <>
                 {/* SOFT PASS header — always visible */}
                 <div style={{ padding:"12px 16px", background:"rgba(0,229,255,0.04)", border:"1px solid rgba(0,229,255,0.2)", borderLeft:"3px solid #00e5ff", borderRadius:0, marginBottom:16 }}>
-                  <div style={{ fontSize:9, fontWeight:900, letterSpacing:"0.16em", color:"#00e5ff", marginBottom:6, fontFamily:"'Space Mono',monospace" }}>👁 PRE-MARKET WATCH</div>
-                  <div style={{ fontSize:11, color:"rgba(255,255,255,0.5)", lineHeight:1.7 }}>
+                  <div style={{ fontSize:13, fontWeight:900, letterSpacing:"0.16em", color:"#00e5ff", marginBottom:6, fontFamily:"'Space Mono',monospace" }}>👁 PRE-MARKET WATCH</div>
+                  <div style={{ fontSize:14, color:"rgba(255,255,255,0.8)", lineHeight:1.7 }}>
                     No entry yet — structure is forming. Two scenarios to watch at session open. <strong style={{ color:"#f0ecff" }}>One activates. The other doesn't.</strong>
                   </div>
                 </div>
@@ -4967,7 +4967,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 {/* Nav buttons */}
                 <div style={{ display:"flex", gap:8, marginBottom:8 }}>
                   <button onClick={() => { setPhase("upload"); setImages(Array(5).fill(null)); }}
-                    style={{ flex:1, padding:"11px", borderRadius:8, border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.04)", color:"rgba(255,255,255,0.5)", fontSize:11, fontWeight:700, letterSpacing:"0.08em", fontFamily:"inherit", cursor:"pointer" }}>
+                    style={{ flex:1, padding:"11px", borderRadius:8, border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.04)", color:"rgba(255,255,255,0.8)", fontSize:14, fontWeight:700, letterSpacing:"0.08em", fontFamily:"inherit", cursor:"pointer" }}>
                     ↩ New Analysis
                   </button>
                 </div>
@@ -4997,8 +4997,8 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 {/* NON A+ — show "What this setup still needs" checklist */}
                 {plan.grade !== "A+" && (
                   <div style={{ padding: "14px 16px", background: "rgba(255,209,102,0.04)", border: "1px solid rgba(255,209,102,0.18)", borderLeft: "3px solid #ffd166", borderRadius: 0, marginBottom: 16 }}>
-                    <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: "0.16em", color: "#ffd166", marginBottom: 10, fontFamily: "'Space Mono',monospace" }}>⚠ WHAT THIS SETUP STILL NEEDS</div>
-                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", marginBottom: 10, lineHeight: 1.6 }}>
+                    <div style={{ fontSize: 13, fontWeight: 900, letterSpacing: "0.16em", color: "#ffd166", marginBottom: 10, fontFamily: "'Space Mono',monospace" }}>⚠ WHAT THIS SETUP STILL NEEDS</div>
+                    <div style={{ fontSize: 13, color: "rgba(255,255,255,0.75)", marginBottom: 10, lineHeight: 1.6 }}>
                       This is a <span style={{ color: gradeColor, fontWeight: 700 }}>{plan.grade} grade</span> setup — not yet A+. Do NOT execute until every condition below is met.
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -5012,12 +5012,12 @@ Use ONLY these times. All earlier time references in this conversation are stale
                           ]
                       ).map((cond, i) => (
                         <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-                          <span style={{ fontSize: 12, color: "#ffd166", flexShrink: 0, marginTop: 1 }}>□</span>
-                          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.65)", lineHeight: 1.6 }}>{cond}</span>
+                          <span style={{ fontSize: 13, color: "#ffd166", flexShrink: 0, marginTop: 1 }}>□</span>
+                          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.8)", lineHeight: 1.6 }}>{cond}</span>
                         </div>
                       ))}
                     </div>
-                    <div style={{ marginTop: 12, padding: "8px 12px", background: "rgba(255,255,255,0.03)", borderRadius: 6, fontSize: 10, color: "rgba(255,255,255,0.35)", fontFamily: "'Space Mono',monospace", lineHeight: 1.7 }}>
+                    <div style={{ marginTop: 12, padding: "8px 12px", background: "rgba(255,255,255,0.03)", borderRadius: 6, fontSize: 13, color: "rgba(255,255,255,0.8)", fontFamily: "'Space Mono',monospace", lineHeight: 1.7 }}>
                       When all boxes are checked — that is an A+ setup. Until then, this is for watching only.
                     </div>
                   </div>
@@ -5032,11 +5032,11 @@ Use ONLY these times. All earlier time references in this conversation are stale
                   </button>
                 ) : (
                   <button onClick={startLiveSession}
-                    style={{ width: "100%", padding: "15px", borderRadius: 10, border: plan.grade === "A+" ? "none" : "1px solid rgba(255,255,255,0.1)", background: plan.grade === "A+" ? "linear-gradient(135deg,#ff6bff,#7b2fff)" : "rgba(255,255,255,0.04)", color: plan.grade === "A+" ? "#fff" : "rgba(255,255,255,0.4)", fontSize: 13, fontWeight: 700, letterSpacing: "0.12em", fontFamily: "inherit", cursor: "pointer", boxShadow: plan.grade === "A+" ? "0 4px 28px rgba(255,107,255,0.25)" : "none" }}>
+                    style={{ width: "100%", padding: "15px", borderRadius: 10, border: plan.grade === "A+" ? "none" : "1px solid rgba(255,255,255,0.1)", background: plan.grade === "A+" ? "linear-gradient(135deg,#ff6bff,#7b2fff)" : "rgba(255,255,255,0.04)", color: plan.grade === "A+" ? "#fff" : "rgba(255,255,255,0.85)", fontSize: 13, fontWeight: 700, letterSpacing: "0.12em", fontFamily: "inherit", cursor: "pointer", boxShadow: plan.grade === "A+" ? "0 4px 28px rgba(255,107,255,0.25)" : "none" }}>
                     {plan.grade === "A+" ? "START LIVE SESSION →" : "MONITOR SETUP →"}
                   </button>
                 )}
-                <div style={{ textAlign: "center", marginTop: 8, fontSize: 9, color: "#8878aa" }}>
+                <div style={{ textAlign: "center", marginTop: 8, fontSize: 13, color: "#8878aa" }}>
                   {messages.length > 0 ? "Your live session is still active" : plan.grade === "A+" ? "Live session tracks tier confirmations in real time" : "Monitor until all A+ conditions are met"}
                 </div>
 
@@ -5046,7 +5046,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                   const alreadySaved = existing.some(e => e.instrument === plan.instrument && e.date === new Date().toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"}));
                   return (
                     <button onClick={() => { if (!alreadySaved) saveToHistory(plan); }}
-                      style={{ width:"100%", marginTop:8, padding:"10px", borderRadius:8, border:`1px solid ${alreadySaved ? "rgba(127,255,107,0.2)" : "rgba(127,255,107,0.35)"}`, background: alreadySaved ? "rgba(127,255,107,0.04)" : "rgba(127,255,107,0.08)", color: alreadySaved ? "rgba(127,255,107,0.45)" : "#7fff6b", fontSize:10, fontWeight:700, letterSpacing:"0.1em", fontFamily:"inherit", cursor: alreadySaved ? "default" : "pointer" }}>
+                      style={{ width:"100%", marginTop:8, padding:"10px", borderRadius:8, border:`1px solid ${alreadySaved ? "rgba(127,255,107,0.2)" : "rgba(127,255,107,0.35)"}`, background: alreadySaved ? "rgba(127,255,107,0.04)" : "rgba(127,255,107,0.08)", color: alreadySaved ? "rgba(127,255,107,0.45)" : "#7fff6b", fontSize:13, fontWeight:700, letterSpacing:"0.1em", fontFamily:"inherit", cursor: alreadySaved ? "default" : "pointer" }}>
                       {alreadySaved ? "✓ SAVED TO HISTORY" : "📋 SAVE TO HISTORY"}
                     </button>
                   );
@@ -5058,12 +5058,12 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 {/* ── NAV — New Analysis ── */}
                 <div style={{ display:"flex", gap:8, marginTop:12 }}>
                   <button onClick={() => { setPhase("upload"); setImages(Array(5).fill(null)); }}
-                    style={{ flex:1, padding:"11px", borderRadius:8, border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.04)", color:"rgba(255,255,255,0.4)", fontSize:11, fontWeight:700, letterSpacing:"0.08em", fontFamily:"inherit", cursor:"pointer" }}>
+                    style={{ flex:1, padding:"11px", borderRadius:8, border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.04)", color:"rgba(255,255,255,0.85)", fontSize:14, fontWeight:700, letterSpacing:"0.08em", fontFamily:"inherit", cursor:"pointer" }}>
                     ↩ New Analysis
                   </button>
                   {messages.length > 0 && (
                     <button onClick={() => setPhase("live")}
-                      style={{ flex:1, padding:"11px", borderRadius:8, border:"1px solid rgba(0,229,255,0.3)", background:"rgba(0,229,255,0.06)", color:"#00e5ff", fontSize:11, fontWeight:700, letterSpacing:"0.08em", fontFamily:"inherit", cursor:"pointer" }}>
+                      style={{ flex:1, padding:"11px", borderRadius:8, border:"1px solid rgba(0,229,255,0.3)", background:"rgba(0,229,255,0.06)", color:"#00e5ff", fontSize:14, fontWeight:700, letterSpacing:"0.08em", fontFamily:"inherit", cursor:"pointer" }}>
                       ← Live Session
                     </button>
                   )}
@@ -5081,18 +5081,18 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 if (isScoutMode) return (
                   <div style={{ animation:"fadein 0.4s ease both" }}>
                     <div style={{ padding:"16px 18px", background:"rgba(0,229,255,0.04)", border:"1px solid rgba(0,229,255,0.2)", borderLeft:"3px solid #00e5ff", borderRadius:0, marginBottom:16 }}>
-                      <div style={{ fontSize:9, fontWeight:900, letterSpacing:"0.2em", color:"#00e5ff", marginBottom:10, fontFamily:"'Space Mono',monospace" }}>🔭 SCOUT MODE — SESSION CLOSED</div>
-                      <div style={{ fontSize:12, color:"rgba(255,255,255,0.6)", lineHeight:1.9 }}>
+                      <div style={{ fontSize:13, fontWeight:900, letterSpacing:"0.2em", color:"#00e5ff", marginBottom:10, fontFamily:"'Space Mono',monospace" }}>🔭 SCOUT MODE — SESSION CLOSED</div>
+                      <div style={{ fontSize:14, color:"rgba(255,255,255,0.75)", lineHeight:1.9 }}>
                         {plan.pass_reason}
                       </div>
                     </div>
                     {/* Show key levels as watchlist */}
                     {plan.key_levels && plan.key_levels.length > 0 && (
                       <div style={{ marginBottom:16 }}>
-                        <div style={{ fontSize:9, fontWeight:900, letterSpacing:"0.14em", color:"#ffd166", marginBottom:10, fontFamily:"'Space Mono',monospace" }}>📋 WATCHLIST FOR NEXT SESSION</div>
+                        <div style={{ fontSize:13, fontWeight:900, letterSpacing:"0.14em", color:"#ffd166", marginBottom:10, fontFamily:"'Space Mono',monospace" }}>📋 WATCHLIST FOR NEXT SESSION</div>
                         <div style={{ display:"flex", flexDirection:"column", gap:0 }}>
                           {plan.key_levels.map((lvl,i) => (
-                            <div key={i} style={{ display:"flex", gap:10, padding:"8px 0", borderBottom:"1px solid rgba(255,255,255,0.04)", fontSize:11, color:"rgba(255,255,255,0.6)", lineHeight:1.6 }}>
+                            <div key={i} style={{ display:"flex", gap:10, padding:"8px 0", borderBottom:"1px solid rgba(255,255,255,0.04)", fontSize:14, color:"rgba(255,255,255,0.75)", lineHeight:1.6 }}>
                               <span style={{ color:"#ffd166", flexShrink:0 }}>→</span>
                               <span>{lvl}</span>
                             </div>
@@ -5114,7 +5114,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                         ))}
                       </div>
                     )}
-                    <div style={{ padding:"10px 14px", background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:8, fontSize:10, color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace", lineHeight:1.8 }}>
+                    <div style={{ padding:"10px 14px", background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:8, fontSize:13, color:"rgba(255,255,255,0.75)", fontFamily:"'Space Mono',monospace", lineHeight:1.8 }}>
                       These levels are for reference only. No execution until the next valid session window opens.
                     </div>
                     <FullAnalysisPanel plan={plan} />
@@ -5125,30 +5125,30 @@ Use ONLY these times. All earlier time references in this conversation are stale
                   <div style={{ animation: "fadein 0.4s ease both" }}>
                     {/* Header */}
                     <div style={{ textAlign:"center", marginBottom:24 }}>
-                      <div style={{ fontSize:11, fontWeight:900, letterSpacing:"0.2em", color:"#ff6b6b", marginBottom:12, fontFamily:"'Space Mono',monospace" }}>PASS — WEEKEND SESSION</div>
+                      <div style={{ fontSize:14, fontWeight:900, letterSpacing:"0.2em", color:"#ff6b6b", marginBottom:12, fontFamily:"'Space Mono',monospace" }}>PASS — WEEKEND SESSION</div>
                       <div style={{ fontSize:18, fontWeight:800, color:"#f0ecff", lineHeight:1.3, fontFamily:"'Syne',sans-serif" }}>
                         Our job is to protect you<br/>from bad trades — not just good ones.
                       </div>
                     </div>
 
                     {/* Why */}
-                    <div style={{ padding:"16px 18px", background:"rgba(255,107,107,0.04)", border:"1px solid rgba(255,107,107,0.15)", borderLeft:"3px solid #ff6b6b", borderRadius:0, marginBottom:14, fontFamily:"'Space Mono',monospace", fontSize:11, color:"rgba(255,255,255,0.55)", lineHeight:1.9 }}>
+                    <div style={{ padding:"16px 18px", background:"rgba(255,107,107,0.04)", border:"1px solid rgba(255,107,107,0.15)", borderLeft:"3px solid #ff6b6b", borderRadius:0, marginBottom:14, fontFamily:"'Space Mono',monospace", fontSize:14, color:"rgba(255,255,255,0.85)", lineHeight:1.9 }}>
                       Weekend crypto volume is thin, choppy, and driven by retail noise — not institutional structure. A setup that looks clean right now can completely reset before Monday's open. This is not a valid BRC execution window.
                     </div>
 
                     {/* FOMO section */}
                     <div style={{ padding:"16px 18px", background:"rgba(255,209,102,0.04)", border:"1px solid rgba(255,209,102,0.15)", borderLeft:"3px solid #ffd166", borderRadius:0, marginBottom:14 }}>
-                      <div style={{ fontFamily:"'Space Mono',monospace", fontSize:9, fontWeight:900, letterSpacing:"0.16em", color:"#ffd166", marginBottom:10 }}>ON FOMO</div>
-                      <div style={{ fontFamily:"'Space Mono',monospace", fontSize:11, color:"rgba(255,255,255,0.55)", lineHeight:1.9 }}>
+                      <div style={{ fontFamily:"'Space Mono',monospace", fontSize:13, fontWeight:900, letterSpacing:"0.16em", color:"#ffd166", marginBottom:10 }}>ON FOMO</div>
+                      <div style={{ fontFamily:"'Space Mono',monospace", fontSize:14, color:"rgba(255,255,255,0.85)", lineHeight:1.9 }}>
                         The feeling that you are missing something right now is one of the most expensive emotions in trading. <span style={{ color:"#ffd166", fontWeight:700 }}>The market will always be there. Monday will always come.</span> The same structure you are looking at tonight will either still be valid when a real session opens — or it will have reset and protected you from a bad trade.
                       </div>
-                      <div style={{ fontFamily:"'Space Mono',monospace", fontSize:11, color:"rgba(255,255,255,0.7)", lineHeight:1.9, marginTop:10, fontWeight:700 }}>
+                      <div style={{ fontFamily:"'Space Mono',monospace", fontSize:14, color:"rgba(255,255,255,0.85)", lineHeight:1.9, marginTop:10, fontWeight:700 }}>
                         Either way, you win by waiting.
                       </div>
                     </div>
 
                     {/* The hard truth */}
-                    <div style={{ padding:"14px 18px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:8, marginBottom:20, fontFamily:"'Space Mono',monospace", fontSize:11, color:"rgba(255,255,255,0.45)", lineHeight:1.9, fontStyle:"italic" }}>
+                    <div style={{ padding:"14px 18px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:8, marginBottom:20, fontFamily:"'Space Mono',monospace", fontSize:14, color:"rgba(255,255,255,0.75)", lineHeight:1.9, fontStyle:"italic" }}>
                       The traders who blow accounts do not lose on A+ setups. They lose on Saturday nights when they convinced themselves the setup was too good to wait.
                     </div>
 
@@ -5160,13 +5160,13 @@ Use ONLY these times. All earlier time references in this conversation are stale
                       ].map(r=>(
                         <div key={r.label} style={{ padding:"12px 14px", background:`${r.color}08`, border:`1px solid ${r.color}22`, borderRadius:8, textAlign:"center" }}>
                           <div style={{ fontFamily:"'Space Mono',monospace", fontSize:8, fontWeight:900, letterSpacing:"0.14em", color:r.color, marginBottom:6 }}>{r.label}</div>
-                          <div style={{ fontFamily:"'Space Mono',monospace", fontSize:11, fontWeight:700, color:"#f0ecff" }}>{r.time}</div>
+                          <div style={{ fontFamily:"'Space Mono',monospace", fontSize:14, fontWeight:700, color:"#f0ecff" }}>{r.time}</div>
                         </div>
                       ))}
                     </div>
 
                     <button onClick={() => { setPhase("upload"); setImages(Array(5).fill(null)); }}
-                      style={{ width:"100%", fontSize:10, fontWeight:700, letterSpacing:"0.1em", padding:"11px", borderRadius:8, border:"1px solid rgba(255,255,255,0.08)", background:"rgba(255,255,255,0.03)", color:"#8878aa", cursor:"pointer", fontFamily:"inherit" }}>
+                      style={{ width:"100%", fontSize:13, fontWeight:700, letterSpacing:"0.1em", padding:"11px", borderRadius:8, border:"1px solid rgba(255,255,255,0.08)", background:"rgba(255,255,255,0.03)", color:"#8878aa", cursor:"pointer", fontFamily:"inherit" }}>
                       ← New Analysis
                     </button>
                   </div>
@@ -5175,10 +5175,10 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 // Standard weekday PASS
                 return (
                   <div style={{ padding:"16px", background:"rgba(255,107,107,0.06)", border:"1px solid rgba(255,107,107,0.2)", borderRadius:10, textAlign:"center" }}>
-                    <div style={{ fontSize:12, color:"#ff8080", fontWeight:700, marginBottom:6 }}>No valid entry — PASS</div>
-                    <div style={{ fontSize:11, color:"#8878aa", marginBottom:14 }}>{plan.pass_reason || "No A+ BRC sequence formed. Wait for fresh structure."}</div>
+                    <div style={{ fontSize:14, color:"#ff8080", fontWeight:700, marginBottom:6 }}>No valid entry — PASS</div>
+                    <div style={{ fontSize:14, color:"#8878aa", marginBottom:14 }}>{plan.pass_reason || "No A+ BRC sequence formed. Wait for fresh structure."}</div>
                     <button onClick={() => { setPhase("upload"); setImages(Array(5).fill(null)); }}
-                      style={{ fontSize:10, fontWeight:700, letterSpacing:"0.08em", padding:"8px 20px", borderRadius:8, border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.04)", color:"#8878aa", cursor:"pointer", fontFamily:"inherit" }}>
+                      style={{ fontSize:13, fontWeight:700, letterSpacing:"0.08em", padding:"8px 20px", borderRadius:8, border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.04)", color:"#8878aa", cursor:"pointer", fontFamily:"inherit" }}>
                       ← New Analysis
                     </button>
                     <FullAnalysisPanel plan={plan} />
@@ -5204,7 +5204,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
             ].map((t, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
                 <div style={{ width: 6, height: 6, borderRadius: "50%", background: t.done ? "#7fff6b" : t.active ? "#00e5ff" : "rgba(255,255,255,0.15)", boxShadow: t.active ? "0 0 6px rgba(0,229,255,0.5)" : "none", animation: t.active ? "pulse 1.5s ease infinite" : "none", transition: "all 0.4s" }}/>
-                <span style={{ fontSize: 9, fontWeight: 700, margin: "0 5px", color: t.done ? "#7fff6b" : t.active ? "#00e5ff" : "rgba(255,255,255,0.2)", whiteSpace: "nowrap" }}>{t.label}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, margin: "0 5px", color: t.done ? "#7fff6b" : t.active ? "#00e5ff" : "rgba(255,255,255,0.80)", whiteSpace: "nowrap" }}>{t.label}</span>
                 {i < 3 && <div style={{ width: 14, height: 1, background: t.done ? "#7fff6b" : "rgba(255,255,255,0.08)", marginRight: 3 }}/>}
               </div>
             ))}
@@ -5229,13 +5229,13 @@ Use ONLY these times. All earlier time references in this conversation are stale
                   {/* Status bar */}
                   <div style={{ padding: "10px 14px", background: tier2 ? "rgba(127,255,107,0.07)" : tier1 ? "rgba(255,209,102,0.07)" : "rgba(0,229,255,0.06)", border: `1px solid ${tier2 ? "rgba(127,255,107,0.3)" : tier1 ? "rgba(255,209,102,0.3)" : "rgba(0,229,255,0.2)"}`, borderLeft: `3px solid ${tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00e5ff"}`, marginBottom: 10 }}>
                     <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.14em", color: tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00e5ff", marginBottom: 4 }}>LIVE STATUS</div>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: "#f0ecff", lineHeight: 1.5 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#f0ecff", lineHeight: 1.5 }}>
                       {tier2 ? `Limit order ready at ${plan.retest_zone}.`
                         : tier1 ? `Tier 1 confirmed. Watching for Tier 2.`
                         : `Watching for 30M close ${plan.bias === "SHORT" ? "below" : "above"} ${plan.trigger_level}.`}
                     </div>
-                    {!tier1 && <div style={{ fontSize: 10, color: "#8878aa", marginTop: 3 }}>No entry until candle fully closes.</div>}
-                    {tier1 && !tier2 && <div style={{ fontSize: 10, color: "rgba(255,209,102,0.6)", marginTop: 3 }}>Do not enter yet. Wait for Tier 2.</div>}
+                    {!tier1 && <div style={{ fontSize: 13, color: "#8878aa", marginTop: 3 }}>No entry until candle fully closes.</div>}
+                    {tier1 && !tier2 && <div style={{ fontSize: 13, color: "rgba(255,209,102,0.6)", marginTop: 3 }}>Do not enter yet. Wait for Tier 2.</div>}
                   </div>
                   {/* Mobile: horizontal scrollable key levels */}
                   <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4 }}>
@@ -5247,8 +5247,8 @@ Use ONLY these times. All earlier time references in this conversation are stale
                       { l: "Runner",  v: plan.runner,        c: "#00e5ff" },
                     ].map((r, i) => (
                       <div key={i} style={{ flexShrink: 0, padding: "7px 11px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8, textAlign: "center", minWidth: 70 }}>
-                        <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", letterSpacing: "0.1em", marginBottom: 4 }}>{r.l}</div>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: r.c, fontFamily: "monospace" }}>{r.v}</div>
+                        <div style={{ fontSize: 8, color: "rgba(255,255,255,0.75)", letterSpacing: "0.1em", marginBottom: 4 }}>{r.l}</div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: r.c, fontFamily: "monospace" }}>{r.v}</div>
                       </div>
                     ))}
                   </div>
@@ -5260,29 +5260,29 @@ Use ONLY these times. All earlier time references in this conversation are stale
                     <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
                         <span style={{ fontSize: 8, color: "#8878aa", letterSpacing: "0.1em" }}>TIME</span>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: "#00e5ff", fontFamily: "monospace" }}>{ctTime} CT</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: "#00e5ff", fontFamily: "monospace" }}>{ctTime} CT</span>
                       </div>
                       {!windowClosed && (
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
                           <span style={{ fontSize: 8, color: "#8878aa", letterSpacing: "0.1em" }}>NEXT CLOSE</span>
-                          <span style={{ fontSize: 11, fontWeight: 700, color: "#ffd166", fontFamily: "monospace" }}>{nextClose} CT</span>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: "#ffd166", fontFamily: "monospace" }}>{nextClose} CT</span>
                         </div>
                       )}
-                      {windowClosed && <div style={{ fontSize: 9, color: "#ff6b6b", fontWeight: 700 }}>Window closed</div>}
+                      {windowClosed && <div style={{ fontSize: 13, color: "#ff6b6b", fontWeight: 700 }}>Window closed</div>}
                     </div>
                   </div>
                   <div style={{ margin: "10px 12px 0", padding: "10px 12px", background: tier2 ? "rgba(127,255,107,0.06)" : tier1 ? "rgba(255,209,102,0.06)" : "rgba(0,229,255,0.05)", border: `1px solid ${tier2 ? "rgba(127,255,107,0.25)" : tier1 ? "rgba(255,209,102,0.25)" : "rgba(0,229,255,0.18)"}`, borderLeft: `3px solid ${tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00e5ff"}`, borderRadius: 0 }}>
                     <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.14em", color: tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00e5ff", marginBottom: 5 }}>LIVE STATUS</div>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: "#f0ecff", lineHeight: 1.5 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#f0ecff", lineHeight: 1.5 }}>
                       {tier2 ? `Limit order ready at ${plan.retest_zone}.`
                         : tier1 ? `Tier 1 confirmed. Watching for Tier 2.`
                         : `Watching for 30M close ${plan.bias === "SHORT" ? "below" : "above"} ${plan.trigger_level}.`}
                     </div>
-                    {!tier1 && <div style={{ fontSize: 9, color: "#8878aa", marginTop: 4, lineHeight: 1.5 }}>No entry until candle fully closes.</div>}
-                    {tier1 && !tier2 && <div style={{ fontSize: 9, color: "rgba(255,209,102,0.6)", marginTop: 4, lineHeight: 1.5 }}>Do not enter yet. Wait for Tier 2.</div>}
+                    {!tier1 && <div style={{ fontSize: 13, color: "#8878aa", marginTop: 4, lineHeight: 1.5 }}>No entry until candle fully closes.</div>}
+                    {tier1 && !tier2 && <div style={{ fontSize: 13, color: "rgba(255,209,102,0.6)", marginTop: 4, lineHeight: 1.5 }}>Do not enter yet. Wait for Tier 2.</div>}
                   </div>
                   <div style={{ padding: "14px 12px 0" }}>
-                    <div style={{ fontSize: 8, color: "rgba(255,255,255,0.25)", letterSpacing: "0.14em", marginBottom: 10 }}>LOCKED PLAN</div>
+                    <div style={{ fontSize: 8, color: "rgba(255,255,255,0.38)", letterSpacing: "0.14em", marginBottom: 10 }}>LOCKED PLAN</div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
                       {[
                         { l: "Trigger", v: plan.trigger_level, c: plan.bias === "SHORT" ? "#ff6b6b" : "#7fff6b" },
@@ -5293,17 +5293,17 @@ Use ONLY these times. All earlier time references in this conversation are stale
                         { l: "Runner",  v: plan.runner,        c: "#00e5ff" },
                       ].map((r, i) => (
                         <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: i < 5 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
-                          <span style={{ fontSize: 9, color: "rgba(255,255,255,0.35)" }}>{r.l}</span>
-                          <span style={{ fontSize: 11, fontWeight: 700, color: r.c, fontFamily: "monospace" }}>{r.v}</span>
+                          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.8)" }}>{r.l}</span>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: r.c, fontFamily: "monospace" }}>{r.v}</span>
                         </div>
                       ))}
                     </div>
                   </div>
                   <div style={{ padding: "14px 12px", marginTop: "auto", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
                     <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                      <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "rgba(255,107,107,0.1)", border: "1px solid rgba(255,107,107,0.25)", color: "#ff6b6b" }}>{plan.instrument}</span>
-                      <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "rgba(255,107,107,0.1)", border: "1px solid rgba(255,107,107,0.25)", color: "#ff6b6b" }}>{plan.bias}</span>
-                      <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "rgba(127,255,107,0.08)", border: "1px solid rgba(127,255,107,0.2)", color: "#7fff6b" }}>{plan.grade}</span>
+                      <span style={{ fontSize: 13, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "rgba(255,107,107,0.1)", border: "1px solid rgba(255,107,107,0.25)", color: "#ff6b6b" }}>{plan.instrument}</span>
+                      <span style={{ fontSize: 13, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "rgba(255,107,107,0.1)", border: "1px solid rgba(255,107,107,0.25)", color: "#ff6b6b" }}>{plan.bias}</span>
+                      <span style={{ fontSize: 13, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "rgba(127,255,107,0.08)", border: "1px solid rgba(127,255,107,0.2)", color: "#7fff6b" }}>{plan.grade}</span>
                     </div>
                   </div>
                 </>
@@ -5342,9 +5342,9 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 return (
                   <div style={{ padding:"5px 16px 6px", display:"flex", alignItems:"center", gap:10, borderTop:"1px solid rgba(255,255,255,0.04)", background:"rgba(0,229,255,0.025)" }}>
                     <span style={{ width:6, height:6, borderRadius:"50%", background:"#00e5ff", display:"inline-block", animation:"pulse 1.5s ease infinite", flexShrink:0 }}/>
-                    <span style={{ fontSize:9, fontWeight:700, color:"#00e5ff", fontFamily:"'Space Mono',monospace" }}>{ctTime} {tzShort}</span>
-                    <span style={{ fontSize:9, color:"rgba(255,255,255,0.2)" }}>|</span>
-                    <span style={{ fontSize:9, color:"rgba(255,255,255,0.45)", fontFamily:"'Space Mono',monospace" }}>
+                    <span style={{ fontSize:13, fontWeight:700, color:"#00e5ff", fontFamily:"'Space Mono',monospace" }}>{ctTime} {tzShort}</span>
+                    <span style={{ fontSize:13, color:"rgba(255,255,255,0.80)" }}>|</span>
+                    <span style={{ fontSize:13, color:"rgba(255,255,255,0.75)", fontFamily:"'Space Mono',monospace" }}>
                       Next 30M close: <strong style={{ color:"#ffd166" }}>{nextClose}</strong> (in {minsLeft}m)
                     </span>
                   </div>
@@ -5354,7 +5354,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
               {/* Input */}
               <div style={{ padding: "8px 16px 14px", borderTop: "1px solid rgba(255,255,255,0.06)", display: "flex", gap: 8, flexShrink: 0 }}>
                 {messages.filter(m=>m.role==="user").length >= 30 ? (
-                  <div style={{ flex:1, padding:"9px 13px", fontFamily:"'Space Mono',monospace", fontSize:10, color:"rgba(255,107,107,0.7)", background:"rgba(255,107,107,0.05)", border:"1px solid rgba(255,107,107,0.15)", borderRadius:8 }}>
+                  <div style={{ flex:1, padding:"9px 13px", fontFamily:"'Space Mono',monospace", fontSize:13, color:"rgba(255,107,107,0.7)", background:"rgba(255,107,107,0.05)", border:"1px solid rgba(255,107,107,0.15)", borderRadius:8 }}>
                     Session limit reached (30 messages). Start a new analysis to continue.
                   </div>
                 ) : (
@@ -5363,7 +5363,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                       placeholder="Type what the candle closed at..."
                       style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 8, padding: "10px 14px", fontSize: isMobile ? 13 : 12, color: "#f0ecff", fontFamily: "inherit", outline: "none" }}/>
                     <button onClick={sendMessage} disabled={loading || !input.trim()}
-                      style={{ padding: "9px 18px", borderRadius: 8, border: "none", background: input.trim() && !loading ? "linear-gradient(135deg,#ff6bff,#7b2fff)" : "rgba(255,255,255,0.05)", color: input.trim() && !loading ? "#fff" : "#8878aa", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", cursor: input.trim() && !loading ? "pointer" : "not-allowed", fontFamily: "inherit", transition: "all 0.2s" }}>
+                      style={{ padding: "9px 18px", borderRadius: 8, border: "none", background: input.trim() && !loading ? "linear-gradient(135deg,#ff6bff,#7b2fff)" : "rgba(255,255,255,0.05)", color: input.trim() && !loading ? "#fff" : "#8878aa", fontSize: 13, fontWeight: 700, letterSpacing: "0.08em", cursor: input.trim() && !loading ? "pointer" : "not-allowed", fontFamily: "inherit", transition: "all 0.2s" }}>
                       SEND →
                     </button>
                   </>
@@ -5389,7 +5389,7 @@ function CopyPrice({val,big,color}){
   return(
     <button onClick={doCopy} title="Tap to copy" style={{background:"none",border:"none",padding:0,cursor:"pointer",display:"inline-flex",alignItems:"center",gap:5,fontFamily:"inherit"}}>
       <span style={{fontSize:big?26:20,fontWeight:900,color:c}}>{val}</span>
-      <span style={{fontSize:9,color:copied?"#7fff6b":"var(--t-muted5)",letterSpacing:"0.08em",transition:"color 0.3s"}}>{copied?"✓":"⊕"}</span>
+      <span style={{fontSize:13,color:copied?"#7fff6b":"var(--t-muted5)",letterSpacing:"0.08em",transition:"color 0.3s"}}>{copied?"✓":"⊕"}</span>
     </button>
   );
 }
@@ -5515,21 +5515,21 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
           <div style={{display:"flex",alignItems:"center",gap:10,padding:"8px 18px",
             background:gc+"20",border:`2px solid ${gc}70`,borderRadius:10,
             boxShadow:`0 0 16px ${gc}22`}}>
-            <span style={{fontSize:10,fontWeight:900,letterSpacing:"0.16em",color:gc,opacity:0.8}}>GRADE</span>
+            <span style={{fontSize:13,fontWeight:900,letterSpacing:"0.16em",color:gc,opacity:0.8}}>GRADE</span>
             <span style={{fontSize:30,fontWeight:900,color:gc,lineHeight:1,letterSpacing:"-0.02em"}}>{grade}</span>
           </div>
           {/* BIAS — secondary */}
           <div style={{display:"flex",alignItems:"center",gap:7,padding:"6px 14px",background:biasColor+"14",border:`1px solid ${biasColor}40`,borderRadius:8}}>
-            <span style={{fontSize:10,fontWeight:900,letterSpacing:"0.12em",color:biasColor,opacity:0.8}}>BIAS</span>
+            <span style={{fontSize:13,fontWeight:900,letterSpacing:"0.12em",color:biasColor,opacity:0.8}}>BIAS</span>
             <span style={{fontSize:18,fontWeight:900,color:biasColor}}>{bias}</span>
           </div>
           {/* INSTRUMENT — tertiary */}
           <div style={{display:"flex",alignItems:"center",gap:7,padding:"6px 14px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8}}>
-            <span style={{fontSize:10,fontWeight:700,letterSpacing:"0.12em",color:"var(--t-muted4)"}}>INSTRUMENT</span>
+            <span style={{fontSize:13,fontWeight:700,letterSpacing:"0.12em",color:"var(--t-muted4)"}}>INSTRUMENT</span>
             <span style={{fontSize:14,fontWeight:900,color:"var(--t-muted)"}}>{instrument}</span>
           </div>
           {pd.alignment&&(
-            <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.08em",color:"var(--t-muted4)",padding:"6px 12px",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:8}}>
+            <div style={{fontSize:13,fontWeight:700,letterSpacing:"0.08em",color:"var(--t-muted4)",padding:"6px 12px",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:8}}>
               {pd.alignment}
             </div>
           )}
@@ -5539,7 +5539,7 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
 
       {/* Primary decision card */}
       <div style={{background:isSkip?"rgba(255,255,255,0.02)":"rgba(255,255,255,0.04)",border:`1px solid ${isSkip?"rgba(255,107,107,0.15)":gc+"40"}`,borderRadius:16,padding:"18px 22px",marginBottom:isSkip?10:20,opacity:isSkip?0.85:1}}>
-        <p style={{fontSize:10,fontWeight:900,letterSpacing:"0.2em",color:"var(--t-muted4)",margin:"0 0 10px"}}>{isSkip?"SESSION VERDICT":"PRIMARY DECISION"}</p>
+        <p style={{fontSize:13,fontWeight:900,letterSpacing:"0.2em",color:"var(--t-muted4)",margin:"0 0 10px"}}>{isSkip?"SESSION VERDICT":"PRIMARY DECISION"}</p>
         <div style={{display:"flex",alignItems:"flex-start",gap:16,flexWrap:"wrap"}}>
           <div style={{flex:1,minWidth:200}}>
             <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap",marginBottom:6}}>
@@ -5554,7 +5554,7 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
               </span>
               {/* Bias pill — hide on PASS */}
               {!isSkip&&(
-                <span style={{fontSize:13,fontWeight:900,color:biasColor,
+                <span style={{fontSize:14,fontWeight:900,color:biasColor,
                   background:biasColor+"18",border:`1px solid ${biasColor}40`,
                   padding:"3px 10px",borderRadius:6,letterSpacing:"0.06em"}}>
                   {bias}
@@ -5565,7 +5565,7 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
               <p style={{fontSize:14,color:"var(--t-muted)",margin:0,lineHeight:1.65,fontWeight:500}}>{pd.confidence_reason}</p>
             )}
             {pd.confidence_reason&&isSkip&&(
-              <p style={{fontSize:12,color:"var(--t-muted3)",margin:0,lineHeight:1.6,fontWeight:400}}>{pd.confidence_reason}</p>
+              <p style={{fontSize:14,color:"var(--t-muted3)",margin:0,lineHeight:1.6,fontWeight:400}}>{pd.confidence_reason}</p>
             )}
           </div>
           {/* Only show confidence/BRC phase chips for active setups */}
@@ -5574,20 +5574,20 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
             <div style={{display:"flex",gap:10,flexWrap:"wrap",flexShrink:0}}>
               {pd.confidence&&(
                 <div style={{textAlign:"center",padding:"8px 14px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:8}}>
-                  <div style={{fontSize:10,color:"var(--t-muted4)",letterSpacing:"0.1em",marginBottom:3}}>ANALYSIS CONFIDENCE</div>
+                  <div style={{fontSize:13,color:"var(--t-muted4)",letterSpacing:"0.1em",marginBottom:3}}>ANALYSIS CONFIDENCE</div>
                   <div style={{fontSize:17,fontWeight:900,color:"#ffd166"}}>{pd.confidence}</div>
-                  <div style={{fontSize:9,color:"var(--t-muted4)",marginTop:3,fontWeight:500}}>how clear the read is</div>
+                  <div style={{fontSize:13,color:"var(--t-muted4)",marginTop:3,fontWeight:500}}>how clear the read is</div>
                 </div>
               )}
               {pd.icc_phase&&(
                 <div style={{textAlign:"center",padding:"8px 14px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:8}}>
-                  <div style={{fontSize:10,color:"var(--t-muted4)",letterSpacing:"0.1em",marginBottom:3}}>BRC PHASE</div>
-                  <div style={{fontSize:13,fontWeight:900,color:"var(--t-text)"}}>{result.icc_phase||"—"}</div>
+                  <div style={{fontSize:13,color:"var(--t-muted4)",letterSpacing:"0.1em",marginBottom:3}}>BRC PHASE</div>
+                  <div style={{fontSize:14,fontWeight:900,color:"var(--t-text)"}}>{result.icc_phase||"—"}</div>
                 </div>
               )}
             </div>
             {pd.confidence&&(
-              <div style={{fontSize:12,color:"var(--t-muted3)",marginTop:10,fontWeight:500,lineHeight:1.6,maxWidth:420}}>
+              <div style={{fontSize:14,color:"var(--t-muted3)",marginTop:10,fontWeight:500,lineHeight:1.6,maxWidth:420}}>
                 <span style={{color:"var(--t-text)",fontWeight:700}}>Grade</span> = setup quality based on timeframe alignment.{" "}
                 <span style={{color:"var(--t-text)",fontWeight:700}}>Confidence</span> = how clearly the charts support this read.
               </div>
@@ -5641,7 +5641,7 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
             borderLeft:`3px solid ${activeCfg.color}`,
             borderRadius:8}}>
             {activeCfg.dot&&<span style={{width:7,height:7,borderRadius:"50%",flexShrink:0,background:activeCfg.color,animation:"icc-pulse 1.5s ease infinite"}}/>}
-            <span style={{fontSize:12,fontWeight:700,color:activeCfg.color,letterSpacing:"0.02em"}}>
+            <span style={{fontSize:14,fontWeight:700,color:activeCfg.color,letterSpacing:"0.02em"}}>
               <span style={{color:"var(--t-muted4)",fontWeight:500,marginRight:6}}>Current state:</span>
               {activeCfg.label}
             </span>
@@ -5654,15 +5654,15 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
 
           {/* ── SECTION 1: WHY IT'S A PASS ── */}
           <div style={{marginBottom:18}}>
-            <div style={{fontSize:9,fontWeight:900,letterSpacing:"0.18em",color:"#ff6b6b",marginBottom:10}}>WHY THIS IS A PASS</div>
+            <div style={{fontSize:13,fontWeight:900,letterSpacing:"0.18em",color:"#ff6b6b",marginBottom:10}}>WHY THIS IS A PASS</div>
             <div style={{display:"flex",flexDirection:"column",gap:7}}>
               {[
                 pd.confidence_reason||"No valid BRC sequence has formed during the NY execution window.",
                 "Timeframe alignment alone is not a trade signal — all three phases (Break · Retest · Continuation) must complete.",
               ].map((text,i)=>(
                 <div key={i} style={{display:"flex",gap:10,alignItems:"flex-start"}}>
-                  <span style={{fontSize:11,color:"#ff6b6b",flexShrink:0,marginTop:2,fontWeight:900}}>—</span>
-                  <span style={{fontSize:13,color:"var(--t-muted2)",fontWeight:500,lineHeight:1.6}}>{text}</span>
+                  <span style={{fontSize:14,color:"#ff6b6b",flexShrink:0,marginTop:2,fontWeight:900}}>—</span>
+                  <span style={{fontSize:14,color:"var(--t-muted2)",fontWeight:500,lineHeight:1.6}}>{text}</span>
                 </div>
               ))}
             </div>
@@ -5672,7 +5672,7 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
 
           {/* ── SECTION 2: WHAT TO DO NOW ── */}
           <div style={{marginBottom:18}}>
-            <div style={{fontSize:9,fontWeight:900,letterSpacing:"0.18em",color:"var(--t-muted4)",marginBottom:10}}>WHAT TO DO NOW</div>
+            <div style={{fontSize:13,fontWeight:900,letterSpacing:"0.18em",color:"var(--t-muted4)",marginBottom:10}}>WHAT TO DO NOW</div>
             <div style={{display:"flex",flexDirection:"column",gap:7}}>
               {[
                 "Stay flat. Do not enter in either direction.",
@@ -5680,8 +5680,8 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
                 "Watch the live chart below for a fresh break forming.",
               ].map((text,i)=>(
                 <div key={i} style={{display:"flex",gap:10,alignItems:"flex-start"}}>
-                  <span style={{fontSize:11,color:"#7fff6b",flexShrink:0,marginTop:2,fontWeight:900}}>·</span>
-                  <span style={{fontSize:13,color:"var(--t-muted2)",fontWeight:500,lineHeight:1.6}}>{text}</span>
+                  <span style={{fontSize:14,color:"#7fff6b",flexShrink:0,marginTop:2,fontWeight:900}}>·</span>
+                  <span style={{fontSize:14,color:"var(--t-muted2)",fontWeight:500,lineHeight:1.6}}>{text}</span>
                 </div>
               ))}
             </div>
@@ -5691,7 +5691,7 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
 
           {/* ── SECTION 3: WHAT TO WATCH NEXT ── */}
           <div style={{marginBottom:18}}>
-            <div style={{fontSize:9,fontWeight:900,letterSpacing:"0.18em",color:"var(--t-muted4)",marginBottom:10}}>WHAT TO WATCH NEXT</div>
+            <div style={{fontSize:13,fontWeight:900,letterSpacing:"0.18em",color:"var(--t-muted4)",marginBottom:10}}>WHAT TO WATCH NEXT</div>
             {/* Key levels */}
             {(cl.long_trigger||cl.short_trigger||cl.major_support||cl.major_resistance)&&(
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:7,marginBottom:12}}>
@@ -5702,7 +5702,7 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
                   {label:"Resistance",    val:cl.major_resistance,color:"#ffd166"},
                 ].filter(r=>r.val&&r.val!=="—").map(row=>(
                   <div key={row.label} style={{padding:"8px 11px",background:"rgba(255,255,255,0.03)",border:`1px solid ${row.color}18`,borderRadius:7}}>
-                    <div style={{fontSize:9,color:"var(--t-muted4)",fontWeight:700,letterSpacing:"0.08em",marginBottom:4}}>{row.label.toUpperCase()}</div>
+                    <div style={{fontSize:13,color:"var(--t-muted4)",fontWeight:700,letterSpacing:"0.08em",marginBottom:4}}>{row.label.toUpperCase()}</div>
                     <CopyPrice val={row.val} color={row.color}/>
                   </div>
                 ))}
@@ -5711,13 +5711,13 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
             {/* Alt scenario */}
             {hasAlt&&(
               <div style={{padding:"10px 14px",background:"rgba(255,209,102,0.05)",border:"1px solid rgba(255,209,102,0.2)",borderRadius:8,marginBottom:10}}>
-                <div style={{fontSize:9,fontWeight:900,letterSpacing:"0.14em",color:"#ffd166",marginBottom:4}}>ALTERNATE SETUP ACTIVATES ONLY IF:</div>
-                <span style={{fontSize:12,color:"var(--t-muted2)",fontWeight:500,lineHeight:1.6}}>{altCondition}</span>
+                <div style={{fontSize:13,fontWeight:900,letterSpacing:"0.14em",color:"#ffd166",marginBottom:4}}>ALTERNATE SETUP ACTIVATES ONLY IF:</div>
+                <span style={{fontSize:14,color:"var(--t-muted2)",fontWeight:500,lineHeight:1.6}}>{altCondition}</span>
               </div>
             )}
             {tc.risk_state&&(
               <div style={{padding:"8px 12px",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:7}}>
-                <span style={{fontSize:11,color:"var(--t-muted3)",fontWeight:500}}>{tc.risk_state}</span>
+                <span style={{fontSize:14,color:"var(--t-muted3)",fontWeight:500}}>{tc.risk_state}</span>
               </div>
             )}
           </div>
@@ -5727,12 +5727,12 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
             padding:"8px 12px",background:"rgba(255,255,255,0.03)",
             border:"1px solid rgba(255,255,255,0.06)",borderRadius:7}}>
             <div style={{flex:1,display:"flex",alignItems:"center",gap:7}}>
-              <span style={{fontSize:10,color:"var(--t-muted3)",fontWeight:600}}>Live chart</span>
-              <span style={{fontSize:9,color:"var(--t-muted4)",background:"rgba(255,255,255,0.05)",padding:"2px 6px",borderRadius:3}}>{tvSym}</span>
-              <span style={{fontSize:9,color:"var(--t-muted4)",background:"rgba(255,255,255,0.05)",padding:"2px 6px",borderRadius:3}}>30M</span>
+              <span style={{fontSize:13,color:"var(--t-muted3)",fontWeight:600}}>Live chart</span>
+              <span style={{fontSize:13,color:"var(--t-muted4)",background:"rgba(255,255,255,0.05)",padding:"2px 6px",borderRadius:3}}>{tvSym}</span>
+              <span style={{fontSize:13,color:"var(--t-muted4)",background:"rgba(255,255,255,0.05)",padding:"2px 6px",borderRadius:3}}>30M</span>
             </div>
             <a href={`https://www.tradingview.com/chart/?symbol=${tvSym}&interval=30`} target="_blank" rel="noopener noreferrer"
-              style={{background:"none",border:"1px solid rgba(255,255,255,0.1)",borderRadius:6,padding:"5px 12px",fontFamily:"inherit",fontSize:10,fontWeight:600,color:"var(--t-muted3)",textDecoration:"none",whiteSpace:"nowrap"}}>
+              style={{background:"none",border:"1px solid rgba(255,255,255,0.1)",borderRadius:6,padding:"5px 12px",fontFamily:"inherit",fontSize:13,fontWeight:600,color:"var(--t-muted3)",textDecoration:"none",whiteSpace:"nowrap"}}>
               Open Chart →
             </a>
           </div>
@@ -5743,7 +5743,7 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
         <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,107,255,0.28)",borderRadius:16,padding:"18px 20px",marginBottom:12}}>
           <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
             <span style={S.sectionTag}>EXECUTION TRACKER</span>
-            <span style={{fontSize:11,color:"var(--t-muted3)",fontWeight:500}}>Follow each phase in order. Do not skip ahead.</span>
+            <span style={{fontSize:14,color:"var(--t-muted3)",fontWeight:500}}>Follow each phase in order. Do not skip ahead.</span>
           </div>
 
           {/* derive the correct trigger level from bias */}
@@ -5782,23 +5782,23 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
                 <div style={{width:24,height:24,borderRadius:"50%",flexShrink:0,marginTop:1,
                   background:"rgba(0,229,255,0.15)",border:"2px solid #00e5ff",
                   display:"flex",alignItems:"center",justifyContent:"center",
-                  fontSize:10,fontWeight:900,color:"#00e5ff"}}>1</div>
+                  fontSize:13,fontWeight:900,color:"#00e5ff"}}>1</div>
                 <div style={{flex:1}}>
-                  <div style={{fontSize:12,fontWeight:900,letterSpacing:"0.08em",marginBottom:4,color:"#00e5ff"}}>
-                    PHASE 1 — BREAK <span style={{marginLeft:8,fontSize:10,animation:"icc-pulse 1.5s ease infinite"}}>● WATCHING</span>
+                  <div style={{fontSize:14,fontWeight:900,letterSpacing:"0.08em",marginBottom:4,color:"#00e5ff"}}>
+                    PHASE 1 — BREAK <span style={{marginLeft:8,fontSize:13,animation:"icc-pulse 1.5s ease infinite"}}>● WATCHING</span>
                   </div>
-                  <div style={{fontSize:13,color:"var(--t-muted)",fontWeight:500,marginBottom:6}}>
+                  <div style={{fontSize:14,color:"var(--t-muted)",fontWeight:500,marginBottom:6}}>
                     Wait for 30M candle to fully close <strong>{dirWord}</strong> <strong style={{color:"#00e5ff"}}>{triggerLevel}</strong>
                   </div>
                   <div style={{padding:"10px 14px",background:"rgba(0,229,255,0.06)",border:"1px solid rgba(0,229,255,0.15)",borderLeft:"3px solid #00e5ff",borderRadius:8,marginBottom:10}}>
-                    <span style={{fontSize:11,color:"#00e5ff",fontWeight:700}}>⚠ Do NOT enter yet. The break is step 1 of 3.</span>
+                    <span style={{fontSize:14,color:"#00e5ff",fontWeight:700}}>⚠ Do NOT enter yet. The break is step 1 of 3.</span>
                     {sctx?.p1_note&&(
                       session==="ASIAN"?(
                         <div style={{marginTop:8,padding:"7px 10px",background:"rgba(255,154,60,0.1)",border:"1px solid rgba(255,154,60,0.35)",borderLeft:"3px solid #ff9a3c",borderRadius:6}}>
-                          <span style={{fontSize:11,color:"#ff9a3c",fontWeight:700}}>⚠ {sctx.p1_note}</span>
+                          <span style={{fontSize:14,color:"#ff9a3c",fontWeight:700}}>⚠ {sctx.p1_note}</span>
                         </div>
                       ):(
-                        <p style={{fontSize:11,color:"var(--t-muted2)",margin:"5px 0 0",lineHeight:1.5,fontWeight:500}}>{sctx.p1_note}</p>
+                        <p style={{fontSize:14,color:"var(--t-muted2)",margin:"5px 0 0",lineHeight:1.5,fontWeight:500}}>{sctx.p1_note}</p>
                       )
                     )}
                   </div>
@@ -5825,10 +5825,10 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
                     return(
                     <div style={{padding:"8px 12px",background:"rgba(255,209,102,0.05)",border:"1px solid rgba(255,209,102,0.2)",borderLeft:"3px solid #ffd166",borderRadius:8,marginBottom:10}}>
                       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
-                        <p style={{fontSize:10,fontWeight:900,color:"#ffd166",margin:0,letterSpacing:"0.1em"}}>30M CANDLE CLOSE WINDOWS</p>
+                        <p style={{fontSize:13,fontWeight:900,color:"#ffd166",margin:0,letterSpacing:"0.1em"}}>30M CANDLE CLOSE WINDOWS</p>
                         {executionClosed
-                          ? <span style={{fontSize:9,fontWeight:900,color:"#ff6b6b",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.3)",padding:"2px 8px",borderRadius:4,letterSpacing:"0.08em"}}>WINDOW CLOSED</span>
-                          : <span style={{fontSize:9,fontWeight:700,color:"#00e5ff",fontFamily:"monospace"}}>{nowCT.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",timeZone:"America/Chicago"})} CT</span>
+                          ? <span style={{fontSize:13,fontWeight:900,color:"#ff6b6b",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.3)",padding:"2px 8px",borderRadius:4,letterSpacing:"0.08em"}}>WINDOW CLOSED</span>
+                          : <span style={{fontSize:13,fontWeight:700,color:"#00e5ff",fontFamily:"monospace"}}>{nowCT.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",timeZone:"America/Chicago"})} CT</span>
                         }
                       </div>
                       <div style={{display:"flex",flexDirection:"column",gap:5}}>
@@ -5843,26 +5843,26 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
                               border:isNext?"1px solid rgba(0,229,255,0.2)":"1px solid transparent",
                               opacity:isPast?0.62:1,
                               transition:"all 0.2s"}}>
-                              <span style={{fontSize:10,fontFamily:"monospace",fontWeight:900,
+                              <span style={{fontSize:13,fontFamily:"monospace",fontWeight:900,
                                 minWidth:84,flexShrink:0,
                                 color:isPast?"var(--t-muted4)":isNext?"#00e5ff":isLast?"#ff8080":"#ffd166"}}>
                                 {r.time}
                               </span>
-                              <span style={{fontSize:10,fontWeight:isNext?700:400,
+                              <span style={{fontSize:13,fontWeight:isNext?700:400,
                                 color:isPast?"var(--t-muted4)":isNext?"#00e5ff":isLast?"#ff8080":"var(--t-muted2)",
                                 flex:1}}>
                                 {isPast?"completed":r.label}
                               </span>
-                              {isPast&&<span style={{fontSize:9,color:"var(--t-muted4)"}}>✓</span>}
-                              {isNext&&!executionClosed&&<span style={{fontSize:9,fontWeight:900,color:"#00e5ff",letterSpacing:"0.06em",flexShrink:0}}>NEXT</span>}
-                              {isLast&&isNext&&<span style={{fontSize:9,fontWeight:900,color:"#ff8080",letterSpacing:"0.06em",flexShrink:0}}>FINAL</span>}
+                              {isPast&&<span style={{fontSize:13,color:"var(--t-muted4)"}}>✓</span>}
+                              {isNext&&!executionClosed&&<span style={{fontSize:13,fontWeight:900,color:"#00e5ff",letterSpacing:"0.06em",flexShrink:0}}>NEXT</span>}
+                              {isLast&&isNext&&<span style={{fontSize:13,fontWeight:900,color:"#ff8080",letterSpacing:"0.06em",flexShrink:0}}>FINAL</span>}
                             </div>
                           );
                         })}
                       </div>
                       {executionClosed&&(
                         <div style={{marginTop:8,padding:"5px 8px",background:"rgba(255,107,107,0.08)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:5}}>
-                          <span style={{fontSize:10,color:"#ff8080",fontWeight:700}}>Execution window closed at 10:30 AM CT. No new entries. Wait for tomorrow's session.</span>
+                          <span style={{fontSize:13,color:"#ff8080",fontWeight:700}}>Execution window closed at 10:30 AM CT. No new entries. Wait for tomorrow's session.</span>
                         </div>
                       )}
                     </div>
@@ -5870,28 +5870,28 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
                   })()}
                   {session==="ASIAN"&&(
                     <div style={{padding:"8px 12px",background:"rgba(255,154,60,0.05)",border:"1px solid rgba(255,154,60,0.2)",borderLeft:"3px solid #ff9a3c",borderRadius:8,marginBottom:10}}>
-                      <p style={{fontSize:10,fontWeight:900,color:"#ff9a3c",margin:"0 0 6px",letterSpacing:"0.1em"}}>ASIAN SESSION CANDLE WINDOWS</p>
+                      <p style={{fontSize:13,fontWeight:900,color:"#ff9a3c",margin:"0 0 6px",letterSpacing:"0.1em"}}>ASIAN SESSION CANDLE WINDOWS</p>
                       <div style={{display:"flex",flexDirection:"column",gap:4}}>
                         {[{time:"7:00 PM CT",label:"Session open — first watch"},{time:"8:00 PM CT",label:"First valid 30M close"},{time:"9:00 PM CT",label:"Best quality window"},{time:"11:00 PM CT",label:"Cutoff — session closes"}].map(r=>(
                           <div key={r.time} style={{display:"flex",gap:10,alignItems:"baseline"}}>
-                            <span style={{fontSize:10,fontFamily:"monospace",fontWeight:900,color:"#ff9a3c",minWidth:90,flexShrink:0}}>{r.time}</span>
-                            <span style={{fontSize:10,color:"var(--t-muted2)",fontWeight:400}}>{r.label}</span>
+                            <span style={{fontSize:13,fontFamily:"monospace",fontWeight:900,color:"#ff9a3c",minWidth:90,flexShrink:0}}>{r.time}</span>
+                            <span style={{fontSize:13,color:"var(--t-muted2)",fontWeight:400}}>{r.label}</span>
                           </div>
                         ))}
                       </div>
                       <div style={{marginTop:8,padding:"5px 8px",background:"rgba(255,154,60,0.08)",border:"1px solid rgba(255,154,60,0.2)",borderRadius:5}}>
-                        <span style={{fontSize:10,color:"#ff9a3c",fontWeight:700}}>⚠ Asian session = reduced size. Half position recommended.</span>
+                        <span style={{fontSize:13,color:"#ff9a3c",fontWeight:700}}>⚠ Asian session = reduced size. Half position recommended.</span>
                       </div>
                     </div>
                   )}
                   {session==="LONDON"&&(
                     <div style={{padding:"8px 12px",background:"rgba(255,107,255,0.05)",border:"1px solid rgba(255,107,255,0.2)",borderLeft:"3px solid #ff6bff",borderRadius:8,marginBottom:10}}>
-                      <p style={{fontSize:10,fontWeight:900,color:"#ff6bff",margin:"0 0 6px",letterSpacing:"0.1em"}}>LONDON SESSION CANDLE WINDOWS</p>
+                      <p style={{fontSize:13,fontWeight:900,color:"#ff6bff",margin:"0 0 6px",letterSpacing:"0.1em"}}>LONDON SESSION CANDLE WINDOWS</p>
                       <div style={{display:"flex",flexDirection:"column",gap:4}}>
                         {[{time:"2:00 AM CT",label:"Session open — first watch"},{time:"3:00 AM CT",label:"First valid 30M close"},{time:"4:00 AM CT",label:"Best quality window"},{time:"5:00 AM CT",label:"Cutoff — session closes"}].map(r=>(
                           <div key={r.time} style={{display:"flex",gap:10,alignItems:"baseline"}}>
-                            <span style={{fontSize:10,fontFamily:"monospace",fontWeight:900,color:"#ff6bff",minWidth:90,flexShrink:0}}>{r.time}</span>
-                            <span style={{fontSize:10,color:"var(--t-muted2)",fontWeight:400}}>{r.label}</span>
+                            <span style={{fontSize:13,fontFamily:"monospace",fontWeight:900,color:"#ff6bff",minWidth:90,flexShrink:0}}>{r.time}</span>
+                            <span style={{fontSize:13,color:"var(--t-muted2)",fontWeight:400}}>{r.label}</span>
                           </div>
                         ))}
                       </div>
@@ -5903,12 +5903,12 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
                 {/* Live chart */}
                 <div style={{display:"flex",alignItems:"center",gap:10,padding:"8px 12px",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:7}}>
                   <div style={{flex:1,display:"flex",alignItems:"center",gap:7}}>
-                    <span style={{fontSize:10,color:"#7fff6b",fontWeight:700}}>Live chart</span>
-                    <span style={{fontSize:9,color:"#7fff6b",background:"rgba(127,255,107,0.1)",border:"1px solid rgba(127,255,107,0.25)",padding:"2px 7px",borderRadius:4,fontWeight:700}}>{tvSym}</span>
-                    <span style={{fontSize:9,color:"#7fff6b",background:"rgba(127,255,107,0.1)",border:"1px solid rgba(127,255,107,0.25)",padding:"2px 7px",borderRadius:4,fontWeight:700}}>30M</span>
+                    <span style={{fontSize:13,color:"#7fff6b",fontWeight:700}}>Live chart</span>
+                    <span style={{fontSize:13,color:"#7fff6b",background:"rgba(127,255,107,0.1)",border:"1px solid rgba(127,255,107,0.25)",padding:"2px 7px",borderRadius:4,fontWeight:700}}>{tvSym}</span>
+                    <span style={{fontSize:13,color:"#7fff6b",background:"rgba(127,255,107,0.1)",border:"1px solid rgba(127,255,107,0.25)",padding:"2px 7px",borderRadius:4,fontWeight:700}}>30M</span>
                   </div>
                   <a href={`https://www.tradingview.com/chart/?symbol=${tvSym}&interval=30`} target="_blank" rel="noopener noreferrer"
-                    style={{background:"none",border:"1px solid rgba(255,255,255,0.12)",borderRadius:6,padding:"5px 12px",fontFamily:"inherit",fontSize:10,fontWeight:700,color:"var(--t-muted3)",letterSpacing:"0.06em",textDecoration:"none",whiteSpace:"nowrap"}}>
+                    style={{background:"none",border:"1px solid rgba(255,255,255,0.12)",borderRadius:6,padding:"5px 12px",fontFamily:"inherit",fontSize:13,fontWeight:700,color:"var(--t-muted3)",letterSpacing:"0.06em",textDecoration:"none",whiteSpace:"nowrap"}}>
                     Open Live Chart →
                   </a>
                 </div>
@@ -5919,15 +5919,15 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
                       background:"rgba(255,255,255,0.03)",padding:"7px 12px",
                       cursor:"pointer",fontFamily:"inherit",border:"none"}}>
                     <div style={{display:"flex",alignItems:"center",gap:7}}>
-                      <span style={{fontSize:11}}>📲</span>
-                      <span style={{fontSize:11,fontWeight:800,color:"var(--t-muted2)",letterSpacing:"0.04em"}}>Set Alerts Now</span>
-                      <span style={{fontSize:10,color:"var(--t-muted3)",fontWeight:500}}>(3 recommended)</span>
+                      <span style={{fontSize:14}}>📲</span>
+                      <span style={{fontSize:14,fontWeight:800,color:"var(--t-muted2)",letterSpacing:"0.04em"}}>Set Alerts Now</span>
+                      <span style={{fontSize:13,color:"var(--t-muted3)",fontWeight:500}}>(3 recommended)</span>
                     </div>
-                    <span style={{fontSize:10,color:"var(--t-muted3)",transform:showAlerts?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s",display:"inline-block"}}>▼</span>
+                    <span style={{fontSize:13,color:"var(--t-muted3)",transform:showAlerts?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s",display:"inline-block"}}>▼</span>
                   </button>
                   {showAlerts&&(
                     <div style={{padding:"10px 14px",background:"rgba(255,107,255,0.03)",animation:"icc-slide 0.2s ease both"}}>
-                      <p style={{fontSize:10,color:"var(--t-muted4)",margin:"0 0 8px",fontWeight:500}}>Add to TradingView before the session opens.</p>
+                      <p style={{fontSize:13,color:"var(--t-muted4)",margin:"0 0 8px",fontWeight:500}}>Add to TradingView before the session opens.</p>
                       <div style={{display:"flex",flexDirection:"column",gap:6}}>
                         {[
                           {label:"Break Alert",  val:`${isShort?"Price crosses below":"Price crosses above"} ${triggerLevel}`,color:"#00e5ff"},
@@ -5935,8 +5935,8 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
                           {label:"Invalidation", val:result.invalidation||"Check invalidation level",color:"#ff6b6b"},
                         ].map(a=>(
                           <div key={a.label} style={{background:"rgba(255,255,255,0.03)",border:`1px solid ${a.color}22`,borderRadius:6,padding:"7px 10px"}}>
-                            <div style={{fontSize:9,fontWeight:900,color:a.color,letterSpacing:"0.08em",marginBottom:2}}>{a.label.toUpperCase()}</div>
-                            <div style={{fontSize:11,color:"var(--t-muted)",fontWeight:600,lineHeight:1.4}}>{a.val}</div>
+                            <div style={{fontSize:13,fontWeight:900,color:a.color,letterSpacing:"0.08em",marginBottom:2}}>{a.label.toUpperCase()}</div>
+                            <div style={{fontSize:14,color:"var(--t-muted)",fontWeight:600,lineHeight:1.4}}>{a.val}</div>
                           </div>
                         ))}
                       </div>
@@ -5945,7 +5945,7 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
                 </div>
                 {/* Checkboxes */}
                 <div style={{background:"rgba(0,229,255,0.04)",border:"1px solid rgba(0,229,255,0.13)",borderRadius:8,padding:"11px 14px",display:"flex",flexDirection:"column",gap:8}}>
-                  <p style={{fontSize:10,fontWeight:900,letterSpacing:"0.12em",color:"#00e5ff",margin:0}}>CONFIRM BEFORE ADVANCING</p>
+                  <p style={{fontSize:13,fontWeight:900,letterSpacing:"0.12em",color:"#00e5ff",margin:0}}>CONFIRM BEFORE ADVANCING</p>
                   {[
                     {key:"closed",label:"30M candle fully CLOSED — not a wick"},
                     {key:"level", label:`Close confirmed ${dirWord} ${triggerLevel}`},
@@ -5954,17 +5954,17 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
                     <div key={item.key} onClick={()=>setChecks(p=>({...p,[item.key]:!p[item.key]}))}
                       style={{display:"flex",alignItems:"flex-start",gap:9,cursor:"pointer"}}>
                       <div style={{width:16,height:16,borderRadius:3,flexShrink:0,marginTop:1,
-                        border:`2px solid ${checks[item.key]?"#00e5ff":"rgba(255,255,255,0.2)"}`,
+                        border:`2px solid ${checks[item.key]?"#00e5ff":"rgba(255,255,255,0.80)"}`,
                         background:checks[item.key]?"rgba(0,229,255,0.15)":"transparent",
                         display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.15s"}}>
-                        {checks[item.key]&&<span style={{fontSize:9,color:"#00e5ff",fontWeight:900}}>✓</span>}
+                        {checks[item.key]&&<span style={{fontSize:13,color:"#00e5ff",fontWeight:900}}>✓</span>}
                       </div>
-                      <span style={{fontSize:12,color:checks[item.key]?"var(--t-muted)":"var(--t-muted3)",fontWeight:checks[item.key]?600:400,lineHeight:1.4,transition:"color 0.15s"}}>{item.label}</span>
+                      <span style={{fontSize:14,color:checks[item.key]?"var(--t-muted)":"var(--t-muted3)",fontWeight:checks[item.key]?600:400,lineHeight:1.4,transition:"color 0.15s"}}>{item.label}</span>
                     </div>
                   ))}
                 </div>
                 {/* Helper text */}
-                <p style={{fontSize:11,color:"var(--t-muted4)",margin:"0 0 10px",lineHeight:1.6,fontWeight:500,fontStyle:"italic"}}>
+                <p style={{fontSize:14,color:"var(--t-muted4)",margin:"0 0 10px",lineHeight:1.6,fontWeight:500,fontStyle:"italic"}}>
                   Waiting for price to return to the broken level before Phase 2 unlocks.
                 </p>
                 <button onClick={()=>{if(allChecked){advanceTo("ARMED_T2");setT1Time(Date.now());}}} disabled={!allChecked}
@@ -5972,7 +5972,7 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
                     background:allChecked?"rgba(0,229,255,0.1)":"rgba(255,255,255,0.03)",
                     border:`1px solid ${allChecked?"rgba(0,229,255,0.35)":"rgba(255,255,255,0.08)"}`,
                     borderRadius:8,padding:"8px 18px",cursor:allChecked?"pointer":"not-allowed",fontFamily:"inherit",
-                    fontSize:12,fontWeight:900,color:allChecked?"#00e5ff":"var(--t-muted4)",letterSpacing:"0.08em",transition:"all 0.2s"}}>
+                    fontSize:14,fontWeight:900,color:allChecked?"#00e5ff":"var(--t-muted4)",letterSpacing:"0.08em",transition:"all 0.2s"}}>
                   {allChecked?"✓ 30M CLOSE CONFIRMED — PHASE 1 COMPLETE":"Waiting for all 3 confirmations"}
                 </button>
               </div>
@@ -5980,8 +5980,8 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
           ):(
             /* COLLAPSED — phase complete */
             <div style={{display:"flex",alignItems:"center",gap:10,padding:"7px 0",marginBottom:6,opacity:0.7}}>
-              <div style={{width:20,height:20,borderRadius:"50%",background:"rgba(127,255,107,0.15)",border:"2px solid #7fff6b",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:900,color:"#7fff6b",flexShrink:0}}>✓</div>
-              <span style={{fontSize:12,fontWeight:700,color:"#7fff6b"}}>Phase 1 — Break confirmed {dirWord} {triggerLevel}</span>
+              <div style={{width:20,height:20,borderRadius:"50%",background:"rgba(127,255,107,0.15)",border:"2px solid #7fff6b",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:900,color:"#7fff6b",flexShrink:0}}>✓</div>
+              <span style={{fontSize:14,fontWeight:700,color:"#7fff6b"}}>Phase 1 — Break confirmed {dirWord} {triggerLevel}</span>
             </div>
           )}
 
@@ -5995,40 +5995,40 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
                 <div style={{width:24,height:24,borderRadius:"50%",flexShrink:0,marginTop:1,
                   background:"rgba(255,209,102,0.15)",border:"2px solid #ffd166",
                   display:"flex",alignItems:"center",justifyContent:"center",
-                  fontSize:10,fontWeight:900,color:"#ffd166"}}>2</div>
+                  fontSize:13,fontWeight:900,color:"#ffd166"}}>2</div>
                 <div style={{flex:1}}>
-                  <div style={{fontSize:12,fontWeight:900,letterSpacing:"0.08em",marginBottom:4,color:"#ffd166"}}>
-                    PHASE 2 — RETEST <span style={{marginLeft:8,fontSize:10,color:"#ffd166",animation:"icc-pulse 1.5s ease infinite"}}>● WATCHING</span>
+                  <div style={{fontSize:14,fontWeight:900,letterSpacing:"0.08em",marginBottom:4,color:"#ffd166"}}>
+                    PHASE 2 — RETEST <span style={{marginLeft:8,fontSize:13,color:"#ffd166",animation:"icc-pulse 1.5s ease infinite"}}>● WATCHING</span>
                   </div>
                   <div style={{display:"inline-flex",alignItems:"flex-start",gap:12,padding:"10px 14px",marginBottom:8,background:"rgba(255,209,102,0.08)",border:"1px solid rgba(255,209,102,0.3)",borderRadius:8,width:"100%",boxSizing:"border-box"}}>
                     <div style={{flexShrink:0}}>
-                      <div style={{fontSize:9,fontWeight:900,color:"#ffd166",letterSpacing:"0.12em",marginBottom:2}}>{isShort?"RETEST RESISTANCE ZONE":"RETEST SUPPORT ZONE"}</div>
+                      <div style={{fontSize:13,fontWeight:900,color:"#ffd166",letterSpacing:"0.12em",marginBottom:2}}>{isShort?"RETEST RESISTANCE ZONE":"RETEST SUPPORT ZONE"}</div>
                       <div style={{fontSize:20,fontWeight:900,color:"#ffd166",lineHeight:1}}>{retestZone}</div>
                     </div>
                     <div style={{width:1,alignSelf:"stretch",background:"rgba(255,209,102,0.2)",flexShrink:0}}/>
-                    <div style={{fontSize:11,color:"var(--t-muted3)",fontWeight:500,lineHeight:1.55}}>
+                    <div style={{fontSize:14,color:"var(--t-muted3)",fontWeight:500,lineHeight:1.55}}>
                       {isShort?`Enter only after a 30M candle closes back below ${triggerLevel}.`:`Enter only after a 30M candle closes back above ${triggerLevel}.`}
                     </div>
                   </div>
-                  <div style={{fontSize:13,color:"var(--t-muted)",fontWeight:500,marginBottom:6,lineHeight:1.6}}>
+                  <div style={{fontSize:14,color:"var(--t-muted)",fontWeight:500,marginBottom:6,lineHeight:1.6}}>
                     Wait for price to retest the <strong style={{color:"#ffd166"}}>{retestZone}</strong> {zoneType} zone after confirmed break {dirWord} <strong style={{color:"#00e5ff"}}>{triggerLevel}</strong>.
                   </div>
-                  <div style={{fontSize:11,color:"var(--t-muted3)",fontWeight:500,marginBottom:6,lineHeight:1.55}}>
+                  <div style={{fontSize:14,color:"var(--t-muted3)",fontWeight:500,marginBottom:6,lineHeight:1.55}}>
                     Valid retest: price tests <strong style={{color:"#ffd166"}}>{retestZone}</strong> and the 30M candle closes back {dirWordBack} the zone. A wick alone does not qualify.
                   </div>
-                  {confirmRule&&<div style={{fontSize:11,color:"#00e5ff",fontWeight:600,marginBottom:6,padding:"6px 10px",background:"rgba(0,229,255,0.05)",border:"1px solid rgba(0,229,255,0.12)",borderRadius:6}}>{confirmRule}</div>}
+                  {confirmRule&&<div style={{fontSize:14,color:"#00e5ff",fontWeight:600,marginBottom:6,padding:"6px 10px",background:"rgba(0,229,255,0.05)",border:"1px solid rgba(0,229,255,0.12)",borderRadius:6}}>{confirmRule}</div>}
                   {sessionNote&&(
                     <div style={{display:"flex",alignItems:"flex-start",gap:8,padding:"7px 12px",marginBottom:8,background:"rgba(255,209,102,0.05)",border:"1px solid rgba(255,209,102,0.15)",borderLeft:"3px solid rgba(255,209,102,0.5)",borderRadius:6}}>
-                      <span style={{fontSize:12,flexShrink:0,marginTop:1}}>⏱</span>
+                      <span style={{fontSize:14,flexShrink:0,marginTop:1}}>⏱</span>
                       <div>
-                        <div style={{fontSize:9,fontWeight:900,color:"#ffd166",letterSpacing:"0.12em",marginBottom:3}}>VALID DURING SESSION</div>
-                        <div style={{fontSize:11,color:"var(--t-muted2)",fontWeight:600,lineHeight:1.45,marginBottom:3}}>{sessionNote}</div>
-                        <div style={{fontSize:10,color:"var(--t-muted4)",fontWeight:400,lineHeight:1.4}}>Confirmation quality and follow-through are strongest in this window. Do not execute outside it.</div>
+                        <div style={{fontSize:13,fontWeight:900,color:"#ffd166",letterSpacing:"0.12em",marginBottom:3}}>VALID DURING SESSION</div>
+                        <div style={{fontSize:14,color:"var(--t-muted2)",fontWeight:600,lineHeight:1.45,marginBottom:3}}>{sessionNote}</div>
+                        <div style={{fontSize:13,color:"var(--t-muted4)",fontWeight:400,lineHeight:1.4}}>Confirmation quality and follow-through are strongest in this window. Do not execute outside it.</div>
                       </div>
                     </div>
                   )}
-                  {sctx?.p2_note&&<div style={{fontSize:11,color:"var(--t-muted4)",marginBottom:6,lineHeight:1.5,fontStyle:"italic"}}>{sctx.p2_note}</div>}
-                  {t1Time&&<div style={{fontSize:11,color:"var(--t-muted4)",marginBottom:8}}>Time since Phase 1: <strong style={{color:"#00e5ff"}}>{elapsed(t1Time)}</strong></div>}
+                  {sctx?.p2_note&&<div style={{fontSize:14,color:"var(--t-muted4)",marginBottom:6,lineHeight:1.5,fontStyle:"italic"}}>{sctx.p2_note}</div>}
+                  {t1Time&&<div style={{fontSize:14,color:"var(--t-muted4)",marginBottom:8}}>Time since Phase 1: <strong style={{color:"#00e5ff"}}>{elapsed(t1Time)}</strong></div>}
                   {/* Live chart P2 */}
                   {(()=>{
                     const st={ARMED_T2:{msg:`Watching retest of ${retestZone} ${zoneType}`,color:"#ffd166"}};
@@ -6037,16 +6037,16 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
                       <div style={{marginBottom:6}}>
                         <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}>
                           <span style={{width:6,height:6,borderRadius:"50%",flexShrink:0,background:s.color,opacity:0.8,animation:"icc-pulse 1.5s ease infinite"}}/>
-                          <span style={{fontSize:11,fontWeight:600,color:s.color,opacity:0.85}}>{s.msg}</span>
+                          <span style={{fontSize:14,fontWeight:600,color:s.color,opacity:0.85}}>{s.msg}</span>
                         </div>
                         <div style={{display:"flex",alignItems:"center",gap:10,padding:"8px 12px",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:7}}>
                           <div style={{flex:1,display:"flex",alignItems:"center",gap:7}}>
-                            <span style={{fontSize:10,color:"#7fff6b",fontWeight:700}}>Live chart</span>
-                            <span style={{fontSize:9,color:"#7fff6b",background:"rgba(127,255,107,0.1)",border:"1px solid rgba(127,255,107,0.25)",padding:"2px 7px",borderRadius:4,fontWeight:700}}>{tvSym}</span>
-                            <span style={{fontSize:9,color:"#7fff6b",background:"rgba(127,255,107,0.1)",border:"1px solid rgba(127,255,107,0.25)",padding:"2px 7px",borderRadius:4,fontWeight:700}}>{tvInterval}M</span>
+                            <span style={{fontSize:13,color:"#7fff6b",fontWeight:700}}>Live chart</span>
+                            <span style={{fontSize:13,color:"#7fff6b",background:"rgba(127,255,107,0.1)",border:"1px solid rgba(127,255,107,0.25)",padding:"2px 7px",borderRadius:4,fontWeight:700}}>{tvSym}</span>
+                            <span style={{fontSize:13,color:"#7fff6b",background:"rgba(127,255,107,0.1)",border:"1px solid rgba(127,255,107,0.25)",padding:"2px 7px",borderRadius:4,fontWeight:700}}>{tvInterval}M</span>
                           </div>
                           <a href={tvUrl} target="_blank" rel="noopener noreferrer"
-                            style={{background:"none",border:"1px solid rgba(255,255,255,0.12)",borderRadius:6,padding:"5px 12px",fontFamily:"inherit",fontSize:10,fontWeight:700,color:"var(--t-muted3)",letterSpacing:"0.06em",textDecoration:"none",whiteSpace:"nowrap"}}>
+                            style={{background:"none",border:"1px solid rgba(255,255,255,0.12)",borderRadius:6,padding:"5px 12px",fontFamily:"inherit",fontSize:13,fontWeight:700,color:"var(--t-muted3)",letterSpacing:"0.06em",textDecoration:"none",whiteSpace:"nowrap"}}>
                             Open Live Chart →
                           </a>
                         </div>
@@ -6057,11 +6057,11 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
               </div>
               <div style={{marginLeft:34,display:"flex",gap:8}}>
                 <button onClick={()=>advanceTo("EXECUTABLE")}
-                  style={{background:"rgba(255,209,102,0.1)",border:"1px solid rgba(255,209,102,0.35)",borderRadius:8,padding:"8px 18px",cursor:"pointer",fontFamily:"inherit",fontSize:12,fontWeight:900,color:"#ffd166",letterSpacing:"0.08em"}}>
+                  style={{background:"rgba(255,209,102,0.1)",border:"1px solid rgba(255,209,102,0.35)",borderRadius:8,padding:"8px 18px",cursor:"pointer",fontFamily:"inherit",fontSize:14,fontWeight:900,color:"#ffd166",letterSpacing:"0.08em"}}>
                   ✓ RETEST CONFIRMED
                 </button>
                 <button onClick={()=>advanceTo("INVALIDATED")}
-                  style={{background:"none",border:"1px solid rgba(255,107,107,0.25)",borderRadius:8,padding:"8px 14px",cursor:"pointer",fontFamily:"inherit",fontSize:12,fontWeight:700,color:"#ff8080"}}>
+                  style={{background:"none",border:"1px solid rgba(255,107,107,0.25)",borderRadius:8,padding:"8px 14px",cursor:"pointer",fontFamily:"inherit",fontSize:14,fontWeight:700,color:"#ff8080"}}>
                   ✕ SETUP INVALIDATED
                 </button>
               </div>
@@ -6069,8 +6069,8 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
           ):(["EXECUTABLE","IN_TRADE","COMPLETE","INVALIDATED"].includes(tradeState))?(
             /* COLLAPSED */
             <div style={{display:"flex",alignItems:"center",gap:10,padding:"7px 0",marginBottom:6,opacity:0.7}}>
-              <div style={{width:20,height:20,borderRadius:"50%",background:"rgba(127,255,107,0.15)",border:"2px solid #7fff6b",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:900,color:"#7fff6b",flexShrink:0}}>✓</div>
-              <span style={{fontSize:12,fontWeight:700,color:"#7fff6b"}}>Phase 2 — Retest confirmed at {retestZone}</span>
+              <div style={{width:20,height:20,borderRadius:"50%",background:"rgba(127,255,107,0.15)",border:"2px solid #7fff6b",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:900,color:"#7fff6b",flexShrink:0}}>✓</div>
+              <span style={{fontSize:14,fontWeight:700,color:"#7fff6b"}}>Phase 2 — Retest confirmed at {retestZone}</span>
             </div>
           ):null}
 
@@ -6083,25 +6083,25 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
                 <div style={{width:24,height:24,borderRadius:"50%",flexShrink:0,marginTop:1,
                   background:tradeState==="EXECUTABLE"?"rgba(127,255,107,0.2)":["IN_TRADE","COMPLETE"].includes(tradeState)?"rgba(127,255,107,0.15)":"rgba(255,255,255,0.04)",
                   border:`2px solid ${tradeState==="EXECUTABLE"?"#7fff6b":["IN_TRADE","COMPLETE"].includes(tradeState)?"#7fff6b":"rgba(255,255,255,0.12)"}`,
-                  display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:900,
+                  display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:900,
                   color:tradeState==="EXECUTABLE"?"#7fff6b":["IN_TRADE","COMPLETE"].includes(tradeState)?"#7fff6b":"var(--t-muted4)"}}>
                   {["IN_TRADE","COMPLETE"].includes(tradeState)?"✓":"3"}
                 </div>
                 <div style={{flex:1}}>
-                  <div style={{fontSize:12,fontWeight:900,letterSpacing:"0.08em",marginBottom:4,
+                  <div style={{fontSize:14,fontWeight:900,letterSpacing:"0.08em",marginBottom:4,
                     color:tradeState==="EXECUTABLE"?"#7fff6b":["IN_TRADE","COMPLETE"].includes(tradeState)?"#7fff6b":"var(--t-muted4)"}}>
                     PHASE 3 — CONFIRM &amp; EXECUTE
-                    {tradeState==="EXECUTABLE"&&<span style={{marginLeft:8,fontSize:10,color:"#7fff6b",animation:"icc-pulse 1.2s ease infinite"}}>● READY NOW</span>}
+                    {tradeState==="EXECUTABLE"&&<span style={{marginLeft:8,fontSize:13,color:"#7fff6b",animation:"icc-pulse 1.2s ease infinite"}}>● READY NOW</span>}
                   </div>
                   {tradeState==="EXECUTABLE"?(
                     <>
-                      <div style={{fontSize:13,color:"var(--t-muted)",fontWeight:500,marginBottom:10}}>
+                      <div style={{fontSize:14,color:"var(--t-muted)",fontWeight:500,marginBottom:10}}>
                         Second 30M rejection close confirmed. <strong style={{color:"#7fff6b"}}>Place your limit order now.</strong>
-                        {sctx?.p3_note&&<span style={{display:"block",fontSize:11,color:"var(--t-muted2)",marginTop:4,lineHeight:1.5,fontWeight:500}}>{sctx.p3_note}</span>}
+                        {sctx?.p3_note&&<span style={{display:"block",fontSize:14,color:"var(--t-muted2)",marginTop:4,lineHeight:1.5,fontWeight:500}}>{sctx.p3_note}</span>}
                       </div>
                       {sctx?.p3_warn&&(
                         <div style={{padding:"7px 11px",background:"rgba(255,154,60,0.07)",border:"1px solid rgba(255,154,60,0.25)",borderLeft:"3px solid #ff9a3c",borderRadius:6,marginBottom:10}}>
-                          <span style={{fontSize:11,color:"#ff9a3c",fontWeight:700}}>{sctx.p3_warn}</span>
+                          <span style={{fontSize:14,color:"#ff9a3c",fontWeight:700}}>{sctx.p3_warn}</span>
                         </div>
                       )}
                       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:7,marginBottom:10}}>
@@ -6123,8 +6123,8 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
                           ].filter(r=>r.price&&r.price!=="—").map(row=>(
                             <div key={row.label} style={{padding:"9px 11px",background:"rgba(127,255,107,0.05)",border:`1px solid ${row.color}22`,borderRadius:7}}>
                               <CopyPrice val={row.price} color={row.color}/>
-                              <div style={{fontSize:10,fontWeight:700,color:"var(--t-muted3)",marginTop:4,letterSpacing:"0.04em"}}>{row.label}</div>
-                              {row.sub&&<div style={{fontSize:10,color:"var(--t-muted4)",marginTop:2,fontWeight:400,lineHeight:1.4}}>{row.sub}</div>}
+                              <div style={{fontSize:13,fontWeight:700,color:"var(--t-muted3)",marginTop:4,letterSpacing:"0.04em"}}>{row.label}</div>
+                              {row.sub&&<div style={{fontSize:13,color:"var(--t-muted4)",marginTop:2,fontWeight:400,lineHeight:1.4}}>{row.sub}</div>}
                             </div>
                           ));
                         })()}
@@ -6132,10 +6132,10 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
                       {result.invalidation&&(
                         <div style={{padding:"8px 12px",background:"rgba(255,107,107,0.05)",border:"1px solid rgba(255,107,107,0.18)",borderLeft:"3px solid #ff9a3c",borderRadius:6,marginBottom:10}}>
                           <div style={{display:"flex",alignItems:"baseline",gap:8,flexWrap:"wrap"}}>
-                            <span style={{fontSize:10,fontWeight:900,color:"#ff9a3c",letterSpacing:"0.1em",flexShrink:0}}>STRUCTURAL INVALIDATION</span>
-                            <span style={{fontSize:11,color:"var(--t-muted2)",fontWeight:600}}>{result.invalidation}</span>
+                            <span style={{fontSize:13,fontWeight:900,color:"#ff9a3c",letterSpacing:"0.1em",flexShrink:0}}>STRUCTURAL INVALIDATION</span>
+                            <span style={{fontSize:14,color:"var(--t-muted2)",fontWeight:600}}>{result.invalidation}</span>
                           </div>
-                          <div style={{fontSize:10,color:"var(--t-muted4)",marginTop:4,fontWeight:500}}>If this occurs, the setup is dead — exit or cancel your order immediately.</div>
+                          <div style={{fontSize:13,color:"var(--t-muted4)",marginTop:4,fontWeight:500}}>If this occurs, the setup is dead — exit or cancel your order immediately.</div>
                         </div>
                       )}
                       <div style={{display:"flex",gap:8}}>
@@ -6153,26 +6153,26 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
                               bias: pd.bias||"—",
                             });
                           }}
-                          style={{...S.generateBtn,alignSelf:"flex-start",padding:"9px 20px",fontSize:12,
+                          style={{...S.generateBtn,alignSelf:"flex-start",padding:"9px 20px",fontSize:14,
                             background:"rgba(127,255,107,0.12)",border:"1px solid rgba(127,255,107,0.35)",
                             color:"#7fff6b",letterSpacing:"0.08em",boxShadow:"none"}}>
                           📈 LIMIT ORDER ACTIVE
                         </button>
                         <button onClick={()=>advanceTo("INVALIDATED")}
-                          style={{background:"none",border:"1px solid rgba(255,107,107,0.3)",borderRadius:10,padding:"9px 14px",cursor:"pointer",fontFamily:"inherit",fontSize:12,fontWeight:700,color:"#ff8080"}}>
+                          style={{background:"none",border:"1px solid rgba(255,107,107,0.3)",borderRadius:10,padding:"9px 14px",cursor:"pointer",fontFamily:"inherit",fontSize:14,fontWeight:700,color:"#ff8080"}}>
                           ✕ MARK AS MISSED
                         </button>
                       </div>
                     </>
                   ):(["IN_TRADE","COMPLETE","INVALIDATED"].includes(tradeState))?(
                     <div style={{marginTop:4}}>
-                      <p style={{fontSize:13,color:tradeState==="COMPLETE"?"#7fff6b":tradeState==="INVALIDATED"?"#ff6b6b":"#ff6bff",margin:"0 0 10px",fontWeight:700}}>
+                      <p style={{fontSize:14,color:tradeState==="COMPLETE"?"#7fff6b":tradeState==="INVALIDATED"?"#ff6b6b":"#ff6bff",margin:"0 0 10px",fontWeight:700}}>
                         {tradeState==="IN_TRADE"?"📈 Trade is live — manage your stops":tradeState==="COMPLETE"?"✓ Session complete":"🚫 Setup invalidated — no trade taken"}
                       </p>
                       {tradeState==="IN_TRADE"&&(
                         <div style={{display:"flex",gap:8}}>
-                          <button onClick={()=>advanceTo("COMPLETE")} style={{...S.generateBtn,alignSelf:"flex-start",padding:"10px 20px",fontSize:12,background:"linear-gradient(135deg,#7fff6b,#00c46b)",color:"#130d22"}}>✓ TRADE CLOSED</button>
-                          <button onClick={()=>advanceTo("INVALIDATED")} style={{background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.3)",color:"#ff8080",padding:"10px 14px",borderRadius:10,cursor:"pointer",fontFamily:"inherit",fontSize:12,fontWeight:900}}>🚫 Stopped out</button>
+                          <button onClick={()=>advanceTo("COMPLETE")} style={{...S.generateBtn,alignSelf:"flex-start",padding:"10px 20px",fontSize:14,background:"linear-gradient(135deg,#7fff6b,#00c46b)",color:"#130d22"}}>✓ TRADE CLOSED</button>
+                          <button onClick={()=>advanceTo("INVALIDATED")} style={{background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.3)",color:"#ff8080",padding:"10px 14px",borderRadius:10,cursor:"pointer",fontFamily:"inherit",fontSize:14,fontWeight:900}}>🚫 Stopped out</button>
                         </div>
                       )}
                       {(tradeState==="COMPLETE"||tradeState==="INVALIDATED")&&(
@@ -6203,10 +6203,10 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
               borderRadius:showPE?"8px 8px 0 0":8,padding:"9px 14px",cursor:"pointer",
               fontFamily:"inherit",transition:"all 0.2s"}}>
             <div style={{display:"flex",alignItems:"center",gap:8}}>
-              <span style={{fontSize:11,fontWeight:700,color:"var(--t-muted3)",letterSpacing:"0.04em"}}>📖 Plain English Breakdown</span>
-              <span style={{fontSize:10,color:"var(--t-muted4)",fontWeight:400}}>Simple explanation — no jargon</span>
+              <span style={{fontSize:14,fontWeight:700,color:"var(--t-muted3)",letterSpacing:"0.04em"}}>📖 Plain English Breakdown</span>
+              <span style={{fontSize:13,color:"var(--t-muted4)",fontWeight:400}}>Simple explanation — no jargon</span>
             </div>
-            <span style={{fontSize:9,color:"var(--t-muted4)",transform:showPE?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s",display:"inline-block"}}>▼</span>
+            <span style={{fontSize:13,color:"var(--t-muted4)",transform:showPE?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s",display:"inline-block"}}>▼</span>
           </button>
           {showPE&&(
             <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",
@@ -6220,14 +6220,14 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
                 {label:"FINAL VERDICT",value:pe.verdict},
               ].filter(r=>r.value).map((row,i)=>(
                 <div key={i} style={{marginBottom:i<4?14:0}}>
-                  <div style={{fontSize:9,fontWeight:900,letterSpacing:"0.16em",color:"var(--t-muted4)",marginBottom:5}}>{row.label}</div>
-                  <p style={{fontSize:13,color:"var(--t-muted2)",margin:0,lineHeight:1.7,fontWeight:500}}>{row.value}</p>
+                  <div style={{fontSize:13,fontWeight:900,letterSpacing:"0.16em",color:"var(--t-muted4)",marginBottom:5}}>{row.label}</div>
+                  <p style={{fontSize:14,color:"var(--t-muted2)",margin:0,lineHeight:1.7,fontWeight:500}}>{row.value}</p>
                 </div>
               ))}
               {pe.psychological_rule&&(
                 <div style={{marginTop:14,padding:"10px 14px",background:"rgba(255,107,255,0.06)",
                   border:"1px solid rgba(255,107,255,0.15)",borderRadius:8}}>
-                  <p style={{fontSize:12,color:"#ff6bff",margin:0,fontWeight:700,fontStyle:"italic",lineHeight:1.6}}>
+                  <p style={{fontSize:14,color:"#ff6bff",margin:0,fontWeight:700,fontStyle:"italic",lineHeight:1.6}}>
                     "{pe.psychological_rule}"
                   </p>
                 </div>
@@ -6246,10 +6246,10 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
               border:`1px solid ${showAlt?"rgba(255,209,102,0.25)":"rgba(255,209,102,0.12)"}`,
               borderRadius:showAlt?"8px 8px 0 0":8,padding:"11px 16px",cursor:"pointer",fontFamily:"inherit",transition:"all 0.2s"}}>
             <div style={{display:"flex",alignItems:"center",gap:8}}>
-              <span style={{fontSize:10,fontWeight:900,color:"#ffd166",letterSpacing:"0.1em"}}>ALT SCENARIO</span>
-              <span style={{fontSize:11,color:"var(--t-muted3)",fontWeight:500}}>if: {altCondition}</span>
+              <span style={{fontSize:13,fontWeight:900,color:"#ffd166",letterSpacing:"0.1em"}}>ALT SCENARIO</span>
+              <span style={{fontSize:14,color:"var(--t-muted3)",fontWeight:500}}>if: {altCondition}</span>
             </div>
-            <span style={{fontSize:9,color:"#ffd166",transform:showAlt?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s",display:"inline-block"}}>▼</span>
+            <span style={{fontSize:13,color:"#ffd166",transform:showAlt?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s",display:"inline-block"}}>▼</span>
           </button>
           {showAlt&&(
             <div style={{background:"rgba(255,209,102,0.04)",border:"1px solid rgba(255,209,102,0.15)",borderTop:"none",borderRadius:"0 0 12px 12px",padding:"16px 18px",animation:"icc-slide 0.25s ease both"}}>
@@ -6269,16 +6269,16 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
                   const hasContext=sub&&sub.length>0&&mainVal!==row.val;
                   return(
                     <div key={row.label} style={{padding:"8px 12px",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:8}}>
-                      <div style={{fontSize:9,color:"var(--t-muted4)",fontWeight:700,letterSpacing:"0.1em",marginBottom:4}}>{row.label.toUpperCase()}</div>
+                      <div style={{fontSize:13,color:"var(--t-muted4)",fontWeight:700,letterSpacing:"0.1em",marginBottom:4}}>{row.label.toUpperCase()}</div>
                       <CopyPrice val={mainVal} color={row.color}/>
                       {hasContext&&(
-                        <div style={{fontSize:10,color:"var(--t-muted4)",marginTop:4,lineHeight:1.4,fontWeight:500}}>{sub}</div>
+                        <div style={{fontSize:13,color:"var(--t-muted4)",marginTop:4,lineHeight:1.4,fontWeight:500}}>{sub}</div>
                       )}
                     </div>
                   );
                 })}
               </div>
-              {sp.warning&&<p style={{fontSize:12,color:"#ffd166aa",margin:0,fontStyle:"italic"}}>{sp.warning}</p>}
+              {sp.warning&&<p style={{fontSize:14,color:"#ffd166aa",margin:0,fontStyle:"italic"}}>{sp.warning}</p>}
             </div>
           )}
         </div>
@@ -6300,15 +6300,15 @@ function PsychologyPage({anime}){
           <span style={{fontSize:28}}>🧠</span>
           <div>
             <h2 style={{fontSize:24,fontWeight:900,color:"var(--t-text)",letterSpacing:"0.08em",margin:0}}>Trading Psychology</h2>
-            <p style={{fontSize:12,color:"#00e5ff",margin:0,letterSpacing:"0.08em"}}>Pre-session · Post-session · Mindset library</p>
+            <p style={{fontSize:14,color:"#00e5ff",margin:0,letterSpacing:"0.08em"}}>Pre-session · Post-session · Mindset library</p>
           </div>
         </div>
-        <p style={{fontSize:13,color:"var(--t-muted)",margin:0,lineHeight:1.8,maxWidth:600}}>Your mindset is either your biggest edge or your biggest liability. Use these tools before and after every session.</p>
+        <p style={{fontSize:14,color:"var(--t-muted)",margin:0,lineHeight:1.8,maxWidth:600}}>Your mindset is either your biggest edge or your biggest liability. Use these tools before and after every session.</p>
       </div>
       <div style={{display:"flex",gap:4,marginBottom:28,borderBottom:"1px solid rgba(255,107,255,0.1)",paddingBottom:0}}>
         {[["pre","🧠 Pre-Session Check"],["post","📋 Post-Session Debrief"],["library","📖 Mindset Library"]].map(([k,l])=>(
           <button key={k} onClick={()=>setTab(k)}
-            style={{background:"none",border:"none",cursor:"pointer",fontFamily:"inherit",padding:"10px 20px",fontSize:12,fontWeight:900,letterSpacing:"0.08em",color:tab===k?"#ff6bff":"var(--t-muted)",borderBottom:tab===k?"2px solid #ff6bff":"2px solid transparent",marginBottom:-1,transition:"all 0.15s"}}>
+            style={{background:"none",border:"none",cursor:"pointer",fontFamily:"inherit",padding:"10px 20px",fontSize:14,fontWeight:900,letterSpacing:"0.08em",color:tab===k?"#ff6bff":"var(--t-muted)",borderBottom:tab===k?"2px solid #ff6bff":"2px solid transparent",marginBottom:-1,transition:"all 0.15s"}}>
             {l}
           </button>
         ))}
@@ -6356,7 +6356,7 @@ function PreSessionCheck({anime}){
     return(
       <div style={{animation:"icc-fade 0.3s ease both",maxWidth:680}}>
         <div style={{background:"var(--t-c3)",border:"1px solid rgba(0,229,255,0.25)",borderRadius:16,padding:"24px 28px",marginBottom:16}}>
-          <p style={{fontSize:10,letterSpacing:"0.18em",color:"#00e5ff",fontWeight:900,margin:"0 0 14px"}}>READINESS VERDICT</p>
+          <p style={{fontSize:13,letterSpacing:"0.18em",color:"#00e5ff",fontWeight:900,margin:"0 0 14px"}}>READINESS VERDICT</p>
           <p style={{fontSize:14,color:"var(--t-text)",lineHeight:1.9,margin:0,whiteSpace:"pre-wrap"}}>{response}</p>
         </div>
         <button onClick={()=>{setResponse(null);setAnswers({sleep:null,emotion:null,distraction:null,ruleBreak:null});}}
@@ -6370,7 +6370,7 @@ function PreSessionCheck({anime}){
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
         {Q.map((q,qi)=>(
           <div key={q.key} style={{background:"var(--t-c2)",border:"1px solid rgba(255,107,255,0.1)",borderRadius:14,padding:"18px 22px"}}>
-            <p style={{fontSize:13,fontWeight:900,color:"var(--t-text)",margin:"0 0 12px",lineHeight:1.4}}>
+            <p style={{fontSize:14,fontWeight:900,color:"var(--t-text)",margin:"0 0 12px",lineHeight:1.4}}>
               <span style={{color:"#ff6bff",marginRight:8}}>{qi+1}.</span>{q.label}
             </p>
             <div style={{display:"flex",flexDirection:"column",gap:7}}>
@@ -6378,7 +6378,7 @@ function PreSessionCheck({anime}){
                 const isSel=answers[q.key]===opt;
                 return(
                   <button key={opt} onClick={()=>setAnswers(prev=>({...prev,[q.key]:opt}))}
-                    style={{background:isSel?"rgba(255,107,255,0.12)":"var(--t-c3)",border:`1px solid ${isSel?"rgba(255,107,255,0.5)":"rgba(255,107,255,0.1)"}`,borderRadius:8,padding:"10px 14px",cursor:"pointer",textAlign:"left",fontFamily:"inherit",fontSize:12,fontWeight:isSel?900:400,color:isSel?"#ff6bff":"var(--t-muted)",transition:"all 0.15s"}}>
+                    style={{background:isSel?"rgba(255,107,255,0.12)":"var(--t-c3)",border:`1px solid ${isSel?"rgba(255,107,255,0.5)":"rgba(255,107,255,0.1)"}`,borderRadius:8,padding:"10px 14px",cursor:"pointer",textAlign:"left",fontFamily:"inherit",fontSize:14,fontWeight:isSel?900:400,color:isSel?"#ff6bff":"var(--t-muted)",transition:"all 0.15s"}}>
                     {isSel?"✓  ":""}{opt}
                   </button>
                 );
@@ -6434,13 +6434,13 @@ function PostSessionDebrief({anime}){
       {!response&&!loading&&(
         <div style={{display:"flex",flexDirection:"column",gap:16}}>
           <div style={{background:"var(--t-c2)",border:`1px solid ${anime.color}22`,borderRadius:14,padding:"20px 24px"}}>
-            <p style={{fontSize:12,color:anime.color,fontWeight:900,letterSpacing:"0.15em",margin:"0 0 6px"}}>AFTER YOUR SESSION CLOSES</p>
-            <p style={{fontSize:12,color:"var(--t-muted)",margin:0,lineHeight:1.7}}>Describe what happened in your session. What did you trade? Did you follow the plan? Did anything feel off? Be honest — {(anime.character||anime.label||"Coach")} can handle it.</p>
+            <p style={{fontSize:14,color:anime.color,fontWeight:900,letterSpacing:"0.15em",margin:"0 0 6px"}}>AFTER YOUR SESSION CLOSES</p>
+            <p style={{fontSize:14,color:"var(--t-muted)",margin:0,lineHeight:1.7}}>Describe what happened in your session. What did you trade? Did you follow the plan? Did anything feel off? Be honest — {(anime.character||anime.label||"Coach")} can handle it.</p>
           </div>
           <textarea
             value={text} onChange={e=>setText(e.target.value)}
             placeholder={`Describe your session... (e.g. "I saw a setup on XAUUSD but the 1H wasn't aligned. I entered anyway because it looked strong on 30M. Got stopped out at the wide SL. Then I took another trade trying to make it back...")`}
-            style={{width:"100%",minHeight:160,background:"var(--t-c3)",border:"1px solid rgba(255,107,255,0.18)",borderRadius:12,padding:"16px 18px",color:"#d0c8e8",fontSize:13,fontFamily:"'Courier New',Courier,monospace",lineHeight:1.7,resize:"vertical"}}
+            style={{width:"100%",minHeight:160,background:"var(--t-c3)",border:"1px solid rgba(255,107,255,0.18)",borderRadius:12,padding:"16px 18px",color:"#d0c8e8",fontSize:14,fontFamily:"'Courier New',Courier,monospace",lineHeight:1.7,resize:"vertical"}}
           />
           <button onClick={runDebrief} disabled={!text.trim()||loading}
             style={{...S.generateBtn,opacity:text.trim()?1:0.35,cursor:text.trim()?"pointer":"not-allowed"}}>
@@ -6453,7 +6453,7 @@ function PostSessionDebrief({anime}){
         <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:16,padding:"60px 20px"}}>
           <span style={{fontSize:36,animation:"icc-pulse 1.2s ease infinite"}}>{anime.emoji}</span>
           <Spinner size={40}/>
-          <p style={{fontSize:13,color:anime.color,fontWeight:900,letterSpacing:"0.12em",animation:"icc-pulse 1.4s ease infinite"}}>{(anime.character||anime.label||"Coach")} is analyzing your session...</p>
+          <p style={{fontSize:14,color:anime.color,fontWeight:900,letterSpacing:"0.12em",animation:"icc-pulse 1.4s ease infinite"}}>{(anime.character||anime.label||"Coach")} is analyzing your session...</p>
         </div>
       )}
       {response&&(
@@ -6462,8 +6462,8 @@ function PostSessionDebrief({anime}){
             <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:20}}>
               <span style={{fontSize:28}}>{anime.emoji}</span>
               <div>
-                <p style={{fontSize:11,letterSpacing:"0.18em",color:anime.color,fontWeight:900,margin:0}}>{(anime.character||anime.label||"COACH").toUpperCase()} DEBRIEF</p>
-                <p style={{fontSize:10,color:"var(--t-muted3)",margin:0}}>Post-session analysis</p>
+                <p style={{fontSize:14,letterSpacing:"0.18em",color:anime.color,fontWeight:900,margin:0}}>{(anime.character||anime.label||"COACH").toUpperCase()} DEBRIEF</p>
+                <p style={{fontSize:13,color:"var(--t-muted3)",margin:0}}>Post-session analysis</p>
               </div>
             </div>
             <p style={{fontSize:14,color:"#d0c8e8",lineHeight:2,margin:0,whiteSpace:"pre-wrap"}}>{response}</p>
@@ -6482,7 +6482,7 @@ function MindsetLibrary({anime}){
         <span style={{fontSize:36}}>{anime.emoji||"◈"}</span>
         <div>
           <p style={{fontSize:14,fontWeight:900,color:anime.color,margin:"0 0 4px",letterSpacing:"0.08em"}}>{anime.name||anime.label||"BRC"} · BRC RULES DECODED</p>
-          <p style={{fontSize:12,color:"var(--t-muted)",margin:0}}>The 5 core trading rules explained through the BRC methodology. Read these before every session.</p>
+          <p style={{fontSize:14,color:"var(--t-muted)",margin:0}}>The 5 core trading rules explained through the BRC methodology. Read these before every session.</p>
         </div>
       </div>
       {(!anime.rules||anime.rules.length===0)?(
@@ -6494,10 +6494,10 @@ function MindsetLibrary({anime}){
         {anime.rules.map((r,i)=>(
           <div key={i} style={{background:"var(--t-c2)",border:`1px solid ${anime.color}22`,borderLeft:`4px solid ${anime.color}`,borderRadius:12,padding:"20px 24px",animation:`icc-slide 0.3s ease ${i*0.07}s both`}}>
             <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
-              <span style={{fontSize:10,letterSpacing:"0.2em",color:anime.color,fontWeight:900,background:anime.color+"15",padding:"3px 10px",borderRadius:4,border:`1px solid ${anime.color}33`}}>RULE {i+1}</span>
-              <span style={{fontSize:13,fontWeight:900,color:"var(--t-text)",letterSpacing:"0.06em"}}>{r.rule}</span>
+              <span style={{fontSize:13,letterSpacing:"0.2em",color:anime.color,fontWeight:900,background:anime.color+"15",padding:"3px 10px",borderRadius:4,border:`1px solid ${anime.color}33`}}>RULE {i+1}</span>
+              <span style={{fontSize:14,fontWeight:900,color:"var(--t-text)",letterSpacing:"0.06em"}}>{r.rule}</span>
             </div>
-            <p style={{fontSize:13,color:"#b0a0cc",lineHeight:1.85,margin:0}}>{r.lesson}</p>
+            <p style={{fontSize:14,color:"#b0a0cc",lineHeight:1.85,margin:0}}>{r.lesson}</p>
           </div>
         ))}
       </div>
@@ -6523,10 +6523,10 @@ function LevelBox({tag,price,sub,note,accent,big}){
   if(!price)return null;
   return(
     <div style={{flex:big?1.3:1,display:"flex",flexDirection:"column",alignItems:"center",padding:"22px 12px",textAlign:"center",background:accent+"0a",borderBottom:`3px solid ${accent}`,borderRight:"1px solid rgba(255,107,255,0.08)"}}>
-      <div style={{fontSize:10,letterSpacing:"0.16em",color:"var(--t-muted)",marginBottom:8,fontWeight:900}}>{tag}</div>
+      <div style={{fontSize:13,letterSpacing:"0.16em",color:"var(--t-muted)",marginBottom:8,fontWeight:900}}>{tag}</div>
       <div style={{fontSize:big?28:22,fontWeight:900,color:accent,letterSpacing:"0.02em",marginBottom:6}}>{price}</div>
-      {sub&&<div style={{fontSize:10,color:"var(--t-muted2)",lineHeight:1.5,marginBottom:note?4:0}}>{sub}</div>}
-      {note&&<div style={{fontSize:10,color:"var(--t-muted3)",lineHeight:1.4,marginTop:2}}>{note}</div>}
+      {sub&&<div style={{fontSize:13,color:"var(--t-muted2)",lineHeight:1.5,marginBottom:note?4:0}}>{sub}</div>}
+      {note&&<div style={{fontSize:13,color:"var(--t-muted3)",lineHeight:1.4,marginTop:2}}>{note}</div>}
     </div>
   );
 }
@@ -6542,8 +6542,8 @@ function TriggerChip({icon,label,val,color}){
   if(!val)return null;
   return(
     <div style={{flex:1,minWidth:150,background:color+"0a",border:`1px solid ${color}30`,borderRadius:10,padding:"12px 14px"}}>
-      <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}><span style={{fontSize:13}}>{icon}</span><span style={{fontSize:9,letterSpacing:"0.18em",color,fontWeight:900}}>{label}</span></div>
-      <p style={{fontSize:12,color:"var(--t-text)",margin:0,lineHeight:1.5}}>{val}</p>
+      <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}><span style={{fontSize:14}}>{icon}</span><span style={{fontSize:13,letterSpacing:"0.18em",color,fontWeight:900}}>{label}</span></div>
+      <p style={{fontSize:14,color:"var(--t-text)",margin:0,lineHeight:1.5}}>{val}</p>
     </div>
   );
 }
@@ -6551,15 +6551,15 @@ function MetaChip({label,val,color}){
   if(!val)return null;
   return(
     <div style={{display:"flex",alignItems:"center",gap:8,background:"var(--t-c3)",border:`1px solid ${color}30`,borderRadius:8,padding:"9px 14px"}}>
-      <span style={{fontSize:9,letterSpacing:"0.15em",color:"var(--t-muted)"}}>{label}</span>
-      <span style={{fontSize:12,fontWeight:900,color}}>{val}</span>
+      <span style={{fontSize:13,letterSpacing:"0.15em",color:"var(--t-muted)"}}>{label}</span>
+      <span style={{fontSize:14,fontWeight:900,color}}>{val}</span>
     </div>
   );
 }
 function Filters({label,opts,val,set}){
   return(
     <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
-      <span style={{fontSize:11,color:"var(--t-muted)",letterSpacing:"0.1em"}}>{label}:</span>
+      <span style={{fontSize:14,color:"var(--t-muted)",letterSpacing:"0.1em"}}>{label}:</span>
       {opts.map(o=>(
         <button key={o} onClick={()=>set(o)} style={{...S.filterBtn,...(val===o?S.filterBtnActive:{})}}>{o}</button>
       ))}
@@ -6579,15 +6579,15 @@ function TradeTable({trades,compact}){
         <tbody>
           {trades.map((t,i)=>(
             <tr key={t.id} style={{background:i%2===0?"#1a0e2e":"#160b28",borderBottom:"1px solid rgba(255,107,255,0.06)"}}>
-              {!compact&&<td style={S.td}><span style={{display:"block"}}>{t.date}</span><span style={{fontSize:11,color:"var(--t-muted2)"}}>{t.time}</span></td>}
-              <td style={S.td}><span style={{fontSize:12,fontWeight:700,color:"#00e5ff",letterSpacing:"0.06em"}}>{t.instrument}</span></td>
-              <td style={S.td}><span style={{fontSize:11,fontWeight:700,padding:"3px 8px",borderRadius:5,border:"1px solid",background:t.direction==="LONG"?"#7fff6b22":"#ff6b6b22",color:t.direction==="LONG"?"#7fff6b":"#ff6b6b",borderColor:t.direction==="LONG"?"#7fff6b55":"#ff6b6b55"}}>{t.direction==="LONG"?"▲ L":"▼ S"}</span></td>
-              <td style={S.td}><span style={{fontSize:11,fontWeight:700,color:phaseColors[t.phase]||"#fff"}}>{t.phase}</span></td>
+              {!compact&&<td style={S.td}><span style={{display:"block"}}>{t.date}</span><span style={{fontSize:14,color:"var(--t-muted2)"}}>{t.time}</span></td>}
+              <td style={S.td}><span style={{fontSize:14,fontWeight:700,color:"#00e5ff",letterSpacing:"0.06em"}}>{t.instrument}</span></td>
+              <td style={S.td}><span style={{fontSize:14,fontWeight:700,padding:"3px 8px",borderRadius:5,border:"1px solid",background:t.direction==="LONG"?"#7fff6b22":"#ff6b6b22",color:t.direction==="LONG"?"#7fff6b":"#ff6b6b",borderColor:t.direction==="LONG"?"#7fff6b55":"#ff6b6b55"}}>{t.direction==="LONG"?"▲ L":"▼ S"}</span></td>
+              <td style={S.td}><span style={{fontSize:14,fontWeight:700,color:phaseColors[t.phase]||"#fff"}}>{t.phase}</span></td>
               {!compact&&<><td style={S.td}>{t.d}</td><td style={S.td}>{t.h4}</td><td style={S.td}>{t.h1}</td></>}
               <td style={S.td}><span style={{color:"#c0b0e0"}}>{t.entry}</span></td>
               <td style={S.td}><span style={{color:"#c0b0e0"}}>{t.exit}</span></td>
               <td style={S.td}><span style={{fontWeight:700,color:t.pnl>0?"#7fff6b":"#ff6b6b"}}>{t.pnl>0?"+":""}{t.pnl.toFixed(1)}</span></td>
-              <td style={S.td}><span style={{fontSize:11,fontWeight:900,padding:"3px 10px",borderRadius:5,border:"1px solid",background:t.result==="WIN"?"#7fff6b22":"#ff6b6b22",color:t.result==="WIN"?"#7fff6b":"#ff6b6b",borderColor:t.result==="WIN"?"#7fff6b44":"#ff6b6b44"}}>{t.result}</span></td>
+              <td style={S.td}><span style={{fontSize:14,fontWeight:900,padding:"3px 10px",borderRadius:5,border:"1px solid",background:t.result==="WIN"?"#7fff6b22":"#ff6b6b22",color:t.result==="WIN"?"#7fff6b":"#ff6b6b",borderColor:t.result==="WIN"?"#7fff6b44":"#ff6b6b44"}}>{t.result}</span></td>
             </tr>
           ))}
         </tbody>
@@ -6601,31 +6601,31 @@ function Spinner({size=24}){
 
 // ─── Theme tokens ───────────────────────────────────────────────────────────
 const DARK={
-  bg:"#130d22",
-  navBg:"rgba(19,13,34,0.96)",
-  text:"#f8f4ff",
-  subtext:"#c8bede",
-  border:"rgba(255,107,255,0.12)",
-  gridLine:"rgba(255,107,255,0.032)",
-  c1:"rgba(255,255,255,0.04)",
-  c2:"rgba(255,255,255,0.07)",
-  c3:"rgba(255,255,255,0.10)",
-  c4:"rgba(255,255,255,0.12)",
-  c5:"rgba(255,255,255,0.08)",
-  c6:"rgba(255,255,255,0.10)",
-  c7:"rgba(255,255,255,0.12)",
-  cardBg:"rgba(255,255,255,0.07)",
-  cardBorder:"rgba(255,255,255,0.10)",
-  inputBg:"rgba(255,255,255,0.10)",
-  inputBorder:"rgba(255,107,255,0.18)",
-  muted:"#f0ecff",
-  muted2:"#d8d0f0",
-  muted3:"#bcb0d8",
-  muted4:"#9888bb",
-  muted5:"#705588",
-  navLinkColor:"#f0ecff",
-  tableBg:"#0f0820",
-  scrollThumb:"rgba(255,107,255,0.25)",
+  bg:"#1a1030",
+  navBg:"rgba(20,12,35,0.97)",
+  text:"#fdf9ff",
+  subtext:"#ede5ff",
+  border:"rgba(255,107,255,0.16)",
+  gridLine:"rgba(255,107,255,0.04)",
+  c1:"rgba(255,255,255,0.07)",
+  c2:"rgba(255,255,255,0.11)",
+  c3:"rgba(255,255,255,0.15)",
+  c4:"rgba(255,255,255,0.18)",
+  c5:"rgba(255,255,255,0.10)",
+  c6:"rgba(255,255,255,0.13)",
+  c7:"rgba(255,255,255,0.15)",
+  cardBg:"rgba(255,255,255,0.08)",
+  cardBorder:"rgba(255,255,255,0.13)",
+  inputBg:"rgba(255,255,255,0.12)",
+  inputBorder:"rgba(255,107,255,0.22)",
+  muted:"#fdf9ff",
+  muted2:"#ede5ff",
+  muted3:"#d8ccf4",
+  muted4:"#c4b4e0",
+  muted5:"#a080c8",
+  navLinkColor:"#f8f4ff",
+  tableBg:"#160e2a",
+  scrollThumb:"rgba(255,107,255,0.3)",
 };
 const LIGHT={
   bg:"#f2f0f8",
@@ -6635,7 +6635,7 @@ const LIGHT={
   border:"rgba(100,60,180,0.15)",
   gridLine:"rgba(100,60,180,0.05)",
   // card surfaces — light uses white with low opacity black shadows
-  c1:"rgba(255,255,255,0.7)",
+  c1:"rgba(255,255,255,0.85)",
   c2:"rgba(255,255,255,0.85)",
   c3:"rgba(255,255,255,0.9)",
   c4:"rgba(255,255,255,0.95)",
@@ -6702,7 +6702,7 @@ function JournalPage({journal, onUpdate, T=DARK}){
       {/* Page header */}
       <div style={{marginBottom:28}}>
         <h1 style={{fontSize:28,fontWeight:900,color:"var(--t-text)",letterSpacing:"-0.01em",margin:"0 0 6px"}}>Execution Journal</h1>
-        <p style={{fontFamily:"monospace",fontSize:12,color:"var(--t-muted4)",margin:0,letterSpacing:"0.04em"}}>The system only works if you log it.</p>
+        <p style={{fontFamily:"monospace",fontSize:14,color:"var(--t-muted4)",margin:0,letterSpacing:"0.04em"}}>The system only works if you log it.</p>
       </div>
 
       {/* Stats bar — 3 primary + 4 secondary */}
@@ -6711,11 +6711,11 @@ function JournalPage({journal, onUpdate, T=DARK}){
         <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
           {/* WIN RATE — softened for small samples */}
           <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:10,padding:"16px 18px"}}>
-            <div style={{fontSize:9,fontWeight:900,letterSpacing:"0.16em",color:"var(--t-muted4)",marginBottom:8}}>WIN RATE</div>
+            <div style={{fontSize:13,fontWeight:900,letterSpacing:"0.16em",color:"var(--t-muted4)",marginBottom:8}}>WIN RATE</div>
             {total<5?(
               <div>
                 <div style={{fontSize:30,fontWeight:900,color:total===0?"#8878aa":"#7fff6b",fontFamily:"monospace",letterSpacing:"-0.02em"}}>{total===0?"—":`${winRate}%`}</div>
-                {total>0&&<div style={{fontSize:9,color:"var(--t-muted4)",fontWeight:600,marginTop:3,fontFamily:"monospace"}}>small sample · {total} trade{total!==1?"s":""}</div>}
+                {total>0&&<div style={{fontSize:13,color:"var(--t-muted4)",fontWeight:600,marginTop:3,fontFamily:"monospace"}}>small sample · {total} trade{total!==1?"s":""}</div>}
               </div>
             ):(
               <div style={{fontSize:30,fontWeight:900,color:"#7fff6b",fontFamily:"monospace",letterSpacing:"-0.02em"}}>{winRate}%</div>
@@ -6723,15 +6723,15 @@ function JournalPage({journal, onUpdate, T=DARK}){
           </div>
           {/* RECORD */}
           <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:10,padding:"16px 18px"}}>
-            <div style={{fontSize:9,fontWeight:900,letterSpacing:"0.16em",color:"var(--t-muted4)",marginBottom:8}}>RECORD</div>
+            <div style={{fontSize:13,fontWeight:900,letterSpacing:"0.16em",color:"var(--t-muted4)",marginBottom:8}}>RECORD</div>
             <div style={{fontSize:30,fontWeight:900,color:"#00e5ff",fontFamily:"monospace",letterSpacing:"-0.02em"}}>{wins}-{losses}{be>0?"-"+be:""}</div>
-            {total<5&&total>0&&<div style={{fontSize:9,color:"var(--t-muted4)",fontWeight:600,marginTop:3,fontFamily:"monospace"}}>need 5+ trades for reliable data</div>}
+            {total<5&&total>0&&<div style={{fontSize:13,color:"var(--t-muted4)",fontWeight:600,marginTop:3,fontFamily:"monospace"}}>need 5+ trades for reliable data</div>}
           </div>
           {/* AVG GRADE */}
           <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:10,padding:"16px 18px"}}>
-            <div style={{fontSize:9,fontWeight:900,letterSpacing:"0.16em",color:"var(--t-muted4)",marginBottom:8}}>AVG GRADE</div>
+            <div style={{fontSize:13,fontWeight:900,letterSpacing:"0.16em",color:"var(--t-muted4)",marginBottom:8}}>AVG GRADE</div>
             <div style={{fontSize:30,fontWeight:900,color:avgGradeColor,fontFamily:"monospace",letterSpacing:"-0.02em"}}>{avgGradeLabel}</div>
-            {gradedTrades.length>0&&<div style={{fontSize:9,color:"var(--t-muted4)",fontWeight:600,marginTop:3,fontFamily:"monospace"}}>{gradedTrades.length} trade{gradedTrades.length!==1?"s":""} logged</div>}
+            {gradedTrades.length>0&&<div style={{fontSize:13,color:"var(--t-muted4)",fontWeight:600,marginTop:3,fontFamily:"monospace"}}>{gradedTrades.length} trade{gradedTrades.length!==1?"s":""} logged</div>}
           </div>
         </div>
         {/* Secondary row */}
@@ -6743,7 +6743,7 @@ function JournalPage({journal, onUpdate, T=DARK}){
             {label:"PENDING",value:pending,color:"#8878aa"},
           ].map(s=>(
             <div key={s.label} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:"10px 14px"}}>
-              <div style={{fontSize:9,fontWeight:900,letterSpacing:"0.16em",color:"var(--t-muted4)",marginBottom:6}}>{s.label}</div>
+              <div style={{fontSize:13,fontWeight:900,letterSpacing:"0.16em",color:"var(--t-muted4)",marginBottom:6}}>{s.label}</div>
               <div style={{fontSize:22,fontWeight:900,color:s.color,fontFamily:"monospace"}}>{s.value}</div>
             </div>
           ))}
@@ -6757,7 +6757,7 @@ function JournalPage({journal, onUpdate, T=DARK}){
             const count=journal.filter(t=>t.grade===g&&t.outcome).length;
             if(!count)return null;
             return(
-              <div key={g} style={{padding:"4px 12px",background:`${gradeColors[g]}14`,border:`1px solid ${gradeColors[g]}44`,borderRadius:8,fontSize:11,fontWeight:700,color:gradeColors[g]}}>
+              <div key={g} style={{padding:"4px 12px",background:`${gradeColors[g]}14`,border:`1px solid ${gradeColors[g]}44`,borderRadius:8,fontSize:14,fontWeight:700,color:gradeColors[g]}}>
                 {g} setups logged: {count}
               </div>
             );
@@ -6771,7 +6771,7 @@ function JournalPage({journal, onUpdate, T=DARK}){
           <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:12,padding:"28px 24px",textAlign:"center"}}>
             <div style={{fontSize:28,marginBottom:12}}>📓</div>
             <div style={{fontSize:15,fontWeight:900,color:"var(--t-muted3)",marginBottom:6}}>No trades logged yet</div>
-            <div style={{fontSize:12,color:"var(--t-muted4)",fontFamily:"monospace",lineHeight:1.7}}>
+            <div style={{fontSize:14,color:"var(--t-muted4)",fontFamily:"monospace",lineHeight:1.7}}>
               Complete Phase 3 and click <strong style={{color:"#7fff6b"}}>LIMIT ORDER ACTIVE</strong><br/>
               to automatically log your next trade here.
             </div>
@@ -6791,26 +6791,26 @@ function JournalPage({journal, onUpdate, T=DARK}){
                 {/* Left — trade info */}
                 <div style={{flex:1,minWidth:200}}>
                   <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,flexWrap:"wrap"}}>
-                    <span style={{fontSize:13,fontWeight:900,color:"var(--t-text)"}}>{trade.instrument}</span>
-                    <span style={{fontSize:11,fontWeight:700,padding:"2px 8px",borderRadius:4,
+                    <span style={{fontSize:14,fontWeight:900,color:"var(--t-text)"}}>{trade.instrument}</span>
+                    <span style={{fontSize:14,fontWeight:700,padding:"2px 8px",borderRadius:4,
                       background:trade.direction==="LONG"?"rgba(127,255,107,0.12)":"rgba(255,107,107,0.12)",
                       color:trade.direction==="LONG"?"#7fff6b":"#ff6b6b"}}>
                       {trade.direction}
                     </span>
-                    <span style={{fontSize:11,fontWeight:700,padding:"2px 8px",borderRadius:4,
+                    <span style={{fontSize:14,fontWeight:700,padding:"2px 8px",borderRadius:4,
                       background:`${gradeColors[trade.grade]||"#8878aa"}14`,
                       color:gradeColors[trade.grade]||"#8878aa"}}>
                       {trade.grade}
                     </span>
-                    <span style={{fontSize:10,color:"var(--t-muted4)",fontFamily:"monospace"}}>
+                    <span style={{fontSize:13,color:"var(--t-muted4)",fontFamily:"monospace"}}>
                       {new Date(trade.date).toLocaleDateString("en-US",{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})}
                     </span>
                   </div>
                   <div style={{display:"flex",gap:16,flexWrap:"wrap"}}>
                     {[{label:"Entry",val:trade.entry},{label:"Stop",val:trade.stop},{label:"TP1",val:trade.tp1},{label:"Session",val:trade.session}].map(f=>(
                       <div key={f.label}>
-                        <div style={{fontSize:9,color:"var(--t-muted4)",fontWeight:700,letterSpacing:"0.1em",marginBottom:2}}>{f.label}</div>
-                        <div style={{fontSize:12,fontWeight:700,color:"var(--t-muted)",fontFamily:"monospace"}}>{f.val||"—"}</div>
+                        <div style={{fontSize:13,color:"var(--t-muted4)",fontWeight:700,letterSpacing:"0.1em",marginBottom:2}}>{f.label}</div>
+                        <div style={{fontSize:14,fontWeight:700,color:"var(--t-muted)",fontFamily:"monospace"}}>{f.val||"—"}</div>
                       </div>
                     ))}
                   </div>
@@ -6820,11 +6820,11 @@ function JournalPage({journal, onUpdate, T=DARK}){
                 <div style={{display:"flex",flexDirection:"column",gap:6,alignItems:"flex-end"}}>
                   {!trade.outcome?(
                     <>
-                      <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.1em",color:"var(--t-muted4)",marginBottom:2}}>OUTCOME</div>
+                      <div style={{fontSize:13,fontWeight:700,letterSpacing:"0.1em",color:"var(--t-muted4)",marginBottom:2}}>OUTCOME</div>
                       <div style={{display:"flex",gap:6}}>
                         {["WIN","LOSS","BE"].map(o=>(
                           <button key={o} onClick={()=>setOutcome(trade.id,o)}
-                            style={{fontFamily:"inherit",fontSize:11,fontWeight:900,letterSpacing:"0.08em",
+                            style={{fontFamily:"inherit",fontSize:14,fontWeight:900,letterSpacing:"0.08em",
                               padding:"6px 14px",borderRadius:7,cursor:"pointer",border:"none",
                               background:o==="WIN"?"rgba(127,255,107,0.12)":o==="LOSS"?"rgba(255,107,107,0.12)":"rgba(255,209,102,0.12)",
                               color:o==="WIN"?"#7fff6b":o==="LOSS"?"#ff6b6b":"#ffd166"}}>
@@ -6837,7 +6837,7 @@ function JournalPage({journal, onUpdate, T=DARK}){
                     <div style={{display:"flex",alignItems:"center",gap:8}}>
                       <span style={{fontSize:16,fontWeight:900,color:outcomeColors[trade.outcome]}}>{trade.outcome}</span>
                       <button onClick={()=>setOutcome(trade.id,null)}
-                        style={{fontSize:11,fontWeight:700,letterSpacing:"0.06em",
+                        style={{fontSize:14,fontWeight:700,letterSpacing:"0.06em",
                           color:"var(--t-muted3)",
                           background:"rgba(255,255,255,0.06)",
                           border:"1px solid rgba(255,255,255,0.14)",
@@ -6852,14 +6852,14 @@ function JournalPage({journal, onUpdate, T=DARK}){
                   )}
                   <button onClick={()=>deleteEntry(trade.id)}
                     title="Delete trade"
-                    style={{fontSize:12,color:"rgba(255,255,255,0.2)",
+                    style={{fontSize:14,color:"rgba(255,255,255,0.80)",
                       background:"rgba(255,255,255,0.04)",
                       border:"1px solid rgba(255,255,255,0.08)",
                       borderRadius:7,padding:"5px 8px",
                       cursor:"pointer",lineHeight:1,
                       transition:"all 0.15s"}}
                     onMouseEnter={e=>{e.currentTarget.style.color="rgba(255,107,107,0.7)";e.currentTarget.style.background="rgba(255,107,107,0.08)";e.currentTarget.style.borderColor="rgba(255,107,107,0.25)";}}
-                    onMouseLeave={e=>{e.currentTarget.style.color="rgba(255,255,255,0.2)";e.currentTarget.style.background="rgba(255,255,255,0.04)";e.currentTarget.style.borderColor="rgba(255,255,255,0.08)";}}>
+                    onMouseLeave={e=>{e.currentTarget.style.color="rgba(255,255,255,0.80)";e.currentTarget.style.background="rgba(255,255,255,0.04)";e.currentTarget.style.borderColor="rgba(255,255,255,0.08)";}}>
                     🗑
                   </button>
                 </div>
@@ -6876,7 +6876,7 @@ function JournalPage({journal, onUpdate, T=DARK}){
           border:"1px solid rgba(255,255,255,0.05)",
           borderRadius:10,display:"flex",alignItems:"center",gap:12}}>
           <span style={{fontSize:16}}>📈</span>
-          <span style={{fontSize:11,color:"var(--t-muted4)",fontFamily:"monospace",lineHeight:1.6}}>
+          <span style={{fontSize:14,color:"var(--t-muted4)",fontFamily:"monospace",lineHeight:1.6}}>
             Complete Phase 3 and click <strong style={{color:"#7fff6b"}}>LIMIT ORDER ACTIVE</strong> to log your next trade automatically.
           </span>
         </div>
@@ -6939,7 +6939,7 @@ function ResetPasswordPage({ token, onDone }) {
           <div style={{ fontSize:22, fontWeight:800, color:"#f4f0ff", marginBottom:6, letterSpacing:"-0.01em" }}>
             {success ? "Password updated." : "Set a new password"}
           </div>
-          <div style={{ fontSize:13, color:"#8878aa", fontFamily:"monospace" }}>
+          <div style={{ fontSize:14, color:"#8878aa", fontFamily:"monospace" }}>
             {success ? "Redirecting you to login..." : "Choose a strong password for your account."}
           </div>
         </div>
@@ -6952,14 +6952,14 @@ function ResetPasswordPage({ token, onDone }) {
           <div style={{ background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,107,255,0.15)", borderRadius:16, padding:"32px 28px" }}>
 
             {error && (
-              <div style={{ padding:"10px 14px", background:"rgba(255,107,107,0.08)", border:"1px solid rgba(255,107,107,0.25)", borderRadius:8, marginBottom:16, fontSize:13, color:"#ff8080", fontFamily:"monospace", lineHeight:1.5 }}>
+              <div style={{ padding:"10px 14px", background:"rgba(255,107,107,0.08)", border:"1px solid rgba(255,107,107,0.25)", borderRadius:8, marginBottom:16, fontSize:14, color:"#ff8080", fontFamily:"monospace", lineHeight:1.5 }}>
                 {error}
               </div>
             )}
 
             <div style={{ display:"flex", flexDirection:"column", gap:12, marginBottom:20 }}>
               <div>
-                <label style={{ fontSize:11, fontWeight:700, letterSpacing:"0.1em", color:"#8878aa", display:"block", marginBottom:6, fontFamily:"monospace" }}>NEW PASSWORD</label>
+                <label style={{ fontSize:14, fontWeight:700, letterSpacing:"0.1em", color:"#8878aa", display:"block", marginBottom:6, fontFamily:"monospace" }}>NEW PASSWORD</label>
                 <div style={{ position:"relative" }}>
                   <input type={showPw ? "text" : "password"} value={pw} onChange={e=>setPw(e.target.value)}
                     placeholder="Minimum 8 characters"
@@ -6973,7 +6973,7 @@ function ResetPasswordPage({ token, onDone }) {
                 </div>
               </div>
               <div>
-                <label style={{ fontSize:11, fontWeight:700, letterSpacing:"0.1em", color:"#8878aa", display:"block", marginBottom:6, fontFamily:"monospace" }}>CONFIRM PASSWORD</label>
+                <label style={{ fontSize:14, fontWeight:700, letterSpacing:"0.1em", color:"#8878aa", display:"block", marginBottom:6, fontFamily:"monospace" }}>CONFIRM PASSWORD</label>
                 <div style={{ position:"relative" }}>
                   <input type={showPw ? "text" : "password"} value={confirm} onChange={e=>setConfirm(e.target.value)}
                     placeholder="Re-enter your password"
@@ -7132,7 +7132,7 @@ function AuthScreen({onBack, supabase, initialTab="signup"}){
           <div style={{fontSize:22,fontWeight:800,color:"#f4f0ff",marginBottom:6,letterSpacing:"-0.01em"}}>
             {tab==="reset"?"Forgot your password?":tab==="signup"?"Almost done.":"Welcome back"}
           </div>
-          <div style={{fontSize:13,color:"#8878aa",fontFamily:"monospace"}}>
+          <div style={{fontSize:14,color:"#8878aa",fontFamily:"monospace"}}>
             {tab==="signup"
               ? (localStorage.getItem("omniusd_paid_tier")
                   ? "Payment confirmed. Create your password to access your dashboard."
@@ -7151,7 +7151,7 @@ function AuthScreen({onBack, supabase, initialTab="signup"}){
               {["signup","login"].map(t=>(
                 <button key={t} onClick={()=>{setTab(t);setError(null);setSuccess(null);setResetSent(false);}}
                   style={{flex:1,padding:"9px",borderRadius:7,border:"none",fontFamily:"inherit",
-                    fontSize:13,fontWeight:700,cursor:"pointer",letterSpacing:"0.04em",transition:"all 0.15s",
+                    fontSize:14,fontWeight:700,cursor:"pointer",letterSpacing:"0.04em",transition:"all 0.15s",
                     background:tab===t?"rgba(255,107,255,0.15)":"none",
                     color:tab===t?"#ff6bff":"#8878aa"}}>
                   {t==="signup"?"Sign Up":"Log In"}
@@ -7162,14 +7162,14 @@ function AuthScreen({onBack, supabase, initialTab="signup"}){
 
           {/* Success */}
           {success&&(
-            <div style={{padding:"10px 14px",background:"rgba(127,255,107,0.08)",border:"1px solid rgba(127,255,107,0.25)",borderRadius:8,marginBottom:16,fontSize:13,color:"#7fff6b",fontFamily:"monospace",lineHeight:1.5}}>
+            <div style={{padding:"10px 14px",background:"rgba(127,255,107,0.08)",border:"1px solid rgba(127,255,107,0.25)",borderRadius:8,marginBottom:16,fontSize:14,color:"#7fff6b",fontFamily:"monospace",lineHeight:1.5}}>
               {success}
             </div>
           )}
 
           {/* Error */}
           {error&&(
-            <div style={{padding:"10px 14px",background:"rgba(255,107,107,0.08)",border:"1px solid rgba(255,107,107,0.25)",borderRadius:8,marginBottom:16,fontSize:13,color:"#ff8080",fontFamily:"monospace",lineHeight:1.5}}>
+            <div style={{padding:"10px 14px",background:"rgba(255,107,107,0.08)",border:"1px solid rgba(255,107,107,0.25)",borderRadius:8,marginBottom:16,fontSize:14,color:"#ff8080",fontFamily:"monospace",lineHeight:1.5}}>
               {error}
             </div>
           )}
@@ -7179,7 +7179,7 @@ function AuthScreen({onBack, supabase, initialTab="signup"}){
 
             {/* Email */}
             <div>
-              <label style={{fontSize:11,fontWeight:700,letterSpacing:"0.1em",color:"#8878aa",display:"block",marginBottom:6,fontFamily:"monospace"}}>EMAIL</label>
+              <label style={{fontSize:14,fontWeight:700,letterSpacing:"0.1em",color:"#8878aa",display:"block",marginBottom:6,fontFamily:"monospace"}}>EMAIL</label>
               <input type="email" value={email} onChange={e=>setEmail(e.target.value)}
                 placeholder="you@example.com" style={inputStyle}
                 onKeyDown={e=>e.key==="Enter"&&(tab==="signup"?handleSignUp():tab==="login"?handleLogin():handleReset())}
@@ -7189,7 +7189,7 @@ function AuthScreen({onBack, supabase, initialTab="signup"}){
             {/* Password */}
             {tab!=="reset"&&(
               <div>
-                <label style={{fontSize:11,fontWeight:700,letterSpacing:"0.1em",color:"#8878aa",display:"block",marginBottom:6,fontFamily:"monospace"}}>PASSWORD</label>
+                <label style={{fontSize:14,fontWeight:700,letterSpacing:"0.1em",color:"#8878aa",display:"block",marginBottom:6,fontFamily:"monospace"}}>PASSWORD</label>
                 <div style={{position:"relative"}}>
                   <input type={showPass?"text":"password"} value={password} onChange={e=>setPassword(e.target.value)}
                     placeholder={tab==="signup"?"Minimum 8 characters":"Enter your password"}
@@ -7208,7 +7208,7 @@ function AuthScreen({onBack, supabase, initialTab="signup"}){
             {/* Confirm password — signup only */}
             {tab==="signup"&&(
               <div>
-                <label style={{fontSize:11,fontWeight:700,letterSpacing:"0.1em",color:"#8878aa",display:"block",marginBottom:6,fontFamily:"monospace"}}>CONFIRM PASSWORD</label>
+                <label style={{fontSize:14,fontWeight:700,letterSpacing:"0.1em",color:"#8878aa",display:"block",marginBottom:6,fontFamily:"monospace"}}>CONFIRM PASSWORD</label>
                 <div style={{position:"relative"}}>
                   <input type={showConfirm?"text":"password"} value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)}
                     placeholder="Re-enter your password"
@@ -7252,22 +7252,22 @@ function AuthScreen({onBack, supabase, initialTab="signup"}){
           )}
 
           {/* Secondary links */}
-          <div style={{textAlign:"center",fontSize:12,fontFamily:"monospace",color:"#8878aa",display:"flex",flexDirection:"column",gap:8}}>
+          <div style={{textAlign:"center",fontSize:14,fontFamily:"monospace",color:"#8878aa",display:"flex",flexDirection:"column",gap:8}}>
             {tab==="login"&&!loginOnly&&(
               <button onClick={()=>{setTab("reset");setError(null);setSuccess(null);setResetSent(false);}}
-                style={{background:"none",border:"none",color:"rgba(255,255,255,0.35)",cursor:"pointer",fontFamily:"monospace",fontSize:12,textDecoration:"underline"}}>
+                style={{background:"none",border:"none",color:"rgba(255,255,255,0.8)",cursor:"pointer",fontFamily:"monospace",fontSize:14,textDecoration:"underline"}}>
                 Forgot your password?
               </button>
             )}
             {tab==="login"&&loginOnly&&(
               <button onClick={()=>{setTab("reset");setError(null);setSuccess(null);setResetSent(false);}}
-                style={{background:"none",border:"none",color:"rgba(255,255,255,0.35)",cursor:"pointer",fontFamily:"monospace",fontSize:12,textDecoration:"underline"}}>
+                style={{background:"none",border:"none",color:"rgba(255,255,255,0.8)",cursor:"pointer",fontFamily:"monospace",fontSize:14,textDecoration:"underline"}}>
                 Forgot your password?
               </button>
             )}
             {tab==="reset"&&(
               <button onClick={()=>{setTab("login");setError(null);setSuccess(null);setResetSent(false);}}
-                style={{background:"none",border:"none",color:"rgba(255,255,255,0.35)",cursor:"pointer",fontFamily:"monospace",fontSize:12,textDecoration:"underline"}}>
+                style={{background:"none",border:"none",color:"rgba(255,255,255,0.8)",cursor:"pointer",fontFamily:"monospace",fontSize:14,textDecoration:"underline"}}>
                 ← Back to log in
               </button>
             )}
@@ -7276,7 +7276,7 @@ function AuthScreen({onBack, supabase, initialTab="signup"}){
 
         {/* Back to landing */}
         <div style={{textAlign:"center",marginTop:20}}>
-          <button onClick={onBack} style={{background:"none",border:"none",color:"#8878aa",cursor:"pointer",fontFamily:"monospace",fontSize:12,letterSpacing:"0.06em"}}>
+          <button onClick={onBack} style={{background:"none",border:"none",color:"#8878aa",cursor:"pointer",fontFamily:"monospace",fontSize:14,letterSpacing:"0.06em"}}>
             ← Back to home
           </button>
         </div>
@@ -7333,25 +7333,25 @@ function LegalPage({ onBack, type }) {
     <div style={{ minHeight:"100vh", background:"#0f0c1a", color:"#f0ecff", fontFamily:"'Space Mono',monospace" }}>
       <div style={{ position:"fixed", inset:0, backgroundImage:"linear-gradient(rgba(255,107,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,107,255,0.025) 1px,transparent 1px)", backgroundSize:"48px 48px", pointerEvents:"none" }}/>
       <div style={{ maxWidth:720, margin:"0 auto", padding:"48px 24px 80px", position:"relative", zIndex:1 }}>
-        <button onClick={onBack} style={{ background:"none", border:"none", color:"rgba(255,107,255,0.6)", cursor:"pointer", fontFamily:"inherit", fontSize:11, marginBottom:32, letterSpacing:"0.08em" }}>
+        <button onClick={onBack} style={{ background:"none", border:"none", color:"rgba(255,107,255,0.6)", cursor:"pointer", fontFamily:"inherit", fontSize:14, marginBottom:32, letterSpacing:"0.08em" }}>
           {"<- Back"}
         </button>
-        <div style={{ fontSize:9, color:"rgba(255,107,255,0.6)", letterSpacing:"0.2em", marginBottom:12 }}>LEGAL</div>
+        <div style={{ fontSize:13, color:"rgba(255,107,255,0.6)", letterSpacing:"0.2em", marginBottom:12 }}>LEGAL</div>
         <h1 style={{ fontSize:28, fontWeight:700, marginBottom:8, letterSpacing:"-0.01em" }}>{title}</h1>
-        <div style={{ fontSize:10, color:"rgba(255,255,255,0.3)", marginBottom:40 }}>Last updated: March 2026</div>
+        <div style={{ fontSize:13, color:"rgba(255,255,255,0.75)", marginBottom:40 }}>Last updated: March 2026</div>
 
         {sections.map((section, i) => (
           <div key={i} style={{ marginBottom:32 }}>
-            <div style={{ fontSize:11, fontWeight:700, color:"#ff6bff", marginBottom:10, letterSpacing:"0.04em" }}>{section.title}</div>
+            <div style={{ fontSize:14, fontWeight:700, color:"#ff6bff", marginBottom:10, letterSpacing:"0.04em" }}>{section.title}</div>
             {section.body && (
-              <div style={{ fontSize:11, color:"rgba(255,255,255,0.55)", lineHeight:2 }}>{section.body}</div>
+              <div style={{ fontSize:14, color:"rgba(255,255,255,0.85)", lineHeight:2 }}>{section.body}</div>
             )}
             {section.bullets && (
               <div style={{ display:"flex", flexDirection:"column", gap:8, marginTop:4 }}>
                 {section.bullets.map((b, j) => (
                   <div key={j} style={{ display:"flex", gap:10, alignItems:"flex-start" }}>
                     <span style={{ color:"#ff6bff", flexShrink:0, marginTop:2 }}>-</span>
-                    <span style={{ fontSize:11, color:"rgba(255,255,255,0.55)", lineHeight:1.8 }}>{b}</span>
+                    <span style={{ fontSize:14, color:"rgba(255,255,255,0.85)", lineHeight:1.8 }}>{b}</span>
                   </div>
                 ))}
               </div>
@@ -7359,7 +7359,7 @@ function LegalPage({ onBack, type }) {
           </div>
         ))}
 
-        <div style={{ borderTop:"1px solid rgba(255,255,255,0.06)", paddingTop:24, fontSize:9, color:"rgba(255,255,255,0.2)", lineHeight:1.8 }}>
+        <div style={{ borderTop:"1px solid rgba(255,255,255,0.06)", paddingTop:24, fontSize:13, color:"rgba(255,255,255,0.80)", lineHeight:1.8 }}>
           {"© 2026 OmniUSD · Questions? Email support@omniusd.pro"}
         </div>
       </div>
@@ -7432,7 +7432,7 @@ function PricingPage({onBack, onPaid}){
           ◈
           <span style={{fontFamily:"'Space Mono',monospace",fontSize:15,fontWeight:700,letterSpacing:"0.1em",background:"linear-gradient(90deg,#ff6bff,#00e5ff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>OmniUSD</span>
         </button>
-        <button onClick={onBack} style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,color:"#8878aa",background:"none",border:"none",cursor:"pointer"}}>
+        <button onClick={onBack} style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,color:"#8878aa",background:"none",border:"none",cursor:"pointer"}}>
           ← Back
         </button>
       </nav>
@@ -7440,11 +7440,11 @@ function PricingPage({onBack, onPaid}){
       {/* Content */}
       <div style={{position:"relative",zIndex:1,maxWidth:1000,margin:"0 auto",padding:"100px 24px 80px"}}>
         <div style={{textAlign:"center",marginBottom:52}}>
-          <div style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,letterSpacing:"0.22em",color:"#ff6bff",marginBottom:16}}>CHOOSE YOUR PLAN</div>
+          <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,letterSpacing:"0.22em",color:"#ff6bff",marginBottom:16}}>CHOOSE YOUR PLAN</div>
           <h1 style={{fontFamily:"'Syne',sans-serif",fontSize:"clamp(32px,5vw,52px)",fontWeight:800,lineHeight:1.1,letterSpacing:"-0.02em",marginBottom:12}}>
             Select your access level
           </h1>
-          <p style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"#8878aa",lineHeight:1.7,maxWidth:480,margin:"0 auto"}}>
+          <p style={{fontFamily:"'Space Mono',monospace",fontSize:14,color:"#8878aa",lineHeight:1.7,maxWidth:480,margin:"0 auto"}}>
             Every plan includes the BRC execution tracker, session-aware guidance, and AI session plans.
           </p>
         </div>
@@ -7464,7 +7464,7 @@ function PricingPage({onBack, onPaid}){
                   boxShadow:isSel?`0 8px 40px ${p.color}18`:undefined}}>
                 {p.popular&&(
                   <div style={{position:"absolute",top:-12,left:"50%",transform:"translateX(-50%)",
-                    fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,letterSpacing:"0.12em",
+                    fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,letterSpacing:"0.12em",
                     color:"#0d0718",background:"#ff6bff",padding:"3px 14px",borderRadius:100,whiteSpace:"nowrap"}}>
                     MOST POPULAR
                   </div>
@@ -7472,20 +7472,20 @@ function PricingPage({onBack, onPaid}){
                 {isSel&&(
                   <div style={{position:"absolute",top:14,right:14,width:22,height:22,borderRadius:"50%",
                     background:p.color,display:"flex",alignItems:"center",justifyContent:"center",
-                    fontSize:11,color:"#0d0718",fontWeight:900}}>✓</div>
+                    fontSize:14,color:"#0d0718",fontWeight:900}}>✓</div>
                 )}
-                <div style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,letterSpacing:"0.16em",color:p.color,marginBottom:12}}>{p.label.toUpperCase()}</div>
+                <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,letterSpacing:"0.16em",color:p.color,marginBottom:12}}>{p.label.toUpperCase()}</div>
                 <div style={{fontFamily:"'Syne',sans-serif",fontSize:40,fontWeight:800,color:p.color,lineHeight:1,marginBottom:4}}>{p.price}</div>
-                <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"#8878aa",marginBottom:20}}>{p.period}</div>
+                <div style={{fontFamily:"'Space Mono',monospace",fontSize:14,color:"#8878aa",marginBottom:20}}>{p.period}</div>
                 <div style={{height:1,background:"rgba(255,255,255,0.07)",marginBottom:18}}/>
                 <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:0}}>
                   {p.instruments.map(ins=>(
-                    <div key={ins} style={{display:"flex",alignItems:"center",gap:8,fontFamily:"'Space Mono',monospace",fontSize:11,color:"#ccc4e8"}}>
+                    <div key={ins} style={{display:"flex",alignItems:"center",gap:8,fontFamily:"'Space Mono',monospace",fontSize:14,color:"#ccc4e8"}}>
                       <span style={{color:"#7fff6b",fontWeight:900}}>✓</span>{ins}
                     </div>
                   ))}
                   {p.features.map(f=>(
-                    <div key={f} style={{display:"flex",alignItems:"center",gap:8,fontFamily:"'Space Mono',monospace",fontSize:11,color:"#8878aa"}}>
+                    <div key={f} style={{display:"flex",alignItems:"center",gap:8,fontFamily:"'Space Mono',monospace",fontSize:14,color:"#8878aa"}}>
                       <span style={{color:"#8878aa"}}>·</span>{f}
                     </div>
                   ))}
@@ -7497,7 +7497,7 @@ function PricingPage({onBack, onPaid}){
 
         {/* Error */}
         {error&&(
-          <div style={{textAlign:"center",marginBottom:16,fontFamily:"'Space Mono',monospace",fontSize:12,color:"#ff8080",
+          <div style={{textAlign:"center",marginBottom:16,fontFamily:"'Space Mono',monospace",fontSize:14,color:"#ff8080",
             background:"rgba(255,107,107,0.08)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:8,padding:"10px"}}>
             {error}
           </div>
@@ -7516,7 +7516,7 @@ function PricingPage({onBack, onPaid}){
               :!selected?"Select a plan above"
               :"CONTINUE TO PAYMENT →"}
           </button>
-          <div style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"#8878aa"}}>
+          <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"#8878aa"}}>
             Paid plans start at $29/month · Secure checkout via Stripe · Cancel anytime
           </div>
         </div>
@@ -7534,13 +7534,13 @@ function FaqRow({q, a, isLast}) {
     <div style={{borderBottom: isLast ? "none" : "1px solid rgba(255,255,255,0.06)"}}>
       <button onClick={() => setOpen(o => !o)}
         style={{width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"20px 28px", background:"none", border:"none", cursor:"pointer", fontFamily:"inherit", textAlign:"left", gap:16}}>
-        <span style={{fontFamily:"'Space Mono',monospace", fontSize:12, fontWeight:700, color:"#f0ecff", lineHeight:1.4}}>{q}</span>
+        <span style={{fontFamily:"'Space Mono',monospace", fontSize:14, fontWeight:700, color:"#f0ecff", lineHeight:1.4}}>{q}</span>
         <span style={{fontSize:16, color:"#ff6bff", flexShrink:0, transition:"transform 0.2s", transform: open ? "rotate(45deg)" : "rotate(0deg)", display:"inline-block"}}>+</span>
       </button>
       {open && (
         <div style={{padding:"0 28px 20px"}}>
           {a.split("\n\n").map((para,i) => (
-            <p key={i} style={{fontFamily:"'Space Mono',monospace", fontSize:11, color:"rgba(255,255,255,0.55)", lineHeight:1.9, margin:i>0?"12px 0 0":0}}>{para}</p>
+            <p key={i} style={{fontFamily:"'Space Mono',monospace", fontSize:14, color:"rgba(255,255,255,0.85)", lineHeight:1.9, margin:i>0?"12px 0 0":0}}>{para}</p>
           ))}
         </div>
       )}
@@ -7594,14 +7594,14 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
           <span style={{fontFamily:"'Space Mono',monospace",fontSize:16,fontWeight:700,letterSpacing:"0.12em",background:"linear-gradient(90deg,#ff6bff,#00e5ff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>OmniUSD</span>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
-          <button onClick={onLogin||onEnterApp} style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,letterSpacing:"0.1em",color:"var(--muted,#ccc4e8)",background:"none",border:"none",cursor:"pointer",padding:"8px 14px"}}>LOG IN</button>
+          <button onClick={onLogin||onEnterApp} style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,letterSpacing:"0.1em",color:"var(--muted,#ccc4e8)",background:"none",border:"none",cursor:"pointer",padding:"8px 14px"}}>LOG IN</button>
           <button onClick={onEnterApp}
-            style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,letterSpacing:"0.1em",color:"#130d22",background:"#ff6bff",border:"none",padding:"9px 18px",borderRadius:6,cursor:"pointer",transition:"all 0.2s"}}>
+            style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,letterSpacing:"0.1em",color:"#130d22",background:"#ff6bff",border:"none",padding:"9px 18px",borderRadius:6,cursor:"pointer",transition:"all 0.2s"}}>
             CREATE ACCOUNT
           </button>
           {/* DEV TOGGLE */}
           <button onClick={onEnterApp}
-            style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,color:"#ffd166",background:"rgba(255,209,102,0.08)",border:"1px solid rgba(255,209,102,0.25)",borderRadius:6,padding:"8px 14px",cursor:"pointer",marginLeft:8}}>
+            style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,color:"#ffd166",background:"rgba(255,209,102,0.08)",border:"1px solid rgba(255,209,102,0.25)",borderRadius:6,padding:"8px 14px",cursor:"pointer",marginLeft:8}}>
             → App
           </button>
         </div>
@@ -7621,9 +7621,9 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
             {label:"Results",     href:"#results"},
           ].map((item,i)=>(
             <a key={item.label} href={item.href}
-              style={{fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,letterSpacing:"0.08em",color:"rgba(255,255,255,0.4)",textDecoration:"none",padding:"0 14px",height:40,display:"flex",alignItems:"center",borderRight:"1px solid rgba(255,255,255,0.05)",whiteSpace:"nowrap",transition:"color 0.15s"}}
+              style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,letterSpacing:"0.08em",color:"rgba(255,255,255,0.85)",textDecoration:"none",padding:"0 14px",height:40,display:"flex",alignItems:"center",borderRight:"1px solid rgba(255,255,255,0.05)",whiteSpace:"nowrap",transition:"color 0.15s"}}
               onMouseEnter={e=>e.currentTarget.style.color="#ff6bff"}
-              onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,0.4)"}>
+              onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,0.85)"}>
               {item.label}
             </a>
           ))}
@@ -7638,20 +7638,20 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
 
           {/* Left — headline + steps + CTA */}
           <div>
-            <div className="land-fade" style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,255,255,0.35)",letterSpacing:"0.22em",marginBottom:20}}>BUILT FOR THE NEW YORK SESSION</div>
+            <div className="land-fade" style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"rgba(255,255,255,0.8)",letterSpacing:"0.22em",marginBottom:20}}>BUILT FOR THE NEW YORK SESSION</div>
             <h1 className="land-fade" style={{fontFamily:"'Syne',sans-serif",fontSize:"clamp(30px,4vw,50px)",fontWeight:800,lineHeight:1.08,letterSpacing:"-0.025em",marginBottom:18,animationDelay:"0.1s"}}>
               <span style={{display:"block",color:"#f4f0ff"}}>Stop reacting.</span>
               <span style={{display:"block",background:"linear-gradient(135deg,#ff6bff,#00e5ff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Start executing.</span>
             </h1>
-            <p className="land-fade" style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"rgba(255,255,255,0.7)",lineHeight:1.7,maxWidth:520,marginBottom:32,animationDelay:"0.2s",fontWeight:700}}>
+            <p className="land-fade" style={{fontFamily:"'Space Mono',monospace",fontSize:14,color:"rgba(255,255,255,0.85)",lineHeight:1.7,maxWidth:520,marginBottom:32,animationDelay:"0.2s",fontWeight:700}}>
               Upload 5 charts. Get a locked BRC plan. Execute with precision during the only window that matters — 8:30 to 10:30 AM CT.
             </p>
             <div className="land-fade" style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap",marginBottom:44,animationDelay:"0.3s"}}>
               <button onClick={onEnterApp}
-                style={{fontFamily:"'Space Mono',monospace",fontSize:11,fontWeight:700,letterSpacing:"0.1em",color:"#fff",background:"linear-gradient(135deg,#ff6bff,#7b2fff)",border:"none",padding:"12px 24px",borderRadius:7,cursor:"pointer",boxShadow:"0 0 32px rgba(255,107,255,0.25)",transition:"all 0.2s"}}>
+                style={{fontFamily:"'Space Mono',monospace",fontSize:14,fontWeight:700,letterSpacing:"0.1em",color:"#fff",background:"linear-gradient(135deg,#ff6bff,#7b2fff)",border:"none",padding:"12px 24px",borderRadius:7,cursor:"pointer",boxShadow:"0 0 32px rgba(255,107,255,0.25)",transition:"all 0.2s"}}>
                 CHOOSE YOUR PLAN →
               </button>
-              <span style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"rgba(255,255,255,0.25)"}}>From $29/month</span>
+              <span style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"rgba(255,255,255,0.38)"}}>From $29/month</span>
             </div>
 
             {/* 3-step product loop */}
@@ -7662,10 +7662,10 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
                 {n:"3",title:"Execute candle by candle in NY session",sub:"OmniUSD tells you what to watch at 9:00 AM, 9:30 AM, and 10:00 AM CT. When a tier confirms — it tells you to act.",color:"#ff6bff"},
               ].map((r,i)=>(
                 <div key={r.n} style={{display:"flex",alignItems:"flex-start",gap:14,padding:"14px 18px",background:i%2===0?"rgba(255,255,255,0.02)":"transparent",borderBottom:i<2?"1px solid rgba(255,255,255,0.06)":"none"}}>
-                  <div style={{width:22,height:22,borderRadius:"50%",background:`${r.color}18`,border:`1px solid ${r.color}44`,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,color:r.color,flexShrink:0,marginTop:1}}>{r.n}</div>
+                  <div style={{width:22,height:22,borderRadius:"50%",background:`${r.color}18`,border:`1px solid ${r.color}44`,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,color:r.color,flexShrink:0,marginTop:1}}>{r.n}</div>
                   <div>
-                    <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,fontWeight:700,color:"#f0ecff",marginBottom:3}}>{r.title}</div>
-                    <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,255,255,0.4)",lineHeight:1.6}}>{r.sub}</div>
+                    <div style={{fontFamily:"'Space Mono',monospace",fontSize:14,fontWeight:700,color:"#f0ecff",marginBottom:3}}>{r.title}</div>
+                    <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"rgba(255,255,255,0.85)",lineHeight:1.6}}>{r.sub}</div>
                   </div>
                 </div>
               ))}
@@ -7683,11 +7683,11 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
 
         {/* Section header */}
         <div style={{marginBottom:40}}>
-          <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,107,255,0.7)",letterSpacing:"0.22em",marginBottom:16}}>LIVE SESSION MODE</div>
+          <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"rgba(255,107,255,0.7)",letterSpacing:"0.22em",marginBottom:16}}>LIVE SESSION MODE</div>
           <h2 style={{fontFamily:"'Syne',sans-serif",fontSize:"clamp(24px,3.5vw,40px)",fontWeight:800,lineHeight:1.1,letterSpacing:"-0.02em",color:"#f0ecff",marginBottom:14}}>
             When the session starts,<br/>this is your screen.
           </h2>
-          <p style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"rgba(255,255,255,0.45)",lineHeight:1.9,maxWidth:520,margin:0}}>
+          <p style={{fontFamily:"'Space Mono',monospace",fontSize:14,color:"rgba(255,255,255,0.75)",lineHeight:1.9,maxWidth:520,margin:0}}>
             OmniUSD doesn't just generate a plan. It guides you through the NY session candle by candle — showing exactly when to wait, when a 30M close counts, and when execution becomes valid during the highest conviction window in the market.
           </p>
         </div>
@@ -7698,14 +7698,14 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
           {/* Nav bar */}
           <div style={{padding:"10px 16px",background:"rgba(255,255,255,0.03)",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
             <div style={{display:"flex",alignItems:"center",gap:8}}>
-              <span style={{fontFamily:"'Space Mono',monospace",fontSize:12,fontWeight:700,color:"#ff6bff"}}>◈ OmniUSD</span>
+              <span style={{fontFamily:"'Space Mono',monospace",fontSize:14,fontWeight:700,color:"#ff6bff"}}>◈ OmniUSD</span>
               {[{l:"BTCUSD",c:"#ff6b6b"},{l:"SHORT",c:"#ff6b6b"},{l:"A+",c:"#7fff6b"}].map(b=>(
-                <span key={b.l} style={{fontFamily:"'Space Mono',monospace",fontSize:9,padding:"2px 7px",borderRadius:4,background:`${b.c}14`,border:`1px solid ${b.c}33`,color:b.c}}>{b.l}</span>
+                <span key={b.l} style={{fontFamily:"'Space Mono',monospace",fontSize:13,padding:"2px 7px",borderRadius:4,background:`${b.c}14`,border:`1px solid ${b.c}33`,color:b.c}}>{b.l}</span>
               ))}
             </div>
             <div style={{display:"flex",alignItems:"center",gap:5}}>
               <div style={{width:5,height:5,borderRadius:"50%",background:"#7fff6b"}}/>
-              <span style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"#7fff6b",fontWeight:700}}>OPEN</span>
+              <span style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"#7fff6b",fontWeight:700}}>OPEN</span>
             </div>
           </div>
 
@@ -7720,12 +7720,12 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
               ].map((t,i)=>(
                 <div key={i} style={{display:"flex",alignItems:"center"}}>
                   <div style={{width:7,height:7,borderRadius:"50%",background:t.done?"#7fff6b":t.active?"#00e5ff":"rgba(255,255,255,0.15)",boxShadow:t.active?"0 0 8px rgba(0,229,255,0.5)":"none",flexShrink:0}}/>
-                  <span style={{fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,color:t.done?"#7fff6b":t.active?"#00e5ff":"rgba(255,255,255,0.2)",margin:"0 5px",whiteSpace:"nowrap"}}>{t.l}</span>
+                  <span style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,color:t.done?"#7fff6b":t.active?"#00e5ff":"rgba(255,255,255,0.80)",margin:"0 5px",whiteSpace:"nowrap"}}>{t.l}</span>
                   {i<3&&<div style={{width:14,height:1,background:t.done?"#7fff6b":"rgba(255,255,255,0.08)",marginRight:3,flexShrink:0}}/>}
                 </div>
               ))}
             </div>
-            <span style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"#00e5ff",fontWeight:700,flexShrink:0,marginLeft:8}}>9:32 AM CT</span>
+            <span style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"#00e5ff",fontWeight:700,flexShrink:0,marginLeft:8}}>9:32 AM CT</span>
           </div>
 
           {/* Body — stack on mobile */}
@@ -7736,15 +7736,15 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
               <div style={{borderRight:"1px solid rgba(255,255,255,0.05)",padding:"16px"}}>
                 <div style={{padding:"10px 12px",background:"rgba(255,209,102,0.06)",border:"1px solid rgba(255,209,102,0.2)",borderLeft:"3px solid #ffd166",borderRadius:0,marginBottom:14}}>
                   <div style={{fontFamily:"'Space Mono',monospace",fontSize:8,color:"#ffd166",letterSpacing:"0.14em",fontWeight:700,marginBottom:5}}>CURRENT STATUS</div>
-                  <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"#f0ecff",lineHeight:1.5,fontWeight:700}}>Tier 1 confirmed.</div>
-                  <div style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"rgba(255,209,102,0.7)",marginTop:3,lineHeight:1.5}}>Watching for second close below 70,200.</div>
+                  <div style={{fontFamily:"'Space Mono',monospace",fontSize:14,color:"#f0ecff",lineHeight:1.5,fontWeight:700}}>Tier 1 confirmed.</div>
+                  <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"rgba(255,209,102,0.7)",marginTop:3,lineHeight:1.5}}>Watching for second close below 70,200.</div>
                 </div>
-                <div style={{fontFamily:"'Space Mono',monospace",fontSize:8,color:"rgba(255,255,255,0.25)",letterSpacing:"0.14em",marginBottom:8}}>LOCKED PLAN</div>
+                <div style={{fontFamily:"'Space Mono',monospace",fontSize:8,color:"rgba(255,255,255,0.38)",letterSpacing:"0.14em",marginBottom:8}}>LOCKED PLAN</div>
                 <div style={{display:"flex",flexDirection:"column",gap:7}}>
                   {[{l:"Trigger",v:"70,200",c:"#ffd166"},{l:"Stop",v:"71,000",c:"#ff6b6b"},{l:"TP1",v:"69,200",c:"#7fff6b"}].map((r,i)=>(
                     <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingBottom:i<2?7:0,borderBottom:i<2?"1px solid rgba(255,255,255,0.05)":"none"}}>
-                      <span style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,255,255,0.4)"}}>{r.l}</span>
-                      <span style={{fontFamily:"'Space Mono',monospace",fontSize:12,fontWeight:700,color:r.c}}>{r.v}</span>
+                      <span style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"rgba(255,255,255,0.85)"}}>{r.l}</span>
+                      <span style={{fontFamily:"'Space Mono',monospace",fontSize:14,fontWeight:700,color:r.c}}>{r.v}</span>
                     </div>
                   ))}
                 </div>
@@ -7756,12 +7756,12 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
               {/* On mobile show a compact status bar */}
               {isMobile && (
                 <div style={{padding:"10px 14px",background:"rgba(255,209,102,0.05)",borderBottom:"1px solid rgba(255,209,102,0.15)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                  <span style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"#ffd166",fontWeight:700}}>Tier 1 confirmed — watching Tier 2</span>
+                  <span style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"#ffd166",fontWeight:700}}>Tier 1 confirmed — watching Tier 2</span>
                   <div style={{display:"flex",gap:10}}>
                     {[{l:"Trigger",v:"70,200",c:"#ffd166"},{l:"Stop",v:"71,000",c:"#ff6b6b"}].map(r=>(
                       <div key={r.l} style={{textAlign:"center"}}>
-                        <div style={{fontFamily:"'Space Mono',monospace",fontSize:7,color:"rgba(255,255,255,0.3)"}}>{r.l}</div>
-                        <div style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,color:r.c}}>{r.v}</div>
+                        <div style={{fontFamily:"'Space Mono',monospace",fontSize:7,color:"rgba(255,255,255,0.75)"}}>{r.l}</div>
+                        <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,color:r.c}}>{r.v}</div>
                       </div>
                     ))}
                   </div>
@@ -7769,25 +7769,25 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
               )}
               <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:8}}>
                 <div style={{display:"flex",justifyContent:"flex-start"}}>
-                  <div style={{maxWidth:"90%",padding:"9px 12px",borderRadius:"10px 10px 10px 3px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.07)",fontFamily:"'Space Mono',monospace",fontSize:10,color:"#ccc4e8",lineHeight:1.8}}>
+                  <div style={{maxWidth:"90%",padding:"9px 12px",borderRadius:"10px 10px 10px 3px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.07)",fontFamily:"'Space Mono',monospace",fontSize:13,color:"#ccc4e8",lineHeight:1.8}}>
                     Live session active — BTCUSD SHORT.<br/>
                     <span style={{color:"#00e5ff"}}>Wicks don't count. Only 30M closes trigger action.</span>
                   </div>
                 </div>
                 <div style={{display:"flex",justifyContent:"flex-end"}}>
-                  <div style={{maxWidth:"65%",padding:"9px 12px",borderRadius:"10px 10px 3px 10px",background:"rgba(255,107,255,0.08)",border:"1px solid rgba(255,107,255,0.18)",fontFamily:"'Space Mono',monospace",fontSize:10,color:"#f0ecff"}}>
+                  <div style={{maxWidth:"65%",padding:"9px 12px",borderRadius:"10px 10px 3px 10px",background:"rgba(255,107,255,0.08)",border:"1px solid rgba(255,107,255,0.18)",fontFamily:"'Space Mono',monospace",fontSize:13,color:"#f0ecff"}}>
                     9:30 AM closed at 69,858
                   </div>
                 </div>
                 <div style={{display:"flex",justifyContent:"flex-start"}}>
-                  <div style={{maxWidth:"90%",padding:"9px 12px",borderRadius:"10px 10px 10px 3px",background:"rgba(255,209,102,0.05)",border:"1px solid rgba(255,209,102,0.15)",fontFamily:"'Space Mono',monospace",fontSize:10,color:"#ccc4e8",lineHeight:1.8}}>
+                  <div style={{maxWidth:"90%",padding:"9px 12px",borderRadius:"10px 10px 10px 3px",background:"rgba(255,209,102,0.05)",border:"1px solid rgba(255,209,102,0.15)",fontFamily:"'Space Mono',monospace",fontSize:13,color:"#ccc4e8",lineHeight:1.8}}>
                     <span style={{color:"#ffd166",fontWeight:700}}>Tier 1 confirmed — 69,858.</span>{isMobile ? " Watching 10:00 AM candle." : " Strong close, $342 below 70,200. Now watching the 10:00 AM candle."}
                   </div>
                 </div>
               </div>
               <div style={{padding:"8px 14px 12px",borderTop:"1px solid rgba(255,255,255,0.05)",display:"flex",gap:7}}>
-                <div style={{flex:1,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:7,padding:"7px 11px",fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,255,255,0.2)"}}>What did the 10:00 AM candle close at?</div>
-                <div style={{padding:"7px 14px",borderRadius:7,background:"rgba(255,107,255,0.14)",border:"1px solid rgba(255,107,255,0.3)",fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,color:"#ff6bff",whiteSpace:"nowrap"}}>SEND →</div>
+                <div style={{flex:1,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:7,padding:"7px 11px",fontFamily:"'Space Mono',monospace",fontSize:13,color:"rgba(255,255,255,0.80)"}}>What did the 10:00 AM candle close at?</div>
+                <div style={{padding:"7px 14px",borderRadius:7,background:"rgba(255,107,255,0.14)",border:"1px solid rgba(255,107,255,0.3)",fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,color:"#ff6bff",whiteSpace:"nowrap"}}>SEND →</div>
               </div>
             </div>
 
@@ -7807,7 +7807,7 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
           ].map((r,i)=>(
             <div key={i} style={{padding:"22px 32px",borderRight:i<3?"1px solid rgba(255,255,255,0.06)":"none"}}>
               <div style={{fontFamily:"'Space Mono',monospace",fontSize:17,fontWeight:700,color:"#ffffff",marginBottom:6}}>{r.val}</div>
-              <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,255,255,0.55)",lineHeight:1.7}}>{r.desc}</div>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"rgba(255,255,255,0.85)",lineHeight:1.7}}>{r.desc}</div>
             </div>
           ))}
         </div>
@@ -7822,14 +7822,14 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
 
           {/* Left — headline */}
           <div style={{position:isMobile?"static":"sticky",top:100}}>
-            <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,107,255,0.7)",letterSpacing:"0.22em",marginBottom:16}}>THE METHODOLOGY</div>
+            <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"rgba(255,107,255,0.7)",letterSpacing:"0.22em",marginBottom:16}}>THE METHODOLOGY</div>
             <h2 style={{fontFamily:"'Syne',sans-serif",fontSize:"clamp(26px,3.5vw,42px)",fontWeight:800,lineHeight:1.1,letterSpacing:"-0.02em",color:"#f0ecff",marginBottom:16}}>
               Why this<br/>system works.
             </h2>
-            <p style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"rgba(255,255,255,0.4)",lineHeight:1.9,maxWidth:340,marginBottom:16}}>
+            <p style={{fontFamily:"'Space Mono',monospace",fontSize:14,color:"rgba(255,255,255,0.85)",lineHeight:1.9,maxWidth:340,marginBottom:16}}>
               Every rule exists because someone broke it and lost money during the NY session. These aren't guidelines. They are the system.
             </p>
-            <p style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"rgba(255,255,255,0.25)",lineHeight:1.9,maxWidth:340}}>
+            <p style={{fontFamily:"'Space Mono',monospace",fontSize:14,color:"rgba(255,255,255,0.38)",lineHeight:1.9,maxWidth:340}}>
               The system is strict on purpose. Every rule exists to stop avoidable mistakes before they become losses.
             </p>
           </div>
@@ -7880,10 +7880,10 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
                 padding:"24px 0",
                 borderBottom:i<5?"1px solid rgba(255,255,255,0.06)":"none",
               }}>
-                <span style={{fontFamily:"'Space Mono',monospace",fontSize:11,fontWeight:700,color:r.color,opacity:0.5,flexShrink:0,marginTop:3,letterSpacing:"0.05em",minWidth:28}}>{r.n}</span>
+                <span style={{fontFamily:"'Space Mono',monospace",fontSize:14,fontWeight:700,color:r.color,opacity:0.5,flexShrink:0,marginTop:3,letterSpacing:"0.05em",minWidth:28}}>{r.n}</span>
                 <div>
                   <div style={{fontFamily:"'Syne',sans-serif",fontSize:17,fontWeight:800,color:"#f0ecff",marginBottom:8,lineHeight:1.2}}>{r.rule}</div>
-                  <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"rgba(255,255,255,0.45)",lineHeight:1.8}}>{r.detail}</div>
+                  <div style={{fontFamily:"'Space Mono',monospace",fontSize:14,color:"rgba(255,255,255,0.75)",lineHeight:1.8}}>{r.detail}</div>
                 </div>
               </div>
             ))}
@@ -7897,7 +7897,7 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
         <div style={{height:1,background:"linear-gradient(90deg,transparent,rgba(255,107,255,0.15),transparent)",marginBottom:64}}/>
 
         <div style={{marginBottom:48}}>
-          <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,107,255,0.7)",letterSpacing:"0.22em",marginBottom:14}}>WHY TRADERS USE OMNIUSD</div>
+          <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"rgba(255,107,255,0.7)",letterSpacing:"0.22em",marginBottom:14}}>WHY TRADERS USE OMNIUSD</div>
           <h2 style={{fontFamily:"'Syne',sans-serif",fontSize:"clamp(20px,2.8vw,34px)",fontWeight:800,lineHeight:1.15,letterSpacing:"-0.02em",color:"#f0ecff",maxWidth:520}}>
             The methodology is yours.<br/>The execution is where it breaks down.
           </h2>
@@ -7938,34 +7938,34 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
               borderBottom:i<2?"1px solid rgba(255,255,255,0.06)":"none",
             }}>
               <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
-                <span style={{fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,color:r.color,opacity:0.5,letterSpacing:"0.08em"}}>{r.n}</span>
+                <span style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,color:r.color,opacity:0.5,letterSpacing:"0.08em"}}>{r.n}</span>
                 <div style={{flex:1,height:1,background:`${r.color}18`}}/>
               </div>
               <div style={{fontFamily:"'Syne',sans-serif",fontSize:16,fontWeight:800,color:"#f0ecff",marginBottom:9,lineHeight:1.25}}>{r.title}</div>
-              <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"rgba(255,255,255,0.62)",lineHeight:1.8}}>{r.body}</div>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:14,color:"rgba(255,255,255,0.62)",lineHeight:1.8}}>{r.body}</div>
             </div>
           ))}
         </div>
 
         {/* Full-width closing statement */}
         <div style={{padding:"30px 32px",background:"rgba(255,107,255,0.04)",border:"1px solid rgba(255,107,255,0.12)",borderTop:"none",borderRadius:"0 0 16px 16px",display:"flex",alignItems:isMobile?"flex-start":"center",flexDirection:isMobile?"column":"row",justifyContent:"space-between",gap:16}}>
-          <p style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:"rgba(255,255,255,0.7)",lineHeight:1.8,margin:0,maxWidth:640}}>
+          <p style={{fontFamily:"'Space Mono',monospace",fontSize:14,color:"rgba(255,255,255,0.85)",lineHeight:1.8,margin:0,maxWidth:640}}>
             OmniUSD is precision built for the NY session — the highest conviction, highest volume, most institutionally driven window in the entire market. We don't trade every session. We trade the right one.
           </p>
           <div style={{display:"flex",gap:16,flexShrink:0}}>
             <div style={{textAlign:"center"}}>
-              <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,color:"#ff9a3c",marginBottom:3}}>NY session only</div>
-              <div style={{fontFamily:"'Space Mono',monospace",fontSize:8,color:"rgba(255,255,255,0.4)",letterSpacing:"0.08em"}}>8:30–10:30 AM CT</div>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:14,fontWeight:700,color:"#ff9a3c",marginBottom:3}}>NY session only</div>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:8,color:"rgba(255,255,255,0.85)",letterSpacing:"0.08em"}}>8:30–10:30 AM CT</div>
             </div>
             <div style={{width:1,background:"rgba(255,255,255,0.08)"}}/>
             <div style={{textAlign:"center"}}>
-              <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,color:"#7fff6b",marginBottom:3}}>A+ only</div>
-              <div style={{fontFamily:"'Space Mono',monospace",fontSize:8,color:"rgba(255,255,255,0.4)",letterSpacing:"0.08em"}}>Execution unlocks here</div>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:14,fontWeight:700,color:"#7fff6b",marginBottom:3}}>A+ only</div>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:8,color:"rgba(255,255,255,0.85)",letterSpacing:"0.08em"}}>Execution unlocks here</div>
             </div>
             <div style={{width:1,background:"rgba(255,255,255,0.08)"}}/>
             <div style={{textAlign:"center"}}>
-              <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,color:"#00e5ff",marginBottom:3}}>30M closes</div>
-              <div style={{fontFamily:"'Space Mono',monospace",fontSize:8,color:"rgba(255,255,255,0.4)",letterSpacing:"0.08em"}}>No wick entries</div>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:14,fontWeight:700,color:"#00e5ff",marginBottom:3}}>30M closes</div>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:8,color:"rgba(255,255,255,0.85)",letterSpacing:"0.08em"}}>No wick entries</div>
             </div>
           </div>
         </div>
@@ -7977,11 +7977,11 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
         <div style={{height:1,background:"linear-gradient(90deg,transparent,rgba(255,107,255,0.2),transparent)",marginBottom:80}}/>
 
         <div style={{marginBottom:56}}>
-          <div style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,letterSpacing:"0.22em",color:"#ff6bff",marginBottom:20}}>THE BRC FRAMEWORK</div>
+          <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,letterSpacing:"0.22em",color:"#ff6bff",marginBottom:20}}>THE BRC FRAMEWORK</div>
           <h2 style={{fontFamily:"'Syne',sans-serif",fontSize:"clamp(26px,4vw,46px)",fontWeight:800,lineHeight:1.1,letterSpacing:"-0.02em",marginBottom:12}}>
             Break. Retest. Continuation.
           </h2>
-          <p style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:"rgba(255,255,255,0.55)",lineHeight:1.8,maxWidth:480,margin:0}}>
+          <p style={{fontFamily:"'Space Mono',monospace",fontSize:14,color:"rgba(255,255,255,0.85)",lineHeight:1.8,maxWidth:480,margin:0}}>
             The sequence stays the same. The NY session is where it executes cleanest.
           </p>
         </div>
@@ -8012,18 +8012,18 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
               <div style={{display:"flex",alignItems:"baseline",gap:12,marginBottom:20}}>
                 <span style={{fontFamily:"'Syne',sans-serif",fontSize:56,fontWeight:800,lineHeight:1,color:p.color,opacity:0.25,letterSpacing:"-0.04em"}}>{p.phase}</span>
                 <div>
-                  <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,letterSpacing:"0.18em",color:p.color,opacity:0.7,marginBottom:4}}>PHASE {i+1}</div>
+                  <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,letterSpacing:"0.18em",color:p.color,opacity:0.7,marginBottom:4}}>PHASE {i+1}</div>
                   <div style={{fontFamily:"'Syne',sans-serif",fontSize:22,fontWeight:800,color:p.color}}>{p.name}</div>
                 </div>
               </div>
-              <div style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:"#ccc4e8",lineHeight:1.7}}>{p.meaning}</div>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:14,color:"#ccc4e8",lineHeight:1.7}}>{p.meaning}</div>
             </div>
           ))}
         </div>
 
         {/* Truth callout */}
         <div style={{textAlign:"center",padding:"32px 40px",background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:12}}>
-          <p style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"#ccc4e8",lineHeight:1.9,maxWidth:640,margin:"0 auto"}}>
+          <p style={{fontFamily:"'Space Mono',monospace",fontSize:14,color:"#ccc4e8",lineHeight:1.9,maxWidth:640,margin:"0 auto"}}>
             They enter during the <span style={{color:"#ffd166",fontWeight:700}}>Retest</span> — confusing a pullback for the end of the move.<br/>
             <strong style={{color:"#f4f0ff",fontWeight:700}}>OmniUSD</strong> identifies where you are in the <span style={{color:"#00e5ff",fontWeight:700}}>Break</span> → <span style={{color:"#ffd166",fontWeight:700}}>Retest</span> → <span style={{color:"#7fff6b",fontWeight:700}}>Continuation</span> sequence<br/>and tells you exactly when execution is valid — and when it isn't.
           </p>
@@ -8037,11 +8037,11 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
 
         {/* Header */}
         <div style={{textAlign:"center",marginBottom:56}}>
-          <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,107,255,0.7)",letterSpacing:"0.22em",marginBottom:14}}>SOCIAL PROOF</div>
+          <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"rgba(255,107,255,0.7)",letterSpacing:"0.22em",marginBottom:14}}>SOCIAL PROOF</div>
           <h2 style={{fontFamily:"'Syne',sans-serif",fontSize:"clamp(22px,3vw,36px)",fontWeight:800,lineHeight:1.15,letterSpacing:"-0.02em",color:"#f0ecff",marginBottom:16}}>
             Real traders. Real sessions.
           </h2>
-          <p style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:"rgba(255,255,255,0.4)",maxWidth:480,margin:"0 auto",lineHeight:1.8}}>
+          <p style={{fontFamily:"'Space Mono',monospace",fontSize:14,color:"rgba(255,255,255,0.85)",maxWidth:480,margin:"0 auto",lineHeight:1.8}}>
             Results from traders using the BRC execution system on OmniUSD.
           </p>
         </div>
@@ -8056,10 +8056,10 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
             {instr:"XAUUSD",dir:"LONG",grade:"A+",result:"+1.6R",date:"Mar 6"},
           ].map((t,i) => (
             <div key={i} style={{padding:"10px 16px",background:"rgba(127,255,107,0.05)",border:"1px solid rgba(127,255,107,0.15)",borderRadius:10,display:"flex",alignItems:"center",gap:10}}>
-              <span style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,color:"rgba(255,255,255,0.5)"}}>{t.instr}</span>
-              <span style={{fontSize:9,padding:"1px 7px",borderRadius:4,background: t.dir==="LONG"?"rgba(127,255,107,0.12)":"rgba(255,107,107,0.12)",border:`1px solid ${t.dir==="LONG"?"rgba(127,255,107,0.3)":"rgba(255,107,107,0.3)"}`,color:t.dir==="LONG"?"#7fff6b":"#ff6b6b",fontFamily:"'Space Mono',monospace",fontWeight:700}}>{t.dir}</span>
-              <span style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:900,color:"#7fff6b"}}>{t.result}</span>
-              <span style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,255,255,0.25)"}}>{t.date}</span>
+              <span style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,color:"rgba(255,255,255,0.8)"}}>{t.instr}</span>
+              <span style={{fontSize:13,padding:"1px 7px",borderRadius:4,background: t.dir==="LONG"?"rgba(127,255,107,0.12)":"rgba(255,107,107,0.12)",border:`1px solid ${t.dir==="LONG"?"rgba(127,255,107,0.3)":"rgba(255,107,107,0.3)"}`,color:t.dir==="LONG"?"#7fff6b":"#ff6b6b",fontFamily:"'Space Mono',monospace",fontWeight:700}}>{t.dir}</span>
+              <span style={{fontFamily:"'Space Mono',monospace",fontSize:14,fontWeight:900,color:"#7fff6b"}}>{t.result}</span>
+              <span style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"rgba(255,255,255,0.38)"}}>{t.date}</span>
             </div>
           ))}
         </div>
@@ -8096,17 +8096,17 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
               {/* Quote marks */}
               <div style={{fontSize:32,color:`${t.color}33`,fontFamily:"Georgia,serif",lineHeight:1,marginBottom:-8}}>"</div>
               {/* Quote */}
-              <p style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"rgba(255,255,255,0.65)",lineHeight:1.9,flex:1,margin:0}}>
+              <p style={{fontFamily:"'Space Mono',monospace",fontSize:14,color:"rgba(255,255,255,0.8)",lineHeight:1.9,flex:1,margin:0}}>
                 {t.quote}
               </p>
               {/* Attribution */}
               <div style={{display:"flex",alignItems:"center",gap:12,paddingTop:12,borderTop:"1px solid rgba(255,255,255,0.06)"}}>
                 <div style={{width:36,height:36,borderRadius:"50%",background:`${t.color}22`,border:`1px solid ${t.color}44`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                  <span style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:900,color:t.color}}>{t.initials}</span>
+                  <span style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:900,color:t.color}}>{t.initials}</span>
                 </div>
                 <div>
-                  <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,fontWeight:700,color:"#f0ecff"}}>{t.name}</div>
-                  <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,255,255,0.3)"}}>{t.location} · {t.detail}</div>
+                  <div style={{fontFamily:"'Space Mono',monospace",fontSize:14,fontWeight:700,color:"#f0ecff"}}>{t.name}</div>
+                  <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"rgba(255,255,255,0.75)"}}>{t.location} · {t.detail}</div>
                 </div>
               </div>
             </div>
@@ -8115,7 +8115,7 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
 
         {/* Disclaimer */}
         <div style={{textAlign:"center"}}>
-          <p style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,255,255,0.2)",lineHeight:1.8,maxWidth:560,margin:"0 auto"}}>
+          <p style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"rgba(255,255,255,0.80)",lineHeight:1.8,maxWidth:560,margin:"0 auto"}}>
             * Trade results shown are illustrative examples of BRC methodology execution. Individual results vary. Trading involves risk. Past performance does not guarantee future results.
           </p>
         </div>
@@ -8123,34 +8123,34 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
 
       {/* Pricing */}
       <div id="pricing" style={{position:"relative",zIndex:1,scrollMarginTop:110,maxWidth:1060,margin:"0 auto",padding:"60px 24px"}}>
-        <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,letterSpacing:"0.24em",color:"#ff6bff",background:"rgba(255,107,255,0.08)",border:"1px solid rgba(255,107,255,0.2)",padding:"4px 12px",borderRadius:4,display:"inline-block",marginBottom:20}}>PRICING</div>
+        <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,letterSpacing:"0.24em",color:"#ff6bff",background:"rgba(255,107,255,0.08)",border:"1px solid rgba(255,107,255,0.2)",padding:"4px 12px",borderRadius:4,display:"inline-block",marginBottom:20}}>PRICING</div>
         <h2 style={{fontFamily:"'Syne',sans-serif",fontSize:"clamp(30px,5vw,50px)",fontWeight:800,lineHeight:1.1,letterSpacing:"-0.02em",marginBottom:12}}>Choose your plan.</h2>
-        <p style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:"#ccc4e8",lineHeight:1.8,maxWidth:520,marginBottom:44}}>Every plan includes the BRC execution tracker, session-aware guidance, and AI session plans.</p>
+        <p style={{fontFamily:"'Space Mono',monospace",fontSize:14,color:"#ccc4e8",lineHeight:1.8,maxWidth:520,marginBottom:44}}>Every plan includes the BRC execution tracker, session-aware guidance, and AI session plans.</p>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(270px,1fr))",gap:14}}>
           {plans.map(p=>(
             <div key={p.tier}
               onMouseEnter={()=>setHoveredPlan(p.tier)}
               onMouseLeave={()=>setHoveredPlan(null)}
               style={{position:"relative",background:p.popular?"rgba(255,107,255,0.05)":"rgba(255,255,255,0.03)",border:`1px solid ${p.popular?"rgba(255,107,255,0.3)":"rgba(255,255,255,0.08)"}`,borderRadius:14,padding:"32px 28px",transition:"all 0.2s",transform:hoveredPlan===p.tier?"translateY(-3px)":"none",boxShadow:p.popular?"0 0 40px rgba(255,107,255,0.1)":undefined}}>
-              {p.popular&&<div style={{position:"absolute",top:-11,left:"50%",transform:"translateX(-50%)",fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:"#130d22",background:"#ff6bff",padding:"3px 14px",borderRadius:100,whiteSpace:"nowrap"}}>MOST POPULAR</div>}
-              <div style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,letterSpacing:"0.16em",color:p.color,marginBottom:14}}>{p.tier}</div>
+              {p.popular&&<div style={{position:"absolute",top:-11,left:"50%",transform:"translateX(-50%)",fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,letterSpacing:"0.12em",color:"#130d22",background:"#ff6bff",padding:"3px 14px",borderRadius:100,whiteSpace:"nowrap"}}>MOST POPULAR</div>}
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,letterSpacing:"0.16em",color:p.color,marginBottom:14}}>{p.tier}</div>
               <div style={{fontFamily:"'Syne',sans-serif",fontSize:42,fontWeight:800,lineHeight:1,color:p.color,marginBottom:4}}>{p.price}</div>
-              <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"#8878aa",marginBottom:24}}>per month</div>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:14,color:"#8878aa",marginBottom:24}}>per month</div>
               <div style={{height:1,background:"rgba(255,255,255,0.07)",marginBottom:20}}/>
               <div style={{display:"flex",flexDirection:"column",gap:9,marginBottom:28}}>
                 {p.instruments.map(ins=>(
-                  <div key={ins} style={{display:"flex",alignItems:"center",gap:9,fontFamily:"'Space Mono',monospace",fontSize:11,color:"#ccc4e8"}}>
+                  <div key={ins} style={{display:"flex",alignItems:"center",gap:9,fontFamily:"'Space Mono',monospace",fontSize:14,color:"#ccc4e8"}}>
                     <span style={{color:"#7fff6b",fontWeight:900,flexShrink:0}}>✓</span>{ins}
                   </div>
                 ))}
                 {["Live session guidance — real time","Tier confirmation tracking","AI-generated session plans"].map(f=>(
-                  <div key={f} style={{display:"flex",alignItems:"center",gap:9,fontFamily:"'Space Mono',monospace",fontSize:11,color:"#ccc4e8"}}>
+                  <div key={f} style={{display:"flex",alignItems:"center",gap:9,fontFamily:"'Space Mono',monospace",fontSize:14,color:"#ccc4e8"}}>
                     <span style={{color:"#7fff6b",fontWeight:900,flexShrink:0}}>✓</span>{f}
                   </div>
                 ))}
               </div>
               <button onClick={onEnterApp}
-                style={{width:"100%",fontFamily:"'Space Mono',monospace",fontSize:11,fontWeight:700,letterSpacing:"0.1em",padding:13,borderRadius:8,cursor:"pointer",transition:"all 0.2s",
+                style={{width:"100%",fontFamily:"'Space Mono',monospace",fontSize:14,fontWeight:700,letterSpacing:"0.1em",padding:13,borderRadius:8,cursor:"pointer",transition:"all 0.2s",
                   background:p.popular?"linear-gradient(135deg,#ff6bff,#7b2fff)":"none",
                   border:p.popular?"none":"1px solid rgba(255,255,255,0.15)",
                   color:p.popular?"#130d22":"#ccc4e8"}}>
@@ -8166,7 +8166,7 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
         <div style={{height:1,background:"linear-gradient(90deg,transparent,rgba(255,107,255,0.15),transparent)",marginBottom:64}}/>
 
         <div style={{marginBottom:48}}>
-          <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,107,255,0.7)",letterSpacing:"0.22em",marginBottom:14}}>FAQ</div>
+          <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"rgba(255,107,255,0.7)",letterSpacing:"0.22em",marginBottom:14}}>FAQ</div>
           <h2 style={{fontFamily:"'Syne',sans-serif",fontSize:"clamp(22px,3vw,36px)",fontWeight:800,lineHeight:1.15,letterSpacing:"-0.02em",color:"#f0ecff"}}>
             Common questions.
           </h2>
@@ -8263,26 +8263,26 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
 
             {/* Footer */}
       <div style={{position:"relative",zIndex:1,borderTop:"1px solid rgba(255,255,255,0.06)",padding:"24px 40px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:16}}>
-        <div style={{fontFamily:"'Space Mono',monospace",fontSize:12,fontWeight:700,color:"#8878aa"}}>◈ OmniUSD</div>
+        <div style={{fontFamily:"'Space Mono',monospace",fontSize:14,fontWeight:700,color:"#8878aa"}}>◈ OmniUSD</div>
         <div style={{display:"flex",gap:24,alignItems:"center"}}>
           <a href="mailto:support@omniusd.pro"
-            style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"rgba(255,107,255,0.6)",textDecoration:"none",fontWeight:700,letterSpacing:"0.08em"}}>
+            style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"rgba(255,107,255,0.6)",textDecoration:"none",fontWeight:700,letterSpacing:"0.08em"}}>
             Contact Us
           </a>
           <a href="mailto:support@omniusd.pro?subject=Instrument Request"
-            style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"rgba(255,255,255,0.3)",textDecoration:"none",letterSpacing:"0.06em"}}>
+            style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"rgba(255,255,255,0.75)",textDecoration:"none",letterSpacing:"0.06em"}}>
             Request an instrument
           </a>
           <button onClick={onPrivacy}
-            style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"rgba(255,255,255,0.25)",background:"none",border:"none",cursor:"pointer",textDecoration:"none",letterSpacing:"0.06em"}}>
+            style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"rgba(255,255,255,0.38)",background:"none",border:"none",cursor:"pointer",textDecoration:"none",letterSpacing:"0.06em"}}>
             Privacy Policy
           </button>
           <button onClick={onTerms}
-            style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"rgba(255,255,255,0.25)",background:"none",border:"none",cursor:"pointer",textDecoration:"none",letterSpacing:"0.06em"}}>
+            style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"rgba(255,255,255,0.38)",background:"none",border:"none",cursor:"pointer",textDecoration:"none",letterSpacing:"0.06em"}}>
             Terms of Service
           </button>
         </div>
-        <div style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"#8878aa",textAlign:"right"}}>
+        <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"#8878aa",textAlign:"right"}}>
           © 2026 OmniUSD · AI-powered trading analysis<br/>
           <span style={{opacity:0.5}}>Trade at your own risk · Results not guaranteed</span>
         </div>
@@ -8303,19 +8303,19 @@ const S={
   logoWord:      {fontSize:21,fontWeight:900,letterSpacing:"0.12em",background:"linear-gradient(90deg,#ff6bff,#00e5ff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"},
   logoWord2:     {fontSize:21,fontWeight:900,letterSpacing:"0.12em",color:"#00e5ff"},
   navLinks:      {display:"flex",gap:2},
-  navLink:       {background:"none",border:"none",color:"var(--t-muted)",padding:"8px 14px",cursor:"pointer",fontSize:12,letterSpacing:"0.08em",fontFamily:"inherit",borderRadius:8,transition:"all 0.15s"},
+  navLink:       {background:"none",border:"none",color:"var(--t-muted)",padding:"8px 14px",cursor:"pointer",fontSize:14,letterSpacing:"0.08em",fontFamily:"inherit",borderRadius:8,transition:"all 0.15s"},
   navLinkActive: {color:"#ff6bff",background:"rgba(255,107,255,0.1)"},
   navRight:      {marginLeft:"auto",display:"flex",alignItems:"center",gap:10},
   animeChip:     {display:"flex",alignItems:"center",gap:6,background:"var(--t-c3)",border:"1px solid rgba(255,107,255,0.2)",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontFamily:"inherit"},
-  sessionPill:   {fontSize:11,letterSpacing:"0.12em",color:"#00e5ff",background:"rgba(0,229,255,0.08)",padding:"5px 12px",borderRadius:20,border:"1px solid rgba(0,229,255,0.2)"},
+  sessionPill:   {fontSize:14,letterSpacing:"0.12em",color:"#00e5ff",background:"rgba(0,229,255,0.08)",padding:"5px 12px",borderRadius:20,border:"1px solid rgba(0,229,255,0.2)"},
   main:          {position:"relative",zIndex:1,maxWidth:1320,margin:"0 auto",padding:"40px 24px 80px"},
-  footer:        {position:"relative",zIndex:1,borderTop:"1px solid rgba(255,107,255,0.1)",padding:"18px 32px",display:"flex",justifyContent:"space-between",alignItems:"center",fontSize:11,letterSpacing:"0.06em",flexWrap:"wrap",gap:10},
+  footer:        {position:"relative",zIndex:1,borderTop:"1px solid rgba(255,107,255,0.1)",padding:"18px 32px",display:"flex",justifyContent:"space-between",alignItems:"center",fontSize:14,letterSpacing:"0.06em",flexWrap:"wrap",gap:10},
   hero:          {marginBottom:32},
   heroTitle:     {fontSize:36,fontWeight:900,color:"#f8f4ff",margin:"0 0 4px",lineHeight:1.2,letterSpacing:"0.02em"},
   heroTitleAccent:{background:"linear-gradient(90deg,#ff6bff,#00e5ff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"},
-  heroSub:       {fontSize:13,color:"var(--t-muted)",lineHeight:1.9,margin:"0 0 4px",maxWidth:580},
+  heroSub:       {fontSize:14,color:"var(--t-muted)",lineHeight:1.9,margin:"0 0 4px",maxWidth:580},
   uploadSection: {background:"var(--t-c2)",border:"1px solid rgba(255,107,255,0.1)",borderRadius:16,padding:"24px",marginBottom:16},
-  sectionTag:    {fontSize:9,letterSpacing:"0.2em",color:"#ff6bff",background:"rgba(255,107,255,0.1)",padding:"3px 10px",borderRadius:4,border:"1px solid rgba(255,107,255,0.25)",fontWeight:900},
+  sectionTag:    {fontSize:13,letterSpacing:"0.2em",color:"#ff6bff",background:"rgba(255,107,255,0.1)",padding:"3px 10px",borderRadius:4,border:"1px solid rgba(255,107,255,0.25)",fontWeight:900},
   fiveSlots:     {display:"grid",gridTemplateColumns:"repeat(5,minmax(160px,1fr))",gap:12,overflowX:"auto"},
   slotCard:      {background:"var(--t-c2)",border:"1px solid",borderRadius:12,padding:11},
   dropZone:      {width:"100%",aspectRatio:"3/2",border:"1.5px dashed",borderRadius:8,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:7,cursor:"pointer",transition:"all 0.15s",padding:"10px 8px",boxSizing:"border-box"},
@@ -8329,15 +8329,15 @@ const S={
   triggerRow:    {display:"flex",gap:10,flexWrap:"wrap"},
   detailsGrid:   {display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginTop:24},
   detailCard:    {background:"var(--t-c3)",border:"1px solid rgba(255,107,255,0.1)",borderRadius:12,padding:20},
-  cardLabel:     {fontSize:11,letterSpacing:"0.2em",color:"var(--t-muted)",margin:"0 0 14px"},
-  resetBtn:      {background:"none",border:"1px solid rgba(255,107,255,0.25)",color:"var(--t-muted)",padding:"9px 20px",borderRadius:8,cursor:"pointer",fontSize:12,letterSpacing:"0.08em",fontFamily:"inherit"},
-  instrBtn:      {background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.18)",color:"var(--t-muted2)",padding:"7px 14px",borderRadius:8,cursor:"pointer",fontSize:11,fontWeight:700,letterSpacing:"0.06em",fontFamily:"inherit",transition:"all 0.15s",display:"flex",alignItems:"center"},
+  cardLabel:     {fontSize:14,letterSpacing:"0.2em",color:"var(--t-muted)",margin:"0 0 14px"},
+  resetBtn:      {background:"none",border:"1px solid rgba(255,107,255,0.25)",color:"var(--t-muted)",padding:"9px 20px",borderRadius:8,cursor:"pointer",fontSize:14,letterSpacing:"0.08em",fontFamily:"inherit"},
+  instrBtn:      {background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.18)",color:"var(--t-muted2)",padding:"7px 14px",borderRadius:8,cursor:"pointer",fontSize:14,fontWeight:700,letterSpacing:"0.06em",fontFamily:"inherit",transition:"all 0.15s",display:"flex",alignItems:"center"},
   instrBtnActive:{background:"rgba(255,107,255,0.14)",color:"#ff6bff",border:"1px solid rgba(255,107,255,0.5)"},
-  filterBtn:     {background:"none",border:"1px solid rgba(255,107,255,0.15)",color:"var(--t-muted)",padding:"4px 10px",borderRadius:6,cursor:"pointer",fontSize:10,letterSpacing:"0.08em",fontFamily:"inherit"},
+  filterBtn:     {background:"none",border:"1px solid rgba(255,107,255,0.15)",color:"var(--t-muted)",padding:"4px 10px",borderRadius:6,cursor:"pointer",fontSize:13,letterSpacing:"0.08em",fontFamily:"inherit"},
   filterBtnActive:{background:"rgba(255,107,255,0.12)",color:"#ff6bff",borderColor:"rgba(255,107,255,0.4)"},
   tableWrap:     {overflowX:"auto",borderRadius:12,border:"1px solid rgba(255,107,255,0.1)"},
-  table:         {width:"100%",borderCollapse:"collapse",fontSize:13},
-  th:            {padding:"12px 14px",textAlign:"left",fontSize:10,letterSpacing:"0.15em",color:"var(--t-muted)",background:"var(--t-tableBg)",borderBottom:"1px solid rgba(255,107,255,0.1)",whiteSpace:"nowrap"},
+  table:         {width:"100%",borderCollapse:"collapse",fontSize:14},
+  th:            {padding:"12px 14px",textAlign:"left",fontSize:13,letterSpacing:"0.15em",color:"var(--t-muted)",background:"var(--t-tableBg)",borderBottom:"1px solid rgba(255,107,255,0.1)",whiteSpace:"nowrap"},
   td:            {padding:"12px 14px",whiteSpace:"nowrap",verticalAlign:"middle"},
   errorBox:      {padding:"14px 18px",background:"rgba(255,107,107,0.07)",border:"1px solid rgba(255,107,107,0.25)",borderRadius:10,fontSize:15,color:"#ffaaaa",lineHeight:1.5,fontWeight:600},
   loadingScreen: {display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"70vh",gap:22,padding:40},
