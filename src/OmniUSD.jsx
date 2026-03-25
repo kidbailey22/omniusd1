@@ -1120,12 +1120,11 @@ function sessionLocalTime(startUTC,endUTC,iana){
 }
 
 function Onboarding({onSelect}){
-  // Step order: 1=Plan, 2=Market, 3=Session, 4=Confirm
+  // Step order: 1=Plan, 2=Platform, 3=Confirm, 4=Commit
   const [step,setStep]=useState(()=>{
-    // If paid tier exists in localStorage, skip plan selection
     if(localStorage.getItem("omniusd_paid_tier")) return 2;
     const params=new URLSearchParams(window.location.search);
-    if(params.get("session_id")) return 2;
+    if(params.get("session_id")) return 2; // post-Stripe: skip to confirm
     return 1;
   });
   const [selectedTier,setSelectedTier]=useState(()=>{
@@ -1208,8 +1207,8 @@ function Onboarding({onSelect}){
   const modeColor = mode ? (MODES.find(m=>m.id===mode)?.color||"#ff6bff") : "#ff6bff";
 
   // Step labels
-  const stepList=["Plan","Confirm","Commit"];
-  const totalSteps=stepList.length; // 2 steps
+  const stepList=["Plan","Platform","Confirm","Commit"];
+  const totalSteps=stepList.length;
   const displayStep=step;
 
   // finish() called on step 3 (Commit)
@@ -1382,18 +1381,97 @@ function Onboarding({onSelect}){
         )}
 
 
-        {/* STEP 2 — CONFIRM */}
+        {/* STEP 2 — PLATFORM */}
         {step===2&&(
+          <div style={{animation:"icc-slide 0.35s ease both",maxWidth:580,margin:"0 auto"}}>
+            <div style={{marginBottom:40}}>
+              <div style={{fontSize:14,fontWeight:900,letterSpacing:"0.18em",color:"#ff6bff",marginBottom:10}}>STEP 2 OF 4</div>
+              <h2 style={{fontSize:34,fontWeight:900,color:"var(--t-text)",margin:"0 0 10px",lineHeight:1.1}}>Do you have a charting platform?</h2>
+              <p style={{fontSize:16,color:"var(--t-muted3)",margin:0,fontWeight:500,lineHeight:1.55}}>OmniUSD reads screenshots from your charts. You'll need a platform that shows candlestick charts to use the app.</p>
+            </div>
+
+            {/* Platform cards */}
+            <div style={{display:"flex",flexDirection:"column",gap:12,marginBottom:28}}>
+
+              {/* TradingView */}
+              <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:16,padding:"22px 24px"}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12,flexWrap:"wrap",gap:10}}>
+                  <div style={{display:"flex",alignItems:"center",gap:12}}>
+                    <div style={{width:36,height:36,borderRadius:10,background:"rgba(0,229,255,0.1)",border:"1px solid rgba(0,229,255,0.25)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>📊</div>
+                    <div>
+                      <div style={{fontSize:16,fontWeight:900,color:"var(--t-text)"}}>TradingView</div>
+                      <div style={{fontSize:13,color:"var(--t-muted4)"}}>Charts · Free & Pro plans</div>
+                    </div>
+                  </div>
+                  <span style={{fontSize:11,fontWeight:900,padding:"3px 10px",borderRadius:20,background:"rgba(0,229,255,0.1)",border:"1px solid rgba(0,229,255,0.25)",color:"#00e5ff",letterSpacing:"0.08em",fontFamily:"'Space Mono',monospace"}}>RECOMMENDED</span>
+                </div>
+                <div style={{fontSize:13,color:"var(--t-muted3)",lineHeight:1.7,marginBottom:16}}>
+                  The most widely used charting platform. Free plan works perfectly for OmniUSD — Daily, 4H, 1H, 30M, and 15M charts available on all instruments.
+                </div>
+                <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                  <a href="https://www.tradingview.com/OmniUSD?aff_id=164890" target="_blank" rel="noopener noreferrer"
+                    style={{flex:1,minWidth:140,padding:"11px 20px",borderRadius:9,background:"linear-gradient(135deg,#00e5ff,#0099bb)",color:"#0f0c1a",fontSize:13,fontWeight:900,letterSpacing:"0.08em",fontFamily:"inherit",textDecoration:"none",textAlign:"center",display:"block",cursor:"pointer"}}>
+                    GET TRADINGVIEW →
+                  </a>
+                </div>
+              </div>
+
+              {/* Liquid Brokers */}
+              <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:16,padding:"22px 24px"}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12,flexWrap:"wrap",gap:10}}>
+                  <div style={{display:"flex",alignItems:"center",gap:12}}>
+                    <div style={{width:36,height:36,borderRadius:10,background:"rgba(255,107,255,0.1)",border:"1px solid rgba(255,107,255,0.25)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>💧</div>
+                    <div>
+                      <div style={{fontSize:16,fontWeight:900,color:"var(--t-text)"}}>Liquid Brokers</div>
+                      <div style={{fontSize:13,color:"var(--t-muted4)"}}>Broker + integrated charts</div>
+                    </div>
+                  </div>
+                  <span style={{fontSize:11,fontWeight:900,padding:"3px 10px",borderRadius:20,background:"rgba(255,107,255,0.08)",border:"1px solid rgba(255,107,255,0.2)",color:"#ff6bff",letterSpacing:"0.08em",fontFamily:"'Space Mono',monospace"}}>BROKER + CHARTS</span>
+                </div>
+                <div style={{fontSize:13,color:"var(--t-muted3)",lineHeight:1.7,marginBottom:16}}>
+                  Trade and chart in one platform. Supports all OmniUSD instruments — XAUUSD, BTCUSD, NAS100, US30, USOIL, US500. Built-in candlestick charts on all timeframes.
+                </div>
+                <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                  <a href="https://my.liquidbrokers.com/auth/register?partner_code=9454489" target="_blank" rel="noopener noreferrer"
+                    style={{flex:1,minWidth:140,padding:"11px 20px",borderRadius:9,background:"linear-gradient(135deg,#ff6bff,#7b2fff)",color:"#fff",fontSize:13,fontWeight:900,letterSpacing:"0.08em",fontFamily:"inherit",textDecoration:"none",textAlign:"center",display:"block",cursor:"pointer"}}>
+                    OPEN LIQUID ACCOUNT →
+                  </a>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Disclaimer */}
+            <div style={{fontSize:11,color:"var(--t-muted4)",textAlign:"center",marginBottom:24,lineHeight:1.6,fontFamily:"'Space Mono',monospace"}}>
+              These are affiliate links. OmniUSD earns a commission if you sign up — at no cost to you.
+            </div>
+
+            {/* Navigation */}
+            <div style={{display:"flex",gap:10}}>
+              {OB_BTN("← Back",()=>setStep(1),false,false)}
+              <button onClick={()=>setStep(3)}
+                style={{flex:2,background:"linear-gradient(135deg,#ff6bff,#7b2fff)",border:"none",color:"#fff",
+                  padding:"17px 28px",borderRadius:13,fontSize:15,fontWeight:900,
+                  letterSpacing:"0.1em",fontFamily:"inherit",cursor:"pointer",
+                  boxShadow:"0 6px 40px rgba(255,107,255,0.28)",transition:"all 0.2s"}}>
+                I ALREADY HAVE ONE — CONTINUE →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 3 — CONFIRM */}
+        {step===3&&(
           <div style={{animation:"icc-slide 0.35s ease both",maxWidth:580,margin:"0 auto"}}>
             {!selectedTier&&(
               // Safety fallback — should never happen if flow is correct
               <div style={{textAlign:"center",padding:"40px 0"}}>
                 <p style={{color:"#ff6b6b",fontSize:16,margin:"0 0 16px",fontWeight:600}}>No plan selected. Please go back and choose a plan first.</p>
-                <button onClick={()=>setStep(1)} style={{background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.3)",color:"#ff6b6b",padding:"12px 24px",borderRadius:10,cursor:"pointer",fontFamily:"inherit",fontSize:14,fontWeight:700}}>← Back to Plan Selection</button>
+                <button onClick={()=>setStep(2)} style={{background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.3)",color:"#ff6b6b",padding:"12px 24px",borderRadius:10,cursor:"pointer",fontFamily:"inherit",fontSize:14,fontWeight:700}}>← Back</button>
               </div>
             )}
             <div style={{marginBottom:40}}>
-              <div style={{fontSize:14,fontWeight:900,letterSpacing:"0.18em",color:"#ff6bff",marginBottom:10}}>STEP 2 OF 3</div>
+              <div style={{fontSize:14,fontWeight:900,letterSpacing:"0.18em",color:"#ff6bff",marginBottom:10}}>STEP 3 OF 4</div>
               <h2 style={{fontSize:34,fontWeight:900,color:"var(--t-text)",margin:"0 0 10px",lineHeight:1.1}}>You're almost in.</h2>
               <p style={{fontSize:16,color:"var(--t-muted3)",margin:0,fontWeight:500,lineHeight:1.55}}>Set your timezone so OmniUSD always shows times in your local time.</p>
             </div>
@@ -1404,7 +1482,7 @@ function Onboarding({onSelect}){
                   return(
                     <div style={{padding:"24px",textAlign:"center"}}>
                       <p style={{color:"#ff6b6b",fontSize:15,margin:"0 0 12px"}}>No plan selected. Please go back and choose a plan.</p>
-                      <button onClick={()=>setStep(1)} style={{background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.3)",color:"#ff6b6b",padding:"10px 20px",borderRadius:8,cursor:"pointer",fontFamily:"inherit",fontSize:14,fontWeight:700}}>← Back to Plan Selection</button>
+                      <button onClick={()=>setStep(2)} style={{background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.3)",color:"#ff6b6b",padding:"10px 20px",borderRadius:8,cursor:"pointer",fontFamily:"inherit",fontSize:14,fontWeight:700}}>← Back</button>
                     </div>
                   );
                 }
@@ -1542,8 +1620,8 @@ function Onboarding({onSelect}){
             </div>
 
             <div style={{display:"flex",gap:10}}>
-              {OB_BTN("← Back",()=>setStep(1),false,false)}
-              <button onClick={()=>tzObj&&setStep(3)} disabled={!tzObj}
+              {OB_BTN("← Back",()=>setStep(2),false,false)}
+              <button onClick={()=>tzObj&&setStep(4)} disabled={!tzObj}
                 style={{flex:2,
                   background:tzObj?"linear-gradient(135deg,#ff6bff,#7b2fff)":"rgba(255,255,255,0.06)",
                   border:tzObj?"none":"1px solid rgba(255,255,255,0.08)",
@@ -1562,10 +1640,10 @@ function Onboarding({onSelect}){
       </div>
 
       
-        {/* STEP 3 — COMMIT */}
-        {step===3&&(
+        {/* STEP 4 — COMMIT */}
+        {step===4&&(
           <div style={{animation:"icc-slide 0.35s ease both",maxWidth:520,margin:"0 auto"}}>
-            <div style={{fontSize:14,fontWeight:900,letterSpacing:"0.2em",color:"#ff6bff",marginBottom:14}}>STEP 3 OF 3</div>
+            <div style={{fontSize:14,fontWeight:900,letterSpacing:"0.2em",color:"#ff6bff",marginBottom:14}}>STEP 4 OF 4</div>
             <h2 style={{fontSize:34,fontWeight:900,color:"var(--t-text)",lineHeight:1.1,margin:"0 0 10px",letterSpacing:"-0.01em"}}>
               Before you begin.
             </h2>
@@ -1597,7 +1675,7 @@ function Onboarding({onSelect}){
             </div>
 
             <div style={{display:"flex",gap:10,marginBottom:20}}>
-              {OB_BTN("← Back",()=>setStep(2),false,false)}
+              {OB_BTN("← Back",()=>setStep(3),false,false)}
               <button onClick={finish}
                 style={{flex:2,background:"linear-gradient(135deg,#ff6bff,#7b2fff)",border:"none",
                   color:"#fff",padding:"18px 28px",borderRadius:13,fontSize:15,fontWeight:900,
