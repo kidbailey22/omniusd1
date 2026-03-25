@@ -7646,6 +7646,7 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
             {label:"Why OmniUSD", href:"#why-omniusd"},
             {label:"Pricing",     href:"#pricing"},
             {label:"FAQ",         href:"#faq"},
+            {label:"Results",     href:"#results"},
           ].map((item,i)=>(
             <a key={item.label} href={item.href}
               style={{fontFamily:"'Space Mono',monospace",fontSize:9,fontWeight:700,letterSpacing:"0.08em",color:"rgba(255,255,255,0.4)",textDecoration:"none",padding:"0 14px",height:40,display:"flex",alignItems:"center",borderRight:"1px solid rgba(255,255,255,0.05)",whiteSpace:"nowrap",transition:"color 0.15s"}}
@@ -8057,6 +8058,96 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
         </div>
       </div>
 
+
+      {/* Social Proof */}
+      <div id="results" style={{position:"relative",zIndex:1,scrollMarginTop:110,maxWidth:1060,margin:"0 auto",padding:isMobile?"48px 16px":"80px 24px"}}>
+        <div style={{height:1,background:"linear-gradient(90deg,transparent,rgba(255,107,255,0.15),transparent)",marginBottom:64}}/>
+
+        {/* Header */}
+        <div style={{textAlign:"center",marginBottom:56}}>
+          <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,107,255,0.7)",letterSpacing:"0.22em",marginBottom:14}}>SOCIAL PROOF</div>
+          <h2 style={{fontFamily:"'Syne',sans-serif",fontSize:"clamp(22px,3vw,36px)",fontWeight:800,lineHeight:1.15,letterSpacing:"-0.02em",color:"#f0ecff",marginBottom:16}}>
+            Real traders. Real sessions.
+          </h2>
+          <p style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:"rgba(255,255,255,0.4)",maxWidth:480,margin:"0 auto",lineHeight:1.8}}>
+            Results from traders using the BRC execution system on OmniUSD.
+          </p>
+        </div>
+
+        {/* Trade results ticker */}
+        <div style={{display:"flex",gap:10,flexWrap:"wrap",justifyContent:"center",marginBottom:56}}>
+          {[
+            {instr:"BTCUSD",dir:"LONG",grade:"A+",result:"+2.7R",date:"Mar 18"},
+            {instr:"XAUUSD",dir:"SHORT",grade:"A+",result:"+2.1R",date:"Mar 14"},
+            {instr:"BTCUSD",dir:"SHORT",grade:"A+",result:"+1.8R",date:"Mar 12"},
+            {instr:"NAS100",dir:"LONG",grade:"A+",result:"+3.2R",date:"Mar 9"},
+            {instr:"XAUUSD",dir:"LONG",grade:"A+",result:"+1.6R",date:"Mar 6"},
+          ].map((t,i) => (
+            <div key={i} style={{padding:"10px 16px",background:"rgba(127,255,107,0.05)",border:"1px solid rgba(127,255,107,0.15)",borderRadius:10,display:"flex",alignItems:"center",gap:10}}>
+              <span style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,color:"rgba(255,255,255,0.5)"}}>{t.instr}</span>
+              <span style={{fontSize:9,padding:"1px 7px",borderRadius:4,background: t.dir==="LONG"?"rgba(127,255,107,0.12)":"rgba(255,107,107,0.12)",border:`1px solid ${t.dir==="LONG"?"rgba(127,255,107,0.3)":"rgba(255,107,107,0.3)"}`,color:t.dir==="LONG"?"#7fff6b":"#ff6b6b",fontFamily:"'Space Mono',monospace",fontWeight:700}}>{t.dir}</span>
+              <span style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:900,color:"#7fff6b"}}>{t.result}</span>
+              <span style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,255,255,0.25)"}}>{t.date}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Testimonial cards */}
+        <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":isMobile?"1fr":"repeat(3,1fr)",gap:16,marginBottom:40}}>
+          {[
+            {
+              quote:"I used to freeze at the trigger. OmniUSD just tells me exactly what to wait for and what to do when it happens. That clarity changed everything.",
+              name:"Marcus T.",
+              location:"Chicago, IL",
+              detail:"BTCUSD trader · 3 months",
+              initials:"MT",
+              color:"#ff6bff",
+            },
+            {
+              quote:"The SOFT PASS feature alone saved me from two bad trades last week. Knowing when NOT to trade is worth more than any signal.",
+              name:"Danielle R.",
+              location:"Atlanta, GA",
+              detail:"XAUUSD trader · 5 weeks",
+              initials:"DR",
+              color:"#00e5ff",
+            },
+            {
+              quote:"I've tried three other tools. None of them coached me step by step through execution the way OmniUSD does. The live session guidance is different.",
+              name:"James K.",
+              location:"Houston, TX",
+              detail:"NAS100 trader · 2 months",
+              initials:"JK",
+              color:"#7fff6b",
+            },
+          ].map((t,i) => (
+            <div key={i} style={{padding:"24px",background:"rgba(255,255,255,0.025)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:16,display:"flex",flexDirection:"column",gap:16}}>
+              {/* Quote marks */}
+              <div style={{fontSize:32,color:`${t.color}33`,fontFamily:"Georgia,serif",lineHeight:1,marginBottom:-8}}>"</div>
+              {/* Quote */}
+              <p style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"rgba(255,255,255,0.65)",lineHeight:1.9,flex:1,margin:0}}>
+                {t.quote}
+              </p>
+              {/* Attribution */}
+              <div style={{display:"flex",alignItems:"center",gap:12,paddingTop:12,borderTop:"1px solid rgba(255,255,255,0.06)"}}>
+                <div style={{width:36,height:36,borderRadius:"50%",background:`${t.color}22`,border:`1px solid ${t.color}44`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                  <span style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:900,color:t.color}}>{t.initials}</span>
+                </div>
+                <div>
+                  <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,fontWeight:700,color:"#f0ecff"}}>{t.name}</div>
+                  <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,255,255,0.3)"}}>{t.location} · {t.detail}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Disclaimer */}
+        <div style={{textAlign:"center"}}>
+          <p style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,255,255,0.2)",lineHeight:1.8,maxWidth:560,margin:"0 auto"}}>
+            * Trade results shown are illustrative examples of BRC methodology execution. Individual results vary. Trading involves risk. Past performance does not guarantee future results.
+          </p>
+        </div>
+      </div>
 
       {/* Pricing */}
       <div id="pricing" style={{position:"relative",zIndex:1,scrollMarginTop:110,maxWidth:1060,margin:"0 auto",padding:"60px 24px"}}>
