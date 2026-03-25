@@ -7634,13 +7634,13 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
 
           {/* Left — headline + steps + CTA */}
           <div>
-            <div className="land-fade" style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,255,255,0.35)",letterSpacing:"0.22em",marginBottom:20}}>BUILT ON PRICE ACTION & MARKET STRUCTURE</div>
+            <div className="land-fade" style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,255,255,0.35)",letterSpacing:"0.22em",marginBottom:20}}>BUILT FOR THE NEW YORK SESSION</div>
             <h1 className="land-fade" style={{fontFamily:"'Syne',sans-serif",fontSize:"clamp(30px,4vw,50px)",fontWeight:800,lineHeight:1.08,letterSpacing:"-0.025em",marginBottom:18,animationDelay:"0.1s"}}>
               <span style={{display:"block",color:"#f4f0ff"}}>Stop reacting.</span>
               <span style={{display:"block",background:"linear-gradient(135deg,#ff6bff,#00e5ff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Start executing.</span>
             </h1>
             <p className="land-fade" style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"rgba(255,255,255,0.7)",lineHeight:1.7,maxWidth:520,marginBottom:32,animationDelay:"0.2s",fontWeight:700}}>
-              Upload 5 charts. Get a locked plan. Know when to wait, when to confirm, and when to execute.
+              Upload 5 charts. Get a locked BRC plan. Execute with precision during the only window that matters — 8:30 to 10:30 AM CT.
             </p>
             <div className="land-fade" style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap",marginBottom:44,animationDelay:"0.3s"}}>
               <button onClick={onEnterApp}
@@ -7653,9 +7653,9 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
             {/* 3-step product loop */}
             <div className="land-fade" style={{display:"flex",flexDirection:"column",gap:0,border:"1px solid rgba(255,255,255,0.07)",borderRadius:10,overflow:"hidden",animationDelay:"0.4s"}}>
               {[
-                {n:"1",title:"Upload 5 charts",sub:"Daily · 4H · 1H · 30M · 15M from your broker",color:"#00e5ff"},
-                {n:"2",title:"Get your locked session plan",sub:"Grade, bias, key levels, trigger, stops, and targets — generated from your actual charts",color:"#7fff6b"},
-                {n:"3",title:"Follow the session candle by candle",sub:"OmniUSD tells you when to wait, when a tier confirms, and exactly when to place your order. That's Live Session Mode.",color:"#ff6bff"},
+                {n:"1",title:"Upload 5 charts before 8:30 AM CT",sub:"Daily · 4H · 1H · 30M · 15M. Pre-market scouting from 7:00 AM CT.",color:"#00e5ff"},
+                {n:"2",title:"Get your locked NY session plan",sub:"Grade, bias, key levels, trigger, stops, and targets — built for the 8:30–10:30 AM CT window.",color:"#7fff6b"},
+                {n:"3",title:"Execute candle by candle in NY session",sub:"OmniUSD tells you what to watch at 9:00 AM, 9:30 AM, and 10:00 AM CT. When a tier confirms — it tells you to act.",color:"#ff6bff"},
               ].map((r,i)=>(
                 <div key={r.n} style={{display:"flex",alignItems:"flex-start",gap:14,padding:"14px 18px",background:i%2===0?"rgba(255,255,255,0.02)":"transparent",borderBottom:i<2?"1px solid rgba(255,255,255,0.06)":"none"}}>
                   <div style={{width:22,height:22,borderRadius:"50%",background:`${r.color}18`,border:`1px solid ${r.color}44`,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,color:r.color,flexShrink:0,marginTop:1}}>{r.n}</div>
@@ -7684,7 +7684,7 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
             When the session starts,<br/>this is your screen.
           </h2>
           <p style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"rgba(255,255,255,0.45)",lineHeight:1.9,maxWidth:520,margin:0}}>
-            OmniUSD does not just generate a plan. It guides the session with you — showing when to wait, when a close counts, and when execution becomes valid.
+            OmniUSD doesn't just generate a plan. It guides you through the NY session candle by candle — showing exactly when to wait, when a 30M close counts, and when execution becomes valid during the highest conviction window in the market.
           </p>
         </div>
 
@@ -7823,7 +7823,7 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
               Why this<br/>system works.
             </h2>
             <p style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"rgba(255,255,255,0.4)",lineHeight:1.9,maxWidth:340,marginBottom:16}}>
-              Every rule exists because someone broke it and lost money. These aren't guidelines. They are the system.
+              Every rule exists because someone broke it and lost money during the NY session. These aren't guidelines. They are the system.
             </p>
             <p style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"rgba(255,255,255,0.25)",lineHeight:1.9,maxWidth:340}}>
               The system is strict on purpose. Every rule exists to stop avoidable mistakes before they become losses.
@@ -7859,14 +7859,14 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
               },
               {
                 n:"05",
-                rule:"Pre-market movement is information, not permission.",
-                detail:"What happens before NY opens tells you the story. It does not give you a trade.",
+                rule:"NY session only. 8:30 to 10:30 AM CT.",
+                detail:"OmniUSD doesn't trade every session. It trades the right one. The New York open is where institutional money is fully active and BRC setups have real follow-through.",
                 color:"#ff9a3c",
               },
               {
                 n:"06",
-                rule:"A+ setups only. Six to seven per month.",
-                detail:"Not thirty mediocre trades. Six quality setups with full confirmation. Discipline over frequency is what compounds a trading account.",
+                rule:"A+ setups only. Six quality NY sessions per month.",
+                detail:"Not thirty random trades across every session. Six clean A+ setups during NY open. Quality over quantity is what compounds a trading account.",
                 color:"#00e5ff",
               },
             ].map((r,i)=>(
@@ -7895,7 +7895,7 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
         <div style={{marginBottom:48}}>
           <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:"rgba(255,107,255,0.7)",letterSpacing:"0.22em",marginBottom:14}}>WHY TRADERS USE OMNIUSD</div>
           <h2 style={{fontFamily:"'Syne',sans-serif",fontSize:"clamp(20px,2.8vw,34px)",fontWeight:800,lineHeight:1.15,letterSpacing:"-0.02em",color:"#f0ecff",maxWidth:520}}>
-            The methodology is yours.<br/>The execution is where it breaks down.
+            Built for the New York open.<br/>The only session that consistently delivers.
           </h2>
         </div>
 
@@ -7905,13 +7905,13 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
             {
               n:"01",
               title:"You know the rules. You still break them.",
-              body:"Knowing BRC is one skill. Executing it under pressure is another. OmniUSD is built for the second one.",
+              body:"Knowing BRC is one skill. Executing it under NY session pressure is another. OmniUSD is built for the second one.",
               color:"#ff6bff",
             },
             {
               n:"02",
               title:"The hardest part is not the analysis. It is the wait.",
-              body:"Most traders lose discipline between the setup and the confirmation. OmniUSD gives that wait structure until confirmation is valid.",
+              body:"Most traders lose discipline between 8:30 and the confirmation close. OmniUSD gives that wait structure — candle by candle — until the signal is valid.",
               color:"#00e5ff",
             },
             {
@@ -7946,12 +7946,12 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
         {/* Full-width closing statement */}
         <div style={{padding:"30px 32px",background:"rgba(255,107,255,0.04)",border:"1px solid rgba(255,107,255,0.12)",borderTop:"none",borderRadius:"0 0 16px 16px",display:"flex",alignItems:isMobile?"flex-start":"center",flexDirection:isMobile?"column":"row",justifyContent:"space-between",gap:16}}>
           <p style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:"rgba(255,255,255,0.7)",lineHeight:1.8,margin:0,maxWidth:640}}>
-            OmniUSD does not replace your methodology. It makes sure you actually follow it.
+            OmniUSD is precision built for the NY session — the highest conviction, highest volume, most institutionally driven window in the entire market. We don't trade every session. We trade the right one.
           </p>
           <div style={{display:"flex",gap:16,flexShrink:0}}>
             <div style={{textAlign:"center"}}>
-              <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,color:"#ff9a3c",marginBottom:3}}>Prop firm ready</div>
-              <div style={{fontFamily:"'Space Mono',monospace",fontSize:8,color:"rgba(255,255,255,0.4)",letterSpacing:"0.08em"}}>Challenge-safe discipline</div>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,color:"#ff9a3c",marginBottom:3}}>NY session only</div>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:8,color:"rgba(255,255,255,0.4)",letterSpacing:"0.08em"}}>8:30–10:30 AM CT</div>
             </div>
             <div style={{width:1,background:"rgba(255,255,255,0.08)"}}/>
             <div style={{textAlign:"center"}}>
@@ -7978,7 +7978,7 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
             Break. Retest. Continuation.
           </h2>
           <p style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:"rgba(255,255,255,0.55)",lineHeight:1.8,maxWidth:480,margin:0}}>
-            The sequence stays the same. Only the levels change.
+            The sequence stays the same. The NY session is where it executes cleanest.
           </p>
         </div>
 
@@ -8192,7 +8192,7 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
             },
             {
               q:"When should I upload the charts?",
-              a:"Upload 30–60 minutes before your session opens. For the NY session, upload between 7:30–8:00 AM CT. This gives you time to review the plan and set alerts before the execution window opens. Do not upload during the session.",
+              a:"Upload during pre-market scouting — 7:00 to 8:30 AM CT. This gives you time to review the plan, study the levels, and set alerts before the 8:30 AM CT execution window opens. Do not upload charts during the session — you should be watching candles, not uploading.",
             },
             {
               q:"What timeframes does BRC use?",
@@ -8200,7 +8200,7 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
             },
             {
               q:"What sessions can I trade?",
-              a:"New York — Opens 9:30 AM ET (8:30 AM CT). BRC execution window: 9:00–11:30 AM ET (8:00–10:30 AM CT). Last valid 30M close is 10:30 AM CT. No new entries after that.\n\nLondon — Opens 8:00 AM GMT (3:00 AM ET / 2:00 AM CT). BRC execution window: 2:00–5:00 AM CT. Last valid 30M close is 5:00 AM CT.\n\nAsian — Opens 9:00 PM ET (8:00 PM CT). BRC execution window: 8:00–11:00 PM CT. Last valid 30M close is 11:00 PM CT. Reduced size recommended.",
+              a:"OmniUSD is built exclusively for the New York session — 8:30 to 10:30 AM CT. This is the only window where institutional volume, level respect, and BRC follow-through are all aligned. Pre-market scouting opens at 7:00 AM CT. Hard cutoff is 10:30 AM CT — no new entries after that.\n\nException: BTCUSD and XAUUSD can be analyzed during London open (2:00–4:00 AM CT) with a maximum grade of B+. All other instruments are NY session only.",
             },
             {
               q:"What is the edge?",
@@ -8228,7 +8228,7 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
             },
             {
               q:"How many trades per month should I expect?",
-              a:"6–7 A+ setups per month across your instruments. Quality over quantity is a core rule. You will pass on far more setups than you take — and that is by design.",
+              a:"Six to seven A+ NY session setups per month across your instruments. Quality over quantity is a core rule. Six clean NY session trades per month beats thirty random trades across all sessions every single time. You will pass on far more setups than you take — that is by design.",
             },
           ].map((item,i,arr)=>(
             <FaqRow key={i} q={item.q} a={item.a} isLast={i===arr.length-1}/>
