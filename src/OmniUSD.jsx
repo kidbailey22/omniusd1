@@ -1833,7 +1833,7 @@ function getMarketStatus(instrument, session = "NY") {
       return {
         open: true, state: "prep",
         reason: `Asian session opens in ${h > 0 ? `${h}h ${m}m` : `${m}m`}`,
-        comeback: "Upload now and study your plan before the session opens at 9:00 PM ET.",
+        comeback: "Upload now and study your plan before the session opens at 9:00 PM.",
         minsUntilOpen: minsLeft,
       };
     }
@@ -1843,7 +1843,7 @@ function getMarketStatus(instrument, session = "NY") {
       const openTimeLocal = etToLocal(21, 0, true);
       return {
         open: false, state: "too_early",
-        reason: `Asian session opens at 9:00 PM ET${openTimeLocal.includes("ET") ? "" : ` (${openTimeLocal})`}.`,
+        reason: `Asian session opens at ${etToUserTime(21, 0, true)}.`,
         comeback: `Come back at 7:00 PM ET to upload your charts — 2 hours before open. That gives you time to study the plan before the session starts.`,
         minsUntilPrep: minsLeft,
       };
@@ -1852,7 +1852,7 @@ function getMarketStatus(instrument, session = "NY") {
     return {
       open: false, state: "closed",
       reason: "Asian session is closed.",
-      comeback: "Come back tonight at 7:00 PM ET to prep for tomorrow's Asian session.",
+      comeback: "Come back tonight at 7:00 PM to prep for tomorrow's Asian session.",
     };
   }
 
@@ -1960,9 +1960,37 @@ ${sessionWarning ? `⚠️ WARNING: ${sessionWarning}` : ""}
 CORE RULES — NEVER VIOLATE THESE
 ═══════════════════════════════════════
 
-RULE 1 — 3TF ALIGNMENT IS MANDATORY FOR A+
-All three timeframes (Daily + 4H + 1H) must agree on direction.
-If even ONE disagrees = maximum grade is B. No exceptions.
+RULE 1 — THE ALIGNMENT GATE (HIGHEST PRIORITY — CHECK FIRST)
+Before anything else, run this gate in order. Do NOT skip steps.
+
+STEP 1 — DAILY (THE GENERAL):
+Read the Daily chart structure.
+Bullish = clear HH + HL pattern.
+Bearish = clear LH + LL pattern.
+Mixed/unclear = SOFT PASS immediately. Stop here.
+
+STEP 2 — 4H (THE LIEUTENANT):
+Must AGREE with Daily direction.
+4H mixed or opposite Daily = SOFT PASS immediately. Stop here.
+Do NOT proceed to A+ if 4H conflicts.
+
+STEP 3 — 1H (THE SOLDIER):
+Must AGREE with Daily + 4H direction.
+1H conflicts = SOFT PASS immediately. Stop here.
+❌ NEVER: A+ when 1H = Bearish and trade is LONG
+❌ NEVER: A+ when 1H = Bullish and trade is SHORT
+❌ NEVER: Use 15M or 30M to override a conflicting 4H or 1H
+
+STEP 4 — Only if ALL 3 agree (3/3 FULL ALIGNMENT):
+Check 30M for entry trigger.
+Check 15M for early warning.
+Now you may consider A+.
+
+WHAT MUST NEVER HAPPEN:
+❌ A+ when 4H = Mixed or opposite Daily
+❌ A+ when 1H disagrees with Daily + 4H
+❌ A+ when session window is CLOSED
+❌ Using 15M or 30M to justify overriding higher TF conflicts
 
 RULE 2 — THE 30M CLOSE IS THE ONLY ENTRY TRIGGER
 Price touching a level = information, not permission.
@@ -1986,16 +2014,19 @@ Daily says bull = LONG setups only.
 Daily says bear = SHORT setups only.
 Counter-trend setups = automatic PASS regardless of lower TF.
 
-RULE 6 — PRE-MARKET IS INFORMATION, NOT PERMISSION
-Moves during Asian or London session before NY open = context only.
+RULE 6 — SESSION WINDOW
 Execution window: ${sessCfg.label} session — ${sessCfg.hours}.
-Best 30M closes: ${sessCfg.candles.map(c => c.label || c).slice(0,2).join(" and ")}.
+If session window is CLOSED → grade="PASS" with pass_reason="Session window closed. Scout mode only — levels noted for next session."
+Never output an executable A+ plan on a closed session window.
 
 RULE 7 — WEEKEND HARD BLOCK
-If today is Saturday OR Sunday before 8:00 PM ET → grade="PASS" regardless of structure. Weekend volume is thin and unreliable. Explain clearly in pass_reason.
+If today is Saturday OR Sunday before 8:00 PM ET → grade="PASS" regardless of structure. Weekend volume is thin and unreliable.
 
 RULE 8 — FRIDAY CAUTION
 ${ct.isFriday ? "TODAY IS FRIDAY — end of week. Apply extra caution. A PASS protects the week. Only A+ if structure is crystal clear." : "Apply standard grading rules."}
+
+TRIGGER LEVEL PRECISION — NON-NEGOTIABLE:
+The trigger_level MUST be the exact structural break price visible on the chart. Do NOT round to nearest 50 or 100. If the break happened at 3,847 — trigger is 3,847, not 3,850.
 
 ═══════════════════════════════════════
 BRC PHASE IDENTIFICATION
@@ -2007,7 +2038,7 @@ RETEST_COOKING: Price broke the level AND is now pulling back to test it.
 Daily + 4H agree but 1H is temporarily counter-trend. This is healthy. WATCH.
 
 CONTINUATION: Price broke, retested, and a 30M candle closed back in the break direction.
-THIS is the A+ entry phase.
+THIS is the A+ entry phase — but ONLY if 3/3 alignment confirmed above.
 
 EXPIRED: Price broke, ran the full target, no retest occurred. PASS — do not chase.
 
@@ -2019,37 +2050,42 @@ DAILY: Primary structure (HH/HL = bull, LH/LL = bear). Key daily level. Bias.
 4H: Confirm or contradict Daily. Swing sequence. Bias.
 1H: Confirm Daily + 4H. Showing retest or continuation. Bias.
 
-ALIGNMENT: 3/3 = A+ possible. 2/3 = B max. 1/3 or 0/3 = PASS.
+ALIGNMENT RESULT:
+3/3 = A+ POSSIBLE (still needs BRC sequence + R:R)
+2/3 = SOFT PASS only — output conditional triggers, no execution
+1/3 or 0/3 = HARD PASS — no triggers, no plan
 
 ═══════════════════════════════════════
-GRADING
+GRADING — STRICT
 ═══════════════════════════════════════
 
-A+ (85-100%): All 3TF aligned. Clear BRC sequence. Price in Retest or Continuation. Clean 30M trigger. R:R min 1.5:1.
-A (70-84%): 3TF aligned but one is weak. BRC present but retest zone is messy. R:R min 1.2:1.
-B (50-69%): Only 2/3 TF aligned. Needs more confirmation. MONITOR ONLY — no execution.
+🟢 A+ EXECUTE (85-100%):
+ALL of these must be true — no exceptions:
+✅ Daily + 4H + 1H = 3/3 FULL ALIGNMENT same direction
+✅ Clear BRC sequence (Break → Retest → Continuation)
+✅ Price in Retest or Continuation phase RIGHT NOW
+✅ Clean 30M trigger level identified (exact price, not rounded)
+✅ R:R minimum 1.5:1
+✅ Session window is currently OPEN
 
-SOFT PASS — PRE-MARKET CONDITIONAL:
-Use SOFT PASS when: it is pre-market OR the session has not yet opened AND structure exists but direction is not yet confirmed.
-A SOFT PASS means: "No trade yet — but here are two scenarios to watch when the session opens."
+🟡 SOFT PASS — 2/3 alignment OR pre-market uncertainty:
 Output TWO conditional trigger levels — one bullish, one bearish.
-For each: exact price that needs to close on the 30M, what it means, and what the trade plan becomes.
-This is NOT a hard block. This is a preparation plan.
-Example: "If 30M closes above 71,082 at NY open → LONG setup activates. If 30M closes below 69,800 → SHORT setup activates."
+For each: exact 30M close price, what trade activates, stop, TP1.
+Add: "Re-upload charts at next session open for execution grade."
+This is NOT executable. This is preparation only.
 
-PASS (hard block):
-Less than 2TF aligned, counter-trend setup, price in no man's land with no defined levels, setup fully expired, post-news chaos, weekend. No conditional levels exist worth watching.
+🔴 HARD PASS:
+1/3 or 0/3 TF aligned. Counter-trend. No man's land. Post-news chaos. Weekend.
+State exactly what needs to change. No triggers. No plan.
+"No trades today — protect the account."
 
-═══════════════════════════════════════
-TRADE PLAN RULES
-═══════════════════════════════════════
+
 
 TRIGGER: The 30M close price confirming Continuation. NOT the break level itself.
 ENTRY: Limit order INSIDE the retest zone — not at the trigger.
 STOP: Beyond the structure that invalidates the setup. NEVER inside the retest zone.
 
-TRIGGER LEVEL PRECISION — NON-NEGOTIABLE:
-The trigger_level MUST be the exact structural break price visible on the chart — the precise swing high, swing low, or consolidation boundary where the break occurred. Do NOT round to the nearest 50 or 100. Do NOT approximate. If the break happened at 3,847, the trigger is 3,847 — not 3,850. Read the exact price from the chart and use it.
+TP VALIDATION — run before outputting:
 SHORT: TP1 < entry. TP2 < TP1. Runner < TP2. Recalculate if any fail.
 LONG: TP1 > entry. TP2 > TP1. Runner > TP2. Recalculate if any fail.
 
@@ -3853,14 +3889,24 @@ Return ONLY valid JSON, no markdown, no explanation:
         }
       }
 
-      // ── WEEKEND HARD OVERRIDE — force PASS regardless of AI grade ────────
+      // ── WEEKEND HARD OVERRIDE ─────────────────────────────────────────────
       const _now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
       const _day = _now.getDay();
       const _mins = _now.getHours() * 60 + _now.getMinutes();
       const _isWeekend = _day === 6 || (_day === 0 && _mins < 20 * 60);
       if (_isWeekend && parsed.grade !== "PASS") {
         parsed.grade = "PASS";
-        parsed.pass_reason = "Weekend — markets are thin and unreliable. No valid BRC execution window until Sunday Asian session (~8:00 PM CT) or Monday NY session (~8:30 AM CT). Structure noted — come back when a proper session opens.";
+        parsed.pass_reason = "Weekend — markets are thin and unreliable. No valid BRC execution window until Sunday Asian session or Monday NY session. Structure noted — come back when a proper session opens.";
+      }
+
+      // ── SESSION WINDOW CLOSED GATE ────────────────────────────────────────
+      // If the session window is closed and AI returned A+, downgrade to SCOUT MODE.
+      // An A+ plan on a closed window is dangerous — user might act on it.
+      const _mktStatus = getMarketStatus(instrument, selectedSession);
+      if (_mktStatus.state === "closed" && parsed.grade === "A+") {
+        parsed.grade = "PASS";
+        parsed.pass_reason = `SCOUT MODE — Session window is closed. The structure and levels below are valid for your next session. No execution today. Come back when the ${SESSION_CONFIG[selectedSession]?.label || "next"} session opens.`;
+        parsed._scoutMode = true;
       }
 
       parsed.instrument = instrument;
@@ -3932,9 +3978,9 @@ Return ONLY valid JSON, no markdown, no explanation:
     let openingMsg = "";
 
     if (isSat) {
-      openingMsg = `⛔ **Saturday — no entries.**\nCome back Sunday Asian (~9:00 PM ET) or Monday NY (~9:30 AM ET).`;
+      openingMsg = `⛔ **Saturday — no entries.**\nCome back Sunday Asian (~9:00 PM) or Monday NY (~9:30 AM).`;
     } else if (isSunEarly) {
-      openingMsg = `⛔ **Markets not yet open.**\nAsian session opens ~9:00 PM ET tonight.`;
+      openingMsg = `⛔ **Markets not yet open.**\nAsian session opens ~9:00 PM tonight.`;
     } else if (isPrep) {
       const h = sessCfg.openET?.h || 9;
       const m = sessCfg.openET?.m || 30;
@@ -4920,6 +4966,51 @@ Return ONLY valid JSON, no markdown, no explanation:
                 const _d = _n.getDay();
                 const _m = _n.getHours()*60+_n.getMinutes();
                 const isWeekendPass = (_d===6||(_d===0&&_m<20*60)) && plan.pass_reason && plan.pass_reason.includes("Weekend");
+                const isScoutMode = plan._scoutMode === true;
+
+                // SCOUT MODE — window closed, levels valid for next session
+                if (isScoutMode) return (
+                  <div style={{ animation:"fadein 0.4s ease both" }}>
+                    <div style={{ padding:"16px 18px", background:"rgba(0,229,255,0.04)", border:"1px solid rgba(0,229,255,0.2)", borderLeft:"3px solid #00e5ff", borderRadius:0, marginBottom:16 }}>
+                      <div style={{ fontSize:9, fontWeight:900, letterSpacing:"0.2em", color:"#00e5ff", marginBottom:10, fontFamily:"'Space Mono',monospace" }}>🔭 SCOUT MODE — SESSION CLOSED</div>
+                      <div style={{ fontSize:12, color:"rgba(255,255,255,0.6)", lineHeight:1.9 }}>
+                        {plan.pass_reason}
+                      </div>
+                    </div>
+                    {/* Show key levels as watchlist */}
+                    {plan.key_levels && plan.key_levels.length > 0 && (
+                      <div style={{ marginBottom:16 }}>
+                        <div style={{ fontSize:9, fontWeight:900, letterSpacing:"0.14em", color:"#ffd166", marginBottom:10, fontFamily:"'Space Mono',monospace" }}>📋 WATCHLIST FOR NEXT SESSION</div>
+                        <div style={{ display:"flex", flexDirection:"column", gap:0 }}>
+                          {plan.key_levels.map((lvl,i) => (
+                            <div key={i} style={{ display:"flex", gap:10, padding:"8px 0", borderBottom:"1px solid rgba(255,255,255,0.04)", fontSize:11, color:"rgba(255,255,255,0.6)", lineHeight:1.6 }}>
+                              <span style={{ color:"#ffd166", flexShrink:0 }}>→</span>
+                              <span>{lvl}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {plan.trigger_level && (
+                      <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:8, marginBottom:16 }}>
+                        {[
+                          { label:"TRIGGER", val:plan.trigger_level, color: plan.bias==="SHORT"?"#ff6b6b":"#7fff6b" },
+                          { label:"STOP",    val:plan.stop_loss,     color:"#ff6b6b" },
+                          { label:"TP1",     val:plan.tp1,           color:"#7fff6b" },
+                        ].map(r => r.val && (
+                          <div key={r.label} style={{ padding:"10px 12px", background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:8, opacity:0.6 }}>
+                            <div style={{ fontSize:8, color:"#8878aa", letterSpacing:"0.1em", marginBottom:4 }}>{r.label}</div>
+                            <div style={{ fontSize:14, fontWeight:700, color:r.color, fontFamily:"monospace" }}>{r.val}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <div style={{ padding:"10px 14px", background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:8, fontSize:10, color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace", lineHeight:1.8 }}>
+                      These levels are for reference only. No execution until the next valid session window opens.
+                    </div>
+                    <FullAnalysisPanel plan={plan} />
+                  </div>
+                );
 
                 if (isWeekendPass) return (
                   <div style={{ animation: "fadein 0.4s ease both" }}>
