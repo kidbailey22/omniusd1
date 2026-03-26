@@ -4291,62 +4291,12 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
         return { type: "image", source: { type: "base64", media_type: "image/jpeg", data: base64 } };
       }));
 
-      // ── STEP 0: DEDICATED INSTRUMENT VALIDATION — runs before everything ──
-      // One job only: what instrument is in these charts?
-      const validationRes = await fetch("/api/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 150,
-          system: `You are a strict chart validator. Your ONLY job: verify the instrument AND timeframe are clearly visible in each chart screenshot.
-
-RULE 1 — INSTRUMENT MUST BE VISIBLE:
-The ticker/instrument symbol (e.g. XAUUSD, BTCUSD, NAS100) must be clearly readable in the chart — in the title bar, header, or chart label. Do NOT guess from price range alone. If the ticker is not visibly printed on the chart, set match=false and detected="not visible".
-
-RULE 2 — TIMEFRAME MUST BE VISIBLE:
-The timeframe (D, 4H, 1H, 30M, 15M) must be clearly readable on the chart — in the interval selector, title, or time axis. If the timeframe cannot be confirmed visually, set match=false.
-
-RULE 3 — NO GUESSING EVER:
-If you are not 100% certain what the instrument or timeframe is from what is visibly printed on the chart, set match=false. Only block if you clearly see a DIFFERENT instrument than expected — a match where you can confirm the ticker is visible and correct should return match=true. Do not reject on uncertainty alone if the ticker appears to match.
-
-RULE 4 — INSTRUMENT MATCH:
-If instrument IS visible and does NOT match the expected instrument, set match=false and detected=what you actually see.
-
-Return ONLY valid JSON, no markdown, no explanation:
-{"detected":"TICKER_OR_not_visible","match":true_or_false,"reason":"one sentence why"}`,
-          messages: [{ role: "user", content: [...imgBlocks.slice(0,2), { type: "text", text: `Expected instrument: ${instrument}. Check: is the instrument ticker VISIBLY PRINTED on these charts? Is the timeframe VISIBLY PRINTED? If either is not clearly visible, set match=false immediately. Return JSON only: {"detected":"TICKER_OR_not_visible","match":true_or_false,"reason":"why"}` }] }],
-        }),
-      });
-
-      const vData = await validationRes.json();
-      const vText = vData.content?.[0]?.text || "{}";
-      let vResult = { detected: "unknown", match: false };
-      try { vResult = JSON.parse(vText.replace(/```json|```/g, "").trim()); } catch(e) {}
-
-      if (!vResult.match) {
-        const detectedRaw = (vResult.detected || "").toUpperCase().trim();
-        const expectedRaw = (instrument || "").toUpperCase().trim();
-        const isInstrumentWrong = detectedRaw && detectedRaw !== expectedRaw && detectedRaw !== "NOT_VISIBLE" && detectedRaw !== "NOT VISIBLE" && detectedRaw !== "UNREADABLE";
-        // Wrong charts = free retry — reset to upload, no blocked screen, no cooldown hit
-        setPlan(null);
-        setImages(Array(5).fill(null));
-        setPhase("upload");
-        // Show a quick error via a temporary state rather than full blocked screen
-        alert(
-          isInstrumentWrong
-            ? `Wrong charts — these show ${detectedRaw}, not ${expectedRaw}. Upload your ${expectedRaw} charts and try again.`
-            : `Charts could not be verified. Make sure the instrument ticker and timeframe labels are clearly visible on every chart, then try again.`
-        );
-        return;
-      }
-
-      // ── Instrument validated — now safe to increment upload count ─────────
+      // ── Increment upload count — we're proceeding to analysis ────────────
       if (userId) {
         setUploadCounts(prev => ({ ...prev, [instrument]: (prev[instrument] || 0) + 1 }));
       }
 
-      // ── STEP 1: MAIN ANALYSIS — only runs if instrument validated ─────────
+      // ── STEP 1: MAIN ANALYSIS ─────────────────────────────────────────────
       const res = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -4362,38 +4312,22 @@ Return ONLY valid JSON, no markdown, no explanation:
       const text = data.content?.[0]?.text || "{}";
       const parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
 
-      // Secondary check — if main analysis also flags mismatch, respect it
-      if (parsed.instrument_valid === false || parsed.charts_valid === false) {
-        const detected = (parsed.instrument_detected || vResult.detected || "").toUpperCase().trim();
+      // Secondary check — only block on a CONFIRMED instrument mismatch, never on uncertainty
+      if (parsed.instrument_valid === false) {
+        const detected = (parsed.instrument_detected || "").toUpperCase().trim();
         const expected = (instrument || "").toUpperCase().trim();
-        const isInstrumentMismatch = parsed.instrument_valid === false && detected && detected !== expected && detected !== "UNKNOWN" && detected !== "UNREADABLE";
-        const isTimeframeMismatch = parsed.charts_valid === false && parsed.instrument_valid !== false;
-
-        let reason = "";
-        if (isInstrumentMismatch) {
-          reason = `Wrong instrument. You selected ${expected} but these charts show ${detected}. Upload your ${expected} charts.`;
-        } else if (isTimeframeMismatch) {
-          reason = `Timeframe mismatch. OmniUSD needs Daily, 4H, 1H, 30M, and 15M — in that order. Check your chart order and re-upload.`;
-        } else {
-          // Instrument detected matches but something else flagged — don't block, let it through
-          // This prevents false positives where AI says invalid but detected = correct instrument
-          if (detected === expected || !detected) {
-            // False positive — skip the block and continue to render the plan
-          } else {
-            reason = `Charts could not be verified. Make sure the instrument ticker and timeframe are clearly visible on every chart.`;
-          }
-        }
-
-        if (reason) {
-          setPlan({
-            _blocked: true,
-            _reason: reason,
-            instrument,
-            grade: "BLOCKED",
-          });
-          setPhase("plan");
+        const isConfirmedMismatch = detected && detected !== expected && detected !== "UNKNOWN" && detected !== "UNREADABLE" && detected !== "NOT_VISIBLE";
+        if (isConfirmedMismatch) {
+          // Free retry — go back to upload, no cooldown hit
+          setUploadCounts(prev => ({ ...prev, [instrument]: Math.max(0, (prev[instrument] || 1) - 1) }));
+          setPlan(null);
+          setImages(Array(5).fill(null));
+          setPhase("upload");
+          alert(`Wrong charts — these show ${detected}, not ${expected}. Upload your ${expected} charts and try again.`);
           return;
         }
+        // Any other instrument_valid=false (uncertainty, unreadable) → proceed anyway
+        // The analysis prompt already instructs the AI to handle uncertain cases gracefully
       }
 
       // ── WEEKEND HARD OVERRIDE ─────────────────────────────────────────────
