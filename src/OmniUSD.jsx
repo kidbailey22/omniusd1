@@ -613,6 +613,25 @@ function OmniUSDApp(){
 
   async function loadProfile(userId, token){
     const tok=token||JSON.parse(localStorage.getItem("omniusd_session")||"{}")?.access_token||SUPABASE_KEY;
+
+    // ── DEV BYPASS — check email from session FIRST, before any DB call ──
+    const _session = JSON.parse(localStorage.getItem("omniusd_session")||"{}");
+    const _sessionEmail = _session?.user?.email || _session?.email || "";
+    const _preferredName = _session?.user?.user_metadata?.preferred_name || "";
+    if (_sessionEmail === "bailey.charles024@gmail.com") {
+      setUserProfileTZ("America/Chicago");
+      setProfile({
+        mode:"standard", emoji:"◈", color:"#00e5ff", label:"Standard",
+        tier:"elite", tierLabel:"Elite", tierColor:"#ff6bff",
+        defaultInstrument:"XAUUSD", session:null,
+        tz:{ iana:"America/Chicago", city:"Chicago", label:"CT / UTC-6", region:"North America" },
+        isPaid:true, _devBypass:true,
+        preferredName: _preferredName || "Chalie",
+        email: _sessionEmail,
+      });
+      return;
+    }
+    // ── END BYPASS ────────────────────────────────────────────────────────
     try{
       const res=await fetch(
         `${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}&select=*`,
