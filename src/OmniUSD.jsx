@@ -4838,23 +4838,84 @@ Use ONLY these times. All earlier time references in this conversation are stale
               </div>
             </div>
 
-            {/* NY Session info block */}
-            <div style={{ padding:"10px 14px", background:"rgba(127,255,107,0.04)", border:"1px solid rgba(127,255,107,0.15)", borderLeft:"3px solid #7fff6b", borderRadius:0, marginBottom:20 }}>
-              <div style={{ fontSize:9, fontWeight:900, letterSpacing:"0.16em", color:"#7fff6b", marginBottom:8, fontFamily:"'Space Mono',monospace" }}>NY SESSION ONLY</div>
-              <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
-                {[
-                  { label:"Upload", val:"30–60 min before NY open" },
-                  { label:"Pre-scout", val:"7:00–8:30 AM CT" },
-                  { label:"Execution", val:"8:30–10:30 AM CT" },
-                  { label:"Cutoff", val:"No new entries after 10:30 AM CT" },
-                ].map(r => (
-                  <div key={r.label} style={{ display:"flex", gap:8, alignItems:"baseline" }}>
-                    <span style={{ fontSize:9, fontWeight:700, color:"rgba(127,255,107,0.6)", fontFamily:"'Space Mono',monospace", minWidth:60, flexShrink:0 }}>{r.label}</span>
-                    <span style={{ fontSize:11, color:"rgba(255,255,255,0.65)", fontFamily:"'Space Mono',monospace" }}>{r.val}</span>
+            {/* Plan-aware upload timing block */}
+            {(()=>{
+              const tier = profile?.tier || "starter";
+              const ct = new Date(new Date().toLocaleString("en-US",{timeZone:"America/Chicago"}));
+              const mins = ct.getHours()*60 + ct.getMinutes();
+              const tzShort = getUserTZShort();
+
+              // Per-plan upload windows (CT minutes)
+              const windows = {
+                elite:   { recommend:7*60,       latest:7*60+30, label:"⭐ ELITE",   color:"#ff6bff", instruments:6 },
+                pro:     { recommend:7*60+15,     latest:7*60+45, label:"💎 PRO",     color:"#00e5ff", instruments:4 },
+                starter: { recommend:7*60+30,     latest:8*60,    label:"🔰 STARTER", color:"#ffd166", instruments:2 },
+              };
+              const w = windows[tier] || windows.starter;
+              const nyOpen  = 8*60+30;
+              const nyCutoff= 10*60+30;
+
+              // Countdown helpers
+              const minsUntil = (target) => Math.max(0, target - mins);
+              const fmtMins = (m) => m >= 60 ? `${Math.floor(m/60)}h ${m%60}m` : `${m}m`;
+
+              // State
+              let dot = "#7fff6b", label = "", sub = "", warning = null;
+
+              if (mins < w.recommend) {
+                // Before recommended window
+                dot = "#7fff6b";
+                label = `${w.label} — Upload window opens in ${fmtMins(minsUntil(w.recommend))}`;
+                sub = `Recommended: ${Math.floor(w.recommend/60)}:${String(w.recommend%60).padStart(2,"0")} ${nyOpen-w.recommend >= 60 ? "AM" : "AM"} CT · NY session at 8:30 AM CT`;
+              } else if (mins < w.latest) {
+                // Inside recommended window — perfect time
+                dot = "#7fff6b";
+                label = `${w.label} — Perfect upload time`;
+                sub = `NY session opens in ${fmtMins(minsUntil(nyOpen))} · Upload now for full analysis`;
+              } else if (mins < nyOpen) {
+                // Past recommended, before NY open
+                dot = "#ffd166";
+                label = `${w.label} — Running behind optimal window`;
+                sub = `NY opens in ${fmtMins(minsUntil(nyOpen))} · Upload now`;
+                warning = tier === "elite"
+                  ? `Uploading after 7:30 AM CT with 6 instruments leaves limited time. Prioritize your top 2–3 instruments first.`
+                  : tier === "pro"
+                  ? `Uploading after 7:45 AM CT leaves limited prep time. Focus on your highest priority instruments.`
+                  : `NY session opens in 30 minutes. Upload now for a complete plan.`;
+              } else if (mins < nyCutoff) {
+                // NY session open
+                dot = "#00e5ff";
+                label = `NY SESSION OPEN — Limited analysis time`;
+                sub = `Window closes in ${fmtMins(minsUntil(nyCutoff))} · Upload immediately`;
+                warning = `NY session is already open. Upload and analyze your top instrument now — you have ${fmtMins(minsUntil(nyCutoff))} before cutoff.`;
+              } else {
+                // Closed
+                dot = "#ff6b6b";
+                label = `WINDOW CLOSED`;
+                sub = `Come back tomorrow at 7:00 AM CT`;
+              }
+
+              const borderColor = dot === "#7fff6b" ? "rgba(127,255,107,0.15)" : dot === "#ffd166" ? "rgba(255,209,102,0.2)" : dot === "#00e5ff" ? "rgba(0,229,255,0.2)" : "rgba(255,107,107,0.2)";
+              const bgColor = dot === "#7fff6b" ? "rgba(127,255,107,0.04)" : dot === "#ffd166" ? "rgba(255,209,102,0.04)" : dot === "#00e5ff" ? "rgba(0,229,255,0.04)" : "rgba(255,107,107,0.04)";
+
+              return (
+                <div style={{ marginBottom:20 }}>
+                  <div style={{ padding:"10px 14px", background:bgColor, border:`1px solid ${borderColor}`, borderLeft:`3px solid ${dot}`, borderRadius:0 }}>
+                    {/* Status row */}
+                    <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6 }}>
+                      <div style={{ width:7, height:7, borderRadius:"50%", background:dot, flexShrink:0, boxShadow:`0 0 6px ${dot}` }}/>
+                      <span style={{ fontSize:11, fontWeight:700, color:dot, fontFamily:"'Space Mono',monospace", letterSpacing:"0.08em" }}>{label}</span>
+                    </div>
+                    <div style={{ fontSize:10, color:"rgba(255,255,255,0.55)", fontFamily:"'Space Mono',monospace", marginBottom: warning ? 8 : 0 }}>{sub}</div>
+                    {warning && (
+                      <div style={{ fontSize:10, color:"rgba(255,209,102,0.85)", fontFamily:"'Space Mono',monospace", lineHeight:1.7, paddingTop:8, borderTop:"1px solid rgba(255,255,255,0.06)" }}>
+                        ⚠ {warning}
+                      </div>
+                    )}
                   </div>
-                ))}
-              </div>
-            </div>
+                </div>
+              );
+            })()}
 
             {/* Instrument pills */}
             {(() => {
