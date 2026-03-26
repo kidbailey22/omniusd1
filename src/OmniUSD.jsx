@@ -1554,6 +1554,52 @@ function Onboarding({onSelect}){
                 ));
               })()}
             </div>
+            {/* Tutorial video — collapsible */}
+            {(()=>{
+              const [vidOpen, setVidOpen] = React.useState(false);
+              return (
+                <div style={{marginBottom:16}}>
+                  <button onClick={()=>setVidOpen(o=>!o)}
+                    style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 16px",background:"rgba(0,229,255,0.05)",border:"1px solid rgba(0,229,255,0.18)",borderRadius: vidOpen ? "10px 10px 0 0" : 10,cursor:"pointer",fontFamily:"inherit",transition:"all 0.2s"}}>
+                    <div style={{display:"flex",alignItems:"center",gap:10}}>
+                      <span style={{fontSize:16}}>▶️</span>
+                      <div style={{textAlign:"left"}}>
+                        <div style={{fontSize:13,fontWeight:700,color:"#00e5ff"}}>How to set up your charts correctly</div>
+                        <div style={{fontSize:10,color:"rgba(255,255,255,0.4)",fontFamily:"'Space Mono',monospace"}}>Watch before your first upload · 3 min</div>
+                      </div>
+                    </div>
+                    <span style={{fontSize:14,color:"#00e5ff",transition:"transform 0.2s",transform:vidOpen?"rotate(45deg)":"none",display:"inline-block"}}>+</span>
+                  </button>
+                  {vidOpen && (
+                    <div style={{background:"rgba(0,0,0,0.3)",border:"1px solid rgba(0,229,255,0.18)",borderTop:"none",borderRadius:"0 0 10px 10px",overflow:"hidden"}}>
+                      {/* Video embed — replace src with real URL when ready */}
+                      <div style={{position:"relative",paddingBottom:"56.25%",height:0}}>
+                        <iframe
+                          src="https://www.youtube.com/embed/PLACEHOLDER_VIDEO_ID"
+                          title="OmniUSD Chart Setup Tutorial"
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          style={{position:"absolute",top:0,left:0,width:"100%",height:"100%"}}
+                        />
+                      </div>
+                      {/* OmniLens indicator mention */}
+                      <div style={{padding:"12px 16px",borderTop:"1px solid rgba(255,255,255,0.06)"}}>
+                        <div style={{fontSize:9,fontWeight:900,letterSpacing:"0.14em",color:"#ffd166",fontFamily:"'Space Mono',monospace",marginBottom:6}}>🔭 OMNI LENS INDICATOR</div>
+                        <div style={{fontSize:12,color:"rgba(255,255,255,0.62)",lineHeight:1.7,marginBottom:8}}>
+                          We built a free TradingView indicator that automatically marks your chart lookback periods, labels market structure (HH/HL/LH/LL), and shows the 30M candle body strength — making the screenshot process foolproof.
+                        </div>
+                        <a href="https://www.tradingview.com/PLACEHOLDER_INDICATOR_LINK" target="_blank" rel="noopener noreferrer"
+                          style={{display:"inline-block",fontSize:11,fontWeight:700,color:"#ffd166",fontFamily:"'Space Mono',monospace",textDecoration:"none",padding:"6px 14px",borderRadius:6,border:"1px solid rgba(255,209,102,0.3)",background:"rgba(255,209,102,0.06)"}}>
+                          GET OMNI LENS ON TRADINGVIEW →
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
             {/* Timezone selector */}
             <div style={{padding:"12px 16px",background:"rgba(127,255,107,0.04)",border:"1px solid rgba(127,255,107,0.15)",borderLeft:"3px solid #7fff6b",borderRadius:0,marginBottom:16}}>
               <div style={{fontSize:9,fontWeight:900,letterSpacing:"0.16em",color:"#7fff6b",marginBottom:8,fontFamily:"'Space Mono',monospace"}}>NY SESSION ONLY</div>
@@ -8598,6 +8644,11 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
             {
               q:"Do I need to watch charts all session?",
               a:"No. Upload before the session, review the plan, set your alerts. You only need to be present at the 30M candle closes. Between closes, there is nothing to act on. OmniUSD is built for structure, not screen time.",
+            },
+            {
+              q:"How do I take the correct screenshot?",
+              a:"Watch the setup tutorial above, or follow these steps:\n\n1. Open TradingView and load your instrument\n2. Set each chart to the correct lookback (Daily=6mo, 4H=4-6wk, 1H=5-7d, 30M=3-5d, 15M=1-2d)\n3. Make sure the instrument ticker AND timeframe label are both clearly visible on screen\n4. Take a full screenshot of each chart\n5. Upload all 5 in OmniUSD\n\nPro tip: Install the free OmniLens indicator on TradingView. It automatically marks your lookback periods, labels market structure (HH/HL/LH/LL), and shows 30M candle body strength — making the screenshot process foolproof. Get it at tradingview.com (search OmniLens by OmniUSD).",
+              highlight: true,
             },
             {
               q:"What broker do I need?",
