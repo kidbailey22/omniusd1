@@ -3697,14 +3697,12 @@ function SoftPassScenariosPanel({ plan, onActivate }) {
             Cancel
           </button>
         )}
-        {/* Urgent alert instruction — always visible */}
+        {/* Urgent alert instruction */}
         {s.trigger && (
           <div style={{ marginTop:10, padding:"10px 12px", background:`${color}08`, border:`1px solid ${color}33`, borderLeft:`3px solid ${color}`, borderRadius:0 }}>
-            <div style={{ fontSize:9, fontWeight:900, letterSpacing:"0.14em", color, fontFamily:"'Space Mono',monospace", marginBottom:5 }}>
-              🔔 SET YOUR ALERT NOW
-            </div>
-            <div style={{ fontSize:12, color:"rgba(255,255,255,0.75)", lineHeight:1.7 }}>
-              Set an alert at <strong style={{ color, fontFamily:"monospace" }}>{s.trigger}</strong> on your {isBull ? "30M" : "30M"} chart right now — don't wait. When it triggers, you need to be ready to act, not scrambling to set it up.
+            <div style={{ fontSize:9, fontWeight:900, letterSpacing:"0.14em", color, fontFamily:"'Space Mono',monospace", marginBottom:5 }}>🔔 SET YOUR ALERT NOW — {s.trigger}</div>
+            <div style={{ fontSize:12, color:"rgba(255,255,255,0.75)", fontFamily:"'Space Mono',monospace" }}>
+              30M close {isBull ? "above" : "below"} this = {isBull ? "LONG" : "SHORT"} setup activates
             </div>
           </div>
         )}
