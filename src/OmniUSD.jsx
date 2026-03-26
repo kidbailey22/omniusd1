@@ -3254,147 +3254,137 @@ function BulkUploadZone({ images, setImages, readSlotFile, dragOverSlot, setDrag
 // SESSION HISTORY PAGE
 // ═══════════════════════════════════════════════════════════════════════════
 function ChartSetupPage({ onClose }) {
-  const TF_REQUIREMENTS = [
+  const [expanded, setExpanded] = React.useState(null);
+
+  const TF = [
     {
-      tf: "Daily",
-      short: "D",
-      lookback: "6 months",
+      short: "D",   tf: "Daily",     lookback: "6 months",  color: "#ff6bff",
       shows: "Full macro trend + major levels",
-      perfect: "Captures the full trend cycle — all key highs, lows, and rejections visible.",
-      tooLittle: "1 month — misses the macro trend",
+      perfect: "Captures the complete trend cycle — every major high, low, and rejection is visible. Too little and you miss the macro trend. Too much and old levels confuse the read.",
+      tooLittle: "1 month — misses macro trend",
       tooMuch: "1 year — old levels confuse analysis",
-      color: "#ff6bff",
-      icon: "📅",
     },
     {
-      tf: "4-Hour",
-      short: "4H",
-      lookback: "4–6 weeks",
+      short: "4H",  tf: "4-Hour",    lookback: "4–6 weeks", color: "#00e5ff",
       shows: "Intermediate structure + BRC phases",
-      perfect: "Shows the full correction phase — lower highs, lower lows, and consolidation all readable.",
+      perfect: "Shows the full correction phase — lower highs, consolidation zones, and the setup forming between Daily and 1H. Less than 4 weeks and the structure disappears.",
       tooLittle: "1 week — misses intermediate structure",
       tooMuch: "3 months — too many old levels",
-      color: "#00e5ff",
-      icon: "📅",
     },
     {
-      tf: "1-Hour",
-      short: "1H",
-      lookback: "5–7 days",
+      short: "1H",  tf: "1-Hour",    lookback: "5–7 days",  color: "#7fff6b",
       shows: "Entry structure + current BRC sequence",
-      perfect: "Shows the active retest zones, entry levels, and BRC sequence forming right now.",
+      perfect: "Shows active retest zones and the BRC sequence forming right now. This is where entry levels, stop zones, and the current phase are most readable.",
       tooLittle: "1 day — misses entry structure",
       tooMuch: "2 weeks — too much noise",
-      color: "#7fff6b",
-      icon: "📅",
     },
     {
-      tf: "30-Minute",
-      short: "30M",
-      lookback: "3–5 days",
+      short: "30M", tf: "30-Minute", lookback: "3–5 days",  color: "#ffd166",
       shows: "Trigger levels + Tier 1 / Tier 2 zones",
-      perfect: "Shows current consolidation, swing highs/lows, and the exact trigger levels for Tier 1 and Tier 2.",
+      perfect: "Shows current consolidation, swing highs and lows, and the exact levels for Tier 1 and Tier 2 confirmation. This is your entry trigger timeframe.",
       tooLittle: "1 day — misses consolidation zones",
       tooMuch: "1 week — stale levels pollute the read",
-      color: "#ffd166",
-      icon: "📅",
     },
     {
-      tf: "15-Minute",
-      short: "15M",
-      lookback: "1–2 days",
-      shows: "Current momentum + early warning",
-      perfect: "This is your early warning only. You need the last 24–48 hours of candle behavior. Nothing more.",
+      short: "15M", tf: "15-Minute", lookback: "1–2 days",  color: "#ff9a3c",
+      shows: "Current momentum + early warning only",
+      perfect: "Early warning only. You need the last 24–48 hours of candle behavior to read current momentum. Nothing more is needed or useful on this timeframe.",
       tooLittle: "4 hours — not enough context",
       tooMuch: "3 days — analysis paralysis",
-      color: "#ff9a3c",
-      icon: "📅",
     },
   ];
 
   return (
     <div style={{ flex:1, overflowY:"auto", padding:"28px 20px", animation:"fadein 0.3s ease both" }}>
-      <div style={{ maxWidth:600, margin:"0 auto" }}>
+      <div style={{ maxWidth:560, margin:"0 auto" }}>
 
         {/* Header */}
         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:6 }}>
           <div>
-            <div style={{ fontFamily:"'Space Mono',monospace", fontSize:11, color:"rgba(255,209,102,0.7)", letterSpacing:"0.18em", marginBottom:6 }}>CHART SETUP</div>
-            <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:20, fontWeight:800, color:"#f0ecff", margin:0 }}>
-              How far back to set each chart.
-            </h2>
+            <div style={{ fontFamily:"'Space Mono',monospace", fontSize:11, color:"rgba(255,209,102,0.7)", letterSpacing:"0.18em", marginBottom:5 }}>CHART SETUP</div>
+            <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:20, fontWeight:800, color:"#f0ecff", margin:0 }}>How far back to set each chart.</h2>
           </div>
           <button onClick={onClose} style={{ fontFamily:"'Space Mono',monospace", fontSize:12, fontWeight:700, color:"#8878aa", background:"none", border:"1px solid rgba(255,255,255,0.08)", borderRadius:6, padding:"6px 12px", cursor:"pointer" }}>
             ← Back
           </button>
         </div>
 
-        {/* Warning banner */}
-        <div style={{ padding:"10px 14px", background:"rgba(255,107,107,0.06)", border:"1px solid rgba(255,107,107,0.2)", borderLeft:"3px solid #ff6b6b", borderRadius:0, marginBottom:24 }}>
-          <div style={{ fontSize:11, color:"rgba(255,255,255,0.62)", fontFamily:"'Space Mono',monospace", lineHeight:1.8 }}>
-            Uploading wrong lookback periods will result in inaccurate analysis. <strong style={{ color:"#ff6b6b" }}>These are not suggestions. These are requirements.</strong>
+        {/* Warning */}
+        <div style={{ padding:"9px 13px", background:"rgba(255,107,107,0.06)", border:"1px solid rgba(255,107,107,0.18)", borderLeft:"3px solid #ff6b6b", borderRadius:0, marginBottom:20 }}>
+          <div style={{ fontSize:11, color:"rgba(255,255,255,0.62)", fontFamily:"'Space Mono',monospace", lineHeight:1.7 }}>
+            Wrong lookback = bad analysis. <strong style={{ color:"#ff6b6b" }}>These are requirements, not suggestions.</strong>
           </div>
         </div>
 
-        {/* Timeframe cards */}
-        <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-          {TF_REQUIREMENTS.map((r, i) => (
-            <div key={r.tf} style={{ background:"rgba(255,255,255,0.03)", border:`1px solid ${r.color}22`, borderLeft:`3px solid ${r.color}`, borderRadius:10, overflow:"hidden" }}>
-              <div style={{ padding:"14px 16px" }}>
-
-                {/* Header row */}
-                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
-                  <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                    <div style={{ width:32, height:32, borderRadius:7, background:`${r.color}14`, border:`1px solid ${r.color}33`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                      <span style={{ fontFamily:"'Space Mono',monospace", fontSize:11, fontWeight:900, color:r.color }}>{r.short}</span>
-                    </div>
-                    <div>
-                      <div style={{ fontSize:14, fontWeight:700, color:"#f0ecff" }}>{r.tf}</div>
-                      <div style={{ fontSize:11, color:"rgba(255,255,255,0.48)", fontFamily:"'Space Mono',monospace" }}>{r.shows}</div>
-                    </div>
-                  </div>
-                  {/* Lookback pill */}
-                  <div style={{ textAlign:"right", flexShrink:0 }}>
-                    <div style={{ fontSize:8, color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace", marginBottom:2 }}>LOOKBACK</div>
-                    <div style={{ fontSize:14, fontWeight:900, color:r.color, fontFamily:"monospace" }}>{r.lookback}</div>
-                  </div>
-                </div>
-
-                {/* Perfect note */}
-                <div style={{ fontSize:11, color:"rgba(255,255,255,0.62)", lineHeight:1.7, marginBottom:10 }}>
-                  ✅ <strong style={{ color:`${r.color}cc` }}>Perfect:</strong> {r.perfect}
-                </div>
-
-                {/* Too little / Too much */}
-                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:6 }}>
-                  <div style={{ padding:"6px 10px", background:"rgba(255,107,107,0.05)", border:"1px solid rgba(255,107,107,0.15)", borderRadius:7 }}>
-                    <div style={{ fontSize:9, color:"#ff6b6b", fontFamily:"'Space Mono',monospace", fontWeight:700, marginBottom:2 }}>❌ TOO LITTLE</div>
-                    <div style={{ fontSize:11, color:"rgba(255,255,255,0.5)", lineHeight:1.5 }}>{r.tooLittle}</div>
-                  </div>
-                  <div style={{ padding:"6px 10px", background:"rgba(255,107,107,0.05)", border:"1px solid rgba(255,107,107,0.15)", borderRadius:7 }}>
-                    <div style={{ fontSize:9, color:"#ff6b6b", fontFamily:"'Space Mono',monospace", fontWeight:700, marginBottom:2 }}>❌ TOO MUCH</div>
-                    <div style={{ fontSize:11, color:"rgba(255,255,255,0.5)", lineHeight:1.5 }}>{r.tooMuch}</div>
-                  </div>
-                </div>
-
+        {/* ── QUICK REFERENCE TABLE — primary view ── */}
+        <div style={{ background:"rgba(255,209,102,0.03)", border:"1px solid rgba(255,209,102,0.15)", borderRadius:10, overflow:"hidden", marginBottom:16 }}>
+          <div style={{ padding:"10px 16px", borderBottom:"1px solid rgba(255,209,102,0.1)" }}>
+            <div style={{ fontFamily:"'Space Mono',monospace", fontSize:9, fontWeight:900, letterSpacing:"0.14em", color:"#ffd166" }}>QUICK REFERENCE</div>
+          </div>
+          {TF.map((r, i) => (
+            <div key={r.short} style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 16px", borderBottom: i < TF.length-1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
+              <div style={{ width:30, height:30, borderRadius:6, background:`${r.color}14`, border:`1px solid ${r.color}33`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                <span style={{ fontFamily:"'Space Mono',monospace", fontSize:10, fontWeight:900, color:r.color }}>{r.short}</span>
               </div>
+              <span style={{ fontSize:12, color:"rgba(255,255,255,0.55)", flex:1 }}>{r.tf}</span>
+              <span style={{ fontSize:13, fontWeight:900, color:r.color, fontFamily:"monospace" }}>{r.lookback}</span>
             </div>
           ))}
         </div>
 
-        {/* Quick reference */}
-        <div style={{ marginTop:20, padding:"14px 16px", background:"rgba(255,209,102,0.04)", border:"1px solid rgba(255,209,102,0.15)", borderRadius:10 }}>
-          <div style={{ fontFamily:"'Space Mono',monospace", fontSize:9, fontWeight:900, letterSpacing:"0.14em", color:"#ffd166", marginBottom:12 }}>QUICK REFERENCE</div>
-          <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
-            {TF_REQUIREMENTS.map(r => (
-              <div key={r.tf} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"5px 0", borderBottom:"1px solid rgba(255,255,255,0.04)" }}>
-                <span style={{ fontSize:12, fontWeight:700, color:r.color, fontFamily:"'Space Mono',monospace", minWidth:40 }}>{r.short}</span>
-                <span style={{ fontSize:11, color:"rgba(255,255,255,0.5)", flex:1 }}>{r.tf}</span>
-                <span style={{ fontSize:12, fontWeight:700, color:"#f0ecff", fontFamily:"monospace" }}>{r.lookback}</span>
-              </div>
-            ))}
-          </div>
+        {/* ── ACCORDION — expandable detail ── */}
+        <div style={{ fontFamily:"'Space Mono',monospace", fontSize:9, fontWeight:900, letterSpacing:"0.14em", color:"rgba(255,255,255,0.3)", marginBottom:10 }}>
+          TAP ANY TIMEFRAME FOR DETAILS
         </div>
+        <div style={{ display:"flex", flexDirection:"column", gap:6, marginBottom:20 }}>
+          {TF.map((r) => {
+            const isOpen = expanded === r.short;
+            return (
+              <div key={r.short} style={{ background:"rgba(255,255,255,0.03)", border:`1px solid ${isOpen ? r.color+"44" : "rgba(255,255,255,0.06)"}`, borderRadius:10, overflow:"hidden", transition:"border 0.2s" }}>
+                {/* Header */}
+                <button onClick={() => setExpanded(isOpen ? null : r.short)}
+                  style={{ width:"100%", display:"flex", alignItems:"center", gap:12, padding:"12px 14px", background:"none", border:"none", cursor:"pointer", fontFamily:"inherit", textAlign:"left" }}>
+                  <div style={{ width:28, height:28, borderRadius:6, background:`${r.color}14`, border:`1px solid ${r.color}33`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                    <span style={{ fontFamily:"'Space Mono',monospace", fontSize:10, fontWeight:900, color:r.color }}>{r.short}</span>
+                  </div>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontSize:13, fontWeight:700, color:"#f0ecff" }}>{r.tf}</div>
+                    <div style={{ fontSize:10, color:"rgba(255,255,255,0.4)", fontFamily:"'Space Mono',monospace" }}>{r.shows}</div>
+                  </div>
+                  <div style={{ textAlign:"right", flexShrink:0, marginRight:8 }}>
+                    <span style={{ fontSize:13, fontWeight:900, color:r.color, fontFamily:"monospace" }}>{r.lookback}</span>
+                  </div>
+                  <span style={{ color:"rgba(255,255,255,0.3)", fontSize:13, flexShrink:0, transform:isOpen?"rotate(180deg)":"none", transition:"transform 0.2s" }}>▾</span>
+                </button>
+
+                {/* Expanded detail */}
+                {isOpen && (
+                  <div style={{ padding:"0 14px 14px", animation:"fadein 0.2s ease both" }}>
+                    <div style={{ fontSize:12, color:"rgba(255,255,255,0.62)", lineHeight:1.8, marginBottom:10, paddingTop:4, borderTop:"1px solid rgba(255,255,255,0.05)" }}>
+                      {r.perfect}
+                    </div>
+                    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:6 }}>
+                      <div style={{ padding:"6px 10px", background:"rgba(255,107,107,0.05)", border:"1px solid rgba(255,107,107,0.15)", borderRadius:7 }}>
+                        <div style={{ fontSize:9, color:"#ff6b6b", fontFamily:"'Space Mono',monospace", fontWeight:700, marginBottom:3 }}>❌ TOO LITTLE</div>
+                        <div style={{ fontSize:11, color:"rgba(255,255,255,0.5)", lineHeight:1.5 }}>{r.tooLittle}</div>
+                      </div>
+                      <div style={{ padding:"6px 10px", background:"rgba(255,107,107,0.05)", border:"1px solid rgba(255,107,107,0.15)", borderRadius:7 }}>
+                        <div style={{ fontSize:9, color:"#ff6b6b", fontFamily:"'Space Mono',monospace", fontWeight:700, marginBottom:3 }}>❌ TOO MUCH</div>
+                        <div style={{ fontSize:11, color:"rgba(255,255,255,0.5)", lineHeight:1.5 }}>{r.tooMuch}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* CTA */}
+        <button onClick={onClose}
+          style={{ width:"100%", padding:"14px", borderRadius:10, border:"none", background:"linear-gradient(135deg,#ff6bff,#7b2fff)", color:"#fff", fontSize:13, fontWeight:700, letterSpacing:"0.1em", fontFamily:"inherit", cursor:"pointer", boxShadow:"0 4px 24px rgba(255,107,255,0.25)" }}>
+          GOT IT — CONTINUE TO UPLOAD →
+        </button>
 
       </div>
     </div>
@@ -4651,6 +4641,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
         @keyframes slide { from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)} }
         @keyframes spin { to{transform:rotate(360deg)} }
         @keyframes fadein { from{opacity:0}to{opacity:1} }
+        @keyframes goldPulse { 0%,100%{box-shadow:0 0 6px rgba(255,209,102,0.2);border-color:rgba(255,209,102,0.35)} 50%{box-shadow:0 0 16px rgba(255,209,102,0.55);border-color:rgba(255,209,102,0.8)} }
       `}</style>
 
       {/* Subtle branded bg — grid + faint orbs */}
@@ -4722,7 +4713,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                     { label: "Dashboard", icon: "◈", action: () => { setAppPage("dashboard"); setPhase("upload"); setImages(Array(5).fill(null)); setDrawerOpen(false); }, active: appPage === "dashboard" },
                     { label: "History", icon: "📋", action: () => { setAppPage("history"); setDrawerOpen(false); }, active: appPage === "history", color: "#7fff6b" },
                     { label: "Settings", icon: "⚙", action: () => { setAppPage("settings"); setDrawerOpen(false); }, active: appPage === "settings", color: "#ff6bff" },
-                    { label: "Chart Setup", icon: "📐", action: () => { setAppPage("chartsetup"); setDrawerOpen(false); }, active: appPage === "chartsetup", color: "#ffd166" },
+                    { label: "Chart Setup", icon: "📐", action: () => { setAppPage("chartsetup"); setDrawerOpen(false); }, active: appPage === "chartsetup", color: "#ffd166", badge: "NEW" },
                     { label: "Help & FAQ", icon: "?", action: () => { setAppPage("faq"); setDrawerOpen(false); }, active: appPage === "faq", color: "#00e5ff" },
                     ...(phase === "live" ? [
                       { label: "View Plan", icon: "📄", action: () => { setPhase("plan"); setDrawerOpen(false); }, color: "#ffd166" },
@@ -4733,6 +4724,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                       style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px 20px", background: item.active ? "rgba(255,107,255,0.08)" : "none", border: "none", cursor: "pointer", fontFamily: "inherit", textAlign: "left", borderLeft: item.active ? "2px solid #ff6bff" : "2px solid transparent", transition: "all 0.15s" }}>
                       <span style={{ fontSize: 14, width: 20, textAlign: "center", flexShrink: 0 }}>{item.icon}</span>
                       <span style={{ fontSize: 13, fontWeight: item.active ? 700 : 500, color: item.active ? "#f0ecff" : (item.color || "#8878aa") }}>{item.label}</span>
+                      {item.badge && !item.active && <span style={{ fontSize: 9, fontWeight: 900, padding: "1px 6px", borderRadius: 4, background: "rgba(255,209,102,0.15)", border: "1px solid rgba(255,209,102,0.4)", color: "#ffd166", fontFamily: "'Space Mono',monospace", letterSpacing: "0.06em", marginLeft: "auto" }}>{item.badge}</span>}
                     </button>
                   ))}
                 </div>
@@ -4776,7 +4768,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 <span style={{ fontSize: 13, fontWeight: 700, color: windowClosed ? "#ff6b6b" : "#7fff6b" }}>{windowClosed ? "WINDOW CLOSED" : "WINDOW OPEN"}</span>
               </div>
             )}
-            <button onClick={() => setAppPage(appPage === "chartsetup" ? "dashboard" : "chartsetup")} style={{ fontSize: 13, fontWeight: 700, color: appPage === "chartsetup" ? "#ffd166" : "#8878aa", background: appPage === "chartsetup" ? "rgba(255,209,102,0.08)" : "none", border: `1px solid ${appPage === "chartsetup" ? "rgba(255,209,102,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>Chart Setup</button>
+            <button onClick={() => setAppPage(appPage === "chartsetup" ? "dashboard" : "chartsetup")} style={{ fontSize: 13, fontWeight: 700, color: appPage === "chartsetup" ? "#ffd166" : "#ffd166", background: appPage === "chartsetup" ? "rgba(255,209,102,0.12)" : "rgba(255,209,102,0.06)", border: `1px solid rgba(255,209,102,${appPage === "chartsetup" ? "0.6" : "0.4"})`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit", boxShadow: appPage === "chartsetup" ? "none" : "0 0 8px rgba(255,209,102,0.2)", animation: appPage === "chartsetup" ? "none" : "goldPulse 2s ease-in-out infinite" }}>Chart Setup</button>
             <button onClick={() => setAppPage(appPage === "history" ? "dashboard" : "history")} style={{ fontSize: 13, fontWeight: 700, color: appPage === "history" ? "#7fff6b" : "#8878aa", background: appPage === "history" ? "rgba(127,255,107,0.08)" : "none", border: `1px solid ${appPage === "history" ? "rgba(127,255,107,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>History</button>
             <button onClick={() => setAppPage(appPage === "settings" ? "dashboard" : "settings")} style={{ fontSize: 13, fontWeight: 700, color: appPage === "settings" ? "#ff6bff" : "#8878aa", background: appPage === "settings" ? "rgba(255,107,255,0.1)" : "none", border: `1px solid ${appPage === "settings" ? "rgba(255,107,255,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>Settings</button>
             <button onClick={() => setAppPage(appPage === "faq" ? "dashboard" : "faq")} style={{ fontSize: 13, fontWeight: 700, color: appPage === "faq" ? "#00e5ff" : "#8878aa", background: appPage === "faq" ? "rgba(0,229,255,0.08)" : "none", border: `1px solid ${appPage === "faq" ? "rgba(0,229,255,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>Help & FAQ</button>
