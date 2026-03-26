@@ -5649,7 +5649,7 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
   const TV_SYMBOLS={
     XAUUSD:"OANDA:XAUUSD",NAS100:"CAPITALCOM:US100",
     US30:"CAPITALCOM:US30",BTCUSD:"COINBASE:BTCUSD",
-    USOIL:"TVC:USOIL",US500:"OANDA:SPX500USD",XAGUSD:"OANDA:XAGUSD",
+    USOIL:"TVC:USOIL",US500:"OANDA:SPX500USD",
   };
   const tvSym=TV_SYMBOLS[instrument]||`OANDA:${instrument}`;
   const tvInterval=tradeState==="EXECUTABLE"?"15":"30"; // Phase 3 → 15M, else 30M
@@ -6524,7 +6524,7 @@ function PreSessionCheck({anime}){
     try{
       const res=await fetch("/api/analyze",{
         method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:400,
+        body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:600,
           messages:[{role:"user",content:getPsychPrompt(anime,"pre",answers)}]})
       });
       const data=await res.json();
