@@ -3697,6 +3697,17 @@ function SoftPassScenariosPanel({ plan, onActivate }) {
             Cancel
           </button>
         )}
+        {/* Urgent alert instruction — always visible */}
+        {s.trigger && (
+          <div style={{ marginTop:10, padding:"10px 12px", background:`${color}08`, border:`1px solid ${color}33`, borderLeft:`3px solid ${color}`, borderRadius:0 }}>
+            <div style={{ fontSize:9, fontWeight:900, letterSpacing:"0.14em", color, fontFamily:"'Space Mono',monospace", marginBottom:5 }}>
+              🔔 SET YOUR ALERT NOW
+            </div>
+            <div style={{ fontSize:12, color:"rgba(255,255,255,0.75)", lineHeight:1.7 }}>
+              Set an alert at <strong style={{ color, fontFamily:"monospace" }}>{s.trigger}</strong> on your {isBull ? "30M" : "30M"} chart right now — don't wait. When it triggers, you need to be ready to act, not scrambling to set it up.
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -4244,7 +4255,7 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
       // If cooldown active — check if user has already used their free re-upload
       if (!limitCheck.allowed && limitCheck.type === "cooldown") {
         if (instrumentCount >= 1) {
-          // They've already done one re-upload — hard block now
+          // They've already done one SUCCESSFUL re-upload — hard block now
           const prevSession = getSessionForInstrument(instrument);
           setPlan({
             _blocked: true,
@@ -4257,9 +4268,7 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
           setPhase("plan");
           return;
         }
-        // First re-upload during cooldown — allow it but increment counter + warn
-        setUploadCounts(prev => ({ ...prev, [instrument]: (prev[instrument] || 0) + 1 }));
-        // Continue to analysis — warning shown on upload screen via uploadCounts state
+        // First re-upload during cooldown — allow it, increment ONLY after successful analysis
       } else if (!limitCheck.allowed) {
         setPlan({
           _blocked: true,
@@ -4270,10 +4279,9 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
         });
         setPhase("plan");
         return;
-      } else {
-        // Normal upload — increment counter
-        setUploadCounts(prev => ({ ...prev, [instrument]: (prev[instrument] || 0) + 1 }));
       }
+      // NOTE: uploadCounts is incremented AFTER successful instrument validation below
+      // Wrong chart uploads do NOT count against the user
     }
 
     setPhase("analyzing");
@@ -4322,18 +4330,22 @@ Return ONLY valid JSON, no markdown, no explanation:
         const detectedRaw = (vResult.detected || "").toUpperCase().trim();
         const expectedRaw = (instrument || "").toUpperCase().trim();
         const isInstrumentWrong = detectedRaw && detectedRaw !== expectedRaw && detectedRaw !== "NOT_VISIBLE" && detectedRaw !== "NOT VISIBLE" && detectedRaw !== "UNREADABLE";
-        setPlan({
-          _blocked: true,
-          _reason: detectedRaw === "NOT_VISIBLE" || detectedRaw === "NOT VISIBLE" || detectedRaw === "UNREADABLE"
-            ? `Charts rejected. The instrument ticker and/or timeframe labels are not visible in your screenshots. Both must be clearly visible on every chart — re-upload with labels showing.`
-            : isInstrumentWrong
-            ? `Wrong instrument. You selected ${expectedRaw} but these charts show ${detectedRaw}. Upload your ${expectedRaw} charts.`
-            : `Charts could not be verified. Make sure the instrument ticker and timeframe labels are clearly visible on every chart.`,
-          instrument,
-          grade: "BLOCKED",
-        });
-        setPhase("plan");
+        // Wrong charts = free retry — reset to upload, no blocked screen, no cooldown hit
+        setPlan(null);
+        setImages(Array(5).fill(null));
+        setPhase("upload");
+        // Show a quick error via a temporary state rather than full blocked screen
+        alert(
+          isInstrumentWrong
+            ? `Wrong charts — these show ${detectedRaw}, not ${expectedRaw}. Upload your ${expectedRaw} charts and try again.`
+            : `Charts could not be verified. Make sure the instrument ticker and timeframe labels are clearly visible on every chart, then try again.`
+        );
         return;
+      }
+
+      // ── Instrument validated — now safe to increment upload count ─────────
+      if (userId) {
+        setUploadCounts(prev => ({ ...prev, [instrument]: (prev[instrument] || 0) + 1 }));
       }
 
       // ── STEP 1: MAIN ANALYSIS — only runs if instrument validated ─────────
