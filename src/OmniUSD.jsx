@@ -638,6 +638,7 @@ function OmniUSDApp(){
             defaultInstrument:"XAUUSD", session:data?.session||null,
             tz: tzObj, isPaid:true, _devBypass:true,
             preferredName: _preferredName || "Chalie",
+            email: _email,
           });
           return;
         }
@@ -658,6 +659,7 @@ function OmniUSDApp(){
             tz: tzObj,
             isPaid:true,
             preferredName: _name,
+            email: _sess2?.user?.email || data?.email || "",
           });
         }
         // No row, or is_paid=false = needs onboarding/payment — profile stays null
@@ -865,7 +867,7 @@ function OmniUSDApp(){
         }} T={T}/>}
       </main>
       <footer style={{...S.footer, borderTop:`1px solid ${T.border}`}}>
-        <span style={{color:T.subtext}}>© 2026 OmniUSD · AI-powered trading analysis</span>
+        <span style={{color:T.subtext}}>© {new Date().getFullYear()} OmniUSD · BRC Execution System</span>
         <span style={{color:"rgba(255,107,107,0.5)",fontWeight:500,fontSize:13,letterSpacing:"0.04em"}}>⚠ Trade at your own risk · Results not guaranteed</span>
       </footer>
     </div>
@@ -2534,6 +2536,15 @@ function SettingsPage({profile, onSignOut, onClose}) {
         {/* ── ACCOUNT ── */}
         {section === "account" && (<>
           <div style={card}>
+            <span style={lbl}>NAME</span>
+            <div style={{fontFamily:"'Space Mono',monospace",fontSize:14,color:"#f0ecff",padding:"10px 14px",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:8}}>
+              {profile?.preferredName || <span style={{color:"rgba(255,255,255,0.35)"}}>Not set</span>}
+            </div>
+            <div style={{fontSize:11,color:"rgba(255,255,255,0.35)",fontFamily:"'Space Mono',monospace",marginTop:6}}>
+              Name used in greetings and live session messages.
+            </div>
+          </div>
+          <div style={card}>
             <span style={lbl}>EMAIL ADDRESS</span>
             <div style={{fontFamily:"'Space Mono',monospace",fontSize:14,color:"#f0ecff",padding:"10px 14px",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:8}}>
               {profile?.email || "—"}
@@ -3128,7 +3139,6 @@ function BulkUploadZone({ images, setImages, readSlotFile, dragOverSlot, setDrag
               Daily · 4H · 1H · 30M · 15M — select all at once or one by one
             </div>
             <div style={{ fontSize: 13, color: "rgba(255,107,255,0.5)", marginTop: 8, fontFamily: "'Space Mono',monospace" }}>
-              Timeframes auto-detected from filename
             </div>
           </div>
 
@@ -6942,7 +6952,7 @@ function JournalPage({journal, onUpdate, T=DARK}){
         <div style={{padding:"40px 0 0"}}>
           <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:12,padding:"28px 24px",textAlign:"center"}}>
             <div style={{fontSize:28,marginBottom:12}}>📓</div>
-            <div style={{fontSize:15,fontWeight:900,color:"var(--t-muted3)",marginBottom:6}}>No trades logged yet</div>
+            <div style={{fontSize:15,fontWeight:900,color:"var(--t-muted3)",marginBottom:6}}>No sessions logged yet</div>
             <div style={{fontSize:14,color:"var(--t-muted4)",fontFamily:"monospace",lineHeight:1.7}}>
               Complete Phase 3 and click <strong style={{color:"#7fff6b"}}>LIMIT ORDER ACTIVE</strong><br/>
               to automatically log your next trade here.
@@ -7049,7 +7059,7 @@ function JournalPage({journal, onUpdate, T=DARK}){
           borderRadius:10,display:"flex",alignItems:"center",gap:12}}>
           <span style={{fontSize:16}}>📈</span>
           <span style={{fontSize:14,color:"var(--t-muted4)",fontFamily:"monospace",lineHeight:1.6}}>
-            Complete Phase 3 and click <strong style={{color:"#7fff6b"}}>LIMIT ORDER ACTIVE</strong> to log your next trade automatically.
+            Start a live session to automatically log your setups here.
           </span>
         </div>
       )}
@@ -7523,7 +7533,7 @@ function LegalPage({ onBack, type }) {
       <div style={{ position:"fixed", inset:0, backgroundImage:"linear-gradient(rgba(255,107,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,107,255,0.025) 1px,transparent 1px)", backgroundSize:"48px 48px", pointerEvents:"none" }}/>
       <div style={{ maxWidth:720, margin:"0 auto", padding:"48px 24px 80px", position:"relative", zIndex:1 }}>
         <button onClick={onBack} style={{ background:"none", border:"none", color:"rgba(255,107,255,0.6)", cursor:"pointer", fontFamily:"inherit", fontSize:14, marginBottom:32, letterSpacing:"0.08em" }}>
-          {"<- Back"}
+          {"← Back"}
         </button>
         <div style={{ fontSize:13, color:"rgba(255,107,255,0.6)", letterSpacing:"0.2em", marginBottom:12 }}>LEGAL</div>
         <h1 style={{ fontSize:28, fontWeight:700, marginBottom:8, letterSpacing:"-0.01em" }}>{title}</h1>
@@ -7549,7 +7559,7 @@ function LegalPage({ onBack, type }) {
         ))}
 
         <div style={{ borderTop:"1px solid rgba(255,255,255,0.06)", paddingTop:24, fontSize:13, color:"rgba(255,255,255,0.80)", lineHeight:1.8 }}>
-          {"© 2026 OmniUSD · Questions? Email support@omniusd.pro"}
+          {`© ${new Date().getFullYear()} OmniUSD · Questions? Email support@omniusd.pro`}
         </div>
       </div>
     </div>
@@ -8467,7 +8477,7 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
           </button>
         </div>
         <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"#8878aa",textAlign:"right"}}>
-          © 2026 OmniUSD · AI-powered trading analysis<br/>
+          {new Date().getFullYear()} OmniUSD · BRC Execution System<br/>
           <span style={{opacity:0.5}}>Trade at your own risk · Results not guaranteed</span>
         </div>
       </div>
