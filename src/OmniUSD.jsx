@@ -3697,13 +3697,13 @@ function SoftPassScenariosPanel({ plan, onActivate }) {
             Cancel
           </button>
         )}
-        {/* Urgent alert instruction */}
+        {/* Alert pill */}
         {s.trigger && (
-          <div style={{ marginTop:10, padding:"10px 12px", background:`${color}08`, border:`1px solid ${color}33`, borderLeft:`3px solid ${color}`, borderRadius:0 }}>
-            <div style={{ fontSize:9, fontWeight:900, letterSpacing:"0.14em", color, fontFamily:"'Space Mono',monospace", marginBottom:5 }}>🔔 SET YOUR ALERT NOW — {s.trigger}</div>
-            <div style={{ fontSize:12, color:"rgba(255,255,255,0.75)", fontFamily:"'Space Mono',monospace" }}>
-              30M close {isBull ? "above" : "below"} this = {isBull ? "LONG" : "SHORT"} setup activates
-            </div>
+          <div style={{ marginTop:10, display:"inline-flex", alignItems:"center", gap:7, padding:"7px 14px", background:`${color}12`, border:`1px solid ${color}44`, borderRadius:20, cursor:"default" }}>
+            <span style={{ fontSize:12 }}>🔔</span>
+            <span style={{ fontSize:12, fontWeight:700, color, fontFamily:"'Space Mono',monospace", letterSpacing:"0.04em" }}>
+              SET ALERT — {s.trigger}
+            </span>
           </div>
         )}
       </div>
