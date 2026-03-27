@@ -738,9 +738,13 @@ function OmniUSDApp(){
   }
 
   async function signOut(){
-    // Do NOT clear omniusd_sessions_* on logout — pill states must survive
-    // across sessions until the NY window expires. They self-expire via
-    // isSessionStale() check on next load. Journal also survives intentionally.
+    // Clear user-scoped keys before session is gone
+    try {
+      const _s = JSON.parse(localStorage.getItem("omniusd_session") || "{}");
+      const _uid = _s.user?.id || _s.user_id || "anon";
+      localStorage.removeItem(`omniusd_sessions_${_uid}`);
+      // Keep journal on device — user may want it if they log back in
+    } catch(e) {}
     localStorage.removeItem("omniusd_paid_tier");
     localStorage.removeItem("omniusd_session");
     await supabase.auth.signOut();
@@ -4042,43 +4046,8 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
   const SESSIONS_KEY = `omniusd_sessions_${_uid}`; // Map of instrument → session data
 
   // Helpers for the sessions map
-  // A session entry is stale if it was saved on a previous calendar day in CT,
-  // OR if it was saved today but the NY cutoff (10:30 AM CT) has already passed
-  // AND it's now past 10:30 AM CT. Pills stay alive across logouts all morning.
-  function isSessionStale(entry) {
-    if (!entry?.savedAt) return true;
-    try {
-      const savedMs = new Date(entry.savedAt).getTime();
-      const now = new Date();
-      // Current CT date string
-      const ctNow = new Date(now.toLocaleString("en-US", { timeZone: "America/Chicago" }));
-      const ctSaved = new Date(new Date(savedMs).toLocaleString("en-US", { timeZone: "America/Chicago" }));
-      // Different calendar day → always stale
-      if (ctNow.toDateString() !== ctSaved.toDateString()) return true;
-      // Same day: only expire if it's past 10:30 AM CT right now
-      // (i.e. the NY window has definitively closed for the day)
-      const ctHour = ctNow.getHours();
-      const ctMin  = ctNow.getMinutes();
-      const pastCutoff = ctHour > 10 || (ctHour === 10 && ctMin >= 30);
-      // If it's still before cutoff, keep all of today's sessions alive regardless
-      if (!pastCutoff) return false;
-      // Past cutoff — sessions from this morning are now stale
-      return true;
-    } catch { return true; }
-  }
   function loadSessions() {
-    try {
-      const raw = JSON.parse(localStorage.getItem(SESSIONS_KEY) || "{}");
-      // Prune stale entries in-place so pills reset naturally each day
-      let dirty = false;
-      Object.keys(raw).forEach(k => {
-        if (isSessionStale(raw[k])) { delete raw[k]; dirty = true; }
-      });
-      if (dirty) {
-        try { localStorage.setItem(SESSIONS_KEY, JSON.stringify(raw)); } catch {}
-      }
-      return raw;
-    } catch { return {}; }
+    try { return JSON.parse(localStorage.getItem(SESSIONS_KEY) || "{}"); } catch { return {}; }
   }
   function saveSession(instr, data) {
     try {
@@ -5389,19 +5358,37 @@ Use ONLY these times. All earlier time references in this conversation are stale
 
             ) : plan.grade !== "PASS" ? (
               <>
-                {/* A+ — show trigger/stop/TP1 execution cards */}
+                {/* A+ — show all 5 execution levels */}
                 {plan.grade === "A+" && (
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginBottom: 16 }}>
-                    {[
-                      { label: "TRIGGER", val: plan.trigger_level, color: plan.bias === "SHORT" ? "#ff6b6b" : "#7fff6b" },
-                      { label: "STOP", val: plan.stop_loss, color: "#ff6b6b" },
-                      { label: "TP1", val: plan.tp1, color: "#7fff6b" },
-                    ].map(r => (
-                      <div key={r.label} style={{ padding: "10px 12px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8 }}>
-                        <div style={{ fontSize: 8, color: "#8878aa", fontWeight: 700, letterSpacing: "0.1em", marginBottom: 4 }}>{r.label}</div>
-                        <div style={{ fontSize: 15, fontWeight: 900, color: r.color, fontFamily: "monospace" }}>{r.val}</div>
-                      </div>
-                    ))}
+                  <div style={{ marginBottom: 16 }}>
+                    {/* Row 1: Trigger / Stop / TP1 */}
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginBottom: 8 }}>
+                      {[
+                        { label: "TRIGGER", val: plan.trigger_level, color: plan.bias === "SHORT" ? "#ff6b6b" : "#7fff6b" },
+                        { label: "STOP",    val: plan.stop_loss,     color: "#ff6b6b" },
+                        { label: "TP1",     val: plan.tp1,           color: "#7fff6b" },
+                      ].map(r => (
+                        <div key={r.label} style={{ padding: "10px 12px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8 }}>
+                          <div style={{ fontSize: 8, color: "#8878aa", fontWeight: 700, letterSpacing: "0.1em", marginBottom: 4 }}>{r.label}</div>
+                          <div style={{ fontSize: 15, fontWeight: 900, color: r.color, fontFamily: "monospace" }}>{r.val || "—"}</div>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Row 2: TP2 / Runner — always shown, never hidden */}
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 8 }}>
+                      {[
+                        { label: "TP2",    val: plan.tp2,    color: "#7fff6b", sub: "Second target" },
+                        { label: "RUNNER", val: plan.runner, color: "#00e5ff", sub: "Full structure target" },
+                      ].map(r => (
+                        <div key={r.label} style={{ padding: "10px 14px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8, display: "flex", flexDirection: "column", gap: 2 }}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                            <div style={{ fontSize: 8, color: "#8878aa", fontWeight: 700, letterSpacing: "0.1em" }}>{r.label}</div>
+                            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.28)", letterSpacing: "0.04em" }}>{r.sub}</div>
+                          </div>
+                          <div style={{ fontSize: 17, fontWeight: 900, color: r.val ? r.color : "rgba(255,255,255,0.25)", fontFamily: "monospace" }}>{r.val || "—"}</div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
 
@@ -5659,7 +5646,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                     ].map((r, i) => (
                       <div key={i} style={{ flexShrink: 0, padding: "7px 11px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8, textAlign: "center", minWidth: 70 }}>
                         <div style={{ fontSize: 8, color: "rgba(255,255,255,0.75)", letterSpacing: "0.1em", marginBottom: 4 }}>{r.l}</div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: r.c, fontFamily: "monospace" }}>{r.v}</div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: r.v ? r.c : "rgba(255,255,255,0.25)", fontFamily: "monospace" }}>{r.v || "—"}</div>
                       </div>
                     ))}
                   </div>
@@ -5705,7 +5692,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                       ].map((r, i) => (
                         <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: i < 5 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
                           <span style={{ fontSize: 13, color: "rgba(255,255,255,0.8)" }}>{r.l}</span>
-                          <span style={{ fontSize: 13, fontWeight: 700, color: r.c, fontFamily: "monospace" }}>{r.v}</span>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: r.v ? r.c : "rgba(255,255,255,0.25)", fontFamily: "monospace" }}>{r.v || "—"}</span>
                         </div>
                       ))}
                     </div>
