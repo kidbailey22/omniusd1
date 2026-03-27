@@ -738,13 +738,9 @@ function OmniUSDApp(){
   }
 
   async function signOut(){
-    // Clear user-scoped keys before session is gone
-    try {
-      const _s = JSON.parse(localStorage.getItem("omniusd_session") || "{}");
-      const _uid = _s.user?.id || _s.user_id || "anon";
-      localStorage.removeItem(`omniusd_sessions_${_uid}`);
-      // Keep journal on device — user may want it if they log back in
-    } catch(e) {}
+    // Do NOT clear omniusd_sessions_* on logout — pill states must survive
+    // across sessions until the NY window expires. They self-expire via
+    // isSessionStale() check on next load. Journal also survives intentionally.
     localStorage.removeItem("omniusd_paid_tier");
     localStorage.removeItem("omniusd_session");
     await supabase.auth.signOut();
@@ -4046,8 +4042,43 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
   const SESSIONS_KEY = `omniusd_sessions_${_uid}`; // Map of instrument → session data
 
   // Helpers for the sessions map
+  // A session entry is stale if it was saved on a previous calendar day in CT,
+  // OR if it was saved today but the NY cutoff (10:30 AM CT) has already passed
+  // AND it's now past 10:30 AM CT. Pills stay alive across logouts all morning.
+  function isSessionStale(entry) {
+    if (!entry?.savedAt) return true;
+    try {
+      const savedMs = new Date(entry.savedAt).getTime();
+      const now = new Date();
+      // Current CT date string
+      const ctNow = new Date(now.toLocaleString("en-US", { timeZone: "America/Chicago" }));
+      const ctSaved = new Date(new Date(savedMs).toLocaleString("en-US", { timeZone: "America/Chicago" }));
+      // Different calendar day → always stale
+      if (ctNow.toDateString() !== ctSaved.toDateString()) return true;
+      // Same day: only expire if it's past 10:30 AM CT right now
+      // (i.e. the NY window has definitively closed for the day)
+      const ctHour = ctNow.getHours();
+      const ctMin  = ctNow.getMinutes();
+      const pastCutoff = ctHour > 10 || (ctHour === 10 && ctMin >= 30);
+      // If it's still before cutoff, keep all of today's sessions alive regardless
+      if (!pastCutoff) return false;
+      // Past cutoff — sessions from this morning are now stale
+      return true;
+    } catch { return true; }
+  }
   function loadSessions() {
-    try { return JSON.parse(localStorage.getItem(SESSIONS_KEY) || "{}"); } catch { return {}; }
+    try {
+      const raw = JSON.parse(localStorage.getItem(SESSIONS_KEY) || "{}");
+      // Prune stale entries in-place so pills reset naturally each day
+      let dirty = false;
+      Object.keys(raw).forEach(k => {
+        if (isSessionStale(raw[k])) { delete raw[k]; dirty = true; }
+      });
+      if (dirty) {
+        try { localStorage.setItem(SESSIONS_KEY, JSON.stringify(raw)); } catch {}
+      }
+      return raw;
+    } catch { return {}; }
   }
   function saveSession(instr, data) {
     try {
