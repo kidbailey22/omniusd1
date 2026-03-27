@@ -3393,7 +3393,7 @@ function ChartSetupPage({ onClose }) {
           <div style={{ fontFamily:"'Space Mono',monospace", fontSize:9, fontWeight:900, letterSpacing:"0.14em", color:"#00e5ff", marginBottom:10 }}>▶️ CHART SETUP TUTORIAL</div>
           <div style={{ position:"relative", paddingBottom:"56.25%", height:0, borderRadius:10, overflow:"hidden", border:"1px solid rgba(0,229,255,0.15)" }}>
             <iframe
-              src="https://www.youtube.com/embed/PLACEHOLDER_VIDEO_ID"
+              src="https://www.youtube.com/embed/NQuieU-xdEs"
               title="OmniUSD Chart Setup Tutorial"
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
