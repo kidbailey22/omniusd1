@@ -498,6 +498,38 @@ const TF_SLOTS=[
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════
+// OMNIUSD LOGO MARK
+// ═══════════════════════════════════════════════════════════════════════════
+function OmniLogo({ size = 38 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 380 380" xmlns="http://www.w3.org/2000/svg" style={{display:"block",flexShrink:0}}>
+      <defs>
+        <linearGradient id="omni-cg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#cc44ff"/>
+          <stop offset="100%" stopColor="#00ccff"/>
+        </linearGradient>
+      </defs>
+      <g transform="translate(190, 190)">
+        <circle cx="0" cy="0" r="178" fill="none" stroke="#cc44ff" strokeWidth="10"
+          strokeDasharray="807.8 310.6" strokeDashoffset="-994.0" strokeLinecap="round"/>
+        <circle cx="0" cy="0" r="146" fill="none" stroke="#8844ee" strokeWidth="7"
+          strokeDasharray="726.4 191.2" strokeDashoffset="-771.4" strokeLinecap="round"/>
+        <circle cx="0" cy="0" r="114" fill="none" stroke="#00ccff" strokeWidth="4.5"
+          strokeDasharray="616.5 99.5" strokeDashoffset="-587.0" strokeLinecap="round"/>
+        <circle cx="-48.2" cy="-103.3" r="5.5" fill="#00ccff" opacity="0.88"/>
+        <circle cx="48.2" cy="-103.3" r="5.5" fill="#00ccff" opacity="0.88"/>
+        <polygon points="0,-32 24,0 0,32 -24,0" fill="url(#omni-cg)" opacity="0.93"/>
+        <polygon points="0,-32 24,0 0,32 -24,0" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1"/>
+        <polyline points="-14,-46 0,-63 14,-46" fill="none" stroke="#cc44ff" strokeWidth="2.8"
+          strokeLinecap="round" strokeLinejoin="round" opacity="0.85"/>
+        <circle cx="0" cy="0" r="5" fill="none" stroke="rgba(255,255,255,0.28)" strokeWidth="0.8"/>
+        <circle cx="0" cy="0" r="2.5" fill="rgba(255,255,255,0.65)"/>
+      </g>
+    </svg>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // ═══════════════════════════════════════════════════════════════════════════
 // ERROR BOUNDARY
 // ═══════════════════════════════════════════════════════════════════════════
@@ -550,6 +582,34 @@ function OmniUSDApp(){
     }catch{return[];}
   });
   const T=DARK;
+
+  // ── Inject SVG favicon ────────────────────────────────────────────────────
+  useEffect(()=>{
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 380">
+      <defs>
+        <linearGradient id="fg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#cc44ff"/>
+          <stop offset="100%" stop-color="#00ccff"/>
+        </linearGradient>
+      </defs>
+      <rect width="380" height="380" rx="76" fill="#1e1a35"/>
+      <g transform="translate(190,190)">
+        <circle cx="0" cy="0" r="178" fill="none" stroke="#cc44ff" stroke-width="10" stroke-dasharray="807.8 310.6" stroke-dashoffset="-994.0" stroke-linecap="round"/>
+        <circle cx="0" cy="0" r="146" fill="none" stroke="#8844ee" stroke-width="7" stroke-dasharray="726.4 191.2" stroke-dashoffset="-771.4" stroke-linecap="round"/>
+        <circle cx="0" cy="0" r="114" fill="none" stroke="#00ccff" stroke-width="4.5" stroke-dasharray="616.5 99.5" stroke-dashoffset="-587.0" stroke-linecap="round"/>
+        <circle cx="-48.2" cy="-103.3" r="5.5" fill="#00ccff" opacity="0.88"/>
+        <circle cx="48.2" cy="-103.3" r="5.5" fill="#00ccff" opacity="0.88"/>
+        <polygon points="0,-32 24,0 0,32 -24,0" fill="url(#fg)" opacity="0.93"/>
+        <polyline points="-14,-46 0,-63 14,-46" fill="none" stroke="#cc44ff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
+        <circle cx="0" cy="0" r="2.5" fill="rgba(255,255,255,0.65)"/>
+      </g>
+    </svg>`;
+    const encoded = `data:image/svg+xml,${encodeURIComponent(svg)}`;
+    let link = document.querySelector("link[rel~='icon']");
+    if (!link) { link = document.createElement("link"); link.rel = "icon"; document.head.appendChild(link); }
+    link.href = encoded;
+    document.title = "OmniUSD — BRC Execution System";
+  },[]);
 
   useEffect(()=>{
     async function init(){
@@ -827,7 +887,7 @@ function OmniUSDApp(){
       <div style={S.gridBg}/>
       <header style={S.nav}>
         <button onClick={()=>{setPage("home");setPlanResult(null);}} style={S.navLogo}>
-          ◈
+          <OmniLogo size={36} />
           <span style={{display:"inline-flex"}}><span style={S.logoWord}>Omni</span><span style={S.logoWord2}>USD</span></span>
         </button>
         {/* Nav tabs */}
@@ -886,7 +946,7 @@ function OmniUSDApp(){
         }} T={T}/>}
       </main>
       <footer style={{...S.footer, borderTop:`1px solid ${T.border}`}}>
-        <span style={{color:T.subtext}}>© {new Date().getFullYear()} OmniUSD · BRC Execution System</span>
+        <span style={{color:T.subtext,display:"flex",alignItems:"center",gap:8}}><OmniLogo size={26} />© {new Date().getFullYear()} OmniUSD · BRC Execution System</span>
         <span style={{color:"rgba(255,107,107,0.5)",fontWeight:500,fontSize:13,letterSpacing:"0.04em"}}>⚠ Trade at your own risk · Results not guaranteed</span>
       </footer>
     </div>
@@ -1295,7 +1355,7 @@ function Onboarding({onSelect}){
         {/* Brand header + step indicator */}
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:56}}>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
-            <span style={{fontSize:18,color:"#ff6bff"}}>◈</span>
+            <span style={{fontSize:18,color:"#ff6bff"}}><OmniLogo size={28} /></span>
             <span style={{fontSize:15,fontWeight:900,color:"var(--t-text)",letterSpacing:"0.08em"}}>OmniUSD</span>
           </div>
           <div style={{display:"flex",alignItems:"center",gap:6}}>
@@ -3333,7 +3393,7 @@ function ChartSetupPage({ onClose }) {
           <div style={{ fontFamily:"'Space Mono',monospace", fontSize:9, fontWeight:900, letterSpacing:"0.14em", color:"#00e5ff", marginBottom:10 }}>▶️ CHART SETUP TUTORIAL</div>
           <div style={{ position:"relative", paddingBottom:"56.25%", height:0, borderRadius:10, overflow:"hidden", border:"1px solid rgba(0,229,255,0.15)" }}>
             <iframe
-              src="https://www.youtube.com/embed/NQuieU-xdEs"
+              src="https://www.youtube.com/embed/PLACEHOLDER_VIDEO_ID"
               title="OmniUSD Chart Setup Tutorial"
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -4648,7 +4708,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
           <div style={{ padding: "10px 14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             {/* Left: logo */}
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 15, color: "#ff6bff" }}>◈</span>
+              <OmniLogo size={28} />
               <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.1em", background: "linear-gradient(90deg,#ff6bff,#00e5ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>OmniUSD</span>
               {/* Instrument + Bias — only when plan exists */}
               {plan && phase !== "upload" && (
@@ -4693,7 +4753,10 @@ Use ONLY these times. All earlier time references in this conversation are stale
 
                 {/* Drawer header */}
                 <div style={{ padding: "18px 20px 14px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.1em", background: "linear-gradient(90deg,#ff6bff,#00e5ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>◈ OmniUSD</span>
+                  <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                    <OmniLogo size={24} />
+                    <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.1em", background: "linear-gradient(90deg,#ff6bff,#00e5ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>OmniUSD</span>
+                  </div>
                   <button onClick={() => setDrawerOpen(false)} style={{ background: "none", border: "none", color: "#8878aa", cursor: "pointer", fontSize: 18, lineHeight: 1 }}>×</button>
                 </div>
 
@@ -4736,7 +4799,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
         /* ── DESKTOP HEADER — unchanged ── */
         <div style={{ padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ fontSize: 18, color: "#ff6bff" }}>◈</span>
+            <OmniLogo size={32} />
             <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.1em", background: "linear-gradient(90deg,#ff6bff,#00e5ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>OmniUSD</span>
             <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.1em", padding: "2px 8px", borderRadius: 4, background: `${(TIER_CONFIG[profile?.tier]||TIER_CONFIG.starter).color}18`, border: `1px solid ${(TIER_CONFIG[profile?.tier]||TIER_CONFIG.starter).color}44`, color: (TIER_CONFIG[profile?.tier]||TIER_CONFIG.starter).color }}>
               {(TIER_CONFIG[profile?.tier]||TIER_CONFIG.starter).label.toUpperCase()}
@@ -7315,7 +7378,10 @@ function ResetPasswordPage({ token, onDone }) {
 
       <div style={{ position:"relative", zIndex:1, width:"100%", maxWidth:420 }}>
         <div style={{ textAlign:"center", marginBottom:40 }}>
-          <div style={{ fontFamily:"monospace", fontSize:18, fontWeight:700, letterSpacing:"0.12em", background:"linear-gradient(90deg,#ff6bff,#00e5ff)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", marginBottom:16 }}>◈ OmniUSD</div>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:8, marginBottom:16 }}>
+            <OmniLogo size={32} />
+            <div style={{ fontFamily:"monospace", fontSize:18, fontWeight:700, letterSpacing:"0.12em", background:"linear-gradient(90deg,#ff6bff,#00e5ff)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>OmniUSD</div>
+          </div>
           <div style={{ fontSize:22, fontWeight:800, color:"#f4f0ff", marginBottom:6, letterSpacing:"-0.01em" }}>
             {success ? "Password updated." : "Set a new password"}
           </div>
@@ -7511,7 +7577,7 @@ function AuthScreen({onBack, supabase, initialTab="signup"}){
         {/* Logo */}
         <div style={{textAlign:"center",marginBottom:40}}>
           <button onClick={onBack} style={{background:"none",border:"none",cursor:"pointer",fontFamily:"inherit",display:"inline-flex",alignItems:"center",gap:8,marginBottom:16}}>
-            ◈
+            <OmniLogo size={32} />
             <span style={{fontFamily:"monospace",fontSize:18,fontWeight:700,letterSpacing:"0.12em",background:"linear-gradient(90deg,#ff6bff,#00e5ff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>OmniUSD</span>
           </button>
           <div style={{fontSize:22,fontWeight:800,color:"#f4f0ff",marginBottom:6,letterSpacing:"-0.01em"}}>
@@ -7826,7 +7892,7 @@ function PricingPage({onBack, onPaid}){
       {/* Nav */}
       <nav style={{position:"fixed",top:0,left:0,right:0,zIndex:100,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 32px",height:64,background:"rgba(19,13,34,0.9)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(255,107,255,0.1)"}}>
         <button onClick={onBack} style={{display:"flex",alignItems:"center",gap:8,background:"none",border:"none",cursor:"pointer",fontFamily:"inherit"}}>
-          ◈
+          <OmniLogo size={32} />
           <span style={{fontFamily:"'Space Mono',monospace",fontSize:15,fontWeight:700,letterSpacing:"0.1em",background:"linear-gradient(90deg,#ff6bff,#00e5ff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>OmniUSD</span>
         </button>
         <button onClick={onBack} style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,color:"#8878aa",background:"none",border:"none",cursor:"pointer"}}>
@@ -7987,7 +8053,7 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
       {/* Nav */}
       <nav style={{position:"fixed",top:0,left:0,right:0,zIndex:100,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 16px",height:64,background:"rgba(7,4,15,0.88)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(255,107,255,0.1)"}}>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
-          <span style={{fontSize:22,color:"#ff6bff"}}>◈</span>
+          <OmniLogo size={36} />
           <span style={{fontFamily:"'Space Mono',monospace",fontSize:16,fontWeight:700,letterSpacing:"0.12em",background:"linear-gradient(90deg,#ff6bff,#00e5ff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>OmniUSD</span>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
@@ -8660,7 +8726,7 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
 
             {/* Footer */}
       <div style={{position:"relative",zIndex:1,borderTop:"1px solid rgba(255,255,255,0.06)",padding:"24px 40px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:16}}>
-        <div style={{fontFamily:"'Space Mono',monospace",fontSize:14,fontWeight:700,color:"#8878aa"}}>◈ OmniUSD</div>
+        <div style={{display:"flex",alignItems:"center",gap:8,fontFamily:"'Space Mono',monospace",fontSize:14,fontWeight:700,color:"#8878aa"}}><OmniLogo size={24} />OmniUSD</div>
         <div style={{display:"flex",gap:24,alignItems:"center"}}>
           <a href="mailto:support@omniusd.pro"
             style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"rgba(255,107,255,0.6)",textDecoration:"none",fontWeight:700,letterSpacing:"0.08em"}}>
