@@ -3333,7 +3333,7 @@ function ChartSetupPage({ onClose }) {
           <div style={{ fontFamily:"'Space Mono',monospace", fontSize:9, fontWeight:900, letterSpacing:"0.14em", color:"#00e5ff", marginBottom:10 }}>▶️ CHART SETUP TUTORIAL</div>
           <div style={{ position:"relative", paddingBottom:"56.25%", height:0, borderRadius:10, overflow:"hidden", border:"1px solid rgba(0,229,255,0.15)" }}>
             <iframe
-              src="https://www.youtube.com/embed/PLACEHOLDER_VIDEO_ID"
+              src="https://www.youtube.com/embed/NQuieU-xdEs"
               title="OmniUSD Chart Setup Tutorial"
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -5263,14 +5263,6 @@ Use ONLY these times. All earlier time references in this conversation are stale
 
           {!plan._blocked && (<>
 
-            {/* Back nav */}
-            <div style={{ marginBottom: 14 }}>
-              <button onClick={() => setPhase("upload")}
-                style={{ fontFamily:"inherit", fontSize:13, fontWeight:700, letterSpacing:"0.06em", padding:"6px 14px", borderRadius:7, border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.04)", color:"#8878aa", cursor:"pointer" }}>
-                ← Back
-              </button>
-            </div>
-
             {/* Grade + bias header */}
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
               {/* Grade badge — A+ gets green glow, others get muted treatment */}
@@ -5598,15 +5590,9 @@ Use ONLY these times. All earlier time references in this conversation are stale
             ))}
             {/* Status badge — desktop only, mobile already shows it in header */}
             {!isMobile && (
-              <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-                <button onClick={() => setPhase("plan")}
-                  style={{ fontFamily:"inherit", fontSize:11, fontWeight:700, letterSpacing:"0.06em", padding:"3px 11px", borderRadius:6, border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.04)", color:"#8878aa", cursor:"pointer" }}>
-                  ← Plan
-                </button>
-                <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "2px 9px", borderRadius: 20, background: `${stateObj.color}14`, border: `1px solid ${stateObj.color}44` }}>
-                  {stateObj.dot && <span style={{ width: 4, height: 4, borderRadius: "50%", background: stateObj.color, animation: "pulse 1.5s ease infinite", display: "inline-block" }}/>}
-                  <span style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.1em", color: stateObj.color }}>{stateObj.label}</span>
-                </div>
+              <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 5, padding: "2px 9px", borderRadius: 20, background: `${stateObj.color}14`, border: `1px solid ${stateObj.color}44`, flexShrink: 0 }}>
+                {stateObj.dot && <span style={{ width: 4, height: 4, borderRadius: "50%", background: stateObj.color, animation: "pulse 1.5s ease infinite", display: "inline-block" }}/>}
+                <span style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.1em", color: stateObj.color }}>{stateObj.label}</span>
               </div>
             )}
           </div>
@@ -5620,13 +5606,6 @@ Use ONLY these times. All earlier time references in this conversation are stale
               {/* MOBILE: full-width status block */}
               {isMobile ? (
                 <div style={{ padding: "10px 14px" }}>
-                  {/* Mobile back nav */}
-                  <div style={{ marginBottom: 10 }}>
-                    <button onClick={() => setPhase("plan")}
-                      style={{ fontFamily:"inherit", fontSize:13, fontWeight:700, letterSpacing:"0.06em", padding:"6px 14px", borderRadius:7, border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.04)", color:"#8878aa", cursor:"pointer" }}>
-                      ← Plan
-                    </button>
-                  </div>
                   {/* Status bar */}
                   <div style={{ padding: "10px 14px", background: tier2 ? "rgba(127,255,107,0.07)" : tier1 ? "rgba(255,209,102,0.07)" : "rgba(0,229,255,0.06)", border: `1px solid ${tier2 ? "rgba(127,255,107,0.3)" : tier1 ? "rgba(255,209,102,0.3)" : "rgba(0,229,255,0.2)"}`, borderLeft: `3px solid ${tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00e5ff"}`, marginBottom: 10 }}>
                     <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.14em", color: tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00e5ff", marginBottom: 4 }}>LIVE STATUS</div>
