@@ -5263,6 +5263,14 @@ Use ONLY these times. All earlier time references in this conversation are stale
 
           {!plan._blocked && (<>
 
+            {/* Back nav */}
+            <div style={{ marginBottom: 14 }}>
+              <button onClick={() => setPhase("upload")}
+                style={{ fontFamily:"inherit", fontSize:13, fontWeight:700, letterSpacing:"0.06em", padding:"6px 14px", borderRadius:7, border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.04)", color:"#8878aa", cursor:"pointer" }}>
+                ← Back
+              </button>
+            </div>
+
             {/* Grade + bias header */}
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
               {/* Grade badge — A+ gets green glow, others get muted treatment */}
@@ -5358,37 +5366,19 @@ Use ONLY these times. All earlier time references in this conversation are stale
 
             ) : plan.grade !== "PASS" ? (
               <>
-                {/* A+ — show all 5 execution levels */}
+                {/* A+ — show trigger/stop/TP1 execution cards */}
                 {plan.grade === "A+" && (
-                  <div style={{ marginBottom: 16 }}>
-                    {/* Row 1: Trigger / Stop / TP1 */}
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginBottom: 8 }}>
-                      {[
-                        { label: "TRIGGER", val: plan.trigger_level, color: plan.bias === "SHORT" ? "#ff6b6b" : "#7fff6b" },
-                        { label: "STOP",    val: plan.stop_loss,     color: "#ff6b6b" },
-                        { label: "TP1",     val: plan.tp1,           color: "#7fff6b" },
-                      ].map(r => (
-                        <div key={r.label} style={{ padding: "10px 12px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8 }}>
-                          <div style={{ fontSize: 8, color: "#8878aa", fontWeight: 700, letterSpacing: "0.1em", marginBottom: 4 }}>{r.label}</div>
-                          <div style={{ fontSize: 15, fontWeight: 900, color: r.color, fontFamily: "monospace" }}>{r.val || "—"}</div>
-                        </div>
-                      ))}
-                    </div>
-                    {/* Row 2: TP2 / Runner — always shown, never hidden */}
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 8 }}>
-                      {[
-                        { label: "TP2",    val: plan.tp2,    color: "#7fff6b", sub: "Second target" },
-                        { label: "RUNNER", val: plan.runner, color: "#00e5ff", sub: "Full structure target" },
-                      ].map(r => (
-                        <div key={r.label} style={{ padding: "10px 14px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8, display: "flex", flexDirection: "column", gap: 2 }}>
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                            <div style={{ fontSize: 8, color: "#8878aa", fontWeight: 700, letterSpacing: "0.1em" }}>{r.label}</div>
-                            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.28)", letterSpacing: "0.04em" }}>{r.sub}</div>
-                          </div>
-                          <div style={{ fontSize: 17, fontWeight: 900, color: r.val ? r.color : "rgba(255,255,255,0.25)", fontFamily: "monospace" }}>{r.val || "—"}</div>
-                        </div>
-                      ))}
-                    </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginBottom: 16 }}>
+                    {[
+                      { label: "TRIGGER", val: plan.trigger_level, color: plan.bias === "SHORT" ? "#ff6b6b" : "#7fff6b" },
+                      { label: "STOP", val: plan.stop_loss, color: "#ff6b6b" },
+                      { label: "TP1", val: plan.tp1, color: "#7fff6b" },
+                    ].map(r => (
+                      <div key={r.label} style={{ padding: "10px 12px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8 }}>
+                        <div style={{ fontSize: 8, color: "#8878aa", fontWeight: 700, letterSpacing: "0.1em", marginBottom: 4 }}>{r.label}</div>
+                        <div style={{ fontSize: 15, fontWeight: 900, color: r.color, fontFamily: "monospace" }}>{r.val}</div>
+                      </div>
+                    ))}
                   </div>
                 )}
 
@@ -5608,9 +5598,15 @@ Use ONLY these times. All earlier time references in this conversation are stale
             ))}
             {/* Status badge — desktop only, mobile already shows it in header */}
             {!isMobile && (
-              <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 5, padding: "2px 9px", borderRadius: 20, background: `${stateObj.color}14`, border: `1px solid ${stateObj.color}44`, flexShrink: 0 }}>
-                {stateObj.dot && <span style={{ width: 4, height: 4, borderRadius: "50%", background: stateObj.color, animation: "pulse 1.5s ease infinite", display: "inline-block" }}/>}
-                <span style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.1em", color: stateObj.color }}>{stateObj.label}</span>
+              <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                <button onClick={() => setPhase("plan")}
+                  style={{ fontFamily:"inherit", fontSize:11, fontWeight:700, letterSpacing:"0.06em", padding:"3px 11px", borderRadius:6, border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.04)", color:"#8878aa", cursor:"pointer" }}>
+                  ← Plan
+                </button>
+                <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "2px 9px", borderRadius: 20, background: `${stateObj.color}14`, border: `1px solid ${stateObj.color}44` }}>
+                  {stateObj.dot && <span style={{ width: 4, height: 4, borderRadius: "50%", background: stateObj.color, animation: "pulse 1.5s ease infinite", display: "inline-block" }}/>}
+                  <span style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.1em", color: stateObj.color }}>{stateObj.label}</span>
+                </div>
               </div>
             )}
           </div>
@@ -5624,6 +5620,13 @@ Use ONLY these times. All earlier time references in this conversation are stale
               {/* MOBILE: full-width status block */}
               {isMobile ? (
                 <div style={{ padding: "10px 14px" }}>
+                  {/* Mobile back nav */}
+                  <div style={{ marginBottom: 10 }}>
+                    <button onClick={() => setPhase("plan")}
+                      style={{ fontFamily:"inherit", fontSize:13, fontWeight:700, letterSpacing:"0.06em", padding:"6px 14px", borderRadius:7, border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.04)", color:"#8878aa", cursor:"pointer" }}>
+                      ← Plan
+                    </button>
+                  </div>
                   {/* Status bar */}
                   <div style={{ padding: "10px 14px", background: tier2 ? "rgba(127,255,107,0.07)" : tier1 ? "rgba(255,209,102,0.07)" : "rgba(0,229,255,0.06)", border: `1px solid ${tier2 ? "rgba(127,255,107,0.3)" : tier1 ? "rgba(255,209,102,0.3)" : "rgba(0,229,255,0.2)"}`, borderLeft: `3px solid ${tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00e5ff"}`, marginBottom: 10 }}>
                     <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.14em", color: tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00e5ff", marginBottom: 4 }}>LIVE STATUS</div>
@@ -5646,7 +5649,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                     ].map((r, i) => (
                       <div key={i} style={{ flexShrink: 0, padding: "7px 11px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8, textAlign: "center", minWidth: 70 }}>
                         <div style={{ fontSize: 8, color: "rgba(255,255,255,0.75)", letterSpacing: "0.1em", marginBottom: 4 }}>{r.l}</div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: r.v ? r.c : "rgba(255,255,255,0.25)", fontFamily: "monospace" }}>{r.v || "—"}</div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: r.c, fontFamily: "monospace" }}>{r.v}</div>
                       </div>
                     ))}
                   </div>
@@ -5692,7 +5695,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                       ].map((r, i) => (
                         <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: i < 5 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
                           <span style={{ fontSize: 13, color: "rgba(255,255,255,0.8)" }}>{r.l}</span>
-                          <span style={{ fontSize: 13, fontWeight: 700, color: r.v ? r.c : "rgba(255,255,255,0.25)", fontFamily: "monospace" }}>{r.v || "—"}</span>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: r.c, fontFamily: "monospace" }}>{r.v}</span>
                         </div>
                       ))}
                     </div>
