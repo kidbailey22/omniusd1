@@ -3689,7 +3689,7 @@ function TradeLoggerPage({ profile, onClose }) {
   const isMobile = useWindowWidth() <= 768;
   const GRADES = ["A+","A","B","C","PASS"];
   const INSTRUMENTS = ["XAUUSD","BTCUSD","NAS100","US30","USOIL","US500"];
-  const RESULTS = ["WIN","LOSS","BE","PENDING"];
+  const RESULTS = ["WIN","LOSS","BE","PASS","MISSED"];
 
   const empty = { instrument:"XAUUSD", grade:"A+", direction:"LONG", entry:"", stop:"", tp1:"", rr:"", result_usd:"", outcome:"WIN", note:"", trade_date: new Date().toISOString().slice(0,10) };
   const [form, setForm] = useState(empty);
@@ -3766,7 +3766,7 @@ function TradeLoggerPage({ profile, onClose }) {
 
   const inp = { width:"100%", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:8, padding:"9px 12px", fontSize:13, color:"#f0ecff", fontFamily:"inherit", outline:"none", boxSizing:"border-box" };
   const sel = { ...inp, appearance:"none", cursor:"pointer" };
-  const outcomeColor = { WIN:"#7fff6b", LOSS:"#ff6b6b", BE:"#ffd166", PENDING:"#8878aa" };
+  const outcomeColor = { WIN:"#7fff6b", LOSS:"#ff6b6b", BE:"#ffd166", PASS:"#8878aa", MISSED:"#ff9a3c" };
 
   return (
     <div style={{ flex:1, overflowY:"auto", padding: isMobile ? "20px 16px" : "32px 24px", animation:"fadein 0.3s ease both" }}>
@@ -3884,6 +3884,19 @@ function PublicResultsPage({ onClose, isStandalone = false }) {
   const [trades, setTrades] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const isOwner = isDevMode();
+
+  const tok = () => { try { return JSON.parse(localStorage.getItem("omniusd_session")||"{}").access_token || SUPABASE_KEY; } catch { return SUPABASE_KEY; } };
+
+  async function deleteTrade(id) {
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/trades?id=eq.${id}`, {
+        method: "DELETE",
+        headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${tok()}` },
+      });
+      setTrades(t => t.filter(x => x.id !== id));
+    } catch {}
+  }
 
   useEffect(() => {
     async function fetchPublic() {
@@ -3903,8 +3916,9 @@ function PublicResultsPage({ onClose, isStandalone = false }) {
   }, []);
 
   // ── Compute stats ──────────────────────────────────────────────────────
-  const executed = trades.filter(t => t.outcome !== "PENDING" && t.outcome !== "PASS");
+  const executed = trades.filter(t => t.outcome !== "MISSED" && t.outcome !== "PASS");
   const passes   = trades.filter(t => t.outcome === "PASS" || t.grade === "PASS");
+  const missed   = trades.filter(t => t.outcome === "MISSED");
   const wins     = executed.filter(t => t.outcome === "WIN");
   const losses   = executed.filter(t => t.outcome === "LOSS");
   const be       = executed.filter(t => t.outcome === "BE");
@@ -3930,7 +3944,7 @@ function PublicResultsPage({ onClose, isStandalone = false }) {
   });
   const weeks = Object.entries(byWeek);
 
-  const outcomeColor = { WIN:"#7fff6b", LOSS:"#ff6b6b", BE:"#ffd166", PENDING:"#8878aa", PASS:"#8878aa" };
+  const outcomeColor = { WIN:"#7fff6b", LOSS:"#ff6b6b", BE:"#ffd166", MISSED:"#ff9a3c", PASS:"#8878aa" };
   const BG = "#0f0c1e";
 
   const statCard = (label, value, color="#f0ecff", sub=null) => (
@@ -3978,6 +3992,7 @@ function PublicResultsPage({ onClose, isStandalone = false }) {
             {statCard("WIN RATE", executed.length > 0 ? `${winRate}%` : "—", winRate >= 60 ? "#7fff6b" : winRate >= 40 ? "#ffd166" : "#ff6b6b")}
             {statCard("RECORD", `${wins.length}-${losses.length}${be.length>0?`-${be.length}`:""}`, "#f0ecff", "W-L-BE")}
             {statCard("PASSES", passes.length, "#8878aa", "discipline wins")}
+            {statCard("MISSED", missed.length, "#ff9a3c", "never retested")}
             {statCard("AVG GRADE", avgGradeStr, "#cc44ff")}
             {statCard("NET P&L", (totalPnl >= 0 ? "+" : "") + "$" + Math.abs(totalPnl).toFixed(0), totalPnl >= 0 ? "#7fff6b" : "#ff6b6b", "USD")}
           </div>
@@ -3989,7 +4004,7 @@ function PublicResultsPage({ onClose, isStandalone = false }) {
 
           {/* Weekly trade log */}
           {weeks.map(([week, wTrades]) => {
-            const wExec = wTrades.filter(t=>t.outcome!=="PENDING"&&t.outcome!=="PASS");
+            const wExec = wTrades.filter(t=>t.outcome!=="MISSED"&&t.outcome!=="PASS");
             const wWins = wExec.filter(t=>t.outcome==="WIN").length;
             const wPnl  = wExec.reduce((s,t)=>s+(parseFloat(t.result_usd)||0),0);
             return (
@@ -4022,6 +4037,9 @@ function PublicResultsPage({ onClose, isStandalone = false }) {
                       <span style={{ fontFamily:"'Space Mono',monospace", fontSize:12, fontWeight:900, color: outcomeColor[t.outcome]||"#8878aa", marginLeft:"auto", flexShrink:0 }}>
                         {t.outcome}{t.result_usd != null ? ` · $${parseFloat(t.result_usd).toFixed(2)}` : ""}
                       </span>
+                      {isOwner && (
+                        <button onClick={()=>deleteTrade(t.id)} style={{ fontSize:12, color:"rgba(255,107,107,0.4)", background:"none", border:"none", cursor:"pointer", fontFamily:"inherit", padding:"0 4px", flexShrink:0 }}>✕</button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -7635,7 +7653,7 @@ function JournalPage({journal, onUpdate, T=DARK}){
   const wins=journal.filter(t=>t.outcome==="WIN").length;
   const losses=journal.filter(t=>t.outcome==="LOSS").length;
   const be=journal.filter(t=>t.outcome==="BE").length;
-  const pending=journal.filter(t=>!t.outcome).length;
+  const missed=journal.filter(t=>t.outcome==="MISSED").length;
   const total=wins+losses+be;
   const winRate=total>0?Math.round((wins/total)*100):0;
   const gradeRank={"A+":4,"A":3,"B":2,"C":1};
@@ -7706,7 +7724,7 @@ function JournalPage({journal, onUpdate, T=DARK}){
             {label:"WINS",value:wins,color:"#7fff6b"},
             {label:"LOSSES",value:losses,color:"#ff6b6b"},
             {label:"BREAK EVEN",value:be,color:"#ffd166"},
-            {label:"PENDING",value:pending,color:"#8878aa"},
+            {label:"MISSED",value:missed,color:"#ff9a3c"},
           ].map(s=>(
             <div key={s.label} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:"10px 14px"}}>
               <div style={{fontSize:13,fontWeight:900,letterSpacing:"0.16em",color:"var(--t-muted4)",marginBottom:6}}>{s.label}</div>
