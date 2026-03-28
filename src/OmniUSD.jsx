@@ -383,9 +383,17 @@ Keep it under 200 words. Respond in plain text, no JSON, no markdown headers.`;
 
 // v2.1 — single upload module, no duplicate states
 // ─── TIER CONFIG ────────────────────────────────────────────────────────────
-// DEV_MODE = false → tier gating enforced from user's saved plan
-// DEV_MODE = true  → full Elite access (only for local development/testing)
-const DEV_MODE = true;
+// DEV_MODE is NEVER a hardcoded constant — isDevMode() is called at the point
+// of use so each user's own session determines their access. The owner being
+// logged in on their device has zero effect on any other user's session.
+const OWNER_EMAIL = "bailey.charles024@gmail.com";
+function isDevMode() {
+  try {
+    const s = JSON.parse(localStorage.getItem("omniusd_session") || "{}");
+    const email = s.user?.email || s.email || "";
+    return email === OWNER_EMAIL;
+  } catch { return false; }
+}
 
 const TIER_CONFIG = {
   starter: { label:"Starter", price:"$29/mo", priceId:"price_1TEyC2EOq82Vh8foSZIKCsG9", instruments:["XAUUSD","BTCUSD"],         dailyCap:3,  color:"#ffd166" },
@@ -393,11 +401,10 @@ const TIER_CONFIG = {
   elite:   { label:"Elite",   price:"$59/mo", priceId:"price_1TEyHFEOq82Vh8fokJEvZNFn", instruments:["XAUUSD","BTCUSD","NAS100","US30","USOIL","US500"], dailyCap:10, color:"#ff6bff" },
 };
 
-// Current user tier — hardcoded for now, will come from Stripe/auth later
-const CURRENT_TIER = DEV_MODE ? "elite" : "starter";
+const CURRENT_TIER = isDevMode() ? "elite" : "starter";
 
 function getTierAccess(tier=CURRENT_TIER){
-  return DEV_MODE ? TIER_CONFIG.elite : (TIER_CONFIG[tier]||TIER_CONFIG.starter);
+  return isDevMode() ? TIER_CONFIG.elite : (TIER_CONFIG[tier]||TIER_CONFIG.starter);
 }
 
 if(typeof document!=="undefined"){
@@ -5753,7 +5760,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
             </div>
 
             {/* DEV MODE shortcut */}
-            {DEV_MODE && (
+            {isDevMode() && (
               <button onClick={() => setPhase("analyzing")}
                 style={{ width:"100%", marginTop:12, padding:"10px", borderRadius:8, border:"1px dashed rgba(255,209,102,0.4)", background:"rgba(255,209,102,0.05)", color:"#ffd166", fontSize:11, fontWeight:700, letterSpacing:"0.1em", fontFamily:"inherit", cursor:"pointer" }}>
                 ⚡ DEV — SKIP TO ANIMATION
