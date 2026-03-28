@@ -4147,6 +4147,36 @@ function HistoryPage({ uid, onClose }) {
   const [expanded, setExpanded] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
 
+  // Restore from cloud on mount if localStorage is empty
+  React.useEffect(() => {
+    async function restore() {
+      if (!uid || uid === "anon") return;
+      try {
+        const tok = JSON.parse(localStorage.getItem("omniusd_session")||"{}").access_token || SUPABASE_KEY;
+        async function pull(type) {
+          const res = await fetch(
+            `${SUPABASE_URL}/rest/v1/user_history?user_id=eq.${uid}&type=eq.${type}&select=data`,
+            { headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${tok}` } }
+          );
+          if (!res.ok) return null;
+          const rows = await res.json();
+          return rows?.length ? JSON.parse(rows[0].data) : null;
+        }
+        const localPlans = JSON.parse(localStorage.getItem(SESSION_PLANS_KEY) || "[]");
+        if (localPlans.length === 0) {
+          const cloud = await pull("session_plans");
+          if (cloud?.length) { localStorage.setItem(SESSION_PLANS_KEY, JSON.stringify(cloud)); setPlans(pruneOld(cloud)); }
+        }
+        const localJournal = JSON.parse(localStorage.getItem(EXEC_JOURNAL_KEY) || "[]");
+        if (localJournal.length === 0) {
+          const cloud = await pull("exec_journal");
+          if (cloud?.length) { localStorage.setItem(EXEC_JOURNAL_KEY, JSON.stringify(cloud)); setJournal(pruneOld(cloud)); }
+        }
+      } catch {}
+    }
+    restore();
+  }, [uid]);
+
   const entries = tab === "plans" ? plans : journal;
   const storageKey = tab === "plans" ? SESSION_PLANS_KEY : EXEC_JOURNAL_KEY;
 
@@ -4799,6 +4829,45 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
     return entries.filter(e => e.savedAt > cutoff);
   }
 
+  // ── Supabase cloud sync helpers ───────────────────────────────────────────
+  async function pushToCloud(type, data) {
+    // type = "session_plans" | "exec_journal"
+    if (!_uid || _uid === "anon") return;
+    try {
+      const tok = JSON.parse(localStorage.getItem("omniusd_session")||"{}").access_token || SUPABASE_KEY;
+      await fetch(`${SUPABASE_URL}/rest/v1/user_history`, {
+        method: "POST",
+        headers: {
+          "apikey": SUPABASE_KEY,
+          "Authorization": `Bearer ${tok}`,
+          "Content-Type": "application/json",
+          "Prefer": "resolution=merge-duplicates",
+        },
+        body: JSON.stringify({
+          user_id: _uid,
+          type,
+          data: JSON.stringify(data),
+          updated_at: new Date().toISOString(),
+        }),
+      });
+    } catch {}
+  }
+
+  async function pullFromCloud(type) {
+    if (!_uid || _uid === "anon") return null;
+    try {
+      const tok = JSON.parse(localStorage.getItem("omniusd_session")||"{}").access_token || SUPABASE_KEY;
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/user_history?user_id=eq.${_uid}&type=eq.${type}&select=data`,
+        { headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${tok}` } }
+      );
+      if (!res.ok) return null;
+      const rows = await res.json();
+      if (!rows?.length) return null;
+      return JSON.parse(rows[0].data);
+    } catch { return null; }
+  }
+
   function autoSavePlan(planObj) {
     // Auto-saves every plan (all grades) as a lightweight summary
     if (!planObj || planObj._blocked || planObj.grade === "BLOCKED") return;
@@ -4833,6 +4902,7 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
       if (alreadySaved) return; // one plan per instrument per day
       const updated = [entry, ...pruned].slice(0, 90); // hard cap 90 entries
       localStorage.setItem(SESSION_PLANS_KEY, JSON.stringify(updated));
+      pushToCloud("session_plans", updated); // async, fire-and-forget
     } catch(e) {}
   }
 
@@ -4858,18 +4928,40 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
         runner: planObj.runner || null,
         retest_zone: planObj.retest_zone || null,
         confidence_score: planObj.confidence_score || null,
+        risk_reward: planObj.risk_reward || null,
         summary: planObj.summary || null,
         result: null, // filled in manually later
       };
       const updated = [entry, ...pruned].slice(0, 90);
       localStorage.setItem(EXEC_JOURNAL_KEY, JSON.stringify(updated));
+      pushToCloud("exec_journal", updated); // async, fire-and-forget
     } catch(e) {}
   }
 
   function saveToHistory(planObj) {
-    // Legacy A+ manual save — kept for backward compat but now redirects to autoSavePlan
     autoSavePlan(planObj);
   }
+
+  // ── On mount: restore from cloud if localStorage is empty ─────────────────
+  React.useEffect(() => {
+    async function restoreFromCloud() {
+      if (!_uid || _uid === "anon") return;
+      try {
+        const localPlans = JSON.parse(localStorage.getItem(SESSION_PLANS_KEY) || "[]");
+        if (localPlans.length === 0) {
+          const cloudPlans = await pullFromCloud("session_plans");
+          if (cloudPlans?.length) localStorage.setItem(SESSION_PLANS_KEY, JSON.stringify(cloudPlans));
+        }
+        const localJournal = JSON.parse(localStorage.getItem(EXEC_JOURNAL_KEY) || "[]");
+        if (localJournal.length === 0) {
+          const cloudJournal = await pullFromCloud("exec_journal");
+          if (cloudJournal?.length) localStorage.setItem(EXEC_JOURNAL_KEY, JSON.stringify(cloudJournal));
+        }
+      } catch {}
+    }
+    restoreFromCloud();
+  }, []);
+
   function getCooldownRemaining(instr) {
     const s = getSessionForInstrument(instr);
     if (!s?.savedAt) return 0;
