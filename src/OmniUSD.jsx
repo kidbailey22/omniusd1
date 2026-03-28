@@ -2786,7 +2786,7 @@ function SettingsPage({profile, onSignOut, onClose}) {
 
         {/* Section tabs */}
         <div style={{display:"flex",gap:4,marginBottom:20,background:"rgba(255,255,255,0.03)",padding:4,borderRadius:10,overflowX:"auto"}}>
-          {[{id:"account",l:"Account"},{id:"plan",l:"Plan"},{id:"preferences",l:"Preferences"},{id:"danger",l:"Danger Zone"}].map(t=>(
+          {[{id:"account",l:"Account"},{id:"plan",l:"Plan"},{id:"preferences",l:"Preferences"},{id:"danger",l:"Danger Zone"},...(isDevMode()?[{id:"storage",l:"🔧 Storage"}]:[])].map(t=>(
             <button key={t.id} onClick={()=>setSection(t.id)}
               style={{flex:1,padding:"7px 4px",borderRadius:7,border:"none",fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,letterSpacing:"0.06em",cursor:"pointer",transition:"all 0.15s",
                 background:section===t.id?"rgba(255,107,255,0.12)":"none",
@@ -2964,6 +2964,77 @@ function SettingsPage({profile, onSignOut, onClose}) {
             </>)}
           </div>
         )}
+
+        {/* ── STORAGE INSPECTOR (owner only) ── */}
+        {section === "storage" && isDevMode() && (() => {
+          const allKeys = Object.keys(localStorage).filter(k => k.startsWith("omniusd_"));
+          return (
+            <div style={{...card}}>
+              <span style={{...lbl,color:"#00ccff"}}>STORAGE INSPECTOR</span>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:"#8878aa",marginBottom:16,lineHeight:1.6}}>
+                All OmniUSD keys in this browser. Use this to diagnose missing history/journal data.
+              </div>
+              {allKeys.length === 0 ? (
+                <div style={{fontSize:13,color:"#ff6b6b",fontFamily:"'Space Mono',monospace"}}>No OmniUSD keys found in localStorage.</div>
+              ) : (
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  {allKeys.map(key => {
+                    let raw = localStorage.getItem(key);
+                    let parsed, preview, count;
+                    try { parsed = JSON.parse(raw); } catch { parsed = raw; }
+                    if (Array.isArray(parsed)) {
+                      count = parsed.length;
+                      preview = `Array [${count} items]`;
+                    } else if (parsed && typeof parsed === "object") {
+                      count = Object.keys(parsed).length;
+                      preview = `Object {${Object.keys(parsed).slice(0,3).join(", ")}${count>3?"...":""}}`;
+                    } else {
+                      preview = String(raw).slice(0, 60) + (raw?.length > 60 ? "..." : "");
+                    }
+                    const isData = key.includes("session_plans") || key.includes("exec_journal") || key.includes("journal_") || key.includes("sessions_");
+                    return (
+                      <div key={key} style={{padding:"10px 12px",background: isData?"rgba(0,204,255,0.04)":"rgba(255,255,255,0.02)",border:`1px solid ${isData?"rgba(0,204,255,0.15)":"rgba(255,255,255,0.06)"}`,borderRadius:8}}>
+                        <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,fontWeight:700,color:isData?"#00ccff":"#8878aa",marginBottom:3,wordBreak:"break-all"}}>{key}</div>
+                        <div style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:"rgba(255,255,255,0.45)"}}>{preview}</div>
+                        {isData && count > 0 && (
+                          <div style={{marginTop:6}}>
+                            <button
+                              onClick={() => {
+                                // Extract uid from key and copy data to current session uid
+                                const _s = JSON.parse(localStorage.getItem("omniusd_session")||"{}");
+                                const currentUid = _s.user?.id || _s.user_id || "anon";
+                                const keyType = key.includes("session_plans") ? `omniusd_session_plans_${currentUid}`
+                                  : key.includes("exec_journal") ? `omniusd_exec_journal_${currentUid}`
+                                  : key.includes("journal_") ? `omniusd_journal_${currentUid}`
+                                  : key.includes("sessions_") ? `omniusd_sessions_${currentUid}` : null;
+                                if (keyType && keyType !== key) {
+                                  const existing = localStorage.getItem(keyType);
+                                  if (existing && existing !== "[]" && existing !== "{}") {
+                                    alert(`Target key ${keyType} already has data. Delete it first if you want to restore from this key.`);
+                                    return;
+                                  }
+                                  localStorage.setItem(keyType, raw);
+                                  alert(`✓ Copied to ${keyType}. Reload the app to see restored data.`);
+                                } else if (keyType === key) {
+                                  alert("This key is already for your current session uid.");
+                                }
+                              }}
+                              style={{fontFamily:"'Space Mono',monospace",fontSize:10,fontWeight:700,padding:"4px 10px",borderRadius:6,border:"1px solid rgba(0,204,255,0.3)",background:"rgba(0,204,255,0.08)",color:"#00ccff",cursor:"pointer"}}>
+                              Restore to current uid →
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              <div style={{marginTop:16,padding:"10px 12px",background:"rgba(255,209,102,0.04)",border:"1px solid rgba(255,209,102,0.15)",borderRadius:8,fontFamily:"'Space Mono',monospace",fontSize:11,color:"rgba(255,209,102,0.65)",lineHeight:1.7}}>
+                If you see session_plans or exec_journal keys with a different uid suffix than your current session, click "Restore to current uid" then reload the app.
+              </div>
+            </div>
+          );
+        })()}
 
       </div>
     </div>
