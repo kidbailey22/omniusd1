@@ -4193,8 +4193,8 @@ function HistoryPage({ uid, onClose }) {
                   <div style={{ textAlign:"right", flexShrink:0 }}>
                     {entry.trigger_level && (
                       <>
-                        <div style={{ fontSize:8, color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace", marginBottom:1 }}>TRIGGER</div>
-                        <div style={{ fontSize:13, fontWeight:700, color:bc, fontFamily:"monospace" }}>{entry.trigger_level}</div>
+                        <div style={{ fontSize:8, color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace", marginBottom:1 }}>ENTRY</div>
+                        <div style={{ fontSize:13, fontWeight:700, color:bc, fontFamily:"monospace" }}>{(entry.trigger_level||"").replace(/[^0-9.,]/g,"").trim()||entry.trigger_level}</div>
                       </>
                     )}
                     <div style={{ fontSize:9, color: dl <= 3 ? "#ff9a3c" : "rgba(255,255,255,0.2)", fontFamily:"'Space Mono',monospace", marginTop:2 }}>
@@ -4216,24 +4216,26 @@ function HistoryPage({ uid, onClose }) {
                       </div>
                     )}
 
-                    {/* Confidence */}
+                    {/* Confidence + R:R */}
                     {entry.confidence_score && (
-                      <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:12 }}>
+                      <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:12, flexWrap:"wrap" }}>
                         <span style={{ fontSize:10, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace" }}>CONFIDENCE</span>
                         <span style={{ fontSize:13, fontWeight:700, color:"#ffd166", fontFamily:"monospace" }}>{entry.confidence_score}%</span>
                         {entry.session && <span style={{ fontSize:10, color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace" }}>· {entry.session} SESSION</span>}
+                        {entry.risk_reward && <>
+                          <span style={{ fontSize:10, color:"rgba(255,255,255,0.18)", fontFamily:"'Space Mono',monospace" }}>·</span>
+                          <span style={{ fontSize:10, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace" }}>R:R</span>
+                          <span style={{ fontSize:13, fontWeight:700, color:"#00e5ff", fontFamily:"monospace" }}>{entry.risk_reward}</span>
+                        </>}
                       </div>
                     )}
 
-                    {/* Levels grid */}
-                    <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:5, marginBottom:12 }}>
+                    {/* Levels — Row 1: ENTRY / STOP / TP1 (price only) */}
+                    <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:5, marginBottom:5 }}>
                       {[
-                        { label:"TRIGGER", val:entry.trigger_level, color:bc },
-                        { label:"STOP",    val:entry.stop_loss,     color:"#ff6b6b" },
-                        { label:"TP1",     val:entry.tp1,           color:"#7fff6b" },
-                        { label:"TP2",     val:entry.tp2,           color:"#7fff6b" },
-                        { label:"RUNNER",  val:entry.runner,        color:"#00e5ff" },
-                        { label:"RETEST",  val:entry.retest_zone,   color:"#ffd166" },
+                        { label:"ENTRY",  val:(entry.trigger_level||"").replace(/[^0-9.,]/g,"").trim()||entry.trigger_level, color:bc },
+                        { label:"STOP",   val:entry.stop_loss,  color:"#ff6b6b" },
+                        { label:"TP1",    val:entry.tp1,        color:"#7fff6b" },
                       ].filter(r => r.val).map(r => (
                         <div key={r.label} style={{ padding:"6px 8px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:7 }}>
                           <div style={{ fontSize:7, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace", letterSpacing:"0.1em", marginBottom:2 }}>{r.label}</div>
@@ -4241,6 +4243,32 @@ function HistoryPage({ uid, onClose }) {
                         </div>
                       ))}
                     </div>
+
+                    {/* Levels — Row 2: TP2 / RUNNER (wider cards) */}
+                    {(entry.tp2 || entry.runner) && (
+                      <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:5, marginBottom:5 }}>
+                        {[
+                          { label:"TP2",    val:entry.tp2,    color:"#7fff6b", sub:"Second target" },
+                          { label:"RUNNER", val:entry.runner, color:"#00e5ff", sub:"Full structure target" },
+                        ].filter(r => r.val).map(r => (
+                          <div key={r.label} style={{ padding:"6px 10px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:7, display:"flex", flexDirection:"column", gap:1 }}>
+                            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                              <div style={{ fontSize:7, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace", letterSpacing:"0.1em" }}>{r.label}</div>
+                              <div style={{ fontSize:8, color:"rgba(255,255,255,0.2)", fontFamily:"'Space Mono',monospace" }}>{r.sub}</div>
+                            </div>
+                            <div style={{ fontSize:15, fontWeight:900, color:r.val?r.color:"rgba(255,255,255,0.2)", fontFamily:"monospace" }}>{r.val||"—"}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Retest — full text preserved */}
+                    {entry.retest_zone && (
+                      <div style={{ padding:"8px 10px", background:"rgba(255,209,102,0.04)", border:"1px solid rgba(255,209,102,0.14)", borderRadius:7, marginBottom:12 }}>
+                        <div style={{ fontSize:7, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace", letterSpacing:"0.1em", marginBottom:3 }}>RETEST</div>
+                        <div style={{ fontSize:13, fontWeight:700, color:"#ffd166", fontFamily:"monospace", lineHeight:1.5 }}>{entry.retest_zone}</div>
+                      </div>
+                    )}
 
                     {/* Delete */}
                     {confirmDelete === entry.id ? (
