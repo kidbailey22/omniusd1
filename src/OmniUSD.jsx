@@ -1916,6 +1916,184 @@ function LoadingScreen({T=DARK}){
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// CHESS BOARD ANALYZING ANIMATION
+// ═══════════════════════════════════════════════════════════════════════════
+function ChessBoardAnalyzing({ instrument }) {
+  const canvasRef = useRef(null);
+  const rafRef    = useRef(null);
+  const t0Ref     = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    const DEG = Math.PI / 180;
+
+    // Board
+    const TW=40, TH=20, EXT=9, N=6;
+    const OX=W/2, OY=H*0.56;
+
+    // Logo
+    const LCX=W/2, LCY=H*0.18;
+    const RO=46, RM=38, RI=30;
+    const AO=[-40*DEG, 220*DEG];
+    const AM=[-52.5*DEG, 232.5*DEG];
+    const AI=[-65*DEG, 245*DEG];
+    const DL=[-12.4,-26.5], DR=[12.4,-26.5];
+    const DIAM=[[0,-8.3],[6.2,0],[0,8.3],[-6.2,0]];
+    const CHEV=[[-3.6,-11.8],[0,-16.3],[3.6,-11.8]];
+
+    const STEPS = [
+      { start:0.0,  text:'COMPRESSING CHARTS...' },
+      { start:1.4,  text:'READING DAILY STRUCTURE...' },
+      { start:2.6,  text:'CHECKING 4H ALIGNMENT...' },
+      { start:3.8,  text:'SCANNING 1H FOR SETUP...' },
+      { start:5.0,  text:'IDENTIFYING BRC PHASE...' },
+      { start:6.2,  text:'VALIDATING ENTRY MATH...' },
+      { start:7.4,  text:'GRADING YOUR SETUP...' },
+      { start:8.4,  text:'THE BOARD IS SET.' },
+    ];
+    const LOOP = 10.5;
+
+    // Build diagonal tile order
+    const tiles = [];
+    for (let d=0; d<N*2-1; d++)
+      for (let c=0; c<N; c++) { const r=d-c; if(r>=0&&r<N) tiles.push([c,r,d]); }
+
+    function toIso(c,r){ return [OX+(c-r)*TW/2, OY+(c+r)*TH/2]; }
+    function easeOut(t){ return 1-Math.pow(1-t,3); }
+    function clamp(v){ return Math.max(0,Math.min(1,v)); }
+    function sub(t,s,e){ return clamp((t-s)/(e-s)); }
+
+    function drawTile(c,r,p,light) {
+      if(p<=0)return;
+      const [x,y]=toIso(c,r);
+      const Y=y-(1-p)*60;
+      ctx.globalAlpha=Math.min(p*1.8,1);
+      const tc=light?'rgba(136,68,238,0.28)':'rgba(18,10,32,0.98)';
+      const lc=light?'rgba(90,40,160,0.35)':'rgba(10,5,18,0.98)';
+      const rc=light?'rgba(110,55,200,0.3)':'rgba(14,7,24,0.98)';
+      ctx.beginPath();
+      ctx.moveTo(x,Y); ctx.lineTo(x+TW/2,Y+TH/2); ctx.lineTo(x,Y+TH); ctx.lineTo(x-TW/2,Y+TH/2);
+      ctx.closePath(); ctx.fillStyle=tc; ctx.fill();
+      ctx.strokeStyle='rgba(204,68,255,0.13)'; ctx.lineWidth=0.6; ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x-TW/2,Y+TH/2); ctx.lineTo(x,Y+TH); ctx.lineTo(x,Y+TH+EXT); ctx.lineTo(x-TW/2,Y+TH/2+EXT);
+      ctx.closePath(); ctx.fillStyle=lc; ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(x+TW/2,Y+TH/2); ctx.lineTo(x,Y+TH); ctx.lineTo(x,Y+TH+EXT); ctx.lineTo(x+TW/2,Y+TH/2+EXT);
+      ctx.closePath(); ctx.fillStyle=rc; ctx.fill();
+      ctx.globalAlpha=1;
+    }
+
+    function drawBeam(p) {
+      if(p<=0)return;
+      const [bx,by]=toIso(2.5,2.5);
+      const startY=LCY+RO+2, endY=by+TH/2;
+      const g=ctx.createLinearGradient(LCX,startY,bx,endY);
+      g.addColorStop(0,'rgba(204,68,255,0.4)');
+      g.addColorStop(0.6,'rgba(136,68,238,0.15)');
+      g.addColorStop(1,'rgba(0,204,255,0.01)');
+      ctx.globalAlpha=p*0.55;
+      ctx.beginPath(); ctx.moveTo(LCX,startY); ctx.lineTo(bx,endY);
+      ctx.strokeStyle=g; ctx.lineWidth=1.5; ctx.stroke();
+      ctx.globalAlpha=1;
+    }
+
+    function drawLogo(p, pulse) {
+      if(p<=0)return;
+      const cx=LCX, cy=LCY;
+      ctx.lineCap='round';
+      const p1=easeOut(sub(p,0,.40));
+      const p2=easeOut(sub(p,.15,.55));
+      const p3=easeOut(sub(p,.30,.70));
+      const p4=easeOut(sub(p,.60,.78));
+      const p5=easeOut(sub(p,.70,.90));
+      const p6=easeOut(sub(p,.85,1.0));
+      const glo=pulse*0.25;
+      if(p1>0){ const sw=(AO[1]-AO[0])*p1; ctx.beginPath(); ctx.arc(cx,cy,RO,AO[0],AO[0]+sw); ctx.strokeStyle=`rgba(204,68,255,${0.78+glo})`; ctx.lineWidth=3; ctx.stroke(); }
+      if(p2>0){ const sw=(AM[1]-AM[0])*p2; ctx.beginPath(); ctx.arc(cx,cy,RM,AM[0],AM[0]+sw); ctx.strokeStyle=`rgba(136,68,238,${0.84+glo})`; ctx.lineWidth=2.2; ctx.stroke(); }
+      if(p3>0){ const sw=(AI[1]-AI[0])*p3; ctx.beginPath(); ctx.arc(cx,cy,RI,AI[0],AI[0]+sw); ctx.strokeStyle=`rgba(0,204,255,${0.9+glo})`; ctx.lineWidth=1.6; ctx.stroke(); }
+      if(p4>0){ ctx.globalAlpha=p4*0.88; ctx.fillStyle='#00ccff'; [DL,DR].forEach(d=>{ ctx.beginPath(); ctx.arc(cx+d[0],cy+d[1],1.8,0,Math.PI*2); ctx.fill(); }); ctx.globalAlpha=1; }
+      if(p5>0){
+        ctx.globalAlpha=p5*0.93;
+        const g=ctx.createLinearGradient(cx-6,cy-9,cx+6,cy+9);
+        g.addColorStop(0,'#cc44ff'); g.addColorStop(1,'#00ccff');
+        ctx.beginPath(); ctx.moveTo(cx+DIAM[0][0],cy+DIAM[0][1]); ctx.lineTo(cx+DIAM[1][0],cy+DIAM[1][1]); ctx.lineTo(cx+DIAM[2][0],cy+DIAM[2][1]); ctx.lineTo(cx+DIAM[3][0],cy+DIAM[3][1]); ctx.closePath();
+        ctx.fillStyle=g; ctx.fill(); ctx.strokeStyle='rgba(255,255,255,0.18)'; ctx.lineWidth=0.7; ctx.stroke();
+        ctx.globalAlpha=1;
+      }
+      if(p6>0){
+        ctx.globalAlpha=p6*0.85;
+        ctx.beginPath(); ctx.moveTo(cx+CHEV[0][0],cy+CHEV[0][1]); ctx.lineTo(cx+CHEV[1][0],cy+CHEV[1][1]); ctx.lineTo(cx+CHEV[2][0],cy+CHEV[2][1]);
+        ctx.strokeStyle='#cc44ff'; ctx.lineWidth=1.3; ctx.stroke();
+        ctx.beginPath(); ctx.arc(cx,cy,1.6,0,Math.PI*2); ctx.strokeStyle='rgba(255,255,255,0.25)'; ctx.lineWidth=0.6; ctx.stroke();
+        ctx.beginPath(); ctx.arc(cx,cy,0.9,0,Math.PI*2); ctx.fillStyle='rgba(255,255,255,0.65)'; ctx.fill();
+        ctx.globalAlpha=1;
+      }
+    }
+
+    function drawBoardGlow(p) {
+      if(p<=0)return;
+      const [tx,ty]=toIso(0,0),[rx,ry]=toIso(N-1,0),[bx,by]=toIso(N-1,N-1),[lx,ly]=toIso(0,N-1);
+      ctx.globalAlpha=p*0.3;
+      ctx.beginPath(); ctx.moveTo(tx,ty); ctx.lineTo(rx+TW/2,ry+TH/2); ctx.lineTo(bx,by+TH); ctx.lineTo(lx-TW/2,ly+TH/2); ctx.closePath();
+      ctx.strokeStyle='#cc44ff'; ctx.lineWidth=0.8; ctx.stroke();
+      ctx.globalAlpha=1;
+    }
+
+    function drawStatus(t) {
+      let cur=STEPS[0], nxt=null;
+      for(let i=0;i<STEPS.length;i++){ if(t>=STEPS[i].start){ cur=STEPS[i]; nxt=STEPS[i+1]||null; } }
+      const isFinal=cur===STEPS[STEPS.length-1];
+      let alpha=clamp((t-cur.start)/0.3);
+      if(nxt){ const fs=nxt.start-0.22; if(t>=fs) alpha=Math.min(alpha,1-clamp((t-fs)/0.22)); }
+      if(alpha<=0)return;
+      const blink=Math.floor(t*2)%2===0;
+      const text=isFinal?cur.text:(cur.text+(blink?' ▮':'  '));
+      ctx.save();
+      ctx.globalAlpha=alpha;
+      ctx.font='700 11px "Space Mono",monospace';
+      ctx.textAlign='center';
+      ctx.fillStyle=isFinal?'#f0ecff':'#8878aa';
+      ctx.fillText(text, W/2, H-16);
+      // Progress dots
+      const idx=STEPS.indexOf(cur);
+      const sp=10, tw=(STEPS.length-1)*sp, sx=W/2-tw/2;
+      for(let i=0;i<STEPS.length;i++){
+        ctx.beginPath(); ctx.arc(sx+i*sp, H-30, 2, 0, Math.PI*2);
+        ctx.fillStyle=i<=idx?'#cc44ff':'rgba(255,255,255,0.12)'; ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function frame(ts) {
+      if(!t0Ref.current) t0Ref.current=ts;
+      const t=((ts-t0Ref.current)/1000)%LOOP;
+      ctx.fillStyle='#1e1a35'; ctx.fillRect(0,0,W,H);
+      for(const [c,r,d] of tiles){ const p=easeOut(clamp((t-d*0.19)/0.38)); drawTile(c,r,p,(c+r)%2===0); }
+      drawBoardGlow(clamp((t-2.2)/0.6));
+      if(t>2.8){ const lp=easeOut(clamp((t-2.8)/5.6)); const pulse=t>8.8?(Math.sin((t-8.8)*Math.PI*1.4)*0.5+0.5):0; drawBeam(lp); drawLogo(lp,pulse); }
+      drawStatus(t);
+      rafRef.current=requestAnimationFrame(frame);
+    }
+    rafRef.current=requestAnimationFrame(frame);
+    return()=>{ if(rafRef.current) cancelAnimationFrame(rafRef.current); };
+  },[]);
+
+  return (
+    <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',flex:1,padding:'16px 0 8px'}}>
+      <canvas ref={canvasRef} width={420} height={320}
+        style={{borderRadius:14,maxWidth:'100%',display:'block'}}/>
+      <div style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:'rgba(255,255,255,0.28)',marginTop:12,letterSpacing:'0.06em'}}>
+        Do not close this tab — analysis in progress
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // HOME PAGE
 // ═══════════════════════════════════════════════════════════════════════════
 function HomePage({planResult,setPlanResult,anime,T=DARK,onJournalEntry}){
@@ -5177,80 +5355,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
 
       {/* ══ PHASE: ANALYZING ═══════════════════════════════════════════════════ */}
       {appPage === "dashboard" && phase === "analyzing" && (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 32, animation: "fadein 0.3s ease both", padding: "32px 24px" }}>
-          <style>{`
-            @keyframes scanScroll {
-              0%   { transform: translateY(0);     opacity: 0; }
-              8%   { opacity: 1; }
-              92%  { opacity: 1; }
-              100% { transform: translateY(-100%); opacity: 0; }
-            }
-            @keyframes scanLine {
-              0%,100% { opacity: 0.3; }
-              50% { opacity: 1; }
-            }
-            @keyframes blink {
-              0%,100% { opacity: 1; }
-              50% { opacity: 0; }
-            }
-          `}</style>
-
-          {/* Scanning animation block */}
-          <div style={{ width: "100%", maxWidth: 480, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,107,255,0.12)", borderRadius: 12, overflow: "hidden", position: "relative" }}>
-
-            {/* Top bar */}
-            <div style={{ padding: "10px 16px", borderBottom: "1px solid rgba(255,107,255,0.1)", display: "flex", alignItems: "center", gap: 8, background: "rgba(255,107,255,0.04)" }}>
-              <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#ff6bff", animation: "pulse 1s ease infinite" }}/>
-              <span style={{ fontFamily: "'Space Mono',monospace", fontSize: 13, fontWeight: 700, letterSpacing: "0.16em", color: "#ff6bff" }}>OMNIUSD ANALYSIS ENGINE</span>
-              <span style={{ fontFamily: "'Space Mono',monospace", fontSize: 13, color: "#8878aa", marginLeft: "auto" }}>
-                {instrument} <span style={{ animation: "blink 1s step-end infinite", color: "#ff6bff" }}>|</span>
-              </span>
-            </div>
-
-            {/* Scrolling messages */}
-            <div style={{ height: 180, position: "relative", overflow: "hidden" }}>
-              {[
-                { msg: `Validating instrument — checking for ${instrument} labels...`, color: "#00e5ff",  delay: "0s",    dur: "2.8s" },
-                { msg: "Reading Daily chart — identifying trend bias...",              color: "#ffd166",  delay: "2.2s",  dur: "2.8s" },
-                { msg: "Reading 4H chart — confirming market structure...",            color: "#ffd166",  delay: "4.2s",  dur: "2.8s" },
-                { msg: "Reading 1H chart — locating BRC sequence...",                 color: "#ff6bff",  delay: "6.2s",  dur: "2.8s" },
-                { msg: "Reading 30M chart — identifying trigger level...",             color: "#ff6bff",  delay: "8.2s",  dur: "2.8s" },
-                { msg: "Reading 15M chart — refining entry zone...",                  color: "#7fff6b",  delay: "10.2s", dur: "2.8s" },
-                { msg: "Checking 3-timeframe alignment...",                            color: "#00e5ff",  delay: "12.2s", dur: "2.8s" },
-                { msg: "Calculating BRC phase — Break / Retest / Continuation...",    color: "#ffd166",  delay: "14.2s", dur: "2.8s" },
-                { msg: "Grading the setup...",                                         color: "#7fff6b",  delay: "16.2s", dur: "2.8s" },
-                { msg: "Building your locked session plan...",                         color: "#ff6bff",  delay: "18.2s", dur: "2.8s" },
-              ].map((item, i) => (
-                <div key={i} style={{
-                  position: "absolute", top: "100%", left: 0, right: 0,
-                  padding: "0 20px",
-                  display: "flex", alignItems: "center", gap: 10,
-                  height: "100%",
-                  animation: `scanScroll ${item.dur} ease both`,
-                  animationDelay: item.delay,
-                }}>
-                  <div style={{ width: 4, height: 4, borderRadius: "50%", background: item.color, flexShrink: 0 }}/>
-                  <span style={{ fontFamily: "'Space Mono',monospace", fontSize: 13, color: item.color, lineHeight: 1.5 }}>{item.msg}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Scan line */}
-            <div style={{ height: 1, background: "linear-gradient(90deg,transparent,rgba(255,107,255,0.4),transparent)", animation: "scanLine 1.5s ease infinite" }}/>
-
-            {/* Bottom progress bar */}
-            <div style={{ height: 3, background: "rgba(255,255,255,0.06)" }}>
-              <div style={{ height: "100%", background: "linear-gradient(90deg,#ff6bff,#00e5ff)", animation: "grow 22s linear both", width: "0%" }}/>
-            </div>
-            <style>{`@keyframes grow { to { width: 95%; } }`}</style>
-          </div>
-
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontFamily: "'Space Mono',monospace", fontSize: 13, color: "rgba(255,255,255,0.75)", lineHeight: 1.8 }}>
-              Do not close this tab — analysis in progress
-            </div>
-          </div>
-        </div>
+        <ChessBoardAnalyzing instrument={instrument} />
       )}
 
       {/* ══ PHASE: PLAN SUMMARY ════════════════════════════════════════════════ */}
