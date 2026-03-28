@@ -1922,6 +1922,8 @@ function ChessBoardAnalyzing({ instrument }) {
   const canvasRef = useRef(null);
   const rafRef    = useRef(null);
   const t0Ref     = useRef(null);
+  const statusRef = useRef(null);
+  const dotsRef   = useRef(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -2069,9 +2071,6 @@ function ChessBoardAnalyzing({ instrument }) {
     rafRef.current=requestAnimationFrame(frame);
     return()=>{ if(rafRef.current) cancelAnimationFrame(rafRef.current); };
   },[]);
-
-  const statusRef = useRef(null);
-  const dotsRef   = useRef(null);
 
   return (
     <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',flex:1,padding:'16px 0 8px'}}>
