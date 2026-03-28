@@ -2043,31 +2043,6 @@ function ChessBoardAnalyzing({ instrument }) {
       ctx.globalAlpha=1;
     }
 
-    function drawStatus(t) {
-      let cur=STEPS[0], nxt=null;
-      for(let i=0;i<STEPS.length;i++){ if(t>=STEPS[i].start){ cur=STEPS[i]; nxt=STEPS[i+1]||null; } }
-      const isFinal=cur===STEPS[STEPS.length-1];
-      let alpha=clamp((t-cur.start)/0.3);
-      if(nxt){ const fs=nxt.start-0.22; if(t>=fs) alpha=Math.min(alpha,1-clamp((t-fs)/0.22)); }
-      if(alpha<=0)return;
-      const blink=Math.floor(t*2)%2===0;
-      const text=isFinal?cur.text:(cur.text+(blink?' ▮':'  '));
-      ctx.save();
-      ctx.globalAlpha=alpha;
-      ctx.font='700 11px "Space Mono",monospace';
-      ctx.textAlign='center';
-      ctx.fillStyle=isFinal?'#f0ecff':'#8878aa';
-      ctx.fillText(text, W/2, H-16);
-      // Progress dots
-      const idx=STEPS.indexOf(cur);
-      const sp=10, tw=(STEPS.length-1)*sp, sx=W/2-tw/2;
-      for(let i=0;i<STEPS.length;i++){
-        ctx.beginPath(); ctx.arc(sx+i*sp, H-30, 2, 0, Math.PI*2);
-        ctx.fillStyle=i<=idx?'#cc44ff':'rgba(255,255,255,0.12)'; ctx.fill();
-      }
-      ctx.restore();
-    }
-
     function frame(ts) {
       if(!t0Ref.current) t0Ref.current=ts;
       const t=((ts-t0Ref.current)/1000)%LOOP;
@@ -2075,18 +2050,43 @@ function ChessBoardAnalyzing({ instrument }) {
       for(const [c,r,d] of tiles){ const p=easeOut(clamp((t-d*0.19)/0.38)); drawTile(c,r,p,(c+r)%2===0); }
       drawBoardGlow(clamp((t-2.2)/0.6));
       if(t>2.8){ const lp=easeOut(clamp((t-2.8)/5.6)); const pulse=t>8.8?(Math.sin((t-8.8)*Math.PI*1.4)*0.5+0.5):0; drawBeam(lp); drawLogo(lp,pulse); }
-      drawStatus(t);
+      // Update status text via DOM (keeps text off the canvas so it never overlaps the board)
+      const statusEl = statusRef.current;
+      const dotsEl   = dotsRef.current;
+      if (!statusEl || !dotsEl) { rafRef.current=requestAnimationFrame(frame); return; }
+      let cur=STEPS[0];
+      for(let i=0;i<STEPS.length;i++){ if(t>=STEPS[i].start) cur=STEPS[i]; }
+      const isFinal=cur===STEPS[STEPS.length-1];
+      const blink=Math.floor(t*2)%2===0;
+      statusEl.textContent = isFinal ? cur.text : cur.text+(blink?' ▮':'  ');
+      statusEl.style.color = isFinal ? '#f0ecff' : '#8878aa';
+      const idx=STEPS.indexOf(cur);
+      Array.from(dotsEl.children).forEach((dot,i)=>{
+        dot.style.background = i<=idx ? '#cc44ff' : 'rgba(255,255,255,0.12)';
+      });
       rafRef.current=requestAnimationFrame(frame);
     }
     rafRef.current=requestAnimationFrame(frame);
     return()=>{ if(rafRef.current) cancelAnimationFrame(rafRef.current); };
   },[]);
 
+  const statusRef = useRef(null);
+  const dotsRef   = useRef(null);
+
   return (
     <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',flex:1,padding:'16px 0 8px'}}>
-      <canvas ref={canvasRef} width={420} height={320}
+      <canvas ref={canvasRef} width={420} height={300}
         style={{borderRadius:14,maxWidth:'100%',display:'block'}}/>
-      <div style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:'rgba(255,255,255,0.28)',marginTop:12,letterSpacing:'0.06em'}}>
+      {/* Status text — lives BELOW canvas, never overlaps the board */}
+      <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,marginTop:14}}>
+        <div ref={dotsRef} style={{display:'flex',gap:10}}>
+          {STEPS.map((_,i)=>(
+            <div key={i} style={{width:4,height:4,borderRadius:'50%',background:'rgba(255,255,255,0.12)',transition:'background 0.2s'}}/>
+          ))}
+        </div>
+        <div ref={statusRef} style={{fontFamily:"'Space Mono',monospace",fontSize:11,fontWeight:700,letterSpacing:'0.14em',color:'#8878aa',minHeight:16,transition:'color 0.2s'}}/>
+      </div>
+      <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:'rgba(255,255,255,0.2)',marginTop:10,letterSpacing:'0.06em'}}>
         Do not close this tab — analysis in progress
       </div>
     </div>
