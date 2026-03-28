@@ -4194,7 +4194,7 @@ function HistoryPage({ uid, onClose }) {
                     {entry.trigger_level && (
                       <>
                         <div style={{ fontSize:8, color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace", marginBottom:1 }}>ENTRY</div>
-                        <div style={{ fontSize:13, fontWeight:700, color:bc, fontFamily:"monospace" }}>{(entry.trigger_level||"").replace(/[^0-9.,]/g,"").trim()||entry.trigger_level}</div>
+                        <div style={{ fontSize:13, fontWeight:700, color:bc, fontFamily:"monospace" }}>{(entry.trigger_level||"").match(/^[\d,\.]+/)?.[0]||entry.trigger_level}</div>
                       </>
                     )}
                     <div style={{ fontSize:9, color: dl <= 3 ? "#ff9a3c" : "rgba(255,255,255,0.2)", fontFamily:"'Space Mono',monospace", marginTop:2 }}>
@@ -4233,7 +4233,7 @@ function HistoryPage({ uid, onClose }) {
                     {/* Levels — Row 1: ENTRY / STOP / TP1 (price only) */}
                     <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:5, marginBottom:5 }}>
                       {[
-                        { label:"ENTRY",  val:(entry.trigger_level||"").replace(/[^0-9.,]/g,"").trim()||entry.trigger_level, color:bc },
+                        { label:"ENTRY",  val:(entry.trigger_level||"").match(/^[\d,\.]+/)?.[0]||entry.trigger_level, color:bc },
                         { label:"STOP",   val:entry.stop_loss,  color:"#ff6b6b" },
                         { label:"TP1",    val:entry.tp1,        color:"#7fff6b" },
                       ].filter(r => r.val).map(r => (
@@ -5752,6 +5752,14 @@ Use ONLY these times. All earlier time references in this conversation are stale
             <div style={{ textAlign: "center", marginTop: 12, fontSize: 11, color: "rgba(255,255,255,0.35)" }}>
               Screenshots must clearly show the instrument ticker and timeframe.
             </div>
+
+            {/* DEV MODE shortcut */}
+            {DEV_MODE && (
+              <button onClick={() => setPhase("analyzing")}
+                style={{ width:"100%", marginTop:12, padding:"10px", borderRadius:8, border:"1px dashed rgba(255,209,102,0.4)", background:"rgba(255,209,102,0.05)", color:"#ffd166", fontSize:11, fontWeight:700, letterSpacing:"0.1em", fontFamily:"inherit", cursor:"pointer" }}>
+                ⚡ DEV — SKIP TO ANIMATION
+              </button>
+            )}
 
           </div>
         </div>
