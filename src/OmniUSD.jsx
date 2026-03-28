@@ -1925,6 +1925,18 @@ function ChessBoardAnalyzing({ instrument }) {
   const statusRef = useRef(null);
   const dotsRef   = useRef(null);
 
+  const STEPS = [
+    { start:0.0,  text:'COMPRESSING CHARTS...' },
+    { start:1.4,  text:'READING DAILY STRUCTURE...' },
+    { start:2.6,  text:'CHECKING 4H ALIGNMENT...' },
+    { start:3.8,  text:'SCANNING 1H FOR SETUP...' },
+    { start:5.0,  text:'IDENTIFYING BRC PHASE...' },
+    { start:6.2,  text:'VALIDATING ENTRY MATH...' },
+    { start:7.4,  text:'GRADING YOUR SETUP...' },
+    { start:8.4,  text:'THE BOARD IS SET.' },
+  ];
+  const LOOP = 10.5;
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -1945,18 +1957,6 @@ function ChessBoardAnalyzing({ instrument }) {
     const DL=[-12.4,-26.5], DR=[12.4,-26.5];
     const DIAM=[[0,-8.3],[6.2,0],[0,8.3],[-6.2,0]];
     const CHEV=[[-3.6,-11.8],[0,-16.3],[3.6,-11.8]];
-
-    const STEPS = [
-      { start:0.0,  text:'COMPRESSING CHARTS...' },
-      { start:1.4,  text:'READING DAILY STRUCTURE...' },
-      { start:2.6,  text:'CHECKING 4H ALIGNMENT...' },
-      { start:3.8,  text:'SCANNING 1H FOR SETUP...' },
-      { start:5.0,  text:'IDENTIFYING BRC PHASE...' },
-      { start:6.2,  text:'VALIDATING ENTRY MATH...' },
-      { start:7.4,  text:'GRADING YOUR SETUP...' },
-      { start:8.4,  text:'THE BOARD IS SET.' },
-    ];
-    const LOOP = 10.5;
 
     // Build diagonal tile order
     const tiles = [];
