@@ -385,7 +385,7 @@ Keep it under 200 words. Respond in plain text, no JSON, no markdown headers.`;
 // ─── TIER CONFIG ────────────────────────────────────────────────────────────
 // DEV_MODE = false → tier gating enforced from user's saved plan
 // DEV_MODE = true  → full Elite access (only for local development/testing)
-const DEV_MODE = false;
+const DEV_MODE = true;
 
 const TIER_CONFIG = {
   starter: { label:"Starter", price:"$29/mo", priceId:"price_1TEyC2EOq82Vh8foSZIKCsG9", instruments:["XAUUSD","BTCUSD"],         dailyCap:3,  color:"#ffd166" },
