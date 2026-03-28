@@ -3675,6 +3675,364 @@ function ChartSetupPage({ onClose }) {
   );
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// TRADE LOGGER PAGE (owner-only, private)
+// ═══════════════════════════════════════════════════════════════════════════
+function TradeLoggerPage({ profile, onClose }) {
+  const OWNER = "bailey.charles024@gmail.com";
+  const isMobile = useWindowWidth() <= 768;
+  const GRADES = ["A+","A","B","C","PASS"];
+  const INSTRUMENTS = ["XAUUSD","BTCUSD","NAS100","US30","USOIL","US500"];
+  const RESULTS = ["WIN","LOSS","BE","PENDING"];
+
+  const empty = { instrument:"XAUUSD", grade:"A+", direction:"LONG", entry:"", stop:"", tp1:"", rr:"", result_usd:"", outcome:"WIN", note:"", trade_date: new Date().toISOString().slice(0,10) };
+  const [form, setForm] = useState(empty);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState(null);
+  const [trades, setTrades] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const tok = () => { try { return JSON.parse(localStorage.getItem("omniusd_session")||"{}").access_token || SUPABASE_KEY; } catch { return SUPABASE_KEY; } };
+
+  async function loadTrades() {
+    setLoading(true);
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/trades?select=*&order=trade_date.desc,created_at.desc&limit=50`, {
+        headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${tok()}`, "Content-Type": "application/json" }
+      });
+      if (res.ok) { const d = await res.json(); setTrades(Array.isArray(d) ? d : []); }
+    } catch {}
+    setLoading(false);
+  }
+
+  useEffect(() => { if (profile?.email === OWNER) loadTrades(); }, []);
+
+  async function saveTrade() {
+    if (!form.entry || !form.stop) { setMsg({ type:"error", text:"Entry and stop are required." }); return; }
+    setSaving(true); setMsg(null);
+    try {
+      const payload = {
+        instrument: form.instrument,
+        grade: form.grade,
+        direction: form.direction,
+        entry: parseFloat(form.entry) || null,
+        stop: parseFloat(form.stop) || null,
+        tp1: parseFloat(form.tp1) || null,
+        rr: form.rr || null,
+        result_usd: parseFloat(form.result_usd) || null,
+        outcome: form.outcome,
+        note: form.note || null,
+        trade_date: form.trade_date,
+        is_public: true,
+      };
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/trades`, {
+        method: "POST",
+        headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${tok()}`, "Content-Type": "application/json", "Prefer": "return=minimal" },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok || res.status === 201) {
+        setMsg({ type:"success", text:"Trade logged." });
+        setForm({ ...empty, trade_date: new Date().toISOString().slice(0,10) });
+        loadTrades();
+      } else {
+        const e = await res.json();
+        setMsg({ type:"error", text: e?.message || "Save failed." });
+      }
+    } catch(e) { setMsg({ type:"error", text:"Network error." }); }
+    setSaving(false);
+  }
+
+  async function deleteTrade(id) {
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/trades?id=eq.${id}`, {
+        method: "DELETE",
+        headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${tok()}` },
+      });
+      setTrades(t => t.filter(x => x.id !== id));
+    } catch {}
+  }
+
+  if (profile?.email !== OWNER) return (
+    <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center" }}>
+      <div style={{ fontFamily:"'Space Mono',monospace", fontSize:13, color:"#ff6b6b" }}>Access restricted.</div>
+    </div>
+  );
+
+  const inp = { width:"100%", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:8, padding:"9px 12px", fontSize:13, color:"#f0ecff", fontFamily:"inherit", outline:"none", boxSizing:"border-box" };
+  const sel = { ...inp, appearance:"none", cursor:"pointer" };
+  const outcomeColor = { WIN:"#7fff6b", LOSS:"#ff6b6b", BE:"#ffd166", PENDING:"#8878aa" };
+
+  return (
+    <div style={{ flex:1, overflowY:"auto", padding: isMobile ? "20px 16px" : "32px 24px", animation:"fadein 0.3s ease both" }}>
+      <div style={{ maxWidth:680, margin:"0 auto" }}>
+
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:28 }}>
+          <div>
+            <div style={{ fontFamily:"'Space Mono',monospace", fontSize:11, color:"rgba(204,68,255,0.7)", letterSpacing:"0.18em", marginBottom:6 }}>TRADE LOGGER</div>
+            <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:22, fontWeight:800, color:"#f0ecff", margin:0 }}>Log a Trade</h2>
+          </div>
+          <button onClick={onClose} style={{ fontFamily:"'Space Mono',monospace", fontSize:13, fontWeight:700, color:"#8878aa", background:"none", border:"1px solid rgba(255,255,255,0.08)", borderRadius:6, padding:"6px 12px", cursor:"pointer" }}>← Back</button>
+        </div>
+
+        {/* Form */}
+        <div style={{ background:"rgba(255,255,255,0.025)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:14, padding:"22px 20px", marginBottom:28 }}>
+          <div style={{ display:"grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr 1fr", gap:12, marginBottom:12 }}>
+            <div>
+              <div style={{ fontSize:10, color:"#8878aa", fontFamily:"'Space Mono',monospace", letterSpacing:"0.12em", marginBottom:6 }}>DATE</div>
+              <input type="date" value={form.trade_date} onChange={e=>setForm(f=>({...f,trade_date:e.target.value}))} style={inp}/>
+            </div>
+            <div>
+              <div style={{ fontSize:10, color:"#8878aa", fontFamily:"'Space Mono',monospace", letterSpacing:"0.12em", marginBottom:6 }}>INSTRUMENT</div>
+              <select value={form.instrument} onChange={e=>setForm(f=>({...f,instrument:e.target.value}))} style={sel}>
+                {INSTRUMENTS.map(i=><option key={i} value={i}>{i}</option>)}
+              </select>
+            </div>
+            <div>
+              <div style={{ fontSize:10, color:"#8878aa", fontFamily:"'Space Mono',monospace", letterSpacing:"0.12em", marginBottom:6 }}>GRADE</div>
+              <select value={form.grade} onChange={e=>setForm(f=>({...f,grade:e.target.value}))} style={sel}>
+                {GRADES.map(g=><option key={g} value={g}>{g}</option>)}
+              </select>
+            </div>
+            <div>
+              <div style={{ fontSize:10, color:"#8878aa", fontFamily:"'Space Mono',monospace", letterSpacing:"0.12em", marginBottom:6 }}>DIRECTION</div>
+              <select value={form.direction} onChange={e=>setForm(f=>({...f,direction:e.target.value}))} style={sel}>
+                <option value="LONG">LONG</option>
+                <option value="SHORT">SHORT</option>
+              </select>
+            </div>
+            <div>
+              <div style={{ fontSize:10, color:"#8878aa", fontFamily:"'Space Mono',monospace", letterSpacing:"0.12em", marginBottom:6 }}>ENTRY</div>
+              <input type="number" placeholder="0.00" value={form.entry} onChange={e=>setForm(f=>({...f,entry:e.target.value}))} style={inp}/>
+            </div>
+            <div>
+              <div style={{ fontSize:10, color:"#8878aa", fontFamily:"'Space Mono',monospace", letterSpacing:"0.12em", marginBottom:6 }}>STOP</div>
+              <input type="number" placeholder="0.00" value={form.stop} onChange={e=>setForm(f=>({...f,stop:e.target.value}))} style={inp}/>
+            </div>
+            <div>
+              <div style={{ fontSize:10, color:"#8878aa", fontFamily:"'Space Mono',monospace", letterSpacing:"0.12em", marginBottom:6 }}>TP1</div>
+              <input type="number" placeholder="0.00" value={form.tp1} onChange={e=>setForm(f=>({...f,tp1:e.target.value}))} style={inp}/>
+            </div>
+            <div>
+              <div style={{ fontSize:10, color:"#8878aa", fontFamily:"'Space Mono',monospace", letterSpacing:"0.12em", marginBottom:6 }}>R:R</div>
+              <input type="text" placeholder="e.g. 2.1:1" value={form.rr} onChange={e=>setForm(f=>({...f,rr:e.target.value}))} style={inp}/>
+            </div>
+            <div>
+              <div style={{ fontSize:10, color:"#8878aa", fontFamily:"'Space Mono',monospace", letterSpacing:"0.12em", marginBottom:6 }}>RESULT ($)</div>
+              <input type="number" placeholder="e.g. 94.50" value={form.result_usd} onChange={e=>setForm(f=>({...f,result_usd:e.target.value}))} style={inp}/>
+            </div>
+            <div>
+              <div style={{ fontSize:10, color:"#8878aa", fontFamily:"'Space Mono',monospace", letterSpacing:"0.12em", marginBottom:6 }}>OUTCOME</div>
+              <select value={form.outcome} onChange={e=>setForm(f=>({...f,outcome:e.target.value}))} style={{...sel, color: outcomeColor[form.outcome]}}>
+                {RESULTS.map(r=><option key={r} value={r}>{r}</option>)}
+              </select>
+            </div>
+          </div>
+          <div style={{ marginBottom:14 }}>
+            <div style={{ fontSize:10, color:"#8878aa", fontFamily:"'Space Mono',monospace", letterSpacing:"0.12em", marginBottom:6 }}>NOTE</div>
+            <textarea value={form.note} onChange={e=>setForm(f=>({...f,note:e.target.value}))}
+              placeholder="What happened? What did the setup look like? Anything to remember..."
+              rows={3}
+              style={{...inp, resize:"vertical", lineHeight:1.6}}/>
+          </div>
+          {msg && (
+            <div style={{ padding:"10px 14px", borderRadius:8, marginBottom:12, background: msg.type==="success" ? "rgba(127,255,107,0.06)" : "rgba(255,107,107,0.06)", border:`1px solid ${msg.type==="success" ? "rgba(127,255,107,0.25)" : "rgba(255,107,107,0.25)"}`, fontSize:13, color: msg.type==="success" ? "#7fff6b" : "#ff6b6b", fontFamily:"'Space Mono',monospace" }}>
+              {msg.text}
+            </div>
+          )}
+          <button onClick={saveTrade} disabled={saving}
+            style={{ width:"100%", padding:"12px", borderRadius:10, border:"none", background: saving ? "rgba(204,68,255,0.2)" : "linear-gradient(135deg,#cc44ff,#00ccff)", color: saving ? "#8878aa" : "#1e1a35", fontSize:13, fontWeight:900, letterSpacing:"0.12em", fontFamily:"inherit", cursor: saving ? "not-allowed" : "pointer" }}>
+            {saving ? "SAVING..." : "LOG TRADE →"}
+          </button>
+        </div>
+
+        {/* Recent trades */}
+        <div style={{ fontFamily:"'Space Mono',monospace", fontSize:11, color:"#8878aa", letterSpacing:"0.14em", marginBottom:14 }}>RECENT TRADES</div>
+        {loading ? (
+          <div style={{ textAlign:"center", padding:"32px 0", color:"#8878aa", fontFamily:"'Space Mono',monospace", fontSize:13 }}>Loading...</div>
+        ) : trades.length === 0 ? (
+          <div style={{ textAlign:"center", padding:"32px 0", color:"#8878aa", fontFamily:"'Space Mono',monospace", fontSize:13 }}>No trades logged yet.</div>
+        ) : (
+          <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+            {trades.map(t => (
+              <div key={t.id} style={{ padding:"12px 16px", background:"rgba(255,255,255,0.025)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:10, display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
+                <span style={{ fontFamily:"'Space Mono',monospace", fontSize:11, color:"#8878aa", minWidth:80 }}>{t.trade_date}</span>
+                <span style={{ fontFamily:"'Space Mono',monospace", fontSize:13, fontWeight:700, color:"#cc44ff", minWidth:64 }}>{t.instrument}</span>
+                <span style={{ fontSize:11, fontWeight:700, padding:"2px 7px", borderRadius:4, background:"rgba(204,68,255,0.1)", border:"1px solid rgba(204,68,255,0.2)", color:"#cc44ff" }}>{t.grade}</span>
+                <span style={{ fontSize:11, fontWeight:700, padding:"2px 7px", borderRadius:4, background: t.direction==="LONG"?"rgba(127,255,107,0.08)":"rgba(255,107,107,0.08)", border:`1px solid ${t.direction==="LONG"?"rgba(127,255,107,0.2)":"rgba(255,107,107,0.2)"}`, color: t.direction==="LONG"?"#7fff6b":"#ff6b6b" }}>{t.direction}</span>
+                <span style={{ fontSize:13, fontWeight:700, color: outcomeColor[t.outcome]||"#8878aa", marginLeft:"auto" }}>{t.outcome}{t.result_usd != null ? ` · $${parseFloat(t.result_usd).toFixed(2)}` : ""}</span>
+                <button onClick={()=>deleteTrade(t.id)} style={{ fontSize:12, color:"rgba(255,107,107,0.4)", background:"none", border:"none", cursor:"pointer", fontFamily:"inherit", padding:"0 4px" }}>✕</button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PUBLIC RESULTS PAGE (no login required)
+// ═══════════════════════════════════════════════════════════════════════════
+function PublicResultsPage({ onClose, isStandalone = false }) {
+  const isMobile = useWindowWidth() <= 768;
+  const [trades, setTrades] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    async function fetchPublic() {
+      setLoading(true);
+      try {
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/trades?select=*&is_public=eq.true&order=trade_date.desc,created_at.desc`,
+          { headers: { "apikey": SUPABASE_KEY, "Content-Type": "application/json" } }
+        );
+        if (!res.ok) throw new Error("Failed to load.");
+        const d = await res.json();
+        setTrades(Array.isArray(d) ? d : []);
+      } catch(e) { setError("Could not load results. Try again shortly."); }
+      setLoading(false);
+    }
+    fetchPublic();
+  }, []);
+
+  // ── Compute stats ──────────────────────────────────────────────────────
+  const executed = trades.filter(t => t.outcome !== "PENDING" && t.outcome !== "PASS");
+  const passes   = trades.filter(t => t.outcome === "PASS" || t.grade === "PASS");
+  const wins     = executed.filter(t => t.outcome === "WIN");
+  const losses   = executed.filter(t => t.outcome === "LOSS");
+  const be       = executed.filter(t => t.outcome === "BE");
+  const winRate  = executed.length > 0 ? Math.round((wins.length / executed.length) * 100) : 0;
+  const totalPnl = executed.reduce((s,t) => s + (parseFloat(t.result_usd)||0), 0);
+  const gradeW   = { "A+":4, "A":3, "B":2, "C":1 };
+  const gradedT  = executed.filter(t => gradeW[t.grade]);
+  const avgGrade = gradedT.length > 0 ? (gradedT.reduce((s,t)=>s+(gradeW[t.grade]||0),0)/gradedT.length) : 0;
+  const avgGradeStr = avgGrade >= 3.5 ? "A+" : avgGrade >= 2.5 ? "A" : avgGrade >= 1.5 ? "B" : avgGrade > 0 ? "C" : "—";
+
+  // Group by week
+  function weekKey(dateStr) {
+    const d = new Date(dateStr + "T12:00:00");
+    const day = d.getDay();
+    const mon = new Date(d); mon.setDate(d.getDate() - ((day+6)%7));
+    return mon.toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" });
+  }
+  const byWeek = {};
+  trades.forEach(t => {
+    const wk = weekKey(t.trade_date);
+    if (!byWeek[wk]) byWeek[wk] = [];
+    byWeek[wk].push(t);
+  });
+  const weeks = Object.entries(byWeek);
+
+  const outcomeColor = { WIN:"#7fff6b", LOSS:"#ff6b6b", BE:"#ffd166", PENDING:"#8878aa", PASS:"#8878aa" };
+  const BG = "#0f0c1e";
+
+  const statCard = (label, value, color="#f0ecff", sub=null) => (
+    <div style={{ padding:"16px 18px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:12, textAlign:"center", flex:1, minWidth:90 }}>
+      <div style={{ fontFamily:"'Space Mono',monospace", fontSize:9, color:"#8878aa", letterSpacing:"0.16em", marginBottom:8 }}>{label}</div>
+      <div style={{ fontFamily:"'Syne',sans-serif", fontSize:22, fontWeight:900, color, lineHeight:1 }}>{value}</div>
+      {sub && <div style={{ fontFamily:"'Space Mono',monospace", fontSize:10, color:"#8878aa", marginTop:5 }}>{sub}</div>}
+    </div>
+  );
+
+  return (
+    <div style={{ flex:1, overflowY:"auto", background: isStandalone ? BG : "transparent", minHeight: isStandalone ? "100vh" : "auto", animation:"fadein 0.3s ease both" }}>
+      <div style={{ maxWidth:720, margin:"0 auto", padding: isMobile ? "24px 16px 40px" : "40px 24px 60px" }}>
+
+        {/* Header */}
+        <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:32 }}>
+          <div>
+            <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:8 }}>
+              <OmniLogo size={28}/>
+              <div style={{ fontFamily:"'Space Mono',monospace", fontSize:11, color:"rgba(0,204,255,0.7)", letterSpacing:"0.2em" }}>OMNIUSD.PRO</div>
+            </div>
+            <h1 style={{ fontFamily:"'Syne',sans-serif", fontSize: isMobile ? 24 : 30, fontWeight:900, color:"#f0ecff", margin:"0 0 6px", lineHeight:1.1 }}>Live Track Record</h1>
+            <p style={{ fontFamily:"'Space Mono',monospace", fontSize:12, color:"#8878aa", margin:0, lineHeight:1.6 }}>
+              Every trade logged in real time. No cherry-picking. No edits after entry.
+            </p>
+          </div>
+          {onClose && (
+            <button onClick={onClose} style={{ fontFamily:"'Space Mono',monospace", fontSize:13, fontWeight:700, color:"#8878aa", background:"none", border:"1px solid rgba(255,255,255,0.08)", borderRadius:6, padding:"6px 12px", cursor:"pointer", flexShrink:0 }}>← Back</button>
+          )}
+        </div>
+
+        {loading ? (
+          <div style={{ textAlign:"center", padding:"60px 0", fontFamily:"'Space Mono',monospace", fontSize:13, color:"#8878aa" }}>Loading results...</div>
+        ) : error ? (
+          <div style={{ textAlign:"center", padding:"60px 0", fontFamily:"'Space Mono',monospace", fontSize:13, color:"#ff6b6b" }}>{error}</div>
+        ) : trades.length === 0 ? (
+          <div style={{ textAlign:"center", padding:"60px 0" }}>
+            <div style={{ fontSize:32, marginBottom:16 }}>📋</div>
+            <div style={{ fontFamily:"'Space Mono',monospace", fontSize:14, color:"#8878aa", lineHeight:1.8 }}>Track record starts in April 2026.<br/>Check back soon.</div>
+          </div>
+        ) : (<>
+
+          {/* Stat summary */}
+          <div style={{ display:"flex", gap:10, flexWrap:"wrap", marginBottom:32 }}>
+            {statCard("WIN RATE", executed.length > 0 ? `${winRate}%` : "—", winRate >= 60 ? "#7fff6b" : winRate >= 40 ? "#ffd166" : "#ff6b6b")}
+            {statCard("RECORD", `${wins.length}-${losses.length}${be.length>0?`-${be.length}`:""}`, "#f0ecff", "W-L-BE")}
+            {statCard("PASSES", passes.length, "#8878aa", "discipline wins")}
+            {statCard("AVG GRADE", avgGradeStr, "#cc44ff")}
+            {statCard("NET P&L", (totalPnl >= 0 ? "+" : "") + "$" + Math.abs(totalPnl).toFixed(0), totalPnl >= 0 ? "#7fff6b" : "#ff6b6b", "USD")}
+          </div>
+
+          {/* Disclaimer */}
+          <div style={{ padding:"10px 16px", background:"rgba(255,209,102,0.04)", border:"1px solid rgba(255,209,102,0.12)", borderLeft:"3px solid rgba(255,209,102,0.4)", borderRadius:0, marginBottom:28, fontFamily:"'Space Mono',monospace", fontSize:11, color:"rgba(255,209,102,0.65)", lineHeight:1.7 }}>
+            Past results do not guarantee future performance. Trade at your own risk. All results shown are from a live account using the BRC methodology.
+          </div>
+
+          {/* Weekly trade log */}
+          {weeks.map(([week, wTrades]) => {
+            const wExec = wTrades.filter(t=>t.outcome!=="PENDING"&&t.outcome!=="PASS");
+            const wWins = wExec.filter(t=>t.outcome==="WIN").length;
+            const wPnl  = wExec.reduce((s,t)=>s+(parseFloat(t.result_usd)||0),0);
+            return (
+              <div key={week} style={{ marginBottom:24 }}>
+                {/* Week header */}
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:10 }}>
+                  <div style={{ fontFamily:"'Space Mono',monospace", fontSize:10, fontWeight:700, color:"#8878aa", letterSpacing:"0.14em" }}>
+                    WEEK OF {week.toUpperCase()}
+                  </div>
+                  <div style={{ display:"flex", gap:10, fontFamily:"'Space Mono',monospace", fontSize:10 }}>
+                    <span style={{ color:"#8878aa" }}>{wExec.length} trade{wExec.length!==1?"s":""}</span>
+                    {wExec.length>0 && <span style={{ color: wWins/wExec.length>=0.5?"#7fff6b":"#ff6b6b" }}>{Math.round(wWins/wExec.length*100)}% win</span>}
+                    {wPnl !== 0 && <span style={{ color: wPnl>=0?"#7fff6b":"#ff6b6b" }}>{wPnl>=0?"+":""}{wPnl.toFixed(2)}</span>}
+                  </div>
+                </div>
+
+                {/* Trade rows */}
+                <div style={{ border:"1px solid rgba(255,255,255,0.07)", borderRadius:10, overflow:"hidden" }}>
+                  {wTrades.map((t,i) => (
+                    <div key={t.id} style={{ display:"flex", alignItems:"center", gap:10, padding:"12px 16px", borderBottom: i<wTrades.length-1?"1px solid rgba(255,255,255,0.05)":"none", flexWrap: isMobile ? "wrap" : "nowrap", background: i%2===0?"rgba(255,255,255,0.01)":"transparent" }}>
+                      <span style={{ fontFamily:"'Space Mono',monospace", fontSize:10, color:"#8878aa", minWidth:72, flexShrink:0 }}>{t.trade_date}</span>
+                      <span style={{ fontFamily:"'Space Mono',monospace", fontSize:12, fontWeight:700, color:"#cc44ff", minWidth:64, flexShrink:0 }}>{t.instrument}</span>
+                      <span style={{ fontSize:10, fontWeight:700, padding:"2px 6px", borderRadius:4, background:"rgba(204,68,255,0.08)", border:"1px solid rgba(204,68,255,0.18)", color:"#cc44ff", flexShrink:0 }}>{t.grade}</span>
+                      <span style={{ fontSize:10, fontWeight:700, padding:"2px 6px", borderRadius:4, flexShrink:0,
+                        background: t.direction==="LONG"?"rgba(127,255,107,0.06)":"rgba(255,107,107,0.06)",
+                        border:`1px solid ${t.direction==="LONG"?"rgba(127,255,107,0.18)":"rgba(255,107,107,0.18)"}`,
+                        color: t.direction==="LONG"?"#7fff6b":"#ff6b6b" }}>{t.direction}</span>
+                      {t.rr && <span style={{ fontFamily:"'Space Mono',monospace", fontSize:10, color:"#8878aa", flexShrink:0 }}>{t.rr}</span>}
+                      {t.note && <span style={{ fontFamily:"'Space Mono',monospace", fontSize:10, color:"rgba(255,255,255,0.38)", flex:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace: isMobile?"normal":"nowrap" }}>{t.note}</span>}
+                      <span style={{ fontFamily:"'Space Mono',monospace", fontSize:12, fontWeight:900, color: outcomeColor[t.outcome]||"#8878aa", marginLeft:"auto", flexShrink:0 }}>
+                        {t.outcome}{t.result_usd != null ? ` · $${parseFloat(t.result_usd).toFixed(2)}` : ""}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Footer note */}
+          <div style={{ marginTop:32, textAlign:"center", fontFamily:"'Space Mono',monospace", fontSize:11, color:"rgba(255,255,255,0.2)", lineHeight:1.8 }}>
+            Trades logged manually after each NY session · <a href="https://omniusd.pro" style={{ color:"rgba(0,204,255,0.4)", textDecoration:"none" }}>omniusd.pro</a>
+          </div>
+        </>)}
+      </div>
+    </div>
+  );
+}
+
 function HistoryPage({ uid, onClose }) {
   const SESSION_PLANS_KEY = `omniusd_session_plans_${uid}`;
   const EXEC_JOURNAL_KEY  = `omniusd_exec_journal_${uid}`;
@@ -4943,9 +5301,13 @@ Use ONLY these times. All earlier time references in this conversation are stale
                   {[
                     { label: "Dashboard", icon: "◈", action: () => { setAppPage("dashboard"); setPhase("upload"); setImages(Array(5).fill(null)); setDrawerOpen(false); }, active: appPage === "dashboard" },
                     { label: "History", icon: "📋", action: () => { setAppPage("history"); setDrawerOpen(false); }, active: appPage === "history", color: "#7fff6b" },
+                    { label: "Results", icon: "📈", action: () => { setAppPage("results"); setDrawerOpen(false); }, active: appPage === "results", color: "#00ccff" },
                     { label: "Settings", icon: "⚙", action: () => { setAppPage("settings"); setDrawerOpen(false); }, active: appPage === "settings", color: "#ff6bff" },
                     { label: "Chart Setup", icon: "📐", action: () => { setAppPage("chartsetup"); setDrawerOpen(false); }, active: appPage === "chartsetup", color: "#ffd166", badge: "NEW" },
                     { label: "Help & FAQ", icon: "?", action: () => { setAppPage("faq"); setDrawerOpen(false); }, active: appPage === "faq", color: "#00e5ff" },
+                    ...(profile?.email === "bailey.charles024@gmail.com" ? [
+                      { label: "Log Trade", icon: "✏", action: () => { setAppPage("tradelog"); setDrawerOpen(false); }, active: appPage === "tradelog", color: "#cc44ff" },
+                    ] : []),
                     ...(phase === "live" ? [
                       { label: "View Plan", icon: "📄", action: () => { setPhase("plan"); setDrawerOpen(false); }, color: "#ffd166" },
                       { label: "New Analysis", icon: "↩", action: () => { setPhase("upload"); setImages(Array(5).fill(null)); setDrawerOpen(false); }, color: "rgba(255,255,255,0.75)" },
@@ -5001,6 +5363,10 @@ Use ONLY these times. All earlier time references in this conversation are stale
             )}
             <button onClick={() => setAppPage(appPage === "chartsetup" ? "dashboard" : "chartsetup")} style={{ fontSize: 13, fontWeight: 700, color: appPage === "chartsetup" ? "#ffd166" : "#ffd166", background: appPage === "chartsetup" ? "rgba(255,209,102,0.12)" : "rgba(255,209,102,0.06)", border: `1px solid rgba(255,209,102,${appPage === "chartsetup" ? "0.6" : "0.4"})`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit", boxShadow: appPage === "chartsetup" ? "none" : "0 0 8px rgba(255,209,102,0.2)", animation: appPage === "chartsetup" ? "none" : "goldPulse 2s ease-in-out infinite" }}>Chart Setup</button>
             <button onClick={() => setAppPage(appPage === "history" ? "dashboard" : "history")} style={{ fontSize: 13, fontWeight: 700, color: appPage === "history" ? "#7fff6b" : "#8878aa", background: appPage === "history" ? "rgba(127,255,107,0.08)" : "none", border: `1px solid ${appPage === "history" ? "rgba(127,255,107,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>History</button>
+            <button onClick={() => setAppPage(appPage === "results" ? "dashboard" : "results")} style={{ fontSize: 13, fontWeight: 700, color: appPage === "results" ? "#00ccff" : "#8878aa", background: appPage === "results" ? "rgba(0,204,255,0.08)" : "none", border: `1px solid ${appPage === "results" ? "rgba(0,204,255,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>Results</button>
+            {profile?.email === "bailey.charles024@gmail.com" && (
+              <button onClick={() => setAppPage(appPage === "tradelog" ? "dashboard" : "tradelog")} style={{ fontSize: 13, fontWeight: 700, color: appPage === "tradelog" ? "#cc44ff" : "#8878aa", background: appPage === "tradelog" ? "rgba(204,68,255,0.1)" : "none", border: `1px solid ${appPage === "tradelog" ? "rgba(204,68,255,0.35)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>Log Trade</button>
+            )}
             <button onClick={() => setAppPage(appPage === "settings" ? "dashboard" : "settings")} style={{ fontSize: 13, fontWeight: 700, color: appPage === "settings" ? "#ff6bff" : "#8878aa", background: appPage === "settings" ? "rgba(255,107,255,0.1)" : "none", border: `1px solid ${appPage === "settings" ? "rgba(255,107,255,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>Settings</button>
             <button onClick={() => setAppPage(appPage === "faq" ? "dashboard" : "faq")} style={{ fontSize: 13, fontWeight: 700, color: appPage === "faq" ? "#00e5ff" : "#8878aa", background: appPage === "faq" ? "rgba(0,229,255,0.08)" : "none", border: `1px solid ${appPage === "faq" ? "rgba(0,229,255,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>Help & FAQ</button>
             {phase === "live" && (<>
@@ -5016,6 +5382,16 @@ Use ONLY these times. All earlier time references in this conversation are stale
       {/* ══ SETTINGS PAGE ══════════════════════════════════════════════════════ */}
       {appPage === "settings" && (
         <SettingsPage profile={profile} onSignOut={onSignOut} onClose={() => setAppPage("dashboard")} />
+      )}
+
+      {/* ══ PUBLIC RESULTS PAGE ════════════════════════════════════════════════ */}
+      {appPage === "results" && (
+        <PublicResultsPage onClose={() => setAppPage("dashboard")} />
+      )}
+
+      {/* ══ TRADE LOGGER (owner only) ══════════════════════════════════════════ */}
+      {appPage === "tradelog" && (
+        <TradeLoggerPage profile={profile} onClose={() => setAppPage("dashboard")} />
       )}
 
       {/* ══ HISTORY PAGE ═══════════════════════════════════════════════════════ */}
