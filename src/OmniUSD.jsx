@@ -3955,6 +3955,7 @@ function PublicResultsPage({ onClose, isStandalone = false }) {
   const [trades, setTrades] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [expandedTrade, setExpandedTrade] = useState(null);
   const isOwner = isDevMode();
 
   const tok = () => { try { return JSON.parse(localStorage.getItem("omniusd_session")||"{}").access_token || SUPABASE_KEY; } catch { return SUPABASE_KEY; } };
@@ -4094,25 +4095,49 @@ function PublicResultsPage({ onClose, isStandalone = false }) {
 
                 {/* Trade rows */}
                 <div style={{ border:"1px solid rgba(255,255,255,0.07)", borderRadius:10, overflow:"hidden" }}>
-                  {wTrades.map((t,i) => (
-                    <div key={t.id} style={{ display:"flex", alignItems:"center", gap:10, padding:"12px 16px", borderBottom: i<wTrades.length-1?"1px solid rgba(255,255,255,0.05)":"none", flexWrap: isMobile ? "wrap" : "nowrap", background: i%2===0?"rgba(255,255,255,0.01)":"transparent" }}>
-                      <span style={{ fontFamily:"'Space Mono',monospace", fontSize:10, color:"#8878aa", minWidth:72, flexShrink:0 }}>{t.trade_date}</span>
-                      <span style={{ fontFamily:"'Space Mono',monospace", fontSize:12, fontWeight:700, color:"#cc44ff", minWidth:64, flexShrink:0 }}>{t.instrument}</span>
-                      <span style={{ fontSize:10, fontWeight:700, padding:"2px 6px", borderRadius:4, background:"rgba(204,68,255,0.08)", border:"1px solid rgba(204,68,255,0.18)", color:"#cc44ff", flexShrink:0 }}>{t.grade}</span>
-                      <span style={{ fontSize:10, fontWeight:700, padding:"2px 6px", borderRadius:4, flexShrink:0,
-                        background: t.direction==="LONG"?"rgba(127,255,107,0.06)":"rgba(255,107,107,0.06)",
-                        border:`1px solid ${t.direction==="LONG"?"rgba(127,255,107,0.18)":"rgba(255,107,107,0.18)"}`,
-                        color: t.direction==="LONG"?"#7fff6b":"#ff6b6b" }}>{t.direction}</span>
-                      {t.rr && <span style={{ fontFamily:"'Space Mono',monospace", fontSize:10, color:"#8878aa", flexShrink:0 }}>{t.rr}</span>}
-                      {t.note && <span style={{ fontFamily:"'Space Mono',monospace", fontSize:10, color:"rgba(255,255,255,0.38)", flex:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace: isMobile?"normal":"nowrap" }}>{t.note}</span>}
-                      <span style={{ fontFamily:"'Space Mono',monospace", fontSize:12, fontWeight:900, color: outcomeColor[t.outcome]||"#8878aa", marginLeft:"auto", flexShrink:0 }}>
-                        {t.outcome}{t.result_usd != null ? ` · $${parseFloat(t.result_usd).toFixed(2)}` : ""}
-                      </span>
-                      {isOwner && (
-                        <button onClick={()=>deleteTrade(t.id)} style={{ fontSize:12, color:"rgba(255,107,107,0.4)", background:"none", border:"none", cursor:"pointer", fontFamily:"inherit", padding:"0 4px", flexShrink:0 }}>✕</button>
-                      )}
-                    </div>
-                  ))}
+                  {wTrades.map((t,i) => {
+                    const isOpen = expandedTrade === t.id;
+                    const hasNote = !!t.note;
+                    return (
+                      <div key={t.id} style={{ borderBottom: i<wTrades.length-1?"1px solid rgba(255,255,255,0.05)":"none", background: i%2===0?"rgba(255,255,255,0.01)":"transparent" }}>
+                        {/* Main row — always visible */}
+                        <div
+                          onClick={() => hasNote && setExpandedTrade(isOpen ? null : t.id)}
+                          style={{ display:"flex", alignItems:"center", gap:10, padding:"12px 16px", flexWrap:"nowrap", cursor: hasNote ? "pointer" : "default" }}>
+                          <span style={{ fontFamily:"'Space Mono',monospace", fontSize:10, color:"#8878aa", minWidth:72, flexShrink:0 }}>{t.trade_date}</span>
+                          <span style={{ fontFamily:"'Space Mono',monospace", fontSize:12, fontWeight:700, color:"#cc44ff", minWidth:64, flexShrink:0 }}>{t.instrument}</span>
+                          <span style={{ fontSize:10, fontWeight:700, padding:"2px 6px", borderRadius:4, background:"rgba(204,68,255,0.08)", border:"1px solid rgba(204,68,255,0.18)", color:"#cc44ff", flexShrink:0 }}>{t.grade}</span>
+                          <span style={{ fontSize:10, fontWeight:700, padding:"2px 6px", borderRadius:4, flexShrink:0,
+                            background: t.direction==="LONG"?"rgba(127,255,107,0.06)":"rgba(255,107,107,0.06)",
+                            border:`1px solid ${t.direction==="LONG"?"rgba(127,255,107,0.18)":"rgba(255,107,107,0.18)"}`,
+                            color: t.direction==="LONG"?"#7fff6b":"#ff6b6b" }}>{t.direction}</span>
+                          {t.rr && <span style={{ fontFamily:"'Space Mono',monospace", fontSize:10, color:"#8878aa", flexShrink:0 }}>{t.rr}</span>}
+                          {/* Note preview — single line truncated */}
+                          {hasNote && !isOpen && (
+                            <span style={{ fontFamily:"'Space Mono',monospace", fontSize:10, color:"rgba(255,255,255,0.3)", flex:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{t.note}</span>
+                          )}
+                          {!hasNote && <span style={{ flex:1 }}/>}
+                          <span style={{ fontFamily:"'Space Mono',monospace", fontSize:12, fontWeight:900, color: outcomeColor[t.outcome]||"#8878aa", flexShrink:0 }}>
+                            {t.outcome}{t.result_usd != null ? ` · $${parseFloat(t.result_usd).toFixed(2)}` : ""}
+                          </span>
+                          {hasNote && (
+                            <span style={{ fontSize:12, color:"rgba(255,255,255,0.25)", flexShrink:0, transition:"transform 0.2s", display:"inline-block", transform: isOpen?"rotate(180deg)":"rotate(0deg)" }}>▾</span>
+                          )}
+                          {isOwner && (
+                            <button onClick={e=>{e.stopPropagation();deleteTrade(t.id);}} style={{ fontSize:12, color:"rgba(255,107,107,0.4)", background:"none", border:"none", cursor:"pointer", fontFamily:"inherit", padding:"0 4px", flexShrink:0 }}>✕</button>
+                          )}
+                        </div>
+                        {/* Expanded note */}
+                        {isOpen && hasNote && (
+                          <div style={{ padding:"0 16px 14px 16px", borderTop:"1px solid rgba(255,255,255,0.04)" }}>
+                            <div style={{ fontFamily:"'Space Mono',monospace", fontSize:12, color:"rgba(255,255,255,0.65)", lineHeight:1.8, paddingTop:10 }}>
+                              {t.note}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             );
