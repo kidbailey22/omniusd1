@@ -268,9 +268,18 @@ The trigger level is always the NEAREST price that, if broken by a 30M close, co
 CHART VALIDATION — CRITICAL FIRST:
 Images submitted in order: [1]=Daily, [2]=4H, [3]=1H, [4]=30M, [5]=15M. Selected instrument: ${instrument}.
 
-STEP 1 — INSTRUMENT CHECK: Before checking timeframes, inspect all 5 charts for the instrument/ticker symbol visible on the chart (pair name, symbol, title bar, watermark, or price scale). 
-- If the charts show a DIFFERENT instrument than ${instrument} (e.g. user selected XAUUSD but uploaded BTCUSD charts), set instrument_valid=false and instrument_detected= what you actually see.
-- If ALL charts match ${instrument}, set instrument_valid=true.
+STEP 1 — INSTRUMENT CHECK: Before checking timeframes, inspect all 5 charts for the instrument/ticker symbol visible on the chart (pair name, symbol, title bar, watermark, or price scale).
+
+ACCEPTED ALIASES — these ticker labels are valid for each instrument:
+- XAUUSD: XAUUSD, GOLD, GC, MGC, XAU, GOLD/USD
+- BTCUSD: BTCUSD, BTC, BTCUSDT, BITCOIN, BTC/USD, BTCPERP
+- NAS100: NAS100, NASDAQ, NQ, NQ1!, NQM2026, NQH2026, NQU2026, NQZ2026, US100, NDX, USTEC, USTECH
+- US30: US30, DOW, YM, YM1!, YMM2026, YMH2026, YMU2026, YMZ2026, DJIA, DJ30, WALL ST
+- USOIL: USOIL, WTI, CL, CL1!, CLM2026, CLK2026, CRUDE, OIL
+- US500: US500, SPX, ES, ES1!, ESM2026, ESH2026, ESU2026, ESZ2026, SP500, SPX500, S&P500
+
+- If the ticker on the charts matches ANY of the accepted aliases for ${instrument}, set instrument_valid=true.
+- If the charts show a ticker that belongs to a DIFFERENT instrument entirely, set instrument_valid=false and instrument_detected= what you actually see.
 - If you cannot clearly identify the instrument on any chart, set instrument_valid=false with instrument_detected="unreadable".
 INSTRUMENT MISMATCH = hard block. Do NOT proceed with analysis if instrument_valid=false.
 
