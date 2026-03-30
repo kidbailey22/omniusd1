@@ -2104,12 +2104,6 @@ function ChessBoardAnalyzing({ instrument, onBack }) {
       <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:'rgba(255,255,255,0.2)',marginTop:10,letterSpacing:'0.06em'}}>
         Do not close this tab — analysis in progress
       </div>
-      {isDevMode() && onBack && (
-        <button onClick={onBack}
-          style={{marginTop:14,fontFamily:"'Space Mono',monospace",fontSize:11,fontWeight:700,letterSpacing:"0.08em",padding:"6px 16px",borderRadius:7,border:"1px dashed rgba(255,209,102,0.35)",background:"rgba(255,209,102,0.05)",color:"rgba(255,209,102,0.6)",cursor:"pointer"}}>
-          ← DEV — BACK TO UPLOAD
-        </button>
-      )}
     </div>
   );
 }
@@ -5979,14 +5973,6 @@ Use ONLY these times. All earlier time references in this conversation are stale
             <div style={{ textAlign: "center", marginTop: 12, fontSize: 11, color: "rgba(255,255,255,0.35)" }}>
               Screenshots must clearly show the instrument ticker and timeframe.
             </div>
-
-            {/* DEV MODE shortcut */}
-            {isDevMode() && (
-              <button onClick={() => setPhase("analyzing")}
-                style={{ width:"100%", marginTop:12, padding:"10px", borderRadius:8, border:"1px dashed rgba(255,209,102,0.4)", background:"rgba(255,209,102,0.05)", color:"#ffd166", fontSize:11, fontWeight:700, letterSpacing:"0.1em", fontFamily:"inherit", cursor:"pointer" }}>
-                ⚡ DEV — SKIP TO ANIMATION
-              </button>
-            )}
 
           </div>
         </div>
