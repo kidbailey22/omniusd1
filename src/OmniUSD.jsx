@@ -3790,6 +3790,7 @@ function TradeLoggerPage({ profile, onClose }) {
   const [msg, setMsg] = useState(null);
   const [trades, setTrades] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [editingId, setEditingId] = useState(null);
 
   const tok = () => { try { return JSON.parse(localStorage.getItem("omniusd_session")||"{}").access_token || SUPABASE_KEY; } catch { return SUPABASE_KEY; } };
 
@@ -3811,27 +3812,30 @@ function TradeLoggerPage({ profile, onClose }) {
     setSaving(true); setMsg(null);
     try {
       const payload = {
-        instrument: form.instrument,
-        grade: form.grade,
-        direction: form.direction,
-        entry: parseFloat(form.entry) || null,
-        stop: parseFloat(form.stop) || null,
-        tp1: parseFloat(form.tp1) || null,
-        rr: form.rr || null,
-        result_usd: parseFloat(form.result_usd) || null,
-        outcome: form.outcome,
-        note: form.note || null,
-        trade_date: form.trade_date,
-        is_public: true,
+        instrument: form.instrument, grade: form.grade, direction: form.direction,
+        entry: parseFloat(form.entry) || null, stop: parseFloat(form.stop) || null,
+        tp1: parseFloat(form.tp1) || null, rr: form.rr || null,
+        result_usd: parseFloat(form.result_usd) || null, outcome: form.outcome,
+        note: form.note || null, trade_date: form.trade_date, is_public: true,
       };
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/trades`, {
-        method: "POST",
-        headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${tok()}`, "Content-Type": "application/json", "Prefer": "return=minimal" },
-        body: JSON.stringify(payload),
-      });
-      if (res.ok || res.status === 201) {
-        setMsg({ type:"success", text:"Trade logged." });
+      let res;
+      if (editingId) {
+        res = await fetch(`${SUPABASE_URL}/rest/v1/trades?id=eq.${editingId}`, {
+          method: "PATCH",
+          headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${tok()}`, "Content-Type": "application/json", "Prefer": "return=minimal" },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        res = await fetch(`${SUPABASE_URL}/rest/v1/trades`, {
+          method: "POST",
+          headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${tok()}`, "Content-Type": "application/json", "Prefer": "return=minimal" },
+          body: JSON.stringify(payload),
+        });
+      }
+      if (res.ok || res.status === 201 || res.status === 204) {
+        setMsg({ type:"success", text: editingId ? "Trade updated." : "Trade logged." });
         setForm({ ...empty, trade_date: new Date().toISOString().slice(0,10) });
+        setEditingId(null);
         loadTrades();
       } else {
         const e = await res.json();
@@ -3839,6 +3843,31 @@ function TradeLoggerPage({ profile, onClose }) {
       }
     } catch(e) { setMsg({ type:"error", text:"Network error." }); }
     setSaving(false);
+  }
+
+  function startEdit(t) {
+    setForm({
+      instrument: t.instrument || "XAUUSD",
+      grade: t.grade || "A+",
+      direction: t.direction || "LONG",
+      entry: t.entry != null ? String(t.entry) : "",
+      stop: t.stop != null ? String(t.stop) : "",
+      tp1: t.tp1 != null ? String(t.tp1) : "",
+      rr: t.rr || "",
+      result_usd: t.result_usd != null ? String(t.result_usd) : "",
+      outcome: t.outcome || "WIN",
+      note: t.note || "",
+      trade_date: t.trade_date || new Date().toISOString().slice(0,10),
+    });
+    setEditingId(t.id);
+    setMsg(null);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function cancelEdit() {
+    setForm({ ...empty, trade_date: new Date().toISOString().slice(0,10) });
+    setEditingId(null);
+    setMsg(null);
   }
 
   async function deleteTrade(id) {
@@ -3868,9 +3897,14 @@ function TradeLoggerPage({ profile, onClose }) {
         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:28 }}>
           <div>
             <div style={{ fontFamily:"'Space Mono',monospace", fontSize:11, color:"rgba(204,68,255,0.7)", letterSpacing:"0.18em", marginBottom:6 }}>TRADE LOGGER</div>
-            <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:22, fontWeight:800, color:"#f0ecff", margin:0 }}>Log a Trade</h2>
+            <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:22, fontWeight:800, color:"#f0ecff", margin:0 }}>{editingId ? "Edit Trade" : "Log a Trade"}</h2>
           </div>
-          <button onClick={onClose} style={{ fontFamily:"'Space Mono',monospace", fontSize:13, fontWeight:700, color:"#8878aa", background:"none", border:"1px solid rgba(255,255,255,0.08)", borderRadius:6, padding:"6px 12px", cursor:"pointer" }}>← Back</button>
+          <div style={{ display:"flex", gap:8 }}>
+            {editingId && (
+              <button onClick={cancelEdit} style={{ fontFamily:"'Space Mono',monospace", fontSize:13, fontWeight:700, color:"#8878aa", background:"none", border:"1px solid rgba(255,255,255,0.08)", borderRadius:6, padding:"6px 12px", cursor:"pointer" }}>✕ Cancel</button>
+            )}
+            <button onClick={onClose} style={{ fontFamily:"'Space Mono',monospace", fontSize:13, fontWeight:700, color:"#8878aa", background:"none", border:"1px solid rgba(255,255,255,0.08)", borderRadius:6, padding:"6px 12px", cursor:"pointer" }}>← Back</button>
+          </div>
         </div>
 
         {/* Form */}
@@ -3938,9 +3972,14 @@ function TradeLoggerPage({ profile, onClose }) {
               {msg.text}
             </div>
           )}
+          {editingId && (
+            <div style={{ padding:"8px 12px", borderRadius:7, marginBottom:10, background:"rgba(204,68,255,0.06)", border:"1px solid rgba(204,68,255,0.2)", fontFamily:"'Space Mono',monospace", fontSize:11, color:"#cc44ff" }}>
+              ✏ Editing trade — make changes then click UPDATE TRADE
+            </div>
+          )}
           <button onClick={saveTrade} disabled={saving}
-            style={{ width:"100%", padding:"12px", borderRadius:10, border:"none", background: saving ? "rgba(204,68,255,0.2)" : "linear-gradient(135deg,#cc44ff,#00ccff)", color: saving ? "#8878aa" : "#1e1a35", fontSize:13, fontWeight:900, letterSpacing:"0.12em", fontFamily:"inherit", cursor: saving ? "not-allowed" : "pointer" }}>
-            {saving ? "SAVING..." : "LOG TRADE →"}
+            style={{ width:"100%", padding:"12px", borderRadius:10, border:"none", background: saving ? "rgba(204,68,255,0.2)" : editingId ? "linear-gradient(135deg,#ffd166,#ff9a3c)" : "linear-gradient(135deg,#cc44ff,#00ccff)", color: saving ? "#8878aa" : "#1e1a35", fontSize:13, fontWeight:900, letterSpacing:"0.12em", fontFamily:"inherit", cursor: saving ? "not-allowed" : "pointer" }}>
+            {saving ? "SAVING..." : editingId ? "UPDATE TRADE →" : "LOG TRADE →"}
           </button>
         </div>
 
@@ -3959,6 +3998,7 @@ function TradeLoggerPage({ profile, onClose }) {
                 <span style={{ fontSize:11, fontWeight:700, padding:"2px 7px", borderRadius:4, background:"rgba(204,68,255,0.1)", border:"1px solid rgba(204,68,255,0.2)", color:"#cc44ff" }}>{t.grade}</span>
                 <span style={{ fontSize:11, fontWeight:700, padding:"2px 7px", borderRadius:4, background: t.direction==="LONG"?"rgba(127,255,107,0.08)":"rgba(255,107,107,0.08)", border:`1px solid ${t.direction==="LONG"?"rgba(127,255,107,0.2)":"rgba(255,107,107,0.2)"}`, color: t.direction==="LONG"?"#7fff6b":"#ff6b6b" }}>{t.direction}</span>
                 <span style={{ fontSize:13, fontWeight:700, color: outcomeColor[t.outcome]||"#8878aa", marginLeft:"auto" }}>{t.outcome}{t.result_usd != null ? ` · $${parseFloat(t.result_usd).toFixed(2)}` : ""}</span>
+                <button onClick={()=>startEdit(t)} style={{ fontSize:12, color:"rgba(0,204,255,0.5)", background:"none", border:"none", cursor:"pointer", fontFamily:"inherit", padding:"0 4px" }}>✏</button>
                 <button onClick={()=>deleteTrade(t.id)} style={{ fontSize:12, color:"rgba(255,107,107,0.4)", background:"none", border:"none", cursor:"pointer", fontFamily:"inherit", padding:"0 4px" }}>✕</button>
               </div>
             ))}
