@@ -1934,7 +1934,7 @@ function LoadingScreen({T=DARK}){
 // ═══════════════════════════════════════════════════════════════════════════
 // CHESS BOARD ANALYZING ANIMATION
 // ═══════════════════════════════════════════════════════════════════════════
-function ChessBoardAnalyzing({ instrument }) {
+function ChessBoardAnalyzing({ instrument, onBack }) {
   const canvasRef = useRef(null);
   const rafRef    = useRef(null);
   const t0Ref     = useRef(null);
@@ -2104,6 +2104,12 @@ function ChessBoardAnalyzing({ instrument }) {
       <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:'rgba(255,255,255,0.2)',marginTop:10,letterSpacing:'0.06em'}}>
         Do not close this tab — analysis in progress
       </div>
+      {isDevMode() && onBack && (
+        <button onClick={onBack}
+          style={{marginTop:14,fontFamily:"'Space Mono',monospace",fontSize:11,fontWeight:700,letterSpacing:"0.08em",padding:"6px 16px",borderRadius:7,border:"1px dashed rgba(255,209,102,0.35)",background:"rgba(255,209,102,0.05)",color:"rgba(255,209,102,0.6)",cursor:"pointer"}}>
+          ← DEV — BACK TO UPLOAD
+        </button>
+      )}
     </div>
   );
 }
@@ -5988,7 +5994,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
 
       {/* ══ PHASE: ANALYZING ═══════════════════════════════════════════════════ */}
       {appPage === "dashboard" && phase === "analyzing" && (
-        <ChessBoardAnalyzing instrument={instrument} />
+        <ChessBoardAnalyzing instrument={instrument} onBack={() => { setPhase("upload"); }} />
       )}
 
       {/* ══ PHASE: PLAN SUMMARY ════════════════════════════════════════════════ */}
