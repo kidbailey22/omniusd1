@@ -4841,6 +4841,31 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
   const _uid = _session.user?.id || _session.user_id || "anon";
   const SESSIONS_KEY = `omniusd_sessions_${_uid}`; // Map of instrument → session data
 
+  // ── Cloud sync for active sessions ───────────────────────────────────────
+  async function pushSessionsToCloud(data) {
+    if (!_uid || _uid === "anon") return;
+    try {
+      const tok = JSON.parse(localStorage.getItem("omniusd_session")||"{}").access_token || SUPABASE_KEY;
+      await fetch(`${SUPABASE_URL}/rest/v1/user_history`, {
+        method: "POST",
+        headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${tok}`, "Content-Type": "application/json", "Prefer": "resolution=merge-duplicates" },
+        body: JSON.stringify({ user_id: _uid, type: "active_sessions", data: JSON.stringify(data), updated_at: new Date().toISOString() }),
+      });
+    } catch {}
+  }
+
+  async function pullSessionsFromCloud() {
+    if (!_uid || _uid === "anon") return null;
+    try {
+      const tok = JSON.parse(localStorage.getItem("omniusd_session")||"{}").access_token || SUPABASE_KEY;
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/user_history?user_id=eq.${_uid}&type=eq.active_sessions&select=data`,
+        { headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${tok}` } });
+      if (!res.ok) return null;
+      const rows = await res.json();
+      return rows?.length ? JSON.parse(rows[0].data) : null;
+    } catch { return null; }
+  }
+
   // Helpers for the sessions map
   function loadSessions() {
     try { return JSON.parse(localStorage.getItem(SESSIONS_KEY) || "{}"); } catch { return {}; }
@@ -4850,6 +4875,7 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
       const all = loadSessions();
       all[instr] = { ...data, savedAt: new Date().toISOString() };
       localStorage.setItem(SESSIONS_KEY, JSON.stringify(all));
+      pushSessionsToCloud(all); // async fire-and-forget
     } catch(e) {}
   }
   function clearSession(instr) {
@@ -4857,6 +4883,7 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
       const all = loadSessions();
       delete all[instr];
       localStorage.setItem(SESSIONS_KEY, JSON.stringify(all));
+      pushSessionsToCloud(all);
     } catch(e) {}
   }
   function getSessionForInstrument(instr) {
@@ -5100,23 +5127,34 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
 
   // ── Restore saved session on load ─────────────────────────────────────────
   React.useEffect(() => {
-    try {
-      const all = loadSessions();
-      // Find the most recent non-upload session
-      const recent = Object.values(all)
-        .filter(s => s.plan && s.phase && s.phase !== "upload")
-        .sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt))[0];
-      if (recent) {
-        setPlan(recent.plan);
-        setPhase(recent.phase);
-        setInstrument(recent.instrument || recent.plan.instrument);
-        setTier1(recent.tier1 || false);
-        setTier2(recent.tier2 || false);
-        setSessionState(recent.sessionState || "WATCHING");
-        setMessages(recent.messages || []);
-        setSessionHistory(recent.sessionHistory || []);
-      }
-    } catch(e) {}
+    async function restore() {
+      try {
+        let all = loadSessions();
+        // If localStorage is empty, try cloud
+        if (!Object.keys(all).length) {
+          const cloud = await pullSessionsFromCloud();
+          if (cloud && Object.keys(cloud).length) {
+            localStorage.setItem(SESSIONS_KEY, JSON.stringify(cloud));
+            all = cloud;
+          }
+        }
+        // Find the most recent non-upload session
+        const recent = Object.values(all)
+          .filter(s => s.plan && s.phase && s.phase !== "upload")
+          .sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt))[0];
+        if (recent) {
+          setPlan(recent.plan);
+          setPhase(recent.phase);
+          setInstrument(recent.instrument || recent.plan.instrument);
+          setTier1(recent.tier1 || false);
+          setTier2(recent.tier2 || false);
+          setSessionState(recent.sessionState || "WATCHING");
+          setMessages(recent.messages || []);
+          setSessionHistory(recent.sessionHistory || []);
+        }
+      } catch(e) {}
+    }
+    restore();
   }, []);
 
   // ── Save session state whenever key values change ──────────────────────────
