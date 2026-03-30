@@ -5194,18 +5194,29 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
 
       // If cooldown active — check if user has already used their free re-upload
       if (!limitCheck.allowed && limitCheck.type === "cooldown") {
+        const prevSession = getSessionForInstrument(instrument);
         if (instrumentCount >= 1) {
-          // They've already done one SUCCESSFUL re-upload — hard block now
-          const prevSession = getSessionForInstrument(instrument);
-          setPlan({
-            _blocked: true,
-            _reason: limitCheck.detail,
-            _limitType: limitCheck.type,
-            _prevPlan: prevSession?.plan || null,
-            instrument,
-            grade: "BLOCKED",
-          });
-          setPhase("plan");
+          // They've used their free re-upload — restore existing plan instead of hard blocking
+          if (prevSession?.plan) {
+            setPlan(prevSession.plan);
+            setPhase(prevSession.phase || "plan");
+            setTier1(prevSession.tier1 || false);
+            setTier2(prevSession.tier2 || false);
+            setSessionState(prevSession.sessionState || "WATCHING");
+            setMessages(prevSession.messages || []);
+            setSessionHistory(prevSession.sessionHistory || []);
+            setPhase("plan");
+          } else {
+            setPlan({
+              _blocked: true,
+              _reason: limitCheck.detail,
+              _limitType: limitCheck.type,
+              _prevPlan: null,
+              instrument,
+              grade: "BLOCKED",
+            });
+            setPhase("plan");
+          }
           return;
         }
         // First re-upload during cooldown — allow it, increment ONLY after successful analysis
@@ -6279,11 +6290,11 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 {/* ── FULL ANALYSIS — collapsible ── */}
                 <FullAnalysisPanel plan={plan} />
 
-                {/* ── NAV — New Analysis ── */}
+                {/* ── NAV ── */}
                 <div style={{ display:"flex", gap:8, marginTop:12 }}>
-                  <button onClick={() => { setPhase("upload"); setImages(Array(5).fill(null)); }}
-                    style={{ flex:1, padding:"11px", borderRadius:8, border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.04)", color:"rgba(255,255,255,0.85)", fontSize:14, fontWeight:700, letterSpacing:"0.08em", fontFamily:"inherit", cursor:"pointer" }}>
-                    ↩ New Analysis
+                  <button onClick={() => setPhase("upload")}
+                    style={{ padding:"11px 18px", borderRadius:8, border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.04)", color:"#8878aa", fontSize:13, fontWeight:700, letterSpacing:"0.08em", fontFamily:"inherit", cursor:"pointer" }}>
+                    ← Back
                   </button>
                   {messages.length > 0 && (
                     <button onClick={() => setPhase("live")}
