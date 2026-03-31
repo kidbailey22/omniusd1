@@ -271,12 +271,12 @@ Images submitted in order: [1]=Daily, [2]=4H, [3]=1H, [4]=30M, [5]=15M. Selected
 STEP 1 — INSTRUMENT CHECK: Before checking timeframes, inspect all 5 charts for the instrument/ticker symbol visible on the chart (pair name, symbol, title bar, watermark, or price scale).
 
 ACCEPTED ALIASES — these ticker labels are valid for each instrument:
-- XAUUSD: XAUUSD, GOLD, GC, MGC, XAU, GOLD/USD
+- XAUUSD: XAUUSD, GOLD, GC, MGC, MGC1!, MGCM2026, MGCH2026, MGCU2026, MGCZ2026, XAU, GOLD/USD
 - BTCUSD: BTCUSD, BTC, BTCUSDT, BITCOIN, BTC/USD, BTCPERP
-- NAS100: NAS100, NASDAQ, NQ, NQ1!, NQM2026, NQH2026, NQU2026, NQZ2026, US100, NDX, USTEC, USTECH
-- US30: US30, DOW, YM, YM1!, YMM2026, YMH2026, YMU2026, YMZ2026, DJIA, DJ30, WALL ST
-- USOIL: USOIL, WTI, CL, CL1!, CLM2026, CLK2026, CRUDE, OIL
-- US500: US500, SPX, ES, ES1!, ESM2026, ESH2026, ESU2026, ESZ2026, SP500, SPX500, S&P500
+- NAS100: NAS100, NASDAQ, NQ, NQ1!, NQM2026, NQM6, NQH2026, NQU2026, NQZ2026, US100, NDX, USTEC, USTECH
+- US30: US30, DOW, YM, YM1!, YMM2026, YMM6, YMH2026, YMU2026, YMZ2026, DJIA, DJ30, WALL ST
+- USOIL: USOIL, WTI, CL, CL1!, CLM2026, CLK2026, CLK6, CLM6, CRUDE, OIL
+- US500: US500, SPX, ES, ES1!, ESM2026, ESM6, ESH2026, ESU2026, ESZ2026, SP500, SPX500, S&P500
 
 - If the ticker on the charts matches ANY of the accepted aliases for ${instrument}, set instrument_valid=true.
 - If the charts show a ticker that belongs to a DIFFERENT instrument entirely, set instrument_valid=false and instrument_detected= what you actually see.
