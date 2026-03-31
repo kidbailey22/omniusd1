@@ -3794,15 +3794,15 @@ function TradeLoggerPage({ profile, onClose }) {
 
   const tok = () => { try { return JSON.parse(localStorage.getItem("omniusd_session")||"{}").access_token || SUPABASE_KEY; } catch { return SUPABASE_KEY; } };
 
-  async function loadTrades() {
-    setLoading(true);
+  async function loadTrades(silent = false) {
+    if (!silent) setLoading(true);
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/trades?select=*&order=trade_date.desc,created_at.desc&limit=50`, {
         headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${tok()}`, "Content-Type": "application/json" }
       });
       if (res.ok) { const d = await res.json(); setTrades(Array.isArray(d) ? d : []); }
     } catch {}
-    setLoading(false);
+    if (!silent) setLoading(false);
   }
 
   useEffect(() => { if (profile?.email === OWNER) loadTrades(); }, []);
@@ -3840,7 +3840,7 @@ function TradeLoggerPage({ profile, onClose }) {
         }
         setForm({ ...empty, trade_date: new Date().toISOString().slice(0,10) });
         setEditingId(null);
-        loadTrades(); // also refetch to stay in sync
+        loadTrades(!!editingId); // silent refresh on edit, full reload on new log
       } else {
         const e = await res.json();
         setMsg({ type:"error", text: e?.message || "Save failed." });
