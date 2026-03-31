@@ -3834,9 +3834,13 @@ function TradeLoggerPage({ profile, onClose }) {
       }
       if (res.ok || res.status === 201 || res.status === 204) {
         setMsg({ type:"success", text: editingId ? "Trade updated." : "Trade logged." });
+        if (editingId) {
+          // Update local state immediately so UI reflects change without waiting for refetch
+          setTrades(prev => prev.map(t => t.id === editingId ? { ...t, ...payload } : t));
+        }
         setForm({ ...empty, trade_date: new Date().toISOString().slice(0,10) });
         setEditingId(null);
-        loadTrades();
+        loadTrades(); // also refetch to stay in sync
       } else {
         const e = await res.json();
         setMsg({ type:"error", text: e?.message || "Save failed." });
