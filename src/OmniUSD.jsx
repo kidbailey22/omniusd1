@@ -5167,38 +5167,34 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
   React.useEffect(() => {
     async function restore() {
       try {
-        let all = loadSessions();
-        // If localStorage is empty, try cloud
-        if (!Object.keys(all).length) {
-          const cloud = await pullSessionsFromCloud();
-          if (cloud && Object.keys(cloud).length) {
-            localStorage.setItem(SESSIONS_KEY, JSON.stringify(cloud));
-            all = cloud;
-          }
-        }
-
-        // Stale check — only restore sessions from TODAY in CT
         const ctToday = new Date(new Date().toLocaleString("en-US", { timeZone:"America/Chicago" })).toDateString();
         function isToday(savedAt) {
           try {
-            const savedCT = new Date(new Date(savedAt).toLocaleString("en-US", { timeZone:"America/Chicago" })).toDateString();
-            return savedCT === ctToday;
+            return new Date(new Date(savedAt).toLocaleString("en-US", { timeZone:"America/Chicago" })).toDateString() === ctToday;
           } catch { return false; }
         }
-
-        // Prune stale sessions from storage
-        let dirty = false;
-        Object.keys(all).forEach(k => {
-          if (!isToday(all[k]?.savedAt)) { delete all[k]; dirty = true; }
-        });
-        if (dirty) {
-          localStorage.setItem(SESSIONS_KEY, JSON.stringify(all));
-          pushSessionsToCloud(all);
+        function pruneStale(sessions) {
+          const cleaned = {};
+          Object.keys(sessions).forEach(k => { if (isToday(sessions[k]?.savedAt)) cleaned[k] = sessions[k]; });
+          return cleaned;
         }
 
-        // Find the most recent non-upload session from today
+        // Load local, prune stale immediately
+        let all = pruneStale(loadSessions());
+
+        // If nothing left locally, check cloud — but prune cloud data too
+        if (!Object.keys(all).length) {
+          const cloud = await pullSessionsFromCloud();
+          if (cloud) all = pruneStale(cloud);
+        }
+
+        // Write clean state back to localStorage and cloud
+        localStorage.setItem(SESSIONS_KEY, JSON.stringify(all));
+        pushSessionsToCloud(all);
+
+        // Restore most recent session from today only
         const recent = Object.values(all)
-          .filter(s => s.plan && s.phase && s.phase !== "upload" && isToday(s.savedAt))
+          .filter(s => s.plan && s.phase && s.phase !== "upload")
           .sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt))[0];
         if (recent) {
           setPlan(recent.plan);
