@@ -5179,20 +5179,26 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
           return cleaned;
         }
 
-        // Load local, prune stale immediately
-        let all = pruneStale(loadSessions());
+        // STEP 1: Always prune localStorage first — no exceptions
+        const raw = loadSessions();
+        const todayOnly = pruneStale(raw);
+        // Write cleaned back immediately — before any async operations
+        localStorage.setItem(SESSIONS_KEY, JSON.stringify(todayOnly));
 
-        // If nothing left locally, check cloud — but prune cloud data too
+        // STEP 2: Only pull from cloud if we have NOTHING today
+        let all = todayOnly;
         if (!Object.keys(all).length) {
           const cloud = await pullSessionsFromCloud();
-          if (cloud) all = pruneStale(cloud);
+          if (cloud) {
+            all = pruneStale(cloud); // prune cloud data too
+            localStorage.setItem(SESSIONS_KEY, JSON.stringify(all));
+          }
         }
 
-        // Write clean state back to localStorage and cloud
-        localStorage.setItem(SESSIONS_KEY, JSON.stringify(all));
-        pushSessionsToCloud(all);
+        // STEP 3: Push clean state back to cloud to overwrite stale cloud data
+        await pushSessionsToCloud(all);
 
-        // Restore most recent session from today only
+        // STEP 4: Restore if we have something from today
         const recent = Object.values(all)
           .filter(s => s.plan && s.phase && s.phase !== "upload")
           .sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt))[0];
