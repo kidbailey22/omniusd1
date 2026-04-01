@@ -5186,6 +5186,16 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
           } catch { return false; }
         }
 
+        // Prune stale sessions from storage
+        let dirty = false;
+        Object.keys(all).forEach(k => {
+          if (!isToday(all[k]?.savedAt)) { delete all[k]; dirty = true; }
+        });
+        if (dirty) {
+          localStorage.setItem(SESSIONS_KEY, JSON.stringify(all));
+          pushSessionsToCloud(all);
+        }
+
         // Find the most recent non-upload session from today
         const recent = Object.values(all)
           .filter(s => s.plan && s.phase && s.phase !== "upload" && isToday(s.savedAt))
