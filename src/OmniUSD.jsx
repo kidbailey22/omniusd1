@@ -5176,9 +5176,19 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
             all = cloud;
           }
         }
-        // Find the most recent non-upload session
+
+        // Stale check — only restore sessions from TODAY in CT
+        const ctToday = new Date(new Date().toLocaleString("en-US", { timeZone:"America/Chicago" })).toDateString();
+        function isToday(savedAt) {
+          try {
+            const savedCT = new Date(new Date(savedAt).toLocaleString("en-US", { timeZone:"America/Chicago" })).toDateString();
+            return savedCT === ctToday;
+          } catch { return false; }
+        }
+
+        // Find the most recent non-upload session from today
         const recent = Object.values(all)
-          .filter(s => s.plan && s.phase && s.phase !== "upload")
+          .filter(s => s.plan && s.phase && s.phase !== "upload" && isToday(s.savedAt))
           .sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt))[0];
         if (recent) {
           setPlan(recent.plan);
