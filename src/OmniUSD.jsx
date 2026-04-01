@@ -814,12 +814,17 @@ function OmniUSDApp(){
   }
 
   async function signOut(){
-    // Clear user-scoped keys before session is gone
     try {
       const _s = JSON.parse(localStorage.getItem("omniusd_session") || "{}");
       const _uid = _s.user?.id || _s.user_id || "anon";
+      const _tok = _s.access_token || SUPABASE_KEY;
+      // Wipe active sessions from localStorage
       localStorage.removeItem(`omniusd_sessions_${_uid}`);
-      // Keep journal on device — user may want it if they log back in
+      // Wipe active sessions from Supabase cloud — so next login starts fresh
+      fetch(`${SUPABASE_URL}/rest/v1/user_history?user_id=eq.${_uid}&type=eq.active_sessions`, {
+        method: "DELETE",
+        headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${_tok}` },
+      }).catch(()=>{});
     } catch(e) {}
     localStorage.removeItem("omniusd_paid_tier");
     localStorage.removeItem("omniusd_session");
@@ -2469,9 +2474,9 @@ Return ONLY this JSON — no markdown, no explanation, no preamble:
   "trigger_level": "exact price only",
   "retest_zone": "price zone e.g. 2,650-2,680",
   "stop_loss": "exact price only",
-  "tp1": "exact price only",
-  "tp2": "exact price only",
-  "runner": "exact price only",
+  "tp1": "exact price only — REQUIRED",
+  "tp2": "exact price only — REQUIRED. Next structural level beyond TP1. Never leave blank.",
+  "runner": "exact price only — REQUIRED. Extended target if momentum continues. Never leave blank.",
   "alert_levels": ["price 1", "price 2"],
   "key_levels": ["support: price — method", "resistance: price — method", "critical: price"],
   "current_phase": "PRE-BREAK|RETEST_COOKING|CONTINUATION|EXPIRED",
@@ -3776,7 +3781,7 @@ function TradeLoggerPage({ profile, onClose }) {
   const isMobile = useWindowWidth() <= 768;
   const GRADES = ["A+","A","B","C","PASS"];
   const INSTRUMENTS = ["XAUUSD","BTCUSD","NAS100","US30","USOIL","US500"];
-  const RESULTS = ["WIN","LOSS","BE","PASS","MISSED"];
+  const RESULTS = ["WIN","LOSS","BE","PASS","MISSED","CANCELLED"];
 
   const empty = { instrument:"XAUUSD", grade:"A+", direction:"LONG", entry:"", stop:"", tp1:"", rr:"", result_usd:"", outcome:"WIN", note:"", trade_date: new Date().toISOString().slice(0,10) };
   const [form, setForm] = useState(empty);
@@ -3886,7 +3891,7 @@ function TradeLoggerPage({ profile, onClose }) {
 
   const inp = { width:"100%", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:8, padding:"9px 12px", fontSize:13, color:"#f0ecff", fontFamily:"inherit", outline:"none", boxSizing:"border-box" };
   const sel = { ...inp, appearance:"none", cursor:"pointer" };
-  const outcomeColor = { WIN:"#7fff6b", LOSS:"#ff6b6b", BE:"#ffd166", PASS:"#8878aa", MISSED:"#ff9a3c" };
+  const outcomeColor = { WIN:"#7fff6b", LOSS:"#ff6b6b", BE:"#ffd166", PASS:"#8878aa", MISSED:"#ff9a3c", CANCELLED:"#00ccff" };
 
   return (
     <div style={{ flex:1, overflowY:"auto", padding: isMobile ? "20px 16px" : "32px 24px", animation:"fadein 0.3s ease both" }}>
@@ -3929,6 +3934,7 @@ function TradeLoggerPage({ profile, onClose }) {
               <select value={form.direction} onChange={e=>setForm(f=>({...f,direction:e.target.value}))} style={sel}>
                 <option value="LONG">LONG</option>
                 <option value="SHORT">SHORT</option>
+                <option value="NEUTRAL">NEUTRAL</option>
               </select>
             </div>
             <div>
@@ -4048,9 +4054,10 @@ function PublicResultsPage({ onClose, isStandalone = false }) {
   }, []);
 
   // ── Compute stats ──────────────────────────────────────────────────────
-  const executed = trades.filter(t => t.outcome !== "MISSED" && t.outcome !== "PASS");
+  const executed = trades.filter(t => t.outcome !== "MISSED" && t.outcome !== "PASS" && t.outcome !== "CANCELLED");
   const passes   = trades.filter(t => t.outcome === "PASS" || t.grade === "PASS");
   const missed   = trades.filter(t => t.outcome === "MISSED");
+  const cancelled = trades.filter(t => t.outcome === "CANCELLED");
   const wins     = executed.filter(t => t.outcome === "WIN");
   const losses   = executed.filter(t => t.outcome === "LOSS");
   const be       = executed.filter(t => t.outcome === "BE");
@@ -4076,7 +4083,7 @@ function PublicResultsPage({ onClose, isStandalone = false }) {
   });
   const weeks = Object.entries(byWeek);
 
-  const outcomeColor = { WIN:"#7fff6b", LOSS:"#ff6b6b", BE:"#ffd166", MISSED:"#ff9a3c", PASS:"#8878aa" };
+  const outcomeColor = { WIN:"#7fff6b", LOSS:"#ff6b6b", BE:"#ffd166", MISSED:"#ff9a3c", PASS:"#8878aa", CANCELLED:"#00ccff" };
   const BG = "#0f0c1e";
 
   const statCard = (label, value, color="#f0ecff", sub=null) => (
@@ -4125,6 +4132,7 @@ function PublicResultsPage({ onClose, isStandalone = false }) {
             {statCard("RECORD", `${wins.length}-${losses.length}${be.length>0?`-${be.length}`:""}`, "#f0ecff", "W-L-BE")}
             {statCard("PASSES", passes.length, "#8878aa", "discipline wins")}
             {statCard("MISSED", missed.length, "#ff9a3c", "never retested")}
+            {statCard("CANCELLED", cancelled.length, "#00ccff", "broker cancelled")}
             {statCard("AVG GRADE", avgGradeStr, "#cc44ff")}
             {statCard("NET P&L", (totalPnl >= 0 ? "+" : "") + "$" + Math.abs(totalPnl).toFixed(0), totalPnl >= 0 ? "#7fff6b" : "#ff6b6b", "USD")}
           </div>
@@ -4136,7 +4144,7 @@ function PublicResultsPage({ onClose, isStandalone = false }) {
 
           {/* Weekly trade log */}
           {weeks.map(([week, wTrades]) => {
-            const wExec = wTrades.filter(t=>t.outcome!=="MISSED"&&t.outcome!=="PASS");
+            const wExec = wTrades.filter(t=>t.outcome!=="MISSED"&&t.outcome!=="PASS"&&t.outcome!=="CANCELLED");
             const wWins = wExec.filter(t=>t.outcome==="WIN").length;
             const wPnl  = wExec.reduce((s,t)=>s+(parseFloat(t.result_usd)||0),0);
             return (
@@ -5383,6 +5391,20 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
       }
 
       parsed.instrument = instrument;
+
+      // Strip any text from price fields — prices only in these fields
+      function stripPrice(v) {
+        if (!v || v === "—" || v === "null" || v === "N/A") return null;
+        const m = String(v).match(/^([0-9,.\s–\-]+(?:\s*[–\-]\s*[0-9,.]+)?)/);
+        return m ? m[1].trim() : v;
+      }
+      parsed.trigger_level = stripPrice(parsed.trigger_level);
+      parsed.retest_zone   = stripPrice(parsed.retest_zone);
+      parsed.stop_loss     = stripPrice(parsed.stop_loss);
+      parsed.tp1           = stripPrice(parsed.tp1);
+      parsed.tp2           = stripPrice(parsed.tp2);
+      parsed.runner        = stripPrice(parsed.runner);
+
       setPlan(parsed);
       setPhase("plan");
       // Auto-save every plan to session history (all grades)
@@ -5708,7 +5730,14 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 {/* Drawer footer — sign out */}
                 <div style={{ padding: "14px 20px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
                   {onSignOut && (
-                    <button onClick={() => { onSignOut(); setDrawerOpen(false); }}
+                    <button onClick={() => {
+                      const allSess = loadSessions();
+                      const hasActive = Object.values(allSess).some(s => s?.plan && s?.phase && s?.phase !== "upload");
+                      if (hasActive) {
+                        if (!window.confirm("⚠️ You have an active session today.\n\nLogging out will erase your current plans and charts. You will be in cooldown if you log back in and try to re-upload.\n\nAre you sure you want to log out?")) return;
+                      }
+                      onSignOut(); setDrawerOpen(false);
+                    }}
                       style={{ fontSize: 13, color: "rgba(255,107,107,0.6)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", letterSpacing: "0.06em" }}>
                       Sign out
                     </button>
@@ -5756,7 +5785,14 @@ Use ONLY these times. All earlier time references in this conversation are stale
               <button onClick={() => setPhase("plan")} style={{ fontSize: 13, fontWeight: 700, color: "#ffd166", background: "rgba(255,209,102,0.08)", border: "1px solid rgba(255,209,102,0.25)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>View Plan</button>
               <button onClick={() => { setPhase("upload"); setImages(Array(5).fill(null)); }} style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.75)", background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>NEW ANALYSIS</button>
             </>)}
-            {onSignOut && <button onClick={onSignOut} style={{ fontSize: 13, color: "rgba(255,255,255,0.38)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", padding: "4px 6px" }}>Sign out</button>}
+            {onSignOut && <button onClick={() => {
+              const allSess = loadSessions();
+              const hasActive = Object.values(allSess).some(s => s?.plan && s?.phase && s?.phase !== "upload");
+              if (hasActive) {
+                if (!window.confirm("⚠️ You have an active session today.\n\nLogging out will erase your current plans and charts. You will be in cooldown if you log back in and try to re-upload.\n\nAre you sure you want to log out?")) return;
+              }
+              onSignOut();
+            }} style={{ fontSize: 13, color: "rgba(255,255,255,0.38)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", padding: "4px 6px" }}>Sign out</button>}
           </div>
         </div>
         )}
