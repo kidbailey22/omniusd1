@@ -271,7 +271,7 @@ Images submitted in order: [1]=Daily, [2]=4H, [3]=1H, [4]=30M, [5]=15M. Selected
 STEP 1 — INSTRUMENT CHECK: Before checking timeframes, inspect all 5 charts for the instrument/ticker symbol visible on the chart (pair name, symbol, title bar, watermark, or price scale).
 
 ACCEPTED ALIASES — these ticker labels are valid for each instrument:
-- XAUUSD: XAUUSD, GOLD, GC, MGC, MGC1!, MGCM2026, MGCH2026, MGCU2026, MGCZ2026, XAU, GOLD/USD
+- XAUUSD: XAUUSD, GOLD, GC, MGC, MGC1!, MGCM2026, MGCM6, MGCH2026, MGCU2026, MGCZ2026, XAU, GOLD/USD
 - BTCUSD: BTCUSD, BTC, BTCUSDT, BITCOIN, BTC/USD, BTCPERP
 - NAS100: NAS100, NASDAQ, NQ, NQ1!, NQM2026, NQM6, NQH2026, NQU2026, NQZ2026, US100, NDX, USTEC, USTECH
 - US30: US30, DOW, YM, YM1!, YMM2026, YMM6, YMH2026, YMU2026, YMZ2026, DJIA, DJ30, WALL ST
