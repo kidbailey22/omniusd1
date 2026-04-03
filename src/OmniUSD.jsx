@@ -3282,7 +3282,8 @@ const SESSION_BLOCKS = {
 };
 
 // ── Usage tracking helpers ────────────────────────────────────────────────
-const DAILY_CAPS = { starter: 3, pro: 5, elite: 10 };
+const DAILY_CAPS = { starter: 3, pro: 5, pro_trial: 4, elite: 10 };
+const TRIAL_TOTAL_CAP = 12;
 const COOLDOWN_MS = 2 * 60 * 60 * 1000; // 2 hours
 
 async function logUsage(userId, token, instrument) {
@@ -3307,34 +3308,48 @@ async function logUsage(userId, token, instrument) {
 
 async function checkUsageLimits(userId, token, instrument, tier) {
   try {
-    // Fetch today's logs for this user
     const startOfDay = new Date();
     startOfDay.setHours(0,0,0,0);
     const res = await fetch(
       `${SUPABASE_URL}/rest/v1/usage_logs?user_id=eq.${userId}&type=eq.analysis&created_at=gte.${startOfDay.toISOString()}&select=instrument,created_at`,
-      {
-        headers: {
-          "apikey": SUPABASE_KEY,
-          "Authorization": `Bearer ${token}`,
-        }
-      }
+      { headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${token}` } }
     );
-    if (!res.ok) return { allowed: true }; // fail open
-
+    if (!res.ok) return { allowed: true };
     const logs = await res.json();
     const cap = DAILY_CAPS[tier] || DAILY_CAPS.starter;
 
-    // Check daily cap
+    // Trial users — enforce 12 total cap across all days
+    if (tier === "pro_trial") {
+      const trialRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/usage_logs?user_id=eq.${userId}&type=eq.analysis&select=id`,
+        { headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${token}` } }
+      );
+      if (trialRes.ok) {
+        const allLogs = await trialRes.json();
+        if (allLogs.length >= TRIAL_TOTAL_CAP) {
+          return {
+            allowed: false,
+            reason: "Trial analyses used",
+            detail: `You've used all ${TRIAL_TOTAL_CAP} trial analyses. Your Pro subscription is active — you're all set to continue trading.`,
+            type: "trial_exhausted",
+          };
+        }
+      }
+    }
+
+    // Daily cap check
     if (logs.length >= cap) {
       return {
         allowed: false,
         reason: `Daily limit reached`,
-        detail: `Your ${tier.charAt(0).toUpperCase()+tier.slice(1)} plan includes ${cap} analyses per day. You've used all ${cap} today. Come back tomorrow or upgrade your plan.`,
+        detail: tier === "pro_trial"
+          ? `You've used all ${cap} trial analyses for today. Come back tomorrow — you have ${TRIAL_TOTAL_CAP} total across your 3-day trial.`
+          : `Your ${tier.charAt(0).toUpperCase()+tier.slice(1)} plan includes ${cap} analyses per day. You've used all ${cap} today. Come back tomorrow or upgrade your plan.`,
         type: "cap",
       };
     }
 
-    // Check instrument cooldown (2 hours)
+    // Instrument cooldown (2 hours)
     const lastForInstrument = logs
       .filter(l => l.instrument === instrument)
       .sort((a,b) => new Date(b.created_at) - new Date(a.created_at))[0];
@@ -3358,7 +3373,7 @@ async function checkUsageLimits(userId, token, instrument, tier) {
     return { allowed: true };
   } catch(e) {
     console.error("Usage check failed:", e);
-    return { allowed: true }; // fail open — never block on error
+    return { allowed: true };
   }
 }
 
@@ -8747,19 +8762,31 @@ function PricingPage({onBack, onPaid}){
     {key:"starter", label:"Starter", price:"$29", period:"/month", color:"#ffd166",
      instruments:["XAUUSD","BTCUSD"],
      features:["Full BRC 3-phase execution tracker","Session-aware guidance","AI session plans"],
-     priceId:TIER_CONFIG.starter.priceId, popular:false},
+     priceId:TIER_CONFIG.starter.priceId, popular:false, trial:false},
     {key:"pro",     label:"Pro",     price:"$39", period:"/month", color:"#00e5ff",
      instruments:["XAUUSD","BTCUSD","NAS100","US30"],
      features:["Full BRC 3-phase execution tracker","Session-aware guidance","AI session plans","Priority access to new features"],
-     priceId:TIER_CONFIG.pro.priceId, popular:true},
+     priceId:TIER_CONFIG.pro.priceId, popular:true, trial:true},
     {key:"elite",   label:"Elite",   price:"$59", period:"/month", color:"#ff6bff",
      instruments:["XAUUSD","BTCUSD","NAS100","US30","USOIL","US500"],
      features:["Full BRC 3-phase execution tracker","Session-aware guidance","AI session plans","Early access to all new features"],
-     priceId:TIER_CONFIG.elite.priceId, popular:false},
+     priceId:TIER_CONFIG.elite.priceId, popular:false, trial:false},
   ];
 
-  async function handleCheckout(){
+  function isWeekend() {
+    const day = new Date().getDay();
+    return day === 0 || day === 6;
+  }
+
+  async function handleCheckout(isTrial = false){
     if(!selected){setError("Select a plan to continue.");return;}
+
+    // Weekend block for trial
+    if (isTrial && isWeekend()) {
+      setError("⚠️ Free trials can't start on weekends — markets are closed and you'd waste your 3 days. Come back Monday morning before the NY session opens at 8:30 AM CT.");
+      return;
+    }
+
     setLoading(true);setError(null);
     try{
       const plan=plans.find(p=>p.key===selected);
@@ -8768,8 +8795,10 @@ function PricingPage({onBack, onPaid}){
         headers:{"Content-Type":"application/json"},
         body:JSON.stringify({
           priceId:plan.priceId,
-          tier:selected,
-          successUrl:`https://omniusd.pro/?payment=success&tier=${selected}&session_id={CHECKOUT_SESSION_ID}`,
+          tier: isTrial ? "pro_trial" : selected,
+          trial: isTrial,
+          trialDays: isTrial ? 3 : 0,
+          successUrl:`https://omniusd.pro/?payment=success&tier=${isTrial?"pro_trial":selected}&session_id={CHECKOUT_SESSION_ID}`,
           cancelUrl:`https://omniusd.pro/?payment=cancel`,
         }),
       });
@@ -8853,6 +8882,19 @@ function PricingPage({onBack, onPaid}){
                     </div>
                   ))}
                 </div>
+                {p.trial && (
+                  <div style={{marginTop:20}}>
+                    <button onClick={e=>{e.stopPropagation();setSelected("pro");handleCheckout(true);}}
+                      style={{width:"100%",fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,letterSpacing:"0.08em",
+                        padding:"11px",borderRadius:8,cursor:"pointer",transition:"all 0.2s",
+                        background:"linear-gradient(135deg,#00e5ff,#0099bb)",border:"none",color:"#0d0718",marginBottom:6}}>
+                      START 3-DAY FREE TRIAL →
+                    </button>
+                    <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"#8878aa",textAlign:"center"}}>
+                      Card required · $39/mo after 3 days · Cancel anytime
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}
@@ -8868,7 +8910,7 @@ function PricingPage({onBack, onPaid}){
 
         {/* CTA */}
         <div style={{textAlign:"center"}}>
-          <button onClick={handleCheckout} disabled={loading||!selected}
+          <button onClick={()=>handleCheckout(false)} disabled={loading||!selected}
             style={{fontFamily:"'Space Mono',monospace",fontSize:14,fontWeight:700,letterSpacing:"0.12em",
               color:(!selected||loading)?"#8878aa":"#0d0718",
               background:(!selected||loading)?"rgba(255,255,255,0.06)":"linear-gradient(135deg,#ff6bff,#7b2fff)",
