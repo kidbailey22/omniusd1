@@ -2471,12 +2471,12 @@ Return ONLY this JSON — no markdown, no explanation, no preamble:
   "summary": "2-3 sentences plain English for a 16-year-old. What the charts show, current phase, which session this targets.",
   "market_structure": "HH/HL or LH/LL with key price levels",
   "brc_phase": "PRE-BREAK|RETEST_COOKING|CONTINUATION|EXPIRED",
-  "trigger_level": "exact price only",
-  "retest_zone": "price zone e.g. 2,650-2,680",
-  "stop_loss": "exact price only",
-  "tp1": "exact price only — REQUIRED",
-  "tp2": "exact price only — REQUIRED. Next structural level beyond TP1. Never leave blank.",
-  "runner": "exact price only — REQUIRED. Extended target if momentum continues. Never leave blank.",
+  "trigger_level": "exact price only — no words, no description",
+  "retest_zone": "price or zone only e.g. 2,650-2,680 — no words",
+  "stop_loss": "exact price only — no words",
+  "tp1": "exact price only — REQUIRED. First structural target beyond trigger.",
+  "tp2": "exact price only — REQUIRED. Look for the next swing high (if SHORT) or swing low (if LONG) beyond TP1 on the 1H or 4H chart. Always populate. If unclear use 1.5x the TP1 distance from entry.",
+  "runner": "exact price only — REQUIRED. Look for the major HTF level beyond TP2. If unclear use 2x the TP1 distance from entry. Never leave blank — always calculate a number.",
   "alert_levels": ["price 1", "price 2"],
   "key_levels": ["support: price — method", "resistance: price — method", "critical: price"],
   "current_phase": "PRE-BREAK|RETEST_COOKING|CONTINUATION|EXPIRED",
@@ -5419,6 +5419,21 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
       parsed.tp1           = stripPrice(parsed.tp1);
       parsed.tp2           = stripPrice(parsed.tp2);
       parsed.runner        = stripPrice(parsed.runner);
+
+      // Fallback: if tp2 or runner still blank, calculate from tp1 + stop distance
+      if ((!parsed.tp2 || parsed.tp2 === "—") && parsed.tp1 && parsed.stop_loss) {
+        try {
+          const entry = parseFloat((parsed.trigger_level || "").replace(/,/g,""));
+          const tp1   = parseFloat((parsed.tp1 || "").replace(/,/g,""));
+          const stop  = parseFloat((parsed.stop_loss || "").replace(/,/g,""));
+          if (entry && tp1 && stop) {
+            const dist = Math.abs(tp1 - entry);
+            const isShort = parsed.bias === "SHORT";
+            parsed.tp2   = parsed.tp2   || String((isShort ? entry - dist*1.5 : entry + dist*1.5).toFixed(2));
+            parsed.runner = parsed.runner || String((isShort ? entry - dist*2.5 : entry + dist*2.5).toFixed(2));
+          }
+        } catch {}
+      }
 
       setPlan(parsed);
       setPhase("plan");
