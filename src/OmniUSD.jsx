@@ -9048,16 +9048,10 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
             </p>
             <div className="land-fade" style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap",marginBottom:44,animationDelay:"0.3s"}}>
               <button onClick={onEnterApp}
-                style={{fontFamily:"'Space Mono',monospace",fontSize:14,fontWeight:700,letterSpacing:"0.1em",color:"#1e1a35",background:"linear-gradient(135deg,#00e5ff,#0099bb)",border:"none",padding:"12px 24px",borderRadius:7,cursor:"pointer",boxShadow:"0 0 32px rgba(0,229,255,0.25)",transition:"all 0.2s"}}>
-                START FREE TRIAL →
+                style={{fontFamily:"'Space Mono',monospace",fontSize:14,fontWeight:700,letterSpacing:"0.1em",color:"#1e1a35",background:"linear-gradient(135deg,#ff6bff,#7b2fff)",border:"none",padding:"12px 24px",borderRadius:7,cursor:"pointer",boxShadow:"0 0 32px rgba(255,107,255,0.25)",transition:"all 0.2s"}}>
+                GET STARTED →
               </button>
-              <button onClick={onEnterApp}
-                style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,letterSpacing:"0.08em",color:"rgba(255,255,255,0.6)",background:"none",border:"1px solid rgba(255,255,255,0.15)",padding:"12px 20px",borderRadius:7,cursor:"pointer",transition:"all 0.2s"}}>
-                VIEW PLANS
-              </button>
-              <div style={{width:"100%",fontFamily:"'Space Mono',monospace",fontSize:11,color:"rgba(255,255,255,0.3)",marginTop:2}}>
-                3-day free trial · Pro plan · Card required · Cancel anytime
-              </div>
+              <span style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"rgba(255,255,255,0.38)"}}>From $29/month · 3-day free trial on Pro</span>
             </div>
 
             {/* 3-step product loop */}
@@ -9204,14 +9198,14 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
       <section style={{position:"relative",zIndex:1,paddingTop:0}}>
 
         {/* Info row */}
-        <div style={{borderTop:"1px solid rgba(255,255,255,0.06)",borderBottom:"1px solid rgba(255,255,255,0.06)",marginTop:64,display:"grid",gridTemplateColumns:"1fr 1fr"}}>
+        <div style={{borderTop:"1px solid rgba(255,255,255,0.06)",borderBottom:"1px solid rgba(255,255,255,0.06)",marginTop:64,display:"grid",gridTemplateColumns:"1fr 1fr",maxWidth:900,margin:"64px auto 0"}}>
           {[
             {val:"A+ only",desc:"The only grade that unlocks execution. All others show PASS."},
             {val:"30M closes",desc:"Wicks don't trigger. Only full candle closes count."},
             {val:"3 phases",desc:"Break. Retest. Continuation. Every trade. Every time."},
             {val:"0 signals",desc:"No alerts. No predictions. Structure only."},
           ].map((r,i)=>(
-            <div key={i} style={{padding:"22px 32px",borderRight:i<3?"1px solid rgba(255,255,255,0.06)":"none"}}>
+            <div key={i} style={{padding:"22px 32px",borderRight:i%2===0?"1px solid rgba(255,255,255,0.06)":"none",borderTop:i>=2?"1px solid rgba(255,255,255,0.06)":"none"}}>
               <div style={{fontFamily:"'Space Mono',monospace",fontSize:17,fontWeight:700,color:"#ffffff",marginBottom:6}}>{r.val}</div>
               <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"rgba(255,255,255,0.85)",lineHeight:1.7}}>{r.desc}</div>
             </div>
