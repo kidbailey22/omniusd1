@@ -9048,10 +9048,16 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
             </p>
             <div className="land-fade" style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap",marginBottom:44,animationDelay:"0.3s"}}>
               <button onClick={onEnterApp}
-                style={{fontFamily:"'Space Mono',monospace",fontSize:14,fontWeight:700,letterSpacing:"0.1em",color:"#fff",background:"linear-gradient(135deg,#ff6bff,#7b2fff)",border:"none",padding:"12px 24px",borderRadius:7,cursor:"pointer",boxShadow:"0 0 32px rgba(255,107,255,0.25)",transition:"all 0.2s"}}>
-                CHOOSE YOUR PLAN →
+                style={{fontFamily:"'Space Mono',monospace",fontSize:14,fontWeight:700,letterSpacing:"0.1em",color:"#1e1a35",background:"linear-gradient(135deg,#00e5ff,#0099bb)",border:"none",padding:"12px 24px",borderRadius:7,cursor:"pointer",boxShadow:"0 0 32px rgba(0,229,255,0.25)",transition:"all 0.2s"}}>
+                START FREE TRIAL →
               </button>
-              <span style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"rgba(255,255,255,0.38)"}}>From $29/month</span>
+              <button onClick={onEnterApp}
+                style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,letterSpacing:"0.08em",color:"rgba(255,255,255,0.6)",background:"none",border:"1px solid rgba(255,255,255,0.15)",padding:"12px 20px",borderRadius:7,cursor:"pointer",transition:"all 0.2s"}}>
+                VIEW PLANS
+              </button>
+              <div style={{width:"100%",fontFamily:"'Space Mono',monospace",fontSize:11,color:"rgba(255,255,255,0.3)",marginTop:2}}>
+                3-day free trial · Pro plan · Card required · Cancel anytime
+              </div>
             </div>
 
             {/* 3-step product loop */}
@@ -9551,11 +9557,16 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
               </div>
               <button onClick={onEnterApp}
                 style={{width:"100%",fontFamily:"'Space Mono',monospace",fontSize:14,fontWeight:700,letterSpacing:"0.1em",padding:13,borderRadius:8,cursor:"pointer",transition:"all 0.2s",
-                  background:p.popular?"linear-gradient(135deg,#ff6bff,#7b2fff)":"none",
+                  background:p.popular?"linear-gradient(135deg,#00e5ff,#0099bb)":"none",
                   border:p.popular?"none":"1px solid rgba(255,255,255,0.15)",
                   color:p.popular?"#1e1a35":"#ccc4e8"}}>
-                GET STARTED {p.popular&&"→"}
+                {p.popular ? "START FREE TRIAL →" : "GET STARTED"}
               </button>
+              {p.popular && (
+                <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"#8878aa",textAlign:"center",marginTop:7}}>
+                  3 days free · then $39/mo · cancel anytime
+                </div>
+              )}
             </div>
           ))}
         </div>
