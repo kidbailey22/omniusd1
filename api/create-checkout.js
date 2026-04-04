@@ -1,50 +1,43 @@
-export const config = {
-  api: { bodyParser: { sizeLimit: '1mb' } },
-  maxDuration: 30,
-};
+// api/create-checkout.js
+// Handles both regular checkout and 3-day free trial (Pro only)
 
-const STRIPE_SECRET = process.env.STRIPE_SECRET_KEY;
+const Stripe = require("stripe");
 
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+module.exports = async (req, res) => {
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  if (!STRIPE_SECRET) return res.status(500).json({ error: 'Stripe not configured on server.' });
+  const { priceId, tier, trial, trialDays, successUrl, cancelUrl } = req.body;
 
-  const { priceId, tier, email } = req.body;
-  if (!priceId) return res.status(400).json({ error: 'Missing priceId' });
+  if (!priceId || !successUrl || !cancelUrl) {
+    return res.status(400).json({ error: "Missing required fields." });
+  }
 
-  const baseUrl = 'https://omniusd.pro';
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
   try {
-    const params = new URLSearchParams({
-      'payment_method_types[]': 'card',
-      'mode': 'subscription',
-      'line_items[0][price]': priceId,
-      'line_items[0][quantity]': '1',
-      'metadata[tier]': tier || 'starter',
-      'success_url': `${baseUrl}/?payment=success&tier=${tier}`,
-      'cancel_url': `${baseUrl}/?payment=cancel`,
-    });
+    const sessionParams = {
+      mode: "subscription",
+      payment_method_types: ["card"],
+      line_items: [{ price: priceId, quantity: 1 }],
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      metadata: { tier: tier || "starter" },
+    };
 
-    if (email) params.append('customer_email', email);
+    // Add trial period if this is a trial checkout
+    if (trial && trialDays && trialDays > 0) {
+      sessionParams.subscription_data = {
+        trial_period_days: trialDays,
+        metadata: { tier: "pro_trial", trial: "true" },
+      };
+      // Trial requires payment method upfront
+      sessionParams.payment_method_collection = "always";
+    }
 
-    const response = await fetch('https://api.stripe.com/v1/checkout/sessions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${STRIPE_SECRET}`,
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: params.toString(),
-    });
-
-    const session = await response.json();
-    if (!response.ok) return res.status(400).json({ error: session.error?.message || 'Checkout failed' });
-    return res.status(200).json({ url: session.url, sessionId: session.id });
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
+    const session = await stripe.checkout.sessions.create(sessionParams);
+    res.status(200).json({ url: session.url });
+  } catch (e) {
+    console.error("Stripe checkout error:", e);
+    res.status(500).json({ error: e.message || "Checkout failed." });
   }
-}
+};
