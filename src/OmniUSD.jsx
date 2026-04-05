@@ -396,11 +396,12 @@ Keep it under 200 words. Respond in plain text, no JSON, no markdown headers.`;
 // of use so each user's own session determines their access. The owner being
 // logged in on their device has zero effect on any other user's session.
 const OWNER_EMAIL = "bailey.charles024@gmail.com";
+const OWNER_EMAILS = ["bailey.charles024@gmail.com", "support@omniusd.pro"];
 function isDevMode() {
   try {
     const s = JSON.parse(localStorage.getItem("omniusd_session") || "{}");
     const email = s.user?.email || s.email || "";
-    return email === OWNER_EMAIL;
+    return OWNER_EMAILS.includes(email);
   } catch { return false; }
 }
 
@@ -694,7 +695,7 @@ function OmniUSDApp(){
     const _session = JSON.parse(localStorage.getItem("omniusd_session")||"{}");
     const _sessionEmail = _session?.user?.email || _session?.email || "";
     const _preferredName = _session?.user?.user_metadata?.preferred_name || "";
-    if (_sessionEmail === "bailey.charles024@gmail.com") {
+    if (OWNER_EMAILS.includes(_sessionEmail)) {
       setUserProfileTZ("America/Chicago");
       setProfile({
         mode:"standard", emoji:"◈", color:"#00e5ff", label:"Standard",
@@ -724,7 +725,7 @@ function OmniUSDApp(){
         const _session = JSON.parse(localStorage.getItem("omniusd_session")||"{}");
         const _email = _session?.user?.email || data?.email || "";
         const _preferredName = _session?.user?.user_metadata?.preferred_name || data?.preferred_name || "";
-        if (_email === "bailey.charles024@gmail.com") {
+        if (OWNER_EMAILS.includes(_email)) {
           const tzObj = data?.tz ? JSON.parse(data.tz) : null;
           if (tzObj?.iana) setUserProfileTZ(tzObj.iana);
           setProfile({
@@ -3792,7 +3793,7 @@ function ChartSetupPage({ onClose }) {
 // TRADE LOGGER PAGE (owner-only, private)
 // ═══════════════════════════════════════════════════════════════════════════
 function TradeLoggerPage({ profile, onClose }) {
-  const OWNER = "bailey.charles024@gmail.com";
+  const OWNER = OWNER_EMAILS[0];
   const isMobile = useWindowWidth() <= 768;
   const GRADES = ["A+","A","B","C","PASS"];
   const INSTRUMENTS = ["XAUUSD","BTCUSD","NAS100","US30","USOIL","US500"];
@@ -5740,7 +5741,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                     { label: "Settings", icon: "⚙", action: () => { setAppPage("settings"); setDrawerOpen(false); }, active: appPage === "settings", color: "#ff6bff" },
                     { label: "Chart Setup", icon: "📐", action: () => { setAppPage("chartsetup"); setDrawerOpen(false); }, active: appPage === "chartsetup", color: "#ffd166", badge: "NEW" },
                     { label: "Help & FAQ", icon: "?", action: () => { setAppPage("faq"); setDrawerOpen(false); }, active: appPage === "faq", color: "#00e5ff" },
-                    ...(profile?.email === "bailey.charles024@gmail.com" ? [
+                    ...(OWNER_EMAILS.includes(profile?.email) ? [
                       { label: "Log Trade", icon: "✏", action: () => { setAppPage("tradelog"); setDrawerOpen(false); }, active: appPage === "tradelog", color: "#cc44ff" },
                     ] : []),
                     ...(phase === "live" ? [
@@ -5806,7 +5807,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
             <button onClick={() => setAppPage(appPage === "chartsetup" ? "dashboard" : "chartsetup")} style={{ fontSize: 13, fontWeight: 700, color: appPage === "chartsetup" ? "#ffd166" : "#ffd166", background: appPage === "chartsetup" ? "rgba(255,209,102,0.12)" : "rgba(255,209,102,0.06)", border: `1px solid rgba(255,209,102,${appPage === "chartsetup" ? "0.6" : "0.4"})`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit", boxShadow: appPage === "chartsetup" ? "none" : "0 0 8px rgba(255,209,102,0.2)", animation: appPage === "chartsetup" ? "none" : "goldPulse 2s ease-in-out infinite" }}>Chart Setup</button>
             <button onClick={() => setAppPage(appPage === "history" ? "dashboard" : "history")} style={{ fontSize: 13, fontWeight: 700, color: appPage === "history" ? "#7fff6b" : "#8878aa", background: appPage === "history" ? "rgba(127,255,107,0.08)" : "none", border: `1px solid ${appPage === "history" ? "rgba(127,255,107,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>History</button>
             <button onClick={() => setAppPage(appPage === "results" ? "dashboard" : "results")} style={{ fontSize: 13, fontWeight: 700, color: appPage === "results" ? "#00ccff" : "#8878aa", background: appPage === "results" ? "rgba(0,204,255,0.08)" : "none", border: `1px solid ${appPage === "results" ? "rgba(0,204,255,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>Results</button>
-            {profile?.email === "bailey.charles024@gmail.com" && (
+            {OWNER_EMAILS.includes(profile?.email) && (
               <button onClick={() => setAppPage(appPage === "tradelog" ? "dashboard" : "tradelog")} style={{ fontSize: 13, fontWeight: 700, color: appPage === "tradelog" ? "#cc44ff" : "#8878aa", background: appPage === "tradelog" ? "rgba(204,68,255,0.1)" : "none", border: `1px solid ${appPage === "tradelog" ? "rgba(204,68,255,0.35)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>Log Trade</button>
             )}
             <button onClick={() => setAppPage(appPage === "settings" ? "dashboard" : "settings")} style={{ fontSize: 13, fontWeight: 700, color: appPage === "settings" ? "#ff6bff" : "#8878aa", background: appPage === "settings" ? "rgba(255,107,255,0.1)" : "none", border: `1px solid ${appPage === "settings" ? "rgba(255,107,255,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>Settings</button>
