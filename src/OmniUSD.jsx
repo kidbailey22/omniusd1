@@ -5380,6 +5380,22 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
       // ── SESSION WINDOW GATE ────────────────────────────────────────────
       const _mktStatus = getMarketStatus(instrument, selectedSession);
 
+      // Pre-market (prep) — if aligned, show SCOUT MODE with potential grade
+      if (_mktStatus.state === "prep") {
+        const alignment = parsed.alignment || "";
+        const isAligned = alignment === "FULL ALIGN" || alignment === "COOKING";
+        if (isAligned && parsed.grade !== "PASS") {
+          parsed._scoutMode = true;
+          parsed._preMarketScout = true;
+          parsed._potentialGrade = alignment === "FULL ALIGN" ? "A+" : "A";
+          parsed._potentialBias = parsed.bias;
+        } else {
+          // Genuine conflict — keep SOFT PASS, mark as misaligned pre-market
+          parsed._preMarketScout = true;
+          parsed._misaligned = true;
+        }
+      }
+
       // London open — cap grade at B for BTCUSD/XAUUSD
       if (_mktStatus.state === "london" && parsed.grade === "A+") {
         parsed.grade = "B";
@@ -6266,25 +6282,42 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 <div style={{
                   fontSize: plan.grade === "A+" ? 48 : 36,
                   fontWeight: 900,
-                  color: gradeColor,
+                  color: plan._scoutMode && plan._preMarketScout && !plan._misaligned ? "#00ccff" : gradeColor,
                   lineHeight: 1,
                   letterSpacing: "-0.02em",
                   opacity: plan.grade === "A+" ? 1 : 0.75,
-                }}>{plan.grade}</div>
+                }}>
+                  {plan._scoutMode && plan._preMarketScout && !plan._misaligned ? "SCOUT" : plan.grade}
+                </div>
                 {plan.instrument && (
                   <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.35)", letterSpacing: "0.1em", fontFamily: "'Space Mono',monospace", marginTop: 3 }}>{plan.instrument}</div>
                 )}
               </div>
               <div>
-                <div style={{ fontSize: plan.grade === "A+" ? 18 : 15, fontWeight: 700, color: plan.grade === "A+" ? "#f0ecff" : "rgba(255,255,255,0.75)", marginBottom: 4 }}>
-                  {plan.grade === "PASS" ? "No active setup"
-                    : plan.grade === "SOFT PASS" ? "Pre-market — two scenarios to watch"
+                <div style={{ fontSize: 15, fontWeight: 700, color: "rgba(255,255,255,0.75)", marginBottom: 4 }}>
+                  {plan._scoutMode && plan._preMarketScout && !plan._misaligned
+                    ? `Structure aligned ${plan._potentialBias} — potential ${plan._potentialGrade} at session open`
+                    : plan.grade === "PASS" ? "No active setup"
+                    : plan.grade === "SOFT PASS" ? "Timeframe conflict — no clear setup today"
                     : plan.grade === "A+" ? `${plan.bias.charAt(0)+plan.bias.slice(1).toLowerCase()} setup — ready to execute`
                     : `${plan.bias.charAt(0)+plan.bias.slice(1).toLowerCase()} setup — not yet A+`}
                 </div>
+                {/* Definition tag */}
+                {plan._preMarketScout && (
+                  <div style={{ fontSize: 11, fontFamily: "'Space Mono',monospace", color: plan._misaligned ? "rgba(255,209,102,0.55)" : "rgba(0,204,255,0.55)", marginBottom: 6, lineHeight: 1.5 }}>
+                    {plan._misaligned
+                      ? "SOFT PASS — Genuine timeframe conflict. Don't get your hopes up."
+                      : "SCOUT MODE — Structure is there, waiting for the session window."}
+                  </div>
+                )}
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                   <span style={{ fontSize: 13, fontWeight: 700, padding: "2px 8px", background: `${biasColor}14`, border: `1px solid ${biasColor}44`, borderRadius: 4, color: biasColor }}>{plan.bias}</span>
                   <span style={{ fontSize: 13, fontWeight: 700, padding: "2px 8px", background: "rgba(255,209,102,0.1)", border: "1px solid rgba(255,209,102,0.3)", borderRadius: 4, color: "#ffd166" }}>{plan.confidence} CONFIDENCE · {plan.confidence_score}%</span>
+                  {plan._scoutMode && plan._preMarketScout && !plan._misaligned && plan._potentialGrade && (
+                    <span style={{ fontSize: 13, fontWeight: 700, padding: "2px 8px", background: "rgba(0,204,255,0.1)", border: "1px solid rgba(0,204,255,0.3)", borderRadius: 4, color: "#00ccff" }}>
+                      POTENTIAL {plan._potentialGrade}
+                    </span>
+                  )}
                 </div>
               </div>
               </div>
