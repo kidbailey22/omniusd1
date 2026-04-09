@@ -5890,6 +5890,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 { q:"What timeframes does BRC use?", a:"Five timeframes: Daily (bias), 4H (structure), 1H (setup), 30M (trigger), 15M (refinement). The 30M candle close is the only valid entry signal. All five are required." },
                 { q:"Every chart must show the instrument and timeframe.", a:"The ticker (e.g. BTCUSD) and timeframe (e.g. 1H, 30M) must be clearly visible in every screenshot. If either is not visible, your upload will be rejected. Take screenshots with labels showing.", highlight:true },
                 { q:"What if the setup does not confirm?", a:"You do nothing. If the BRC sequence is incomplete, the result is PASS. No execution UI appears. A clean PASS protects your account. Not every session has a trade." },
+                { q:"Why does OmniUSD cut off at 10:30 AM CT?", a:"10:30 AM CT marks the end of the institutional execution window. From 8:30 to 10:30 AM CT, banks and institutions are actively executing — volume is highest, levels are respected, breaks are clean. After 10:30 AM, institutional participation drops and what remains is retail noise and choppy price action. The four valid 30M closes are 9:00, 9:30, 10:00, and 10:30 AM CT. If Tier 2 has not confirmed by 10:30 AM the plan expires — no exceptions. This is the discipline that keeps the system profitable." },
                 { q:"Can I use this for a prop firm challenge?", a:"Yes — this is one of the strongest use cases. Limit orders only, hard session cutoffs, A+ setups only. These are exactly the rules prop firms require." },
                 { q:"How much should I risk per trade?", a:"2.5% per trade is the recommended risk. For prop firm challenges, check your drawdown rules — most allow 1–2% and you should adjust accordingly." },
                 { q:"What sessions can I trade?", a:"NY session: 8:30–10:30 AM CT (last valid 30M close). London: 2:00–5:00 AM CT. Asian: 8:00–11:00 PM CT. NY produces the cleanest setups." },
@@ -6258,16 +6259,22 @@ Use ONLY these times. All earlier time references in this conversation are stale
           {!plan._blocked && (<>
 
             {/* Grade + bias header */}
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               {/* Grade badge — A+ gets green glow, others get muted treatment */}
-              <div style={{
-                fontSize: plan.grade === "A+" ? 48 : 36,
-                fontWeight: 900,
-                color: gradeColor,
-                lineHeight: 1,
-                letterSpacing: "-0.02em",
-                opacity: plan.grade === "A+" ? 1 : 0.75,
-              }}>{plan.grade}</div>
+              <div>
+                <div style={{
+                  fontSize: plan.grade === "A+" ? 48 : 36,
+                  fontWeight: 900,
+                  color: gradeColor,
+                  lineHeight: 1,
+                  letterSpacing: "-0.02em",
+                  opacity: plan.grade === "A+" ? 1 : 0.75,
+                }}>{plan.grade}</div>
+                {plan.instrument && (
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.35)", letterSpacing: "0.1em", fontFamily: "'Space Mono',monospace", marginTop: 3 }}>{plan.instrument}</div>
+                )}
+              </div>
               <div>
                 <div style={{ fontSize: plan.grade === "A+" ? 18 : 15, fontWeight: 700, color: plan.grade === "A+" ? "#f0ecff" : "rgba(255,255,255,0.75)", marginBottom: 4 }}>
                   {plan.grade === "PASS" ? "No active setup"
@@ -6280,6 +6287,12 @@ Use ONLY these times. All earlier time references in this conversation are stale
                   <span style={{ fontSize: 13, fontWeight: 700, padding: "2px 8px", background: "rgba(255,209,102,0.1)", border: "1px solid rgba(255,209,102,0.3)", borderRadius: 4, color: "#ffd166" }}>{plan.confidence} CONFIDENCE · {plan.confidence_score}%</span>
                 </div>
               </div>
+              </div>
+              {/* Back button — top right */}
+              <button onClick={() => setPhase("upload")}
+                style={{ fontFamily:"'Space Mono',monospace", fontSize:12, fontWeight:700, color:"#8878aa", background:"none", border:"1px solid rgba(255,255,255,0.1)", borderRadius:7, padding:"7px 14px", cursor:"pointer", whiteSpace:"nowrap", alignSelf:"flex-start" }}>
+                ← Back
+              </button>
             </div>
 
             {/* Summary */}
@@ -9648,8 +9661,8 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
               a:"OmniUSD is built exclusively for the New York session — 8:30 to 10:30 AM CT. This is the only window where institutional volume, level respect, and BRC follow-through are all aligned. Pre-market scouting opens at 7:00 AM CT. Hard cutoff is 10:30 AM CT — no new entries after that.\n\nException: BTCUSD and XAUUSD can be analyzed during London open (2:00–4:00 AM CT) with a maximum grade of B+. All other instruments are NY session only.",
             },
             {
-              q:"What is the edge?",
-              a:"Most traders enter at the Break. BRC waits for all three phases — Break, Retest, Continuation. You enter after confirmation, not during the move. That patience enforced by structure is the edge. OmniUSD holds that discipline when pressure says otherwise.",
+              q:"Why does OmniUSD cut off at 10:30 AM CT?",
+              a:"The 10:30 AM CT cutoff is not arbitrary — it marks the end of the institutional execution window. From 8:30 to 10:30 AM CT, the banks, hedge funds, and institutional players are actively executing their positions. Volume is highest, levels are respected, breaks are clean, and retests happen fast. This is the window BRC was built for.\n\nAfter 10:30 AM CT, institutional participation drops significantly. What remains is retail noise, profit-taking, and choppy price action. The same level that produced a clean retest at 9:30 AM might just chop sideways after 10:30 AM with no follow-through. Entries taken after the cutoff have a lower probability of clean execution.\n\nThe four 30M closes that matter: 9:00 AM, 9:30 AM, 10:00 AM, and 10:30 AM CT. If Tier 2 has not confirmed by 10:30 AM — the plan expires. No exceptions. This is the discipline that keeps the system profitable.",
             },
             {
               q:"Do I need to watch charts all session?",
