@@ -7,12 +7,6 @@ export const config = {
   maxDuration: 60,
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// VALIDATION — Rule 4: Directional math must be correct before returning plan
-// SHORT: entry > tp1 > tp2 > runner  (all descending)
-// LONG:  entry < tp1 < tp2 < runner  (all ascending)
-// Returns { valid: true } or { valid: false, reason: string, fixed: object }
-// ─────────────────────────────────────────────────────────────────────────────
 function validateTradePlan(parsed) {
   if (!parsed || typeof parsed !== 'object') return { valid: true };
 
@@ -33,7 +27,7 @@ function validateTradePlan(parsed) {
   const runner = toNum(parsed.runner);
   const stop   = toNum(parsed.stop_loss);
 
-  if (!entry || !tp1) return { valid: true }; // can't validate without at least entry + tp1
+  if (!entry || !tp1) return { valid: true };
 
   const errors = [];
 
@@ -53,7 +47,6 @@ function validateTradePlan(parsed) {
 
   if (errors.length === 0) return { valid: true };
 
-  // Downgrade to B and flag — don't silently pass broken math to the user
   const fixed = {
     ...parsed,
     grade: parsed.grade === 'A+' || parsed.grade === 'A' ? 'B' : parsed.grade,
@@ -65,6 +58,35 @@ function validateTradePlan(parsed) {
   };
 
   return { valid: false, reason: errors.join(' | '), fixed };
+}
+
+// Retry helper — retries once on rate limit (429) or server error (529/500)
+// with exponential backoff: first retry after 2s, second after 4s
+async function fetchWithRetry(url, options, maxRetries = 2) {
+  let lastError;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, options);
+
+      // Retry on rate limit or overloaded
+      if ((response.status === 429 || response.status === 529 || response.status === 500) && attempt < maxRetries - 1) {
+        const waitMs = (attempt + 1) * 2000; // 2s, 4s
+        console.warn(`[OmniUSD] API returned ${response.status} — retrying in ${waitMs}ms (attempt ${attempt + 1})`);
+        await new Promise(r => setTimeout(r, waitMs));
+        continue;
+      }
+
+      return response;
+    } catch (err) {
+      lastError = err;
+      if (attempt < maxRetries - 1) {
+        const waitMs = (attempt + 1) * 2000;
+        console.warn(`[OmniUSD] Network error — retrying in ${waitMs}ms (attempt ${attempt + 1}):`, err.message);
+        await new Promise(r => setTimeout(r, waitMs));
+      }
+    }
+  }
+  throw lastError || new Error('Max retries exceeded');
 }
 
 export default async function handler(req, res) {
@@ -84,7 +106,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetchWithRetry('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -96,8 +118,7 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    // ── Run TP validation on analysis responses (not live session chat) ──────
-    // Only validate when the response looks like a trade plan JSON
+    // Run TP validation on analysis responses (not live session chat)
     if (response.ok && data?.content?.[0]?.text) {
       const text = data.content[0].text;
       try {
@@ -106,12 +127,11 @@ export default async function handler(req, res) {
           const validation = validateTradePlan(parsed);
           if (!validation.valid) {
             console.warn('[OmniUSD] TP validation failed:', validation.reason);
-            // Return corrected version with downgraded grade
             data.content[0].text = JSON.stringify(validation.fixed);
           }
         }
       } catch (_) {
-        // Not a trade plan JSON (e.g. live session chat) — skip validation
+        // Not a trade plan JSON (live session chat) — skip validation
       }
     }
 
