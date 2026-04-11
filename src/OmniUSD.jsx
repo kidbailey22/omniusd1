@@ -2244,7 +2244,7 @@ function getNextClose() {
   return `${timeStr} ${tzShort}`;
 }
 
-function getAnalysisPrompt(instrument, session = "NY") {
+function getAnalysisPrompt(instrument, session = "NY", devMode = false) {
   const ct = getCTTime();
   const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
   const day = now.getDay();
@@ -2380,7 +2380,7 @@ OUTSIDE NY WINDOW (all other instruments, all other times):
 Current window: ${sessionContext}${fridayNote}
 
 RULE 7 — WEEKEND HARD BLOCK
-If today is Saturday OR Sunday before 8:00 PM ET → grade="PASS" regardless of structure. Weekend volume is thin and unreliable.
+${devMode ? "DEV MODE ACTIVE — Weekend block bypassed. Grade structure normally regardless of day." : "If today is Saturday OR Sunday before 8:00 PM ET → grade=\"PASS\" regardless of structure. Weekend volume is thin and unreliable."}
 
 RULE 8 — FRIDAY CAUTION
 ${ct.isFriday ? "TODAY IS FRIDAY — end of week. Apply extra caution. A PASS protects the week. Only A+ if structure is crystal clear." : "Apply standard grading rules."}
@@ -5388,7 +5388,7 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
           max_tokens: 1000,
-          system: getAnalysisPrompt(instrument, selectedSession),
+          system: getAnalysisPrompt(instrument, selectedSession, isDevMode()),
           messages: [{ role: "user", content: [...imgBlocks, { type: "text", text: `Analyze these ${instrument} charts. Daily first, then 4H, 1H, 30M, 15M. Return only the JSON.` }] }],
         }),
       });
