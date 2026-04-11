@@ -7000,9 +7000,9 @@ Use ONLY these times. All earlier time references in this conversation are stale
                             })}
                           </div>
                           {windowClosed && <div style={{ fontSize:9, color:"#ff6b6b", fontFamily:"'Space Mono',monospace", textAlign:"center", fontWeight:700, marginBottom:4 }}>WINDOW CLOSED</div>}
-                          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-                            <span style={{ fontSize:8, color:"#8878aa", letterSpacing:"0.1em" }}>{ctTime} CT</span>
-                            {!windowClosed && <span style={{ fontSize:8, color:"#ffd166", fontFamily:"monospace" }}>next: {nextClose}</span>}
+                          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:4 }}>
+                            <span style={{ fontSize:8, color:"rgba(255,255,255,0.3)", letterSpacing:"0.08em", fontFamily:"'Space Mono',monospace" }}>{ctTime}</span>
+                            {!windowClosed && <span style={{ fontSize:8, color:"rgba(255,209,102,0.6)", fontFamily:"'Space Mono',monospace" }}>{nextClose} next</span>}
                           </div>
                         </div>
                       );
@@ -7071,72 +7071,6 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 <div ref={bottomRef}/>
               </div>
 
-              {/* 30M Close Windows Tracker */}
-              {(() => {
-                const ctNow = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
-                const nowMins = ctNow.getHours() * 60 + ctNow.getMinutes();
-                const tzShort = getUserTZShort();
-                const sessCfg = SESSION_CONFIG[selectedSession] || SESSION_CONFIG.NY;
-                const candles = sessCfg.candles || [];
-                const candleMins = sessCfg.candleMins || [];
-                const cutoffMins = 10 * 60 + 30;
-                const windowClosed = nowMins > cutoffMins;
-                const minsLeft = ctNow.getMinutes() < 30 ? 30 - ctNow.getMinutes() : 60 - ctNow.getMinutes();
-
-                return (
-                  <div style={{ padding:"8px 12px 6px", borderTop:"1px solid rgba(255,255,255,0.04)", background:"rgba(0,229,255,0.02)" }}>
-                    {/* Label + time */}
-                    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:6 }}>
-                      <div style={{ fontSize:9, fontWeight:700, letterSpacing:"0.14em", color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace" }}>30M CLOSE WINDOWS</div>
-                      <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-                        <span style={{ width:5, height:5, borderRadius:"50%", background: windowClosed ? "#ff6b6b" : "#00e5ff", display:"inline-block", animation: windowClosed ? "none" : "pulse 1.5s ease infinite" }}/>
-                        <span style={{ fontSize:11, fontWeight:700, color: windowClosed ? "#ff6b6b" : "#00e5ff", fontFamily:"'Space Mono',monospace" }}>{ctTime} {tzShort}</span>
-                      </div>
-                    </div>
-                    {/* Window pills */}
-                    <div style={{ display:"grid", gridTemplateColumns:`repeat(${candles.length},1fr)`, gap:5 }}>
-                      {candles.map((c, i) => {
-                        const cMins = candleMins[i];
-                        const isPast = nowMins > cMins;
-                        const isNext = !isPast && (i === 0 || nowMins > candleMins[i-1]);
-                        const isFinal = i === candles.length - 1;
-                        const label = candleToUserTime(c).replace(/ (CT|ET|PT|MT|CST|CDT|EST|EDT|PST|PDT|MST|MDT).*/,"");
-
-                        let bg, border, timeColor, subColor, sub;
-                        if (isPast) {
-                          bg="rgba(255,255,255,0.02)"; border="1px solid rgba(255,255,255,0.06)";
-                          timeColor="rgba(255,255,255,0.2)"; sub="done"; subColor="rgba(255,255,255,0.15)";
-                        } else if (isNext && isFinal) {
-                          bg="rgba(255,107,107,0.08)"; border="1px solid rgba(255,107,107,0.4)";
-                          timeColor="#ff6b6b"; sub="FINAL"; subColor="#ff6b6b";
-                        } else if (isNext) {
-                          bg="rgba(0,204,255,0.08)"; border="2px solid rgba(0,204,255,0.5)";
-                          timeColor="#00ccff"; sub=`NEXT ${minsLeft}m`; subColor="#00ccff";
-                        } else if (isFinal) {
-                          bg="rgba(255,107,107,0.03)"; border="1px solid rgba(255,107,107,0.15)";
-                          timeColor="rgba(255,107,107,0.45)"; sub="FINAL"; subColor="rgba(255,107,107,0.35)";
-                        } else {
-                          bg="rgba(255,255,255,0.02)"; border="1px solid rgba(255,255,255,0.07)";
-                          timeColor="rgba(255,255,255,0.4)"; sub=""; subColor="transparent";
-                        }
-
-                        return (
-                          <div key={i} style={{ background:bg, border, borderRadius:8, padding:"6px 4px", textAlign:"center" }}>
-                            <div style={{ fontSize:12, fontWeight:700, color:timeColor, fontFamily:"'Space Mono',monospace", letterSpacing:"0.02em" }}>{label}</div>
-                            <div style={{ fontSize:8, fontWeight:700, letterSpacing:"0.08em", color:subColor, marginTop:2, minHeight:10 }}>{sub}</div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    {windowClosed && (
-                      <div style={{ marginTop:6, fontSize:11, color:"#ff6b6b", fontFamily:"'Space Mono',monospace", textAlign:"center", fontWeight:700 }}>
-                        WINDOW CLOSED — no new entries
-                      </div>
-                    )}
-                  </div>
-                );
-              })()}
-
               {/* Input */}
               <div style={{ padding: "8px 16px 14px", borderTop: "1px solid rgba(255,255,255,0.06)", display: "flex", gap: 8, flexShrink: 0 }}>
                 {messages.filter(m=>m.role==="user").length >= 30 ? (
@@ -7174,7 +7108,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                         ⚠ Spot price shown — prop firm prices may differ slightly
                       </div>
                     )}
-                    <div style={{ height: isMobile ? 320 : 280, background:"#131722" }}>
+                    <div style={{ height: isMobile ? 320 : 340, background:"#131722" }}>
                       <iframe
                         key={tvSymbol}
                         src={`https://s.tradingview.com/widgetembed/?symbol=${encodeURIComponent(tvSymbol)}&interval=30&theme=dark&style=1&locale=en&hide_top_toolbar=0&hide_legend=0&allow_symbol_change=0&save_image=0`}
