@@ -6295,6 +6295,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
 
               const btnLabel = !instrument ? "SELECT AN INSTRUMENT ABOVE"
                 : !chartsReady ? (images.filter(Boolean).length === 0 ? "SELECT YOUR 5 CHARTS" : `ADD ${5 - images.filter(Boolean).length} MORE CHART${5 - images.filter(Boolean).length !== 1 ? "S" : ""}`)
+                : isDevMode() && (mkt.state === "closed" || mkt.state === "wrong_session") ? "⚡ DEV — GENERATE PLAN →"
                 : mkt.state === "closed" ? "WINDOW CLOSED — COME BACK AT 8:30 AM CT"
                 : mkt.state === "wrong_session" ? `${instrument} — NY SESSION ONLY`
                 : mkt.state === "prep" ? "GENERATE SCOUT PLAN →"
