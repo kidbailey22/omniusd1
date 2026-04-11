@@ -2511,7 +2511,7 @@ Return ONLY this JSON — no markdown, no explanation, no preamble:
 }`;
 }
 
-function getLivePrompt(plan, session = "NY") {
+function getLivePrompt(plan, session = "NY", devMode = false) {
   const ct = getCTTime();
   const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
   const day = now.getDay(); // 0=Sun, 1=Mon...6=Sat
@@ -2523,7 +2523,10 @@ function getLivePrompt(plan, session = "NY") {
   let windowStatus = "";
   let sessionWarning = "";
 
-  if (day === 6) {
+  if (devMode) {
+    windowStatus = "DEV MODE — testing outside session window";
+    sessionWarning = "DEV MODE ACTIVE — ignore weekend/session restrictions. Coach this trader normally.";
+  } else if (day === 6) {
     // Saturday
     windowStatus = "SATURDAY — NO VALID SESSION ❌";
     sessionWarning = `CRITICAL CONTEXT — IT IS SATURDAY:
@@ -5715,7 +5718,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
           max_tokens: 1024,
-          system: getLivePrompt(plan, selectedSession),
+          system: getLivePrompt(plan, selectedSession, isDevMode()),
           messages: newHistory,
         }),
       });
@@ -7076,7 +7079,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 )}
               </div>
 
-              {/* TradingView Chart — collapsible */}
+              {/* TradingView Chart — always visible */}
               {(() => {
                 const tvSymbols = propFirmMode ? {
                   XAUUSD: "COMEX:MGC1!",
@@ -7095,23 +7098,14 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 };
                 const tvSymbol = tvSymbols[plan?.instrument] || "OANDA:XAUUSD";
                 return (
-                  <div style={{ borderTop:"1px solid rgba(255,255,255,0.06)", flexShrink:0 }}>
-                    <button onClick={() => setShowChart(c => !c)}
-                      style={{ width:"100%", padding:"8px 16px", background:"rgba(255,255,255,0.02)", border:"none", color:"rgba(255,255,255,0.45)", fontSize:11, fontWeight:700, letterSpacing:"0.1em", fontFamily:"'Space Mono',monospace", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-                      <span>📊 {showChart ? "HIDE CHART" : "SHOW CHART"}</span>
-                      <span>{showChart ? "▴" : "▾"}</span>
-                    </button>
-                    {showChart && (
-                      <div style={{ height: isMobile ? 200 : 260, background:"#131722" }}>
-                        <iframe
-                          key={tvSymbol}
-                          src={`https://www.tradingview.com/widgetembed/?frameElementId=tradingview_omni&symbol=${encodeURIComponent(tvSymbol)}&interval=30&theme=dark&style=1&locale=en&toolbar_bg=%231e1a35&enable_publishing=false&hide_top_toolbar=0&hide_legend=0&saveimage=false&studies=[]&show_popup_button=false`}
-                          style={{ width:"100%", height:"100%", border:"none" }}
-                          allowTransparency
-                          allow="clipboard-read; clipboard-write"
-                        />
-                      </div>
-                    )}
+                  <div style={{ height: isMobile ? 200 : 260, background:"#131722", borderTop:"1px solid rgba(255,255,255,0.06)", flexShrink:0 }}>
+                    <iframe
+                      key={tvSymbol}
+                      src={`https://s.tradingview.com/widgetembed/?symbol=${encodeURIComponent(tvSymbol)}&interval=30&theme=dark&style=1&locale=en&hide_top_toolbar=0&hide_legend=0&allow_symbol_change=0&save_image=0`}
+                      style={{ width:"100%", height:"100%", border:"none" }}
+                      allowTransparency
+                      allow="clipboard-read; clipboard-write"
+                    />
                   </div>
                 );
               })()}
