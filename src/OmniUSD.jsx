@@ -5397,6 +5397,13 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
       const text = data.content?.[0]?.text || "{}";
       const parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
 
+      // DEV MODE — force override if AI still returned PASS due to weekend/session rules
+      if (isDevMode() && (parsed.grade === "PASS" || parsed.grade === "SOFT PASS") && parsed.pass_reason && (parsed.pass_reason.toLowerCase().includes("weekend") || parsed.pass_reason.toLowerCase().includes("saturday") || parsed.pass_reason.toLowerCase().includes("session") || parsed.pass_reason.toLowerCase().includes("closed"))) {
+        parsed.grade = "B";
+        parsed.pass_reason = "";
+        parsed._devOverride = true;
+      }
+
       // Secondary check — only block on a CONFIRMED instrument mismatch, never on uncertainty
       if (parsed.instrument_valid === false) {
         const detected = (parsed.instrument_detected || "").toUpperCase().trim();
