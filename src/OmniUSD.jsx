@@ -6291,7 +6291,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
             {(() => {
               const mkt = instrument ? getMarketStatus(instrument, selectedSession) : { state: "closed" };
               const chartsReady = images.filter(Boolean).length === 5;
-              const canGenerate = chartsReady && instrument && (mkt.state === "live" || mkt.state === "prep" || mkt.state === "london");
+              const canGenerate = (chartsReady && instrument && (mkt.state === "live" || mkt.state === "prep" || mkt.state === "london")) || (chartsReady && instrument && isDevMode());
 
               const btnLabel = !instrument ? "SELECT AN INSTRUMENT ABOVE"
                 : !chartsReady ? (images.filter(Boolean).length === 0 ? "SELECT YOUR 5 CHARTS" : `ADD ${5 - images.filter(Boolean).length} MORE CHART${5 - images.filter(Boolean).length !== 1 ? "S" : ""}`)
