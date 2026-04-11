@@ -5323,7 +5323,7 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
     const userId = session.user?.id || (token ? JSON.parse(atob(token.split(".")[1]))?.sub : null);
     const userTier = profile?.tier || "starter";
 
-    if (userId && token) {
+    if (userId && token && !isDevMode()) {
       const instrumentCount = (uploadCounts[instrument] || 0);
       const limitCheck = await checkUsageLimits(userId, token, instrument, userTier);
 
