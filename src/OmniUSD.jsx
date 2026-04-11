@@ -6724,7 +6724,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 const _n = new Date(new Date().toLocaleString("en-US",{timeZone:"America/Chicago"}));
                 const _d = _n.getDay();
                 const _m = _n.getHours()*60+_n.getMinutes();
-                const isWeekendPass = (_d===6||(_d===0&&_m<20*60)) && plan.pass_reason && plan.pass_reason.includes("Weekend");
+                const isWeekendPass = (_d===6||(_d===0&&_m<20*60)) && plan.pass_reason && plan.pass_reason.includes("Weekend") && !isDevMode();
                 const isScoutMode = plan._scoutMode === true;
 
                 // SCOUT MODE — window closed, levels valid for next session
