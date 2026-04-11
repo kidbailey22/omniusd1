@@ -3340,6 +3340,7 @@ async function logUsage(userId, token, instrument) {
 }
 
 async function checkUsageLimits(userId, token, instrument, tier) {
+  if (isDevMode()) return { allowed: true };
   try {
     const startOfDay = new Date();
     startOfDay.setHours(0,0,0,0);
