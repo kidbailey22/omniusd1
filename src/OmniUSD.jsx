@@ -4541,6 +4541,13 @@ function SoftPassScenariosPanel({ plan, onActivate }) {
   if (!plan?.soft_pass_scenarios) return null;
   const { bull, bear } = plan.soft_pass_scenarios;
 
+  // Strip text from price fields — same as main plan stripPrice
+  function stripP(v) {
+    if (!v) return v;
+    const m = String(v).match(/^([0-9,.\s–\-]+(?:\s*[–\-]\s*[0-9,.]+)?)/);
+    return m ? m[1].trim() : v;
+  }
+
   function handleActivate(s, bias) {
     if (confirming === bias) {
       setConfirming(null);
@@ -4557,6 +4564,9 @@ function SoftPassScenariosPanel({ plan, onActivate }) {
     const bias = isBull ? "LONG" : "SHORT";
     const dir = isBull ? "above" : "below";
     const isConfirming = confirming === bias;
+    const trigger = stripP(s.trigger);
+    const stop    = stripP(s.stop);
+    const tp1     = stripP(s.tp1);
 
     return (
       <div style={{ padding:"10px 14px", background:`${color}08`, border:`1px solid ${isConfirming ? color : color+"33"}`, borderRadius:10, marginBottom:8, transition:"border 0.2s" }}>
@@ -4565,19 +4575,19 @@ function SoftPassScenariosPanel({ plan, onActivate }) {
           <span style={{ fontSize:11, fontWeight:900, letterSpacing:"0.12em", color, fontFamily:"'Space Mono',monospace" }}>{isBull ? "🟢 BULL" : "🔴 BEAR"}</span>
           <span style={{ fontSize:11, padding:"2px 8px", borderRadius:4, background:`${color}14`, border:`1px solid ${color}33`, color, fontFamily:"'Space Mono',monospace", fontWeight:700 }}>{bias}</span>
         </div>
-        {/* Trigger line — simplified */}
+        {/* Trigger line */}
         <div style={{ fontSize:14, fontWeight:700, color, marginBottom:8, fontFamily:"monospace" }}>
-          30M close {dir} {s.trigger} activates {bias}
+          30M close {dir} {trigger} activates {bias}
         </div>
-        {/* Level cards — tighter */}
+        {/* Level cards */}
         <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:5, marginBottom:10 }}>
-          {s.stop && <div style={{ padding:"6px 10px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:7 }}>
+          {stop && <div style={{ padding:"6px 10px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:7 }}>
             <div style={{ fontSize:9, color:"#8878aa", letterSpacing:"0.1em", marginBottom:2 }}>STOP</div>
-            <div style={{ fontSize:14, fontWeight:700, color:"#ff6b6b", fontFamily:"monospace" }}>{s.stop}</div>
+            <div style={{ fontSize:14, fontWeight:700, color:"#ff6b6b", fontFamily:"monospace" }}>{stop}</div>
           </div>}
-          {s.tp1 && <div style={{ padding:"6px 10px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:7 }}>
+          {tp1 && <div style={{ padding:"6px 10px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:7 }}>
             <div style={{ fontSize:9, color:"#8878aa", letterSpacing:"0.1em", marginBottom:2 }}>TP1</div>
-            <div style={{ fontSize:14, fontWeight:700, color:"#7fff6b", fontFamily:"monospace" }}>{s.tp1}</div>
+            <div style={{ fontSize:14, fontWeight:700, color:"#7fff6b", fontFamily:"monospace" }}>{tp1}</div>
           </div>}
         </div>
         {isConfirming && (
@@ -4602,11 +4612,11 @@ function SoftPassScenariosPanel({ plan, onActivate }) {
           </button>
         )}
         {/* Alert pill */}
-        {s.trigger && (
+        {trigger && (
           <div style={{ marginTop:10, display:"inline-flex", alignItems:"center", gap:7, padding:"7px 14px", background:`${color}12`, border:`1px solid ${color}44`, borderRadius:20, cursor:"default" }}>
             <span style={{ fontSize:12 }}>🔔</span>
             <span style={{ fontSize:12, fontWeight:700, color, fontFamily:"'Space Mono',monospace", letterSpacing:"0.04em" }}>
-              SET ALERT — {s.trigger}
+              SET ALERT — {trigger} — 30M close {dir} activates {bias}
             </span>
           </div>
         )}
@@ -6361,14 +6371,39 @@ Use ONLY these times. All earlier time references in this conversation are stale
                   <div style={{ fontSize:14, color:"rgba(255,255,255,0.8)", lineHeight:1.7 }}>
                     No entry yet — structure is forming. Two scenarios to watch at session open. <strong style={{ color:"#f0ecff" }}>One activates. The other doesn't.</strong>
                   </div>
+                  {plan._scoutMode && plan._preMarketScout && !plan._misaligned && (
+                    <div style={{ marginTop:10, padding:"8px 12px", background:"rgba(0,204,255,0.06)", border:"1px solid rgba(0,204,255,0.2)", borderRadius:7, fontSize:12, color:"rgba(0,204,255,0.8)", fontFamily:"'Space Mono',monospace", lineHeight:1.6 }}>
+                      ✓ Alert set? You're ready. No re-upload needed — activate your scenario when the 30M confirms at session open.
+                    </div>
+                  )}
                 </div>
 
                 {/* Scenarios — collapsible dropdown (proper component, no IIFE) */}
                 <SoftPassScenariosPanel plan={plan} onActivate={(scenario, bias) => {
-                  // Build a live-session-compatible plan from the activated scenario
+                  // Check 3TF alignment before assigning grade
+                  // A+ requires Daily + 4H + 1H all agreeing with the activated bias
+                  const tf = plan.timeframe_reads || {};
+                  const dailyBias  = (tf.daily?.bias  || "").toUpperCase();
+                  const h4Bias     = (tf.h4?.bias     || "").toUpperCase();
+                  const h1Bias     = (tf.h1?.bias     || "").toUpperCase();
+                  const activeBias = (bias || "").toUpperCase();
+                  const biasTarget = activeBias === "LONG" ? "BULLISH" : "BEARISH";
+
+                  const dailyAgrees = dailyBias === biasTarget;
+                  const h4Agrees    = h4Bias    === biasTarget;
+                  const h1Agrees    = h1Bias    === biasTarget;
+                  const aligned     = [dailyAgrees, h4Agrees, h1Agrees].filter(Boolean).length;
+
+                  // Grade based on how many timeframes agree
+                  let activatedGrade;
+                  if (aligned === 3)      activatedGrade = "A+";
+                  else if (aligned === 2) activatedGrade = "A";
+                  else if (aligned === 1) activatedGrade = "B";
+                  else                   activatedGrade = "C";
+
                   const activatedPlan = {
                     ...plan,
-                    grade: "A+",
+                    grade: activatedGrade,
                     bias,
                     trigger_level: scenario.trigger,
                     stop_loss: scenario.stop,
@@ -6379,7 +6414,6 @@ Use ONLY these times. All earlier time references in this conversation are stale
                     summary: scenario.plan || plan.summary,
                     _activatedFromSoftPass: true,
                   };
-                  // Set plan first, then start session with the activated plan directly
                   setPlan(activatedPlan);
                   startLiveSession(activatedPlan);
                 }} />
