@@ -5457,14 +5457,14 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
       }
 
       // Window closed — downgrade to SCOUT MODE
-      if (_mktStatus.state === "closed" && parsed.grade === "A+") {
+      if (_mktStatus.state === "closed" && parsed.grade === "A+" && !isDevMode()) {
         parsed.grade = "PASS";
         parsed.pass_reason = `SCOUT MODE — Session window is closed. These levels are valid for your next NY session (8:30 AM CT). No execution today.`;
         parsed._scoutMode = true;
       }
 
       // Wrong session — hard block
-      if (_mktStatus.state === "wrong_session") {
+      if (_mktStatus.state === "wrong_session" && !isDevMode()) {
         parsed.grade = "PASS";
         parsed.pass_reason = `OmniUSD is built for NY session execution. The window opens at 8:30 AM CT. Come back then with fresh charts for A+ analysis. Pre-market scouting available from 7:00 AM CT.`;
         parsed._scoutMode = true;
