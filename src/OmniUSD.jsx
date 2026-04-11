@@ -5420,7 +5420,7 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
       const _day = _now.getDay();
       const _mins = _now.getHours() * 60 + _now.getMinutes();
       const _isWeekend = _day === 6 || (_day === 0 && _mins < 20 * 60);
-      if (_isWeekend && parsed.grade !== "PASS") {
+      if (_isWeekend && parsed.grade !== "PASS" && !isDevMode()) {
         parsed.grade = "PASS";
         parsed.pass_reason = "Weekend — markets are thin and unreliable. No valid BRC execution window until Sunday Asian session or Monday NY session. Structure noted — come back when a proper session opens.";
       }
