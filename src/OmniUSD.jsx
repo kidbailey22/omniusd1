@@ -6611,14 +6611,13 @@ Use ONLY these times. All earlier time references in this conversation are stale
                   </div>
                 )}
 
-                {/* ── PLAN CHAT — Ask Omni about this plan ── */}
+                {/* ── PLAN CHAT — Ask Omni about this plan — FIRST ── */}
                 {(() => {
                   const questionsUsed = planChatMessages.filter(m => m.role === "user").length;
                   const questionsLeft = PLAN_CHAT_LIMIT - questionsUsed;
                   const isExhausted = questionsLeft <= 0;
                   return (
                     <div style={{ marginBottom: 12 }}>
-                      {/* Toggle button */}
                       <button onClick={() => setPlanChatOpen(o => !o)}
                         style={{ width:"100%", padding:"11px 16px", borderRadius: planChatOpen ? "10px 10px 0 0" : 10, border:"1px solid rgba(204,68,255,0.25)", background:"rgba(204,68,255,0.05)", color:"#cc44ff", fontSize:13, fontWeight:700, letterSpacing:"0.08em", fontFamily:"inherit", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"space-between", transition:"all 0.2s" }}>
                         <span>💬 Ask Omni about this plan</span>
@@ -6626,20 +6625,14 @@ Use ONLY these times. All earlier time references in this conversation are stale
                           {isExhausted ? "0 questions left" : `${questionsLeft} question${questionsLeft !== 1 ? "s" : ""} left`} {planChatOpen ? "▴" : "▾"}
                         </span>
                       </button>
-
-                      {/* Chat panel */}
                       {planChatOpen && (
                         <div style={{ border:"1px solid rgba(204,68,255,0.25)", borderTop:"none", borderRadius:"0 0 10px 10px", background:"rgba(255,255,255,0.02)", padding:"12px 14px" }}>
-
-                          {/* Warning — shown before first question */}
                           {questionsUsed === 0 && (
                             <div style={{ padding:"10px 12px", background:"rgba(255,209,102,0.06)", border:"1px solid rgba(255,209,102,0.2)", borderRadius:8, marginBottom:12, fontFamily:"'Space Mono',monospace", fontSize:11, color:"rgba(255,209,102,0.8)", lineHeight:1.7 }}>
-                              ⚠ You have 3 questions. Make them count.<br/>
+                              ⚠ You have {PLAN_CHAT_LIMIT} questions. Make them count.<br/>
                               Ask only about <strong style={{color:"#ffd166"}}>this plan</strong> — levels, structure, bias, BRC phase. Nothing else.
                             </div>
                           )}
-
-                          {/* Messages */}
                           {planChatMessages.length > 0 && (
                             <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:12, maxHeight:220, overflowY:"auto" }}>
                               {planChatMessages.map((m, i) => (
@@ -6656,8 +6649,6 @@ Use ONLY these times. All earlier time references in this conversation are stale
                               )}
                             </div>
                           )}
-
-                          {/* Exhausted message */}
                           {isExhausted ? (
                             <div style={{ textAlign:"center", padding:"10px 0", fontFamily:"'Space Mono',monospace", fontSize:11, color:"rgba(255,255,255,0.35)", lineHeight:1.7 }}>
                               Questions used. Ready to trade — start your live session when the candle confirms.
@@ -6683,16 +6674,18 @@ Use ONLY these times. All earlier time references in this conversation are stale
                   );
                 })()}
 
+                {/* ── FULL ANALYSIS — collapsible — SECOND ── */}
+                <FullAnalysisPanel plan={plan} />
+
                 {/* START / RESUME LIVE SESSION */}
                 {messages.length > 0 ? (
-                  // Active session exists — show Resume button
                   <button onClick={() => setPhase("live")}
-                    style={{ width: "100%", padding: "15px", borderRadius: 10, border: "none", background: "linear-gradient(135deg,#00e5ff,#0099bb)", color: "#fff", fontSize: 13, fontWeight: 700, letterSpacing: "0.12em", fontFamily: "inherit", cursor: "pointer", boxShadow: "0 4px 28px rgba(0,229,255,0.25)" }}>
+                    style={{ width: "100%", padding: "15px", borderRadius: 10, border: "none", background: "linear-gradient(135deg,#00e5ff,#0099bb)", color: "#fff", fontSize: 13, fontWeight: 700, letterSpacing: "0.12em", fontFamily: "inherit", cursor: "pointer", boxShadow: "0 4px 28px rgba(0,229,255,0.25)", marginTop: 8 }}>
                     ← BACK TO LIVE SESSION
                   </button>
                 ) : (
                   <button onClick={startLiveSession}
-                    style={{ width: "100%", padding: "15px", borderRadius: 10, border: plan.grade === "A+" ? "none" : "1px solid rgba(255,255,255,0.1)", background: plan.grade === "A+" ? "linear-gradient(135deg,#ff6bff,#7b2fff)" : "rgba(255,255,255,0.04)", color: plan.grade === "A+" ? "#fff" : "rgba(255,255,255,0.85)", fontSize: 13, fontWeight: 700, letterSpacing: "0.12em", fontFamily: "inherit", cursor: "pointer", boxShadow: plan.grade === "A+" ? "0 4px 28px rgba(255,107,255,0.25)" : "none" }}>
+                    style={{ width: "100%", padding: "15px", borderRadius: 10, border: plan.grade === "A+" ? "none" : "1px solid rgba(255,209,102,0.35)", background: plan.grade === "A+" ? "linear-gradient(135deg,#ff6bff,#7b2fff)" : "linear-gradient(135deg,#cc8800,#ffd166)", color: "#fff", fontSize: 13, fontWeight: 700, letterSpacing: "0.12em", fontFamily: "inherit", cursor: "pointer", boxShadow: plan.grade === "A+" ? "0 4px 28px rgba(255,107,255,0.25)" : "0 4px 28px rgba(255,209,102,0.2)", marginTop: 8 }}>
                     {plan.grade === "A+" ? "START LIVE SESSION →" : "MONITOR SETUP →"}
                   </button>
                 )}
@@ -6711,9 +6704,6 @@ Use ONLY these times. All earlier time references in this conversation are stale
                     </button>
                   );
                 })()}
-
-                {/* ── FULL ANALYSIS — collapsible ── */}
-                <FullAnalysisPanel plan={plan} />
 
                 {/* ── NAV ── */}
                 <div style={{ display:"flex", gap:8, marginTop:12 }}>
@@ -7084,10 +7074,10 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 const tvSymbols = {
                   XAUUSD: "TVC:GOLD",
                   BTCUSD: "COINBASE:BTCUSD",
-                  NAS100: "NASDAQ:NDX",
-                  US30:   "TVC:DJI",
+                  NAS100: "NASDAQ:QQQ",
+                  US30:   "AMEX:DIA",
                   USOIL:  "TVC:USOIL",
-                  US500:  "SP:SPX",
+                  US500:  "AMEX:SPY",
                 };
                 const tvSymbol = tvSymbols[plan?.instrument] || "TVC:GOLD";
                 return (
