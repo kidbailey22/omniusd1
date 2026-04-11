@@ -5312,7 +5312,7 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
   async function analyzeCharts() {
     if (images.filter(Boolean).length < 5) return;
     const mktStatus = getMarketStatus(instrument, selectedSession);
-    if (mktStatus.state === "closed" || mktStatus.state === "wrong_session") return;
+    if ((mktStatus.state === "closed" || mktStatus.state === "wrong_session") && !isDevMode()) return;
 
     // ── Usage limit checks ────────────────────────────────────────────────
     const session = JSON.parse(localStorage.getItem("omniusd_session") || "{}");
