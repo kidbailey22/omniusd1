@@ -2925,6 +2925,7 @@ function SettingsPage({profile, onSignOut, onClose}) {
 
         {/* ── PREFERENCES ── */}
         {section === "preferences" && (
+          <>
           <div style={card}>
             <span style={lbl}>TIMEZONE</span>
             <div style={{marginBottom:10,fontFamily:"'Space Mono',monospace",fontSize:13,color:"rgba(255,255,255,0.85)"}}>
@@ -2954,6 +2955,34 @@ function SettingsPage({profile, onSignOut, onClose}) {
               SAVE TIMEZONE →
             </button>
           </div>
+
+          {/* Prop Firm Mode */}
+          <div style={{...card, marginTop:12}}>
+            <span style={lbl}>PROP FIRM MODE</span>
+            <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"rgba(255,255,255,0.7)",lineHeight:1.7,marginBottom:14}}>
+              When enabled the live session chart shows futures contracts (MGC, NQ, YM, ES, CL) instead of spot prices. Use this if you trade on a prop firm platform like MFFU or Apex.
+            </div>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+              <div>
+                <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,color: profile?._propFirmMode || JSON.parse(localStorage.getItem("omniusd_prop_firm_mode")||"false") ? "#7fff6b" : "#8878aa"}}>
+                  {JSON.parse(localStorage.getItem("omniusd_prop_firm_mode")||"false") ? "✓ Prop firm mode ON" : "Prop firm mode OFF"}
+                </div>
+                <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"rgba(255,255,255,0.35)",marginTop:2}}>
+                  {JSON.parse(localStorage.getItem("omniusd_prop_firm_mode")||"false") ? "Chart shows: MGC · NQ · YM · ES · CL" : "Chart shows: XAUUSD · NQ · YM · ES · CL"}
+                </div>
+              </div>
+              <button onClick={() => {
+                const current = JSON.parse(localStorage.getItem("omniusd_prop_firm_mode")||"false");
+                const next = !current;
+                localStorage.setItem("omniusd_prop_firm_mode", String(next));
+                window.location.reload();
+              }}
+                style={{padding:"9px 18px",borderRadius:8,border:`1px solid ${JSON.parse(localStorage.getItem("omniusd_prop_firm_mode")||"false") ? "rgba(127,255,107,0.35)" : "rgba(255,255,255,0.15)"}`,background:JSON.parse(localStorage.getItem("omniusd_prop_firm_mode")||"false") ? "rgba(127,255,107,0.1)" : "rgba(255,255,255,0.04)",color:JSON.parse(localStorage.getItem("omniusd_prop_firm_mode")||"false") ? "#7fff6b" : "#8878aa",fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,cursor:"pointer"}}>
+                {JSON.parse(localStorage.getItem("omniusd_prop_firm_mode")||"false") ? "TURN OFF" : "TURN ON"}
+              </button>
+            </div>
+          </div>
+          </>
         )}
 
         {/* ── DANGER ZONE ── */}
@@ -5191,8 +5220,17 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
   const [ctTime, setCtTime] = useState(getCTTime().str);
   const [nextClose, setNextClose] = useState(getNextClose());
   const [dragOverSlot, setDragOverSlot] = useState(null);
-  // Track uploads per instrument this session — allows one free re-upload, warns on second
-  const [uploadCounts, setUploadCounts] = useState({}); // { "BTCUSD": 1, "XAUUSD": 2 }
+  const [uploadCounts, setUploadCounts] = useState({});
+  // Plan chat state
+  const [planChatMessages, setPlanChatMessages] = useState([]);
+  const [planChatInput, setPlanChatInput] = useState("");
+  const [planChatLoading, setPlanChatLoading] = useState(false);
+  const [planChatOpen, setPlanChatOpen] = useState(false);
+  const PLAN_CHAT_LIMIT = 4;
+  const [showChart, setShowChart] = useState(false);
+  const [propFirmMode, setPropFirmMode] = useState(() => {
+    try { return localStorage.getItem("omniusd_prop_firm_mode") === "true"; } catch { return false; }
+  });
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
   const fileRef = useRef(null);
@@ -5463,6 +5501,8 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
       }
 
       setPlan(parsed);
+      setPlanChatMessages([]);
+      setPlanChatOpen(false);
       setPhase("plan");
       // Auto-save every plan to session history (all grades)
       autoSavePlan({ ...parsed, instrument });
@@ -5481,6 +5521,66 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
   }
 
   // ── STEP 2: Start live session ──────────────────────────────────────────────
+  // ── Plan chat — post-analysis Q&A (3 questions max) ─────────────────────
+  async function sendPlanChat() {
+    const userMsg = planChatInput.trim();
+    if (!userMsg || planChatLoading) return;
+    if (planChatMessages.filter(m => m.role === "user").length >= PLAN_CHAT_LIMIT) return;
+
+    setPlanChatInput("");
+    setPlanChatLoading(true);
+    const newMessages = [...planChatMessages, { role: "user", content: userMsg }];
+    setPlanChatMessages(newMessages);
+
+    const systemPrompt = `You are OmniUSD's plan analyst. A trader just received this session plan and has questions about it.
+
+THEIR PLAN:
+Instrument: ${plan?.instrument} | Grade: ${plan?.grade} | Bias: ${plan?.bias}
+Trigger: ${plan?.trigger_level} | Stop: ${plan?.stop_loss} | TP1: ${plan?.tp1} | TP2: ${plan?.tp2} | Runner: ${plan?.runner}
+Retest Zone: ${plan?.retest_zone} | Confidence: ${plan?.confidence_score}%
+Summary: ${plan?.summary}
+BRC Phase: ${plan?.brc_phase}
+Daily: ${plan?.timeframe_reads?.daily?.bias} — ${plan?.timeframe_reads?.daily?.structure}
+4H: ${plan?.timeframe_reads?.h4?.bias} — ${plan?.timeframe_reads?.h4?.structure}
+1H: ${plan?.timeframe_reads?.h1?.bias} — ${plan?.timeframe_reads?.h1?.structure}
+
+YOUR ROLE:
+- Answer questions about THIS plan only. If they ask anything unrelated — redirect them back to the plan.
+- Explain levels, structure, bias, and BRC phases in plain simple English.
+- Keep answers under 4 lines. Be direct and clear.
+- Never give new trade recommendations or modify the plan.
+- This trader has ${PLAN_CHAT_LIMIT - planChatMessages.filter(m=>m.role==="user").length - 1} questions remaining after this one.
+
+DISCIPLINE REINFORCEMENT — CRITICAL:
+If the trader sounds anxious, uncertain, scared, or doubtful — acknowledge their feeling briefly then redirect to the plan with calm confidence. Examples:
+- "Is this really a good setup?" → Explain why the grade is what it is, then: "The system has done the analysis. Trust the plan and let the candle confirm."
+- "What if it goes against me?" → "That's what the stop is for. Set it, respect it, and let the trade work."
+- "I'm not sure about this" → "Uncertainty before a trade is normal. The plan doesn't change because of feelings — wait for the 30M close to confirm before acting."
+- "Should I take this?" → Answer based on the grade and conditions, end with: "Trust the process."
+- Any sign of FOMO or second-guessing → Calm them down, point back to the rules.
+
+Never dismiss their feelings. Acknowledge briefly, then refocus on the plan and the process.`;
+
+    try {
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 300,
+          system: systemPrompt,
+          messages: newMessages.map(m => ({ role: m.role, content: m.content })),
+        }),
+      });
+      const data = await res.json();
+      const reply = data.content?.[0]?.text || "Unable to answer right now. Try again.";
+      setPlanChatMessages(prev => [...prev, { role: "assistant", content: reply }]);
+    } catch {
+      setPlanChatMessages(prev => [...prev, { role: "assistant", content: "Connection error. Try again." }]);
+    }
+    setPlanChatLoading(false);
+  }
+
   function startLiveSession(planOverride) {
     const activePlan = planOverride || plan;
     // Save to execution journal — user committed to this setup
@@ -6477,6 +6577,78 @@ Use ONLY these times. All earlier time references in this conversation are stale
                   </div>
                 )}
 
+                {/* ── PLAN CHAT — Ask Omni about this plan ── */}
+                {(() => {
+                  const questionsUsed = planChatMessages.filter(m => m.role === "user").length;
+                  const questionsLeft = PLAN_CHAT_LIMIT - questionsUsed;
+                  const isExhausted = questionsLeft <= 0;
+                  return (
+                    <div style={{ marginBottom: 12 }}>
+                      {/* Toggle button */}
+                      <button onClick={() => setPlanChatOpen(o => !o)}
+                        style={{ width:"100%", padding:"11px 16px", borderRadius: planChatOpen ? "10px 10px 0 0" : 10, border:"1px solid rgba(204,68,255,0.25)", background:"rgba(204,68,255,0.05)", color:"#cc44ff", fontSize:13, fontWeight:700, letterSpacing:"0.08em", fontFamily:"inherit", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"space-between", transition:"all 0.2s" }}>
+                        <span>💬 Ask Omni about this plan</span>
+                        <span style={{ fontSize:11, color:"rgba(204,68,255,0.6)" }}>
+                          {isExhausted ? "0 questions left" : `${questionsLeft} question${questionsLeft !== 1 ? "s" : ""} left`} {planChatOpen ? "▴" : "▾"}
+                        </span>
+                      </button>
+
+                      {/* Chat panel */}
+                      {planChatOpen && (
+                        <div style={{ border:"1px solid rgba(204,68,255,0.25)", borderTop:"none", borderRadius:"0 0 10px 10px", background:"rgba(255,255,255,0.02)", padding:"12px 14px" }}>
+
+                          {/* Warning — shown before first question */}
+                          {questionsUsed === 0 && (
+                            <div style={{ padding:"10px 12px", background:"rgba(255,209,102,0.06)", border:"1px solid rgba(255,209,102,0.2)", borderRadius:8, marginBottom:12, fontFamily:"'Space Mono',monospace", fontSize:11, color:"rgba(255,209,102,0.8)", lineHeight:1.7 }}>
+                              ⚠ You have 3 questions. Make them count.<br/>
+                              Ask only about <strong style={{color:"#ffd166"}}>this plan</strong> — levels, structure, bias, BRC phase. Nothing else.
+                            </div>
+                          )}
+
+                          {/* Messages */}
+                          {planChatMessages.length > 0 && (
+                            <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:12, maxHeight:220, overflowY:"auto" }}>
+                              {planChatMessages.map((m, i) => (
+                                <div key={i} style={{ display:"flex", flexDirection:"column", alignItems: m.role === "user" ? "flex-end" : "flex-start" }}>
+                                  <div style={{ maxWidth:"90%", padding:"8px 12px", borderRadius: m.role === "user" ? "10px 10px 3px 10px" : "10px 10px 10px 3px", background: m.role === "user" ? "rgba(204,68,255,0.1)" : "rgba(255,255,255,0.04)", border: m.role === "user" ? "1px solid rgba(204,68,255,0.2)" : "1px solid rgba(255,255,255,0.07)", fontSize:13, color: m.role === "user" ? "#f0ecff" : "#ccc4e8", lineHeight:1.7, fontFamily:"'Space Mono',monospace" }}>
+                                    {m.content}
+                                  </div>
+                                </div>
+                              ))}
+                              {planChatLoading && (
+                                <div style={{ display:"flex", gap:4, padding:"8px 12px" }}>
+                                  {[0,1,2].map(d => <span key={d} style={{ width:5, height:5, borderRadius:"50%", background:"#cc44ff", animation:`pulse 1s ease ${d*0.2}s infinite`, display:"inline-block" }}/>)}
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Exhausted message */}
+                          {isExhausted ? (
+                            <div style={{ textAlign:"center", padding:"10px 0", fontFamily:"'Space Mono',monospace", fontSize:11, color:"rgba(255,255,255,0.35)", lineHeight:1.7 }}>
+                              Questions used. Ready to trade — start your live session when the candle confirms.
+                            </div>
+                          ) : (
+                            <div style={{ display:"flex", gap:8 }}>
+                              <input
+                                value={planChatInput}
+                                onChange={e => setPlanChatInput(e.target.value)}
+                                onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendPlanChat()}
+                                placeholder="Ask about this plan..."
+                                style={{ flex:1, background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:8, padding:"9px 12px", fontSize:13, color:"#f0ecff", fontFamily:"'Space Mono',monospace", outline:"none" }}
+                              />
+                              <button onClick={sendPlanChat} disabled={planChatLoading || !planChatInput.trim()}
+                                style={{ padding:"9px 16px", borderRadius:8, border:"none", background: planChatInput.trim() ? "linear-gradient(135deg,#cc44ff,#7b2fff)" : "rgba(255,255,255,0.06)", color: planChatInput.trim() ? "#fff" : "#8878aa", fontSize:13, fontWeight:700, fontFamily:"inherit", cursor: planChatInput.trim() ? "pointer" : "not-allowed" }}>
+                                ASK
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
                 {/* START / RESUME LIVE SESSION */}
                 {messages.length > 0 ? (
                   // Active session exists — show Resume button
@@ -6788,19 +6960,68 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 <div ref={bottomRef}/>
               </div>
 
-              {/* Live time strip — next candle countdown */}
+              {/* 30M Close Windows Tracker */}
               {(() => {
                 const ctNow = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
-                const minsLeft = ctNow.getMinutes() < 30 ? 30 - ctNow.getMinutes() : 60 - ctNow.getMinutes();
+                const nowMins = ctNow.getHours() * 60 + ctNow.getMinutes();
                 const tzShort = getUserTZShort();
+                const sessCfg = SESSION_CONFIG[selectedSession] || SESSION_CONFIG.NY;
+                const candles = sessCfg.candles || [];
+                const candleMins = sessCfg.candleMins || [];
+                const cutoffMins = 10 * 60 + 30;
+                const windowClosed = nowMins > cutoffMins;
+                const minsLeft = ctNow.getMinutes() < 30 ? 30 - ctNow.getMinutes() : 60 - ctNow.getMinutes();
+
                 return (
-                  <div style={{ padding:"5px 16px 6px", display:"flex", alignItems:"center", gap:10, borderTop:"1px solid rgba(255,255,255,0.04)", background:"rgba(0,229,255,0.025)" }}>
-                    <span style={{ width:6, height:6, borderRadius:"50%", background:"#00e5ff", display:"inline-block", animation:"pulse 1.5s ease infinite", flexShrink:0 }}/>
-                    <span style={{ fontSize:13, fontWeight:700, color:"#00e5ff", fontFamily:"'Space Mono',monospace" }}>{ctTime} {tzShort}</span>
-                    <span style={{ fontSize:13, color:"rgba(255,255,255,0.80)" }}>|</span>
-                    <span style={{ fontSize:13, color:"rgba(255,255,255,0.75)", fontFamily:"'Space Mono',monospace" }}>
-                      Next 30M close: <strong style={{ color:"#ffd166" }}>{nextClose}</strong> (in {minsLeft}m)
-                    </span>
+                  <div style={{ padding:"8px 12px 6px", borderTop:"1px solid rgba(255,255,255,0.04)", background:"rgba(0,229,255,0.02)" }}>
+                    {/* Label + time */}
+                    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:6 }}>
+                      <div style={{ fontSize:9, fontWeight:700, letterSpacing:"0.14em", color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace" }}>30M CLOSE WINDOWS</div>
+                      <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                        <span style={{ width:5, height:5, borderRadius:"50%", background: windowClosed ? "#ff6b6b" : "#00e5ff", display:"inline-block", animation: windowClosed ? "none" : "pulse 1.5s ease infinite" }}/>
+                        <span style={{ fontSize:11, fontWeight:700, color: windowClosed ? "#ff6b6b" : "#00e5ff", fontFamily:"'Space Mono',monospace" }}>{ctTime} {tzShort}</span>
+                      </div>
+                    </div>
+                    {/* Window pills */}
+                    <div style={{ display:"grid", gridTemplateColumns:`repeat(${candles.length},1fr)`, gap:5 }}>
+                      {candles.map((c, i) => {
+                        const cMins = candleMins[i];
+                        const isPast = nowMins > cMins;
+                        const isNext = !isPast && (i === 0 || nowMins > candleMins[i-1]);
+                        const isFinal = i === candles.length - 1;
+                        const label = candleToUserTime(c).replace(/ (CT|ET|PT|MT|CST|CDT|EST|EDT|PST|PDT|MST|MDT).*/,"");
+
+                        let bg, border, timeColor, subColor, sub;
+                        if (isPast) {
+                          bg="rgba(255,255,255,0.02)"; border="1px solid rgba(255,255,255,0.06)";
+                          timeColor="rgba(255,255,255,0.2)"; sub="done"; subColor="rgba(255,255,255,0.15)";
+                        } else if (isNext && isFinal) {
+                          bg="rgba(255,107,107,0.08)"; border="1px solid rgba(255,107,107,0.4)";
+                          timeColor="#ff6b6b"; sub="FINAL"; subColor="#ff6b6b";
+                        } else if (isNext) {
+                          bg="rgba(0,204,255,0.08)"; border="2px solid rgba(0,204,255,0.5)";
+                          timeColor="#00ccff"; sub=`NEXT ${minsLeft}m`; subColor="#00ccff";
+                        } else if (isFinal) {
+                          bg="rgba(255,107,107,0.03)"; border="1px solid rgba(255,107,107,0.15)";
+                          timeColor="rgba(255,107,107,0.45)"; sub="FINAL"; subColor="rgba(255,107,107,0.35)";
+                        } else {
+                          bg="rgba(255,255,255,0.02)"; border="1px solid rgba(255,255,255,0.07)";
+                          timeColor="rgba(255,255,255,0.4)"; sub=""; subColor="transparent";
+                        }
+
+                        return (
+                          <div key={i} style={{ background:bg, border, borderRadius:8, padding:"6px 4px", textAlign:"center" }}>
+                            <div style={{ fontSize:12, fontWeight:700, color:timeColor, fontFamily:"'Space Mono',monospace", letterSpacing:"0.02em" }}>{label}</div>
+                            <div style={{ fontSize:8, fontWeight:700, letterSpacing:"0.08em", color:subColor, marginTop:2, minHeight:10 }}>{sub}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {windowClosed && (
+                      <div style={{ marginTop:6, fontSize:11, color:"#ff6b6b", fontFamily:"'Space Mono',monospace", textAlign:"center", fontWeight:700 }}>
+                        WINDOW CLOSED — no new entries
+                      </div>
+                    )}
                   </div>
                 );
               })()}
@@ -6823,6 +7044,46 @@ Use ONLY these times. All earlier time references in this conversation are stale
                   </>
                 )}
               </div>
+
+              {/* TradingView Chart — collapsible */}
+              {(() => {
+                const tvSymbols = propFirmMode ? {
+                  XAUUSD: "COMEX:MGC1!",
+                  BTCUSD: "COINBASE:BTCUSD",
+                  NAS100: "CME_MINI:NQ1!",
+                  US30:   "CME_MINI:YM1!",
+                  USOIL:  "NYMEX:CL1!",
+                  US500:  "CME_MINI:ES1!",
+                } : {
+                  XAUUSD: "OANDA:XAUUSD",
+                  BTCUSD: "COINBASE:BTCUSD",
+                  NAS100: "CME_MINI:NQ1!",
+                  US30:   "CME_MINI:YM1!",
+                  USOIL:  "NYMEX:CL1!",
+                  US500:  "CME_MINI:ES1!",
+                };
+                const tvSymbol = tvSymbols[plan?.instrument] || "OANDA:XAUUSD";
+                return (
+                  <div style={{ borderTop:"1px solid rgba(255,255,255,0.06)", flexShrink:0 }}>
+                    <button onClick={() => setShowChart(c => !c)}
+                      style={{ width:"100%", padding:"8px 16px", background:"rgba(255,255,255,0.02)", border:"none", color:"rgba(255,255,255,0.45)", fontSize:11, fontWeight:700, letterSpacing:"0.1em", fontFamily:"'Space Mono',monospace", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                      <span>📊 {showChart ? "HIDE CHART" : "SHOW CHART"}</span>
+                      <span>{showChart ? "▴" : "▾"}</span>
+                    </button>
+                    {showChart && (
+                      <div style={{ height: isMobile ? 200 : 260, background:"#131722" }}>
+                        <iframe
+                          key={tvSymbol}
+                          src={`https://www.tradingview.com/widgetembed/?frameElementId=tradingview_omni&symbol=${encodeURIComponent(tvSymbol)}&interval=30&theme=dark&style=1&locale=en&toolbar_bg=%231e1a35&enable_publishing=false&hide_top_toolbar=0&hide_legend=0&saveimage=false&studies=[]&show_popup_button=false`}
+                          style={{ width:"100%", height:"100%", border:"none" }}
+                          allowTransparency
+                          allow="clipboard-read; clipboard-write"
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
             </div>
           </div>
