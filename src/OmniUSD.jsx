@@ -7072,14 +7072,14 @@ Use ONLY these times. All earlier time references in this conversation are stale
               {/* TradingView Chart — always visible */}
               {(() => {
                 const tvSymbols = {
-                  XAUUSD: "TVC:GOLD",
-                  BTCUSD: "COINBASE:BTCUSD",
-                  NAS100: "NASDAQ:QQQ",
-                  US30:   "AMEX:DIA",
-                  USOIL:  "TVC:USOIL",
-                  US500:  "AMEX:SPY",
+                  XAUUSD: "XAUUSD",
+                  BTCUSD: "BTCUSD",
+                  NAS100: "NAS100",
+                  US30:   "US30",
+                  USOIL:  "USOIL",
+                  US500:  "US500",
                 };
-                const tvSymbol = tvSymbols[plan?.instrument] || "TVC:GOLD";
+                const tvSymbol = tvSymbols[plan?.instrument] || "XAUUSD";
                 return (
                   <div style={{ flexShrink:0, borderTop:"1px solid rgba(255,255,255,0.06)" }}>
                     {propFirmMode && (
