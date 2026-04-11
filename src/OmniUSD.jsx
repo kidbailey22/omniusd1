@@ -6146,8 +6146,26 @@ Use ONLY these times. All earlier time references in this conversation are stale
               const allowed = tierCfg.instruments;
               const allSessions = loadSessions();
 
+              const propFirmTickers = {
+                XAUUSD: "MGC", BTCUSD: "BTC", NAS100: "NQ",
+                US30: "YM", USOIL: "CL", US500: "ES",
+              };
+
               return (
                 <div style={{ marginBottom: 24 }}>
+                  {/* Prop Firm Mode toggle */}
+                  <div style={{ display:"flex", justifyContent:"center", marginBottom:10 }}>
+                    <button onClick={() => {
+                      const next = !propFirmMode;
+                      setPropFirmMode(next);
+                      localStorage.setItem("omniusd_prop_firm_mode", String(next));
+                    }}
+                      style={{ display:"flex", alignItems:"center", gap:7, padding:"4px 12px", borderRadius:20, border:`1px solid ${propFirmMode ? "rgba(127,255,107,0.35)" : "rgba(255,255,255,0.12)"}`, background: propFirmMode ? "rgba(127,255,107,0.08)" : "rgba(255,255,255,0.03)", cursor:"pointer", fontFamily:"'Space Mono',monospace", fontSize:10, fontWeight:700, letterSpacing:"0.1em", color: propFirmMode ? "#7fff6b" : "rgba(255,255,255,0.4)", transition:"all 0.2s" }}>
+                      <span style={{ width:6, height:6, borderRadius:"50%", background: propFirmMode ? "#7fff6b" : "rgba(255,255,255,0.2)", display:"inline-block", transition:"all 0.2s" }}/>
+                      {propFirmMode ? "PROP FIRM MODE ON" : "PROP FIRM MODE"}
+                    </button>
+                  </div>
+
                   <div style={{ display: "flex", gap: 6, justifyContent: "center", flexWrap: "wrap" }}>
                     {allInstruments.map(sym => {
                       const isLocked = !allowed.includes(sym);
@@ -6157,27 +6175,32 @@ Use ONLY these times. All earlier time references in this conversation are stale
                       const cooldownMs = getCooldownRemaining(sym);
                       const inCooldown = cooldownMs > 0 && !hasActivePlan;
                       const cooldownLabel = formatCountdown(cooldownMs);
+                      const futuresTicker = propFirmTickers[sym];
 
                       let borderColor, bgColor, textColor, cursor, label, subLabel;
 
                       if (isLocked) {
                         borderColor = "rgba(255,255,255,0.05)"; bgColor = "rgba(255,255,255,0.02)";
                         textColor = "rgba(255,255,255,0.22)"; cursor = "not-allowed";
-                        label = `⊘ ${sym}`; subLabel = null;
+                        label = propFirmMode ? `⊘ ${sym} · ${futuresTicker}` : `⊘ ${sym}`; subLabel = null;
                       } else if (hasActivePlan) {
                         const gradeC = sess.plan.grade === "A+" ? "#7fff6b" : sess.plan.grade === "PASS" ? "#ff6b6b" : "#ffd166";
                         borderColor = `${gradeC}55`; bgColor = `${gradeC}12`;
                         textColor = gradeC; cursor = "pointer";
-                        label = sym; subLabel = `${sess.plan.grade} · RESUME`;
+                        label = propFirmMode ? `${sym} · ${futuresTicker}` : sym;
+                        subLabel = `${sess.plan.grade} · RESUME`;
                       } else if (inCooldown) {
                         borderColor = "rgba(255,154,60,0.3)"; bgColor = "rgba(255,154,60,0.06)";
                         textColor = "rgba(255,154,60,0.6)"; cursor = "default";
-                        label = sym; subLabel = `🔒 ${cooldownLabel}`;
+                        label = propFirmMode ? `${sym} · ${futuresTicker}` : sym;
+                        subLabel = `🔒 ${cooldownLabel}`;
                       } else {
                         borderColor = isSelected ? "rgba(255,107,255,0.6)" : "rgba(255,255,255,0.1)";
                         bgColor = isSelected ? "rgba(255,107,255,0.18)" : "rgba(255,255,255,0.04)";
                         textColor = isSelected ? "#ff6bff" : "rgba(255,255,255,0.7)";
-                        cursor = "pointer"; label = sym; subLabel = null;
+                        cursor = "pointer";
+                        label = propFirmMode ? `${sym} · ${futuresTicker}` : sym;
+                        subLabel = null;
                       }
 
                       return (
