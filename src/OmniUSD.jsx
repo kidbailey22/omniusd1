@@ -7081,31 +7081,31 @@ Use ONLY these times. All earlier time references in this conversation are stale
 
               {/* TradingView Chart — always visible */}
               {(() => {
-                const tvSymbols = propFirmMode ? {
-                  XAUUSD: "COMEX:MGC1!",
+                const tvSymbols = {
+                  XAUUSD: "TVC:GOLD",
                   BTCUSD: "COINBASE:BTCUSD",
-                  NAS100: "CME_MINI:NQ1!",
-                  US30:   "CME_MINI:YM1!",
-                  USOIL:  "NYMEX:CL1!",
-                  US500:  "CME_MINI:ES1!",
-                } : {
-                  XAUUSD: "OANDA:XAUUSD",
-                  BTCUSD: "COINBASE:BTCUSD",
-                  NAS100: "CME_MINI:NQ1!",
-                  US30:   "CME_MINI:YM1!",
-                  USOIL:  "NYMEX:CL1!",
-                  US500:  "CME_MINI:ES1!",
+                  NAS100: "NASDAQ:NDX",
+                  US30:   "TVC:DJI",
+                  USOIL:  "TVC:USOIL",
+                  US500:  "SP:SPX",
                 };
-                const tvSymbol = tvSymbols[plan?.instrument] || "OANDA:XAUUSD";
+                const tvSymbol = tvSymbols[plan?.instrument] || "TVC:GOLD";
                 return (
-                  <div style={{ height: isMobile ? 200 : 260, background:"#131722", borderTop:"1px solid rgba(255,255,255,0.06)", flexShrink:0 }}>
-                    <iframe
-                      key={tvSymbol}
-                      src={`https://s.tradingview.com/widgetembed/?symbol=${encodeURIComponent(tvSymbol)}&interval=30&theme=dark&style=1&locale=en&hide_top_toolbar=0&hide_legend=0&allow_symbol_change=0&save_image=0`}
-                      style={{ width:"100%", height:"100%", border:"none" }}
-                      allowTransparency
-                      allow="clipboard-read; clipboard-write"
-                    />
+                  <div style={{ flexShrink:0, borderTop:"1px solid rgba(255,255,255,0.06)" }}>
+                    {propFirmMode && (
+                      <div style={{ padding:"4px 12px", background:"rgba(255,209,102,0.06)", borderBottom:"1px solid rgba(255,209,102,0.15)", fontSize:10, color:"rgba(255,209,102,0.6)", fontFamily:"'Space Mono',monospace", textAlign:"center" }}>
+                        ⚠ Spot price shown — prop firm prices may differ slightly
+                      </div>
+                    )}
+                    <div style={{ height: isMobile ? 200 : 260, background:"#131722" }}>
+                      <iframe
+                        key={tvSymbol}
+                        src={`https://s.tradingview.com/widgetembed/?symbol=${encodeURIComponent(tvSymbol)}&interval=30&theme=dark&style=1&locale=en&hide_top_toolbar=0&hide_legend=0&allow_symbol_change=0&save_image=0`}
+                        style={{ width:"100%", height:"100%", border:"none" }}
+                        allowTransparency
+                        allow="clipboard-read; clipboard-write"
+                      />
+                    </div>
                   </div>
                 );
               })()}
