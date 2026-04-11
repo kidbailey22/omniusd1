@@ -6876,20 +6876,69 @@ Use ONLY these times. All earlier time references in this conversation are stale
 
               {/* MOBILE: full-width status block */}
               {isMobile ? (
-                <div style={{ padding: "10px 14px" }}>
+                <div style={{ padding: "8px 10px" }}>
                   {/* Status bar */}
-                  <div style={{ padding: "10px 14px", background: tier2 ? "rgba(127,255,107,0.07)" : tier1 ? "rgba(255,209,102,0.07)" : "rgba(0,229,255,0.06)", border: `1px solid ${tier2 ? "rgba(127,255,107,0.3)" : tier1 ? "rgba(255,209,102,0.3)" : "rgba(0,229,255,0.2)"}`, borderLeft: `3px solid ${tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00e5ff"}`, marginBottom: 10 }}>
-                    <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.14em", color: tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00e5ff", marginBottom: 4 }}>LIVE STATUS</div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: "#f0ecff", lineHeight: 1.5 }}>
+                  <div style={{ padding: "8px 12px", background: tier2 ? "rgba(127,255,107,0.07)" : tier1 ? "rgba(255,209,102,0.07)" : "rgba(0,229,255,0.06)", border: `1px solid ${tier2 ? "rgba(127,255,107,0.3)" : tier1 ? "rgba(255,209,102,0.3)" : "rgba(0,229,255,0.2)"}`, borderLeft: `3px solid ${tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00e5ff"}`, marginBottom: 8 }}>
+                    <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.14em", color: tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00e5ff", marginBottom: 3 }}>LIVE STATUS</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: "#f0ecff", lineHeight: 1.5 }}>
                       {tier2 ? `Limit order ready at ${plan.retest_zone}.`
                         : tier1 ? `Tier 1 confirmed. Watching for Tier 2.`
                         : `Watching for 30M close ${plan.bias === "SHORT" ? "below" : "above"} ${plan.trigger_level}.`}
                     </div>
-                    {!tier1 && <div style={{ fontSize: 13, color: "#8878aa", marginTop: 3 }}>No entry until candle fully closes.</div>}
-                    {tier1 && !tier2 && <div style={{ fontSize: 13, color: "rgba(255,209,102,0.6)", marginTop: 3 }}>Do not enter yet. Wait for Tier 2.</div>}
+                    {!tier1 && <div style={{ fontSize: 11, color: "#8878aa", marginTop: 2 }}>No entry until candle fully closes.</div>}
+                    {tier1 && !tier2 && <div style={{ fontSize: 11, color: "rgba(255,209,102,0.6)", marginTop: 2 }}>Do not enter yet. Wait for Tier 2.</div>}
                   </div>
+
+                  {/* 30M Close Windows — compact inside left column */}
+                  {(() => {
+                    const ctNow = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
+                    const nowMins = ctNow.getHours() * 60 + ctNow.getMinutes();
+                    const minsLeft = ctNow.getMinutes() < 30 ? 30 - ctNow.getMinutes() : 60 - ctNow.getMinutes();
+                    const candles = ["8:30","9:00","9:30","10:00","10:30"];
+                    const candleMinsArr = [8*60+30, 9*60, 9*60+30, 10*60, 10*60+30];
+                    const cutoffMins = 10*60+30;
+                    const windowClosed = nowMins > cutoffMins;
+                    return (
+                      <div style={{ marginBottom: 8 }}>
+                        <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.14em", color: "rgba(255,255,255,0.3)", fontFamily: "'Space Mono',monospace", marginBottom: 5 }}>30M CLOSE WINDOWS</div>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 3 }}>
+                          {candles.map((c, i) => {
+                            const cMins = candleMinsArr[i];
+                            const isPast = nowMins > cMins;
+                            const isNext = !isPast && (i === 0 || nowMins > candleMinsArr[i-1]);
+                            const isFinal = i === candles.length - 1;
+                            let bg, border, timeColor, subColor, sub;
+                            if (isPast) {
+                              bg="rgba(255,255,255,0.02)"; border="1px solid rgba(255,255,255,0.06)";
+                              timeColor="rgba(255,255,255,0.2)"; sub="✓"; subColor="rgba(255,255,255,0.15)";
+                            } else if (isNext && isFinal) {
+                              bg="rgba(255,107,107,0.08)"; border="1px solid rgba(255,107,107,0.4)";
+                              timeColor="#ff6b6b"; sub="FINAL"; subColor="#ff6b6b";
+                            } else if (isNext) {
+                              bg="rgba(0,204,255,0.08)"; border="2px solid rgba(0,204,255,0.5)";
+                              timeColor="#00ccff"; sub=`${minsLeft}m`; subColor="#00ccff";
+                            } else if (isFinal) {
+                              bg="rgba(255,107,107,0.03)"; border="1px solid rgba(255,107,107,0.15)";
+                              timeColor="rgba(255,107,107,0.45)"; sub="FINAL"; subColor="rgba(255,107,107,0.35)";
+                            } else {
+                              bg="rgba(255,255,255,0.02)"; border="1px solid rgba(255,255,255,0.07)";
+                              timeColor="rgba(255,255,255,0.4)"; sub=""; subColor="transparent";
+                            }
+                            return (
+                              <div key={i} style={{ background:bg, border, borderRadius:6, padding:"4px 2px", textAlign:"center" }}>
+                                <div style={{ fontSize:10, fontWeight:700, color:timeColor, fontFamily:"'Space Mono',monospace" }}>{c}</div>
+                                <div style={{ fontSize:7, fontWeight:700, color:subColor, marginTop:1, minHeight:8 }}>{sub}</div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        {windowClosed && <div style={{ marginTop:4, fontSize:9, color:"#ff6b6b", fontFamily:"'Space Mono',monospace", textAlign:"center", fontWeight:700 }}>WINDOW CLOSED</div>}
+                      </div>
+                    );
+                  })()}
+
                   {/* Mobile: horizontal scrollable key levels */}
-                  <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4 }}>
+                  <div style={{ display: "flex", gap: 5, overflowX: "auto", paddingBottom: 4 }}>
                     {[
                       { l: "Trigger", v: plan.trigger_level, c: plan.bias === "SHORT" ? "#ff6b6b" : "#7fff6b" },
                       { l: "Stop",    v: plan.stop_loss,     c: "#ff6b6b" },
@@ -6897,9 +6946,9 @@ Use ONLY these times. All earlier time references in this conversation are stale
                       { l: "TP2",     v: plan.tp2,           c: "#7fff6b" },
                       { l: "Runner",  v: plan.runner,        c: "#00e5ff" },
                     ].map((r, i) => (
-                      <div key={i} style={{ flexShrink: 0, padding: "7px 11px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8, textAlign: "center", minWidth: 70 }}>
-                        <div style={{ fontSize: 8, color: "rgba(255,255,255,0.75)", letterSpacing: "0.1em", marginBottom: 4 }}>{r.l}</div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: r.c, fontFamily: "monospace" }}>{r.v}</div>
+                      <div key={i} style={{ flexShrink: 0, padding: "6px 9px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 7, textAlign: "center", minWidth: 64 }}>
+                        <div style={{ fontSize: 8, color: "rgba(255,255,255,0.75)", letterSpacing: "0.1em", marginBottom: 3 }}>{r.l}</div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: r.c, fontFamily: "monospace" }}>{r.v}</div>
                       </div>
                     ))}
                   </div>
@@ -6908,19 +6957,56 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 <>
                   {/* DESKTOP: original vertical layout */}
                   <div style={{ padding: "10px 14px", borderBottom: "1px solid rgba(255,255,255,0.05)", background: "rgba(255,255,255,0.02)" }}>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                        <span style={{ fontSize: 8, color: "#8878aa", letterSpacing: "0.1em" }}>TIME</span>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: "#00e5ff", fontFamily: "monospace" }}>{ctTime} CT</span>
-                      </div>
-                      {!windowClosed && (
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                          <span style={{ fontSize: 8, color: "#8878aa", letterSpacing: "0.1em" }}>NEXT CLOSE</span>
-                          <span style={{ fontSize: 13, fontWeight: 700, color: "#ffd166", fontFamily: "monospace" }}>{nextClose} CT</span>
+                    {/* 30M Close Windows — desktop left column */}
+                    {(() => {
+                      const ctNow = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
+                      const nowMins = ctNow.getHours() * 60 + ctNow.getMinutes();
+                      const minsLeft = ctNow.getMinutes() < 30 ? 30 - ctNow.getMinutes() : 60 - ctNow.getMinutes();
+                      const candles = ["8:30","9:00","9:30","10:00","10:30"];
+                      const candleMinsArr = [8*60+30, 9*60, 9*60+30, 10*60, 10*60+30];
+                      const windowClosed = nowMins > 10*60+30;
+                      return (
+                        <div>
+                          <div style={{ fontSize:8, fontWeight:700, letterSpacing:"0.14em", color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace", marginBottom:6 }}>30M CLOSE WINDOWS</div>
+                          <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:3, marginBottom:6 }}>
+                            {candles.map((c, i) => {
+                              const cMins = candleMinsArr[i];
+                              const isPast = nowMins > cMins;
+                              const isNext = !isPast && (i === 0 || nowMins > candleMinsArr[i-1]);
+                              const isFinal = i === candles.length - 1;
+                              let bg, border, timeColor, subColor, sub;
+                              if (isPast) {
+                                bg="rgba(255,255,255,0.02)"; border="1px solid rgba(255,255,255,0.06)";
+                                timeColor="rgba(255,255,255,0.2)"; sub="✓"; subColor="rgba(255,255,255,0.15)";
+                              } else if (isNext && isFinal) {
+                                bg="rgba(255,107,107,0.08)"; border="1px solid rgba(255,107,107,0.4)";
+                                timeColor="#ff6b6b"; sub="FINAL"; subColor="#ff6b6b";
+                              } else if (isNext) {
+                                bg="rgba(0,204,255,0.08)"; border="2px solid rgba(0,204,255,0.5)";
+                                timeColor="#00ccff"; sub=`${minsLeft}m`; subColor="#00ccff";
+                              } else if (isFinal) {
+                                bg="rgba(255,107,107,0.03)"; border="1px solid rgba(255,107,107,0.15)";
+                                timeColor="rgba(255,107,107,0.45)"; sub="FINAL"; subColor="rgba(255,107,107,0.35)";
+                              } else {
+                                bg="rgba(255,255,255,0.02)"; border="1px solid rgba(255,255,255,0.07)";
+                                timeColor="rgba(255,255,255,0.4)"; sub=""; subColor="transparent";
+                              }
+                              return (
+                                <div key={i} style={{ background:bg, border, borderRadius:6, padding:"5px 2px", textAlign:"center" }}>
+                                  <div style={{ fontSize:10, fontWeight:700, color:timeColor, fontFamily:"'Space Mono',monospace" }}>{c}</div>
+                                  <div style={{ fontSize:7, fontWeight:700, color:subColor, marginTop:1, minHeight:8 }}>{sub}</div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                          {windowClosed && <div style={{ fontSize:9, color:"#ff6b6b", fontFamily:"'Space Mono',monospace", textAlign:"center", fontWeight:700, marginBottom:4 }}>WINDOW CLOSED</div>}
+                          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                            <span style={{ fontSize:8, color:"#8878aa", letterSpacing:"0.1em" }}>{ctTime} CT</span>
+                            {!windowClosed && <span style={{ fontSize:8, color:"#ffd166", fontFamily:"monospace" }}>next: {nextClose}</span>}
+                          </div>
                         </div>
-                      )}
-                      {windowClosed && <div style={{ fontSize: 13, color: "#ff6b6b", fontWeight: 700 }}>Window closed</div>}
-                    </div>
+                      );
+                    })()}
                   </div>
                   <div style={{ margin: "10px 12px 0", padding: "10px 12px", background: tier2 ? "rgba(127,255,107,0.06)" : tier1 ? "rgba(255,209,102,0.06)" : "rgba(0,229,255,0.05)", border: `1px solid ${tier2 ? "rgba(127,255,107,0.25)" : tier1 ? "rgba(255,209,102,0.25)" : "rgba(0,229,255,0.18)"}`, borderLeft: `3px solid ${tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00e5ff"}`, borderRadius: 0 }}>
                     <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.14em", color: tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00e5ff", marginBottom: 5 }}>LIVE STATUS</div>
@@ -7088,7 +7174,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                         ⚠ Spot price shown — prop firm prices may differ slightly
                       </div>
                     )}
-                    <div style={{ height: isMobile ? 200 : 260, background:"#131722" }}>
+                    <div style={{ height: isMobile ? 320 : 280, background:"#131722" }}>
                       <iframe
                         key={tvSymbol}
                         src={`https://s.tradingview.com/widgetembed/?symbol=${encodeURIComponent(tvSymbol)}&interval=30&theme=dark&style=1&locale=en&hide_top_toolbar=0&hide_legend=0&allow_symbol_change=0&save_image=0`}
