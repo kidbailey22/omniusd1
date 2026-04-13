@@ -6468,7 +6468,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                     : plan.grade === "PASS" ? "No active setup"
                     : plan.grade === "SOFT PASS" ? "Timeframe conflict — no clear setup today"
                     : plan.grade === "A+" ? `${plan.bias.charAt(0)+plan.bias.slice(1).toLowerCase()} setup — ready to execute`
-                    : `${plan.bias.charAt(0)+plan.bias.slice(1).toLowerCase()} setup — not yet A+`}
+                    : `${plan.bias.charAt(0)+plan.bias.slice(1).toLowerCase()} setup — not executable yet`}
                 </div>
                 {/* Definition tag */}
                 {plan._preMarketScout && (
@@ -6498,7 +6498,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
 
             {/* Summary */}
             <div style={{ padding: "14px 16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10, marginBottom: 16, fontSize: 13, color: "#ccc4e8", lineHeight: 1.7 }}>
-              {plan.summary}
+              {plan.summary}{plan.grade !== "A+" && plan.grade !== "PASS" && plan.grade !== "SOFT PASS" && plan.summary && !plan.summary.toLowerCase().includes("not executable") ? " This is not executable yet." : ""}
             </div>
 
             {/* Session context note — always show on weekends */}
@@ -6703,19 +6703,24 @@ Use ONLY these times. All earlier time references in this conversation are stale
 
                 {/* START / RESUME LIVE SESSION */}
                 {messages.length > 0 ? (
-                  <button onClick={() => setPhase("live")}
-                    style={{ width: "100%", padding: "15px", borderRadius: 10, border: "none", background: "linear-gradient(135deg,#00e5ff,#0099bb)", color: "#fff", fontSize: 13, fontWeight: 700, letterSpacing: "0.12em", fontFamily: "inherit", cursor: "pointer", boxShadow: "0 4px 28px rgba(0,229,255,0.25)", marginTop: 8 }}>
-                    ← BACK TO LIVE SESSION
-                  </button>
+                  <>
+                    <button onClick={() => setPhase("live")}
+                      style={{ width: "100%", padding: "15px", borderRadius: 10, border: "none", background: "linear-gradient(135deg,#00e5ff,#0099bb)", color: "#fff", fontSize: 13, fontWeight: 700, letterSpacing: "0.12em", fontFamily: "inherit", cursor: "pointer", boxShadow: "0 4px 28px rgba(0,229,255,0.25)", marginTop: 8 }}>
+                      ← BACK TO LIVE SESSION
+                    </button>
+                    <div style={{ textAlign: "center", marginTop: 6, fontSize: 12, color: "rgba(255,255,255,0.35)" }}>Your live session is still active</div>
+                  </>
                 ) : (
-                  <button onClick={startLiveSession}
-                    style={{ width: "100%", padding: "15px", borderRadius: 10, border: plan.grade === "A+" ? "none" : "1px solid rgba(255,209,102,0.35)", background: plan.grade === "A+" ? "linear-gradient(135deg,#ff6bff,#7b2fff)" : "linear-gradient(135deg,#cc8800,#ffd166)", color: "#fff", fontSize: 13, fontWeight: 700, letterSpacing: "0.12em", fontFamily: "inherit", cursor: "pointer", boxShadow: plan.grade === "A+" ? "0 4px 28px rgba(255,107,255,0.25)" : "0 4px 28px rgba(255,209,102,0.2)", marginTop: 8 }}>
-                    {plan.grade === "A+" ? "START LIVE SESSION →" : "MONITOR SETUP →"}
-                  </button>
+                  <>
+                    <button onClick={startLiveSession}
+                      style={{ width: "100%", padding: "15px", borderRadius: 10, border: plan.grade === "A+" ? "none" : "1px solid rgba(255,209,102,0.35)", background: plan.grade === "A+" ? "linear-gradient(135deg,#ff6bff,#7b2fff)" : "linear-gradient(135deg,#cc8800,#ffd166)", color: "#fff", fontSize: 13, fontWeight: 700, letterSpacing: "0.12em", fontFamily: "inherit", cursor: "pointer", boxShadow: plan.grade === "A+" ? "0 4px 28px rgba(255,107,255,0.25)" : "0 4px 28px rgba(255,209,102,0.2)", marginTop: 8 }}>
+                      {plan.grade === "A+" ? "START LIVE SESSION →" : "MONITOR SETUP →"}
+                    </button>
+                    <div style={{ textAlign: "center", marginTop: 6, fontSize: 12, color: "rgba(255,255,255,0.35)" }}>
+                      {plan.grade === "A+" ? "Live session tracks tier confirmations in real time" : "Monitor until all conditions are met"}
+                    </div>
+                  </>
                 )}
-                <div style={{ textAlign: "center", marginTop: 8, fontSize: 13, color: "#8878aa" }}>
-                  {messages.length > 0 ? "Your live session is still active" : plan.grade === "A+" ? "Live session tracks tier confirmations in real time" : "Monitor until all A+ conditions are met"}
-                </div>
 
                 {/* Save to History — A+ only */}
                 {plan.grade === "A+" && (() => {
@@ -6728,20 +6733,6 @@ Use ONLY these times. All earlier time references in this conversation are stale
                     </button>
                   );
                 })()}
-
-                {/* ── NAV ── */}
-                <div style={{ display:"flex", gap:8, marginTop:12 }}>
-                  <button onClick={() => setPhase("upload")}
-                    style={{ padding:"11px 18px", borderRadius:8, border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.04)", color:"#8878aa", fontSize:13, fontWeight:700, letterSpacing:"0.08em", fontFamily:"inherit", cursor:"pointer" }}>
-                    ← Back
-                  </button>
-                  {messages.length > 0 && (
-                    <button onClick={() => setPhase("live")}
-                      style={{ flex:1, padding:"11px", borderRadius:8, border:"1px solid rgba(0,229,255,0.3)", background:"rgba(0,229,255,0.06)", color:"#00e5ff", fontSize:14, fontWeight:700, letterSpacing:"0.08em", fontFamily:"inherit", cursor:"pointer" }}>
-                      ← Live Session
-                    </button>
-                  )}
-                </div>
               </>
             ) : (
               (() => {
