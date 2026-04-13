@@ -2453,7 +2453,10 @@ TP1: Next clean swing level in trend direction. Min 1.5:1 R:R.
 TP2: Next major structural level beyond TP1.
 Runner: Only if momentum clearly accelerating past TP2.
 
-what_still_needed: For ANY non-A+ grade, list 2-4 specific conditions needed for upgrade with exact prices and session timing. If A+, return [].
+what_still_needed: For ANY non-A+ grade, list 2-4 conditions a trader needs to see before executing. Write each condition as a plain sentence a beginner can act on. Use exact prices from the plan. Never use abbreviations like "TFs" or jargon like "BRC sequence confirmation". 
+Examples of GOOD conditions: "30M candle closes above 3,250", "Daily and 4H both showing bullish structure", "Price pulls back to 3,220 retest zone and holds", "NY session window is open — 8:30 to 10:30 AM CT"
+Examples of BAD conditions: "Daily timeframe alignment with lower TFs", "Clear BRC sequence confirmation", "Proper entry setup"
+If A+, return [].
 
 ═══════════════════════════════════════
 SPECIAL CONDITIONS
@@ -6615,7 +6618,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                     <div style={{ fontSize: 13, fontWeight: 900, letterSpacing: "0.16em", color: "#ffd166", marginBottom: 10, fontFamily: "'Space Mono',monospace" }}>⚠ WHAT THIS SETUP STILL NEEDS</div>
                     <div style={{ fontSize: 13, color: "rgba(255,255,255,0.75)", marginBottom: 10, lineHeight: 1.6 }}>
                       This is a <span style={{ color: gradeColor, fontWeight: 700 }}>{plan.grade} grade</span> setup.{" "}
-                      {plan.grade === "A" ? "Strong setup — confirm every condition before executing." : plan.grade === "B" ? "Moderate setup — confirm every condition before executing." : "Lower conviction setup — all conditions must be met before executing."}
+                      {plan.grade === "A" ? "Strong setup — execute on 30M confirmation." : plan.grade === "B" ? "Moderate conviction — tradeable when the 30M confirms." : "Lower conviction — size down and wait for the 30M to confirm before acting."}
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                       {(plan.what_still_needed && plan.what_still_needed.length > 0
