@@ -5727,7 +5727,15 @@ Use ONLY these times. All earlier time references in this conversation are stale
       const data = await res.json();
       if (!res.ok) {
         const errMsg = data?.error?.message || data?.message || `API error ${res.status}`;
-        setMessages(prev => [...prev, { role: "assistant", content: `⚠ ${errMsg}`, time: getCTTime().str }]);
+        const isOverload = res.status === 529 || res.status === 429 || errMsg.toLowerCase().includes("overload");
+        setMessages(prev => [...prev, {
+          role: "assistant",
+          content: isOverload
+            ? `⚠ Omni is overloaded right now. Wait 10 seconds and retype your message.`
+            : `⚠ ${errMsg}`,
+          time: getCTTime().str,
+          _retryMsg: isOverload ? input : null,
+        }]);
         setLoading(false);
         return;
       }
