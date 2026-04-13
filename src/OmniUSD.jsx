@@ -5237,6 +5237,7 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
   const [planChatInput, setPlanChatInput] = useState("");
   const [planChatLoading, setPlanChatLoading] = useState(false);
   const [planChatOpen, setPlanChatOpen] = useState(false);
+  const [checkedItems, setCheckedItems] = useState({});
   const PLAN_CHAT_LIMIT = 4;
   const [showChart, setShowChart] = useState(false);
   const [propFirmMode, setPropFirmMode] = useState(() => {
@@ -5524,6 +5525,7 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
       setPlan(parsed);
       setPlanChatMessages([]);
       setPlanChatOpen(false);
+      setCheckedItems({});
       setPhase("plan");
       // Auto-save every plan to session history (all grades)
       autoSavePlan({ ...parsed, instrument });
@@ -5584,6 +5586,7 @@ DISCIPLINE REINFORCEMENT:
 If the trader sounds anxious or doubtful — one sentence of acknowledgment, then redirect to the plan.
 "What if it goes against me?" → "That is what the stop at ${plan?.stop_loss} is for. Set it and let the trade work."
 Any FOMO or second-guessing → point back to the 30M close. That is the only trigger that matters.
+IMPORTANT: Never tell the user to skip the checklist or ignore the grade conditions. A ${plan?.grade} grade is executable only when all conditions on the checklist are confirmed. Do not contradict this.
 
 Questions remaining after this one: ${PLAN_CHAT_LIMIT - planChatMessages.filter(m=>m.role==="user").length - 1}`;
 
@@ -6611,23 +6614,30 @@ Use ONLY these times. All earlier time references in this conversation are stale
                   <div style={{ padding: "14px 16px", background: "rgba(255,209,102,0.04)", border: "1px solid rgba(255,209,102,0.18)", borderLeft: "3px solid #ffd166", borderRadius: 0, marginBottom: 16 }}>
                     <div style={{ fontSize: 13, fontWeight: 900, letterSpacing: "0.16em", color: "#ffd166", marginBottom: 10, fontFamily: "'Space Mono',monospace" }}>⚠ WHAT THIS SETUP STILL NEEDS</div>
                     <div style={{ fontSize: 13, color: "rgba(255,255,255,0.75)", marginBottom: 10, lineHeight: 1.6 }}>
-                      This is a <span style={{ color: gradeColor, fontWeight: 700 }}>{plan.grade} grade</span> setup — not A+ yet. Do not execute until every condition below is met.
+                      This is a <span style={{ color: gradeColor, fontWeight: 700 }}>{plan.grade} grade</span> setup.{" "}
+                      {plan.grade === "A" ? "Strong setup — confirm every condition before executing." : plan.grade === "B" ? "Moderate setup — confirm every condition before executing." : "Lower conviction setup — all conditions must be met before executing."}
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                       {(plan.what_still_needed && plan.what_still_needed.length > 0
                         ? plan.what_still_needed
                         : [
-                            `NY execution window is open`,
-                            `30M closes ${plan.bias === "SHORT" ? "below" : "above"} ${plan.trigger_level}`,
-                            `Daily trend aligns with lower timeframes`,
-                            `Break, retest, and continuation all confirm`,
+                            `NY execution window is open — 8:30 to 10:30 AM CT`,
+                            `30M candle closes ${plan.bias === "SHORT" ? "below" : "above"} ${plan.trigger_level || "the trigger level"}`,
+                            `Daily, 4H, and 1H all show ${plan.bias === "SHORT" ? "bearish" : "bullish"} structure`,
+                            `Price pulls back to the retest zone, then the next 30M close confirms`,
                           ]
-                      ).map((cond, i) => (
-                        <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "7px 10px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 6 }}>
-                          <div style={{ width: 14, height: 14, borderRadius: 3, border: "1.5px solid rgba(255,209,102,0.4)", flexShrink: 0, marginTop: 1, background: "transparent" }}/>
-                          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.8)", lineHeight: 1.5 }}>{cond}</span>
-                        </div>
-                      ))}
+                      ).map((cond, i) => {
+                        const isChecked = !!checkedItems[i];
+                        return (
+                          <div key={i} onClick={() => setCheckedItems(prev => ({ ...prev, [i]: !prev[i] }))}
+                            style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "7px 10px", background: isChecked ? "rgba(127,255,107,0.04)" : "rgba(255,255,255,0.03)", border: `1px solid ${isChecked ? "rgba(127,255,107,0.25)" : "rgba(255,255,255,0.06)"}`, borderRadius: 6, cursor: "pointer", transition: "all 0.15s" }}>
+                            <div style={{ width: 14, height: 14, borderRadius: 3, border: `1.5px solid ${isChecked ? "#7fff6b" : "rgba(255,209,102,0.4)"}`, flexShrink: 0, marginTop: 1, background: isChecked ? "#7fff6b" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}>
+                              {isChecked && <span style={{ fontSize: 9, color: "#1e1a35", fontWeight: 900 }}>✓</span>}
+                            </div>
+                            <span style={{ fontSize: 13, color: isChecked ? "rgba(127,255,107,0.7)" : "rgba(255,255,255,0.8)", lineHeight: 1.5, textDecoration: isChecked ? "line-through" : "none", transition: "all 0.15s" }}>{cond}</span>
+                          </div>
+                        );
+                      })}
                     </div>
                     <div style={{ marginTop: 12, padding: "8px 12px", background: "rgba(255,255,255,0.03)", borderRadius: 6, fontSize: 12, color: "rgba(255,255,255,0.5)", fontFamily: "'Space Mono',monospace", lineHeight: 1.7 }}>
                       When every box is checked, this becomes A+. Until then, it is watching only.
