@@ -6622,7 +6622,18 @@ Use ONLY these times. All earlier time references in this conversation are stale
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                       {(plan.what_still_needed && plan.what_still_needed.length > 0
-                        ? plan.what_still_needed
+                        ? plan.what_still_needed.map(c => {
+                            // Replace known vague AI conditions with plain language
+                            if (/daily.*timeframe.*align|align.*lower.*tf/i.test(c))
+                              return `Daily, 4H, and 1H all show ${plan.bias === "SHORT" ? "bearish" : "bullish"} structure`;
+                            if (/brc.*sequence.*confirm|clear.*brc/i.test(c))
+                              return `Price breaks ${plan.trigger_level}, pulls back, then the next 30M close confirms`;
+                            if (/session.*open|ny session open/i.test(c))
+                              return `NY execution window is open — 8:30 to 10:30 AM CT`;
+                            if (/30m.*close.*confirm|confirm.*30m/i.test(c) && plan.trigger_level)
+                              return `30M candle closes ${plan.bias === "SHORT" ? "below" : "above"} ${plan.trigger_level}`;
+                            return c;
+                          })
                         : [
                             `NY execution window is open — 8:30 to 10:30 AM CT`,
                             `30M candle closes ${plan.bias === "SHORT" ? "below" : "above"} ${plan.trigger_level || "the trigger level"}`,
