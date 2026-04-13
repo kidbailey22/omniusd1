@@ -2622,28 +2622,28 @@ Never ask them to rephrase. If you're not 100% sure what they mean, make your be
 ━━━ WHAT YOU SAY FOR KEY MOMENTS ━━━
 
 Tier 1 confirmed strong:
-"🚨 Tier 1. ${plan.trigger_level} broken — closed at [price]. Watch the [next time] close for Tier 2."
+"Tier 1 confirmed above ${plan.trigger_level}.\nSend the candle close. Watch the [next time] close for Tier 2."
 
 Tier 1 confirmed barely:
-"🚨 Tier 1 — squeaked it. [price]. Tier 2 needs to hold clean. Watch [next time] close."
+"Tier 1 confirmed — tight close at [price].\nTier 2 needs to hold clean. Watch [next time]."
 
 Candle didn't confirm:
-"[Time] didn't close ${plan.bias==="SHORT"?"below":"above"} ${plan.trigger_level}. [Next time] is the next window."
+"[Time] closed ${plan.bias==="SHORT"?"above":"below"} ${plan.trigger_level}. Not confirmed.\n[Next time] is the next window."
 
 Wick only:
-"Wick. Not a close. Wait for the full candle to close ${plan.bias==="SHORT"?"below":"above"} ${plan.trigger_level}."
+"Wick — not a close. Wait for the full candle to close ${plan.bias==="SHORT"?"below":"above"} ${plan.trigger_level}."
 
 Tier 2 confirmed:
-"🚨 Tier 2. Place limit at ${plan.retest_zone}. Stop ${plan.stop_loss}. TP1 ${plan.tp1}. Order in — hands off. Let the trade work."
+"Tier 2 confirmed at [price].\nPlace limit at ${plan.retest_zone}. Stop ${plan.stop_loss}. TP1 ${plan.tp1}.\nOrder in. Hands off."
 
 Last candle window:
-"⚠️ Last window — [time]. This is it. If it doesn't confirm, plan expires. No chasing after ${sessCfg.cutoff}."
+"Last window — [time]. If it doesn't confirm, plan expires. No chasing after ${sessCfg.cutoff}."
 
 Cutoff hit:
-"Session closed. No trade today. Plan is still valid for tomorrow's session."
+"Session closed. No trade today. Plan holds for tomorrow."
 
 Counter trend question:
-"${plan.bias === "SHORT" ? "Yes — the plan is SHORT. A long here goes against the bias. No." : "Yes — the plan is LONG. A short here goes against the bias. No."}"
+"${plan.bias === "SHORT" ? "The plan is SHORT. A long here goes against the bias. No." : "The plan is LONG. A short here goes against the bias. No."}"
 
 ━━━ SIGNALS — MACHINE TAGS, NEVER CHANGE ━━━
 
@@ -4830,9 +4830,9 @@ function FullAnalysisPanel({ plan }) {
               {/* 3-step plan */}
               <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:14 }}>
                 {[
-                  { n:1, label:"Break",   desc:`30M closes ${isShort?"below":"above"} ${plan.trigger_level} → note it, do NOT enter` },
-                  { n:2, label:"Retest",  desc:`Price returns to ${plan.retest_zone || "the retest zone"} → watch closely` },
-                  { n:3, label:"Confirm", desc:`30M closes ${isShort?"below":"above"} ${plan.trigger_level} AGAIN → PLACE LIMIT` },
+                  { n:1, label:"Break",   desc:`30M closes ${isShort?"below":"above"} ${plan.trigger_level}. Note it — do not enter.` },
+                  { n:2, label:"Retest",  desc:`Price pulls back to ${plan.retest_zone || plan.trigger_level} and holds.` },
+                  { n:3, label:"Confirm", desc:`Next 30M candle closes back ${isShort?"below":"above"} ${plan.trigger_level}. Then place the limit.` },
                 ].map(({ n, label, desc }) => (
                   <div key={n} style={{ display:"flex", gap:12, padding:"10px 14px", background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:8 }}>
                     <div style={{ width:22, height:22, borderRadius:"50%", background:"rgba(255,107,255,0.15)", border:"1px solid rgba(255,107,255,0.3)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
@@ -4848,11 +4848,11 @@ function FullAnalysisPanel({ plan }) {
 
               {/* Level table */}
               <div style={{ marginBottom:14 }}>
-                <Row label={`📍 ${isShort?"SELL":"BUY"} LIMIT`}  value={plan.retest_zone || plan.trigger_level} color={biasColor} />
+                <Row label={`📍 ${isShort?"Sell":"Buy"} Limit`}  value={plan.retest_zone || plan.trigger_level} color={biasColor} />
                 <Row label="🛑 Stop Loss"  value={plan.stop_loss} color="#ff6b6b" />
                 <Row label="🎯 TP1"        value={plan.tp1}       color="#7fff6b" />
-                <Row label="🎯 TP2"        value={plan.tp2}       color="#7fff6b" />
-                <Row label="🏃 Runner"     value={plan.runner}    color="#00e5ff" />
+                <Row label="🎯 TP2"        value={plan.tp2 || "Not set"} color={plan.tp2 ? "#7fff6b" : "rgba(255,255,255,0.3)"} />
+                <Row label="🏃 Runner"     value={plan.runner || "Not set"} color={plan.runner ? "#00e5ff" : "rgba(255,255,255,0.3)"} />
               </div>
 
               {/* Alert levels */}
@@ -4862,7 +4862,9 @@ function FullAnalysisPanel({ plan }) {
                   <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
                     {plan.alert_levels.map((a, i) => (
                       <div key={i} style={{ fontSize:14, color:"rgba(255,255,255,0.85)", display:"flex", gap:8 }}>
-                        <span style={{ color:"#ffd166", flexShrink:0 }}>Alert {i+1}:</span>
+                        <span style={{ color:"rgba(255,209,102,0.7)", flexShrink:0, fontFamily:"'Space Mono',monospace", fontSize:12 }}>
+                          {i === 0 ? "Break alert:" : i === 1 ? "Invalidation alert:" : `Alert ${i+1}:`}
+                        </span>
                         <span style={{ fontFamily:"monospace", fontWeight:700, color:"#ffd166" }}>{a}</span>
                       </div>
                     ))}
@@ -4878,11 +4880,16 @@ function FullAnalysisPanel({ plan }) {
 
           <div style={{ padding:"12px 14px", background: plan.grade === "A+" ? "rgba(127,255,107,0.06)" : plan.grade === "PASS" ? "rgba(136,120,170,0.06)" : "rgba(255,209,102,0.06)", border:`1px solid ${plan.grade === "A+" ? "rgba(127,255,107,0.25)" : plan.grade === "PASS" ? "rgba(136,120,170,0.2)" : "rgba(255,209,102,0.2)"}`, borderRadius:8, marginBottom:14 }}>
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:10 }}>
-              <div style={{ fontSize:14, fontWeight:900, color: biasColor, letterSpacing:"0.1em", fontFamily:"'Space Mono',monospace" }}>
-                GRADE: {plan.grade === "A+" ? "🟢 A+ EXECUTE" : plan.grade === "PASS" ? "🔴 HARD PASS" : plan.grade === "SOFT PASS" ? "🟡 SOFT PASS" : `🟡 ${plan.grade}`}
-              </div>
-              <div style={{ fontSize:14, fontWeight:700, color:"#ffd166", fontFamily:"monospace" }}>
-                {plan.confidence_score}%
+              <div style={{ display:"flex", gap:16, alignItems:"center" }}>
+                <div>
+                  <div style={{ fontSize:9, color:"rgba(255,255,255,0.35)", letterSpacing:"0.1em", fontFamily:"'Space Mono',monospace", marginBottom:2 }}>GRADE</div>
+                  <div style={{ fontSize:16, fontWeight:900, color: plan.grade === "A+" ? "#7fff6b" : plan.grade === "PASS" ? "#8878aa" : "#ffd166", fontFamily:"'Space Mono',monospace" }}>{plan.grade}</div>
+                </div>
+                <div style={{ width:1, height:32, background:"rgba(255,255,255,0.08)" }}/>
+                <div>
+                  <div style={{ fontSize:9, color:"rgba(255,255,255,0.35)", letterSpacing:"0.1em", fontFamily:"'Space Mono',monospace", marginBottom:2 }}>CONFIDENCE</div>
+                  <div style={{ fontSize:16, fontWeight:900, color:"#ffd166", fontFamily:"monospace" }}>{plan.confidence_score}%</div>
+                </div>
               </div>
             </div>
 
@@ -5486,8 +5493,11 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
       // Strip any text from price fields — prices only in these fields
       function stripPrice(v) {
         if (!v || v === "—" || v === "null" || v === "N/A") return null;
-        const m = String(v).match(/^([0-9,.\s–\-]+(?:\s*[–\-]\s*[0-9,.]+)?)/);
-        return m ? m[1].trim() : v;
+        // Match only a price or price range — stop at any letter/word after the number
+        const m = String(v).match(/^([0-9,]+(?:\.[0-9]+)?(?:\s*[–\-]\s*[0-9,]+(?:\.[0-9]+)?)?)/);
+        if (!m) return null;
+        const result = m[1].trim().replace(/[–\-]\s*$/, "").trim();
+        return result || null;
       }
       parsed.trigger_level = stripPrice(parsed.trigger_level);
       parsed.retest_zone   = stripPrice(parsed.retest_zone);
@@ -5496,20 +5506,20 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
       parsed.tp2           = stripPrice(parsed.tp2);
       parsed.runner        = stripPrice(parsed.runner);
 
-      // Fallback: if tp2 or runner still blank, calculate from tp1 + stop distance
-      if ((!parsed.tp2 || parsed.tp2 === "—") && parsed.tp1 && parsed.stop_loss) {
-        try {
-          const entry = parseFloat((parsed.trigger_level || "").replace(/,/g,""));
-          const tp1   = parseFloat((parsed.tp1 || "").replace(/,/g,""));
-          const stop  = parseFloat((parsed.stop_loss || "").replace(/,/g,""));
-          if (entry && tp1 && stop) {
-            const dist = Math.abs(tp1 - entry);
-            const isShort = parsed.bias === "SHORT";
-            parsed.tp2   = parsed.tp2   || String((isShort ? entry - dist*1.5 : entry + dist*1.5).toFixed(2));
-            parsed.runner = parsed.runner || String((isShort ? entry - dist*2.5 : entry + dist*2.5).toFixed(2));
-          }
-        } catch {}
-      }
+      // Fallback: calculate tp2 + runner if blank
+      try {
+        const entry = parseFloat(String(parsed.trigger_level || "").replace(/,/g,""));
+        const tp1   = parseFloat(String(parsed.tp1 || "").replace(/,/g,""));
+        const stop  = parseFloat(String(parsed.stop_loss || "").replace(/,/g,""));
+        if (entry && tp1 && stop) {
+          const dist = Math.abs(tp1 - entry);
+          const isShort = parsed.bias === "SHORT";
+          if (!parsed.tp2 || parsed.tp2 === "—")
+            parsed.tp2 = String((isShort ? entry - dist*1.5 : entry + dist*1.5).toFixed(2));
+          if (!parsed.runner || parsed.runner === "—")
+            parsed.runner = String((isShort ? entry - dist*2.5 : entry + dist*2.5).toFixed(2));
+        }
+      } catch (_) {}
 
       setPlan(parsed);
       setPlanChatMessages([]);
@@ -5543,7 +5553,7 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
     const newMessages = [...planChatMessages, { role: "user", content: userMsg }];
     setPlanChatMessages(newMessages);
 
-    const systemPrompt = `You are OmniUSD's plan analyst. A trader just received this session plan and has questions about it.
+    const systemPrompt = `You are the plan analyst inside OmniUSD. A trader is looking at their session plan and has a question.
 
 THEIR PLAN:
 Instrument: ${plan?.instrument} | Grade: ${plan?.grade} | Bias: ${plan?.bias}
@@ -5555,22 +5565,27 @@ Daily: ${plan?.timeframe_reads?.daily?.bias} — ${plan?.timeframe_reads?.daily?
 4H: ${plan?.timeframe_reads?.h4?.bias} — ${plan?.timeframe_reads?.h4?.structure}
 1H: ${plan?.timeframe_reads?.h1?.bias} — ${plan?.timeframe_reads?.h1?.structure}
 
-YOUR ROLE:
-- Answer questions about THIS plan only. If they ask anything unrelated — redirect them back to the plan.
-- Explain levels, structure, bias, and BRC phases in plain simple English.
-- Keep answers under 4 lines. Be direct and clear.
-- Never give new trade recommendations or modify the plan.
-- This trader has ${PLAN_CHAT_LIMIT - planChatMessages.filter(m=>m.role==="user").length - 1} questions remaining after this one.
+RESPONSE RULES — NON-NEGOTIABLE:
+- Maximum 3 sentences. Never more.
+- No bullet points. No headers. No markdown. Plain sentences only.
+- Never repeat what the trader just said.
+- Never use phrases like "Great question" or "I understand".
+- Always end with what the trader should do or watch for next.
+- If the question is not about this plan — say: "That's outside this plan. Ask about the levels, grade, or structure here."
 
-DISCIPLINE REINFORCEMENT — CRITICAL:
-If the trader sounds anxious, uncertain, scared, or doubtful — acknowledge their feeling briefly then redirect to the plan with calm confidence. Examples:
-- "Is this really a good setup?" → Explain why the grade is what it is, then: "The system has done the analysis. Trust the plan and let the candle confirm."
-- "What if it goes against me?" → "That's what the stop is for. Set it, respect it, and let the trade work."
-- "I'm not sure about this" → "Uncertainty before a trade is normal. The plan doesn't change because of feelings — wait for the 30M close to confirm before acting."
-- "Should I take this?" → Answer based on the grade and conditions, end with: "Trust the process."
-- Any sign of FOMO or second-guessing → Calm them down, point back to the rules.
+TONE — product-native, not chatbot:
+Write like a seasoned trader explaining something quickly to a colleague.
+Direct. Grounded. No fluff.
 
-Never dismiss their feelings. Acknowledge briefly, then refocus on the plan and the process.`;
+Example of the correct response style:
+"The lower timeframe is trying to turn long, but the higher-timeframe picture is not fully aligned yet. This stays ${plan?.grade} grade until the Daily aligns and the 30M confirms above ${plan?.trigger_level}. For now, it is watching only — not executable."
+
+DISCIPLINE REINFORCEMENT:
+If the trader sounds anxious or doubtful — one sentence of acknowledgment, then redirect to the plan.
+"What if it goes against me?" → "That is what the stop at ${plan?.stop_loss} is for. Set it and let the trade work."
+Any FOMO or second-guessing → point back to the 30M close. That is the only trigger that matters.
+
+Questions remaining after this one: ${PLAN_CHAT_LIMIT - planChatMessages.filter(m=>m.role==="user").length - 1}`;
 
     try {
       const res = await fetch("/api/analyze", {
@@ -5663,7 +5678,7 @@ Never dismiss their feelings. Acknowledge briefly, then refocus on the plan and 
 
       const nextCandleLocal = nextCandleObj ? candleToUserTime(nextCandleObj) : nextCandleET;
 
-      openingMsg = `**NEXT ACTION**${profile?.preferredName ? ` — ${profile.preferredName}` : ""}\n\nWatch the next 30M **${activePlan.instrument}** close.\n\nIf it closes **${direction} ${trigger}** — send it now.\nIf not — send me the closing price.\n\nWicks don't count. Only closes.\n\n🕐 Next check: **${nextCandleLocal}** (in ${minsLeft}m)`;
+      openingMsg = `**NEXT ACTION**${profile?.preferredName ? ` — ${profile.preferredName}` : ""}\n\nIf the 30M closes **${direction} ${trigger}** — send the close.\nIf not — send the closing price.\n\nWicks don't count. Only closes.\n\n🕐 Next check: **${nextCandleLocal}** (in ${minsLeft}m)`;
 
       if (activePlan._activatedFromSoftPass) {
         openingMsg += `\n\n📋 Activated from Soft Pass scenario. If session opens with different structure — trust the charts over this plan.`;
@@ -5731,7 +5746,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
         setMessages(prev => [...prev, {
           role: "assistant",
           content: isOverload
-            ? `⚠ Omni is overloaded right now. Wait 10 seconds and retype your message.`
+            ? `⚠ Connection interrupted. Wait a moment and retype your message.`
             : `⚠ ${errMsg}`,
           time: getCTTime().str,
           _retryMsg: isOverload ? input : null,
@@ -5946,7 +5961,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
             {phase === "live" && (
               <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
                 <span style={{ width: 6, height: 6, borderRadius: "50%", background: windowClosed ? "#ff6b6b" : "#7fff6b", animation: windowOpen ? "pulse 1.5s ease infinite" : "none" }}/>
-                <span style={{ fontSize: 13, fontWeight: 700, color: windowClosed ? "#ff6b6b" : "#7fff6b" }}>{windowClosed ? "WINDOW CLOSED" : "WINDOW OPEN"}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: windowClosed ? "#ff6b6b" : "#7fff6b" }}>{windowClosed ? "SESSION CLOSED" : "LIVE"}</span>
               </div>
             )}
             <button onClick={() => setAppPage(appPage === "chartsetup" ? "dashboard" : "chartsetup")} style={{ fontSize: 13, fontWeight: 700, color: appPage === "chartsetup" ? "#ffd166" : "#ffd166", background: appPage === "chartsetup" ? "rgba(255,209,102,0.12)" : "rgba(255,209,102,0.06)", border: `1px solid rgba(255,209,102,${appPage === "chartsetup" ? "0.6" : "0.4"})`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit", boxShadow: appPage === "chartsetup" ? "none" : "0 0 8px rgba(255,209,102,0.2)", animation: appPage === "chartsetup" ? "none" : "goldPulse 2s ease-in-out infinite" }}>Chart Setup</button>
@@ -6459,7 +6474,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 {plan._preMarketScout && (
                   <div style={{ fontSize: 11, fontFamily: "'Space Mono',monospace", color: plan._misaligned ? "rgba(255,209,102,0.55)" : "rgba(0,204,255,0.55)", marginBottom: 6, lineHeight: 1.5 }}>
                     {plan._misaligned
-                      ? "SOFT PASS — Genuine timeframe conflict. Don't get your hopes up."
+                      ? "SOFT PASS — Timeframe conflict. Watching only for now."
                       : "SCOUT MODE — Structure is there, waiting for the session window."}
                   </div>
                 )}
@@ -6596,26 +6611,26 @@ Use ONLY these times. All earlier time references in this conversation are stale
                   <div style={{ padding: "14px 16px", background: "rgba(255,209,102,0.04)", border: "1px solid rgba(255,209,102,0.18)", borderLeft: "3px solid #ffd166", borderRadius: 0, marginBottom: 16 }}>
                     <div style={{ fontSize: 13, fontWeight: 900, letterSpacing: "0.16em", color: "#ffd166", marginBottom: 10, fontFamily: "'Space Mono',monospace" }}>⚠ WHAT THIS SETUP STILL NEEDS</div>
                     <div style={{ fontSize: 13, color: "rgba(255,255,255,0.75)", marginBottom: 10, lineHeight: 1.6 }}>
-                      This is a <span style={{ color: gradeColor, fontWeight: 700 }}>{plan.grade} grade</span> setup — not yet A+. Do NOT execute until every condition below is met.
+                      This is a <span style={{ color: gradeColor, fontWeight: 700 }}>{plan.grade} grade</span> setup — not A+ yet. Do not execute until every condition below is met.
                     </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                       {(plan.what_still_needed && plan.what_still_needed.length > 0
                         ? plan.what_still_needed
                         : [
-                            `30M candle close ${plan.bias === "SHORT" ? "below" : "above"} ${plan.trigger_level}`,
-                            `Retest holds ${plan.bias === "SHORT" ? "below" : "above"} ${plan.trigger_level} on the pullback`,
-                            `Full 3-timeframe alignment — Daily + 4H + 1H all agree`,
-                            `NY session window — valid entries 8:30–10:30 AM CT only`,
+                            `NY execution window is open`,
+                            `30M closes ${plan.bias === "SHORT" ? "below" : "above"} ${plan.trigger_level}`,
+                            `Daily trend aligns with lower timeframes`,
+                            `Break, retest, and continuation all confirm`,
                           ]
                       ).map((cond, i) => (
-                        <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-                          <span style={{ fontSize: 13, color: "#ffd166", flexShrink: 0, marginTop: 1 }}>□</span>
-                          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.8)", lineHeight: 1.6 }}>{cond}</span>
+                        <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "7px 10px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 6 }}>
+                          <div style={{ width: 14, height: 14, borderRadius: 3, border: "1.5px solid rgba(255,209,102,0.4)", flexShrink: 0, marginTop: 1, background: "transparent" }}/>
+                          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.8)", lineHeight: 1.5 }}>{cond}</span>
                         </div>
                       ))}
                     </div>
-                    <div style={{ marginTop: 12, padding: "8px 12px", background: "rgba(255,255,255,0.03)", borderRadius: 6, fontSize: 13, color: "rgba(255,255,255,0.8)", fontFamily: "'Space Mono',monospace", lineHeight: 1.7 }}>
-                      When all boxes are checked — that is an A+ setup. Until then, this is for watching only.
+                    <div style={{ marginTop: 12, padding: "8px 12px", background: "rgba(255,255,255,0.03)", borderRadius: 6, fontSize: 12, color: "rgba(255,255,255,0.5)", fontFamily: "'Space Mono',monospace", lineHeight: 1.7 }}>
+                      When every box is checked, this becomes A+. Until then, it is watching only.
                     </div>
                   </div>
                 )}
@@ -6647,7 +6662,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                               {planChatMessages.map((m, i) => (
                                 <div key={i} style={{ display:"flex", flexDirection:"column", alignItems: m.role === "user" ? "flex-end" : "flex-start" }}>
                                   <div style={{ maxWidth:"90%", padding:"8px 12px", borderRadius: m.role === "user" ? "10px 10px 3px 10px" : "10px 10px 10px 3px", background: m.role === "user" ? "rgba(204,68,255,0.1)" : "rgba(255,255,255,0.04)", border: m.role === "user" ? "1px solid rgba(204,68,255,0.2)" : "1px solid rgba(255,255,255,0.07)", fontSize:13, color: m.role === "user" ? "#f0ecff" : "#ccc4e8", lineHeight:1.7, fontFamily:"'Space Mono',monospace" }}>
-                                    {m.content}
+                                    {String(m.content).replace(/\*\*(.*?)\*\*/g,"$1").replace(/\*(.*?)\*/g,"$1").replace(/`([^`]+)`/g,"$1")}
                                   </div>
                                 </div>
                               ))}
@@ -6973,10 +6988,12 @@ Use ONLY these times. All earlier time references in this conversation are stale
                       const candles = ["8:30","9:00","9:30","10:00","10:30"];
                       const candleMinsArr = [8*60+30, 9*60, 9*60+30, 10*60, 10*60+30];
                       const windowClosed = nowMins > 10*60+30;
+                      const nextCandle = candles.find((c, i) => nowMins <= candleMinsArr[i]);
+                      const nextCandleLabel = nextCandle ? candleToUserTime({ et: nextCandle }) : null;
                       return (
                         <div>
                           <div style={{ fontSize:8, fontWeight:700, letterSpacing:"0.14em", color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace", marginBottom:6 }}>30M CLOSE WINDOWS</div>
-                          <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:3, marginBottom:6 }}>
+                          <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:3, marginBottom:8 }}>
                             {candles.map((c, i) => {
                               const cMins = candleMinsArr[i];
                               const isPast = nowMins > cMins;
@@ -7007,10 +7024,11 @@ Use ONLY these times. All earlier time references in this conversation are stale
                               );
                             })}
                           </div>
-                          {windowClosed && <div style={{ fontSize:9, color:"#ff6b6b", fontFamily:"'Space Mono',monospace", textAlign:"center", fontWeight:700, marginBottom:4 }}>WINDOW CLOSED</div>}
-                          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:4 }}>
-                            <span style={{ fontSize:8, color:"rgba(255,255,255,0.3)", letterSpacing:"0.08em", fontFamily:"'Space Mono',monospace" }}>{ctTime}</span>
-                            {!windowClosed && <span style={{ fontSize:8, color:"rgba(255,209,102,0.6)", fontFamily:"'Space Mono',monospace" }}>{nextClose} next</span>}
+                          {/* Single line — next close or session over */}
+                          <div style={{ fontSize:9, fontFamily:"'Space Mono',monospace", color: windowClosed ? "rgba(255,107,107,0.6)" : "rgba(255,255,255,0.4)", lineHeight:1.5 }}>
+                            {windowClosed
+                              ? `Session closed · ${ctTime}`
+                              : `Next close · ${nextClose} · ${ctTime}`}
                           </div>
                         </div>
                       );
@@ -7060,11 +7078,11 @@ Use ONLY these times. All earlier time references in this conversation are stale
             <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
               {/* Messages */}
-              <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px 8px" }}>
+              <div style={{ flex: 1, overflowY: "auto", padding: "10px 14px 6px" }}>
                 {messages.map((msg, i) => (
-                  <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: msg.role === "user" ? "flex-end" : "flex-start", marginBottom: 10, animation: "slide 0.2s ease both" }}>
-                    <div style={{ maxWidth: "88%", padding: "9px 13px", borderRadius: msg.role === "user" ? "10px 10px 3px 10px" : "10px 10px 10px 3px", background: msg.role === "user" ? "rgba(255,107,255,0.1)" : "rgba(255,255,255,0.04)", border: msg.role === "user" ? "1px solid rgba(255,107,255,0.2)" : "1px solid rgba(255,255,255,0.07)", fontSize: isMobile ? 13 : 12, lineHeight: 1.75, color: msg.role === "user" ? "#f0ecff" : "#ccc4e8" }} dangerouslySetInnerHTML={{ __html: fmt(msg.content) }}/>
-                    <span style={{ fontSize: 8, color: "#8878aa", marginTop: 3, paddingLeft: 3, paddingRight: 3 }}>{msg.role === "user" ? "You" : "OmniUSD"} · {msg.time} CT</span>
+                  <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: msg.role === "user" ? "flex-end" : "flex-start", marginBottom: msg.role === "user" ? 6 : 10, animation: "slide 0.2s ease both" }}>
+                    <div style={{ maxWidth: "82%", padding: msg.role === "user" ? "7px 12px" : "9px 13px", borderRadius: msg.role === "user" ? "10px 10px 3px 10px" : "10px 10px 10px 3px", background: msg.role === "user" ? "rgba(255,107,255,0.08)" : "rgba(255,255,255,0.04)", border: msg.role === "user" ? "1px solid rgba(255,107,255,0.18)" : "1px solid rgba(255,255,255,0.07)", fontSize: isMobile ? 13 : 12, lineHeight: 1.7, color: msg.role === "user" ? "#f0ecff" : "#ccc4e8" }} dangerouslySetInnerHTML={{ __html: fmt(msg.content) }}/>
+                    <span style={{ fontSize: 8, color: "rgba(255,255,255,0.25)", marginTop: 2, paddingLeft: 3, paddingRight: 3 }}>{msg.role === "user" ? "You" : "OmniUSD"} · {msg.time} CT</span>
                   </div>
                 ))}
                 {loading && (
@@ -7098,7 +7116,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 )}
               </div>
 
-              {/* TradingView Chart — always visible */}
+              {/* TradingView Chart — collapsible */}
               {(() => {
                 const tvSymbols = {
                   XAUUSD: "XAUUSD",
@@ -7111,20 +7129,29 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 const tvSymbol = tvSymbols[plan?.instrument] || "XAUUSD";
                 return (
                   <div style={{ flexShrink:0, borderTop:"1px solid rgba(255,255,255,0.06)" }}>
-                    {propFirmMode && (
-                      <div style={{ padding:"4px 12px", background:"rgba(255,209,102,0.06)", borderBottom:"1px solid rgba(255,209,102,0.15)", fontSize:10, color:"rgba(255,209,102,0.6)", fontFamily:"'Space Mono',monospace", textAlign:"center" }}>
-                        ⚠ Spot price shown — prop firm prices may differ slightly
-                      </div>
+                    <button onClick={() => setShowChart(c => !c)}
+                      style={{ width:"100%", padding:"7px 14px", background:"rgba(255,255,255,0.02)", border:"none", color:"rgba(255,255,255,0.4)", fontSize:11, fontWeight:700, letterSpacing:"0.1em", fontFamily:"'Space Mono',monospace", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                      <span>📊 {showChart ? "HIDE CHART" : "SHOW CHART"}</span>
+                      <span style={{ fontSize:9 }}>{showChart ? "▴" : "▾"}</span>
+                    </button>
+                    {showChart && (
+                      <>
+                        {propFirmMode && (
+                          <div style={{ padding:"4px 12px", background:"rgba(255,209,102,0.06)", borderBottom:"1px solid rgba(255,209,102,0.15)", fontSize:10, color:"rgba(255,209,102,0.6)", fontFamily:"'Space Mono',monospace", textAlign:"center" }}>
+                            ⚠ Spot price shown — prop firm prices may differ slightly
+                          </div>
+                        )}
+                        <div style={{ height: isMobile ? 280 : 300, background:"#131722" }}>
+                          <iframe
+                            key={tvSymbol}
+                            src={`https://s.tradingview.com/widgetembed/?symbol=${encodeURIComponent(tvSymbol)}&interval=30&theme=dark&style=1&locale=en&hide_top_toolbar=0&hide_legend=0&allow_symbol_change=0&save_image=0`}
+                            style={{ width:"100%", height:"100%", border:"none" }}
+                            allowTransparency
+                            allow="clipboard-read; clipboard-write"
+                          />
+                        </div>
+                      </>
                     )}
-                    <div style={{ height: isMobile ? 320 : 340, background:"#131722" }}>
-                      <iframe
-                        key={tvSymbol}
-                        src={`https://s.tradingview.com/widgetembed/?symbol=${encodeURIComponent(tvSymbol)}&interval=30&theme=dark&style=1&locale=en&hide_top_toolbar=0&hide_legend=0&allow_symbol_change=0&save_image=0`}
-                        style={{ width:"100%", height:"100%", border:"none" }}
-                        allowTransparency
-                        allow="clipboard-read; clipboard-write"
-                      />
-                    </div>
                   </div>
                 );
               })()}
