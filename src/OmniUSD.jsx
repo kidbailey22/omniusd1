@@ -4807,7 +4807,7 @@ function FullAnalysisPanel({ plan }) {
 
               // If Daily field contains compressed multi-TF text, split into labeled lines
               if (tf === "Daily" && structure && /4H:|1H:|Current:/i.test(structure)) {
-                const lines = structure.split(/,\s*(?=Daily:|4H:|1H:|Current:)/i).filter(Boolean);
+                const lines = structure.split(/[,\.]\s*(?=Daily:|4H:|1H:|Current:)/i).filter(Boolean);
                 return (
                   <div key={tf} style={{ display:"flex", flexDirection:"column", gap:4 }}>
                     {lines.map((line, li) => {
