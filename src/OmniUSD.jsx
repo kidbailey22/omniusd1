@@ -4571,7 +4571,7 @@ function HistoryPage({ uid, onClose }) {
   );
 }
 
-function SoftPassScenariosPanel({ plan, onActivate }) {
+function SoftPassScenariosPanel({ plan, onActivate, isMobile }) {
   const [open, setOpen] = useState(false);
   const [confirming, setConfirming] = useState(null);
   if (!plan?.soft_pass_scenarios) return null;
@@ -4605,17 +4605,14 @@ function SoftPassScenariosPanel({ plan, onActivate }) {
     const tp1     = stripP(s.tp1);
 
     return (
-      <div style={{ padding:"10px 14px", background:`${color}08`, border:`1px solid ${isConfirming ? color : color+"33"}`, borderRadius:10, marginBottom:8, transition:"border 0.2s" }}>
-        {/* Header row */}
+      <div style={{ padding:"10px 14px", background:`${color}08`, border:`1px solid ${isConfirming ? color : color+"33"}`, borderRadius:10, marginBottom: isMobile ? 8 : 0, transition:"border 0.2s", height:"100%" }}>
         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
           <span style={{ fontSize:11, fontWeight:900, letterSpacing:"0.12em", color, fontFamily:"'Space Mono',monospace" }}>{isBull ? "🟢 BULL" : "🔴 BEAR"}</span>
           <span style={{ fontSize:11, padding:"2px 8px", borderRadius:4, background:`${color}14`, border:`1px solid ${color}33`, color, fontFamily:"'Space Mono',monospace", fontWeight:700 }}>{bias}</span>
         </div>
-        {/* Trigger line */}
         <div style={{ fontSize:14, fontWeight:700, color, marginBottom:8, fontFamily:"monospace" }}>
           30M close {dir} {trigger} activates {bias}
         </div>
-        {/* Level cards */}
         <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:5, marginBottom:10 }}>
           {stop && <div style={{ padding:"6px 10px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:7 }}>
             <div style={{ fontSize:9, color:"#8878aa", letterSpacing:"0.1em", marginBottom:2 }}>STOP</div>
@@ -4647,7 +4644,6 @@ function SoftPassScenariosPanel({ plan, onActivate }) {
             Cancel
           </button>
         )}
-        {/* Alert pill */}
         {trigger && (
           <div style={{ marginTop:10, display:"inline-flex", alignItems:"center", gap:7, padding:"7px 14px", background:`${color}12`, border:`1px solid ${color}44`, borderRadius:20, cursor:"default" }}>
             <span style={{ fontSize:12 }}>🔔</span>
@@ -4660,6 +4656,23 @@ function SoftPassScenariosPanel({ plan, onActivate }) {
     );
   };
 
+  // Desktop — side by side, Bear left / Bull right, always visible
+  if (!isMobile) {
+    return (
+      <div style={{ marginBottom:16 }}>
+        <div style={{ fontSize:11, fontWeight:700, letterSpacing:"0.1em", color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace", marginBottom:8 }}>IF PRICE CONFIRMS</div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:10 }}>
+          <ScenarioCard s={bear} type="bear" />
+          <ScenarioCard s={bull} type="bull" />
+        </div>
+        <div style={{ padding:"8px 12px", background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:8, fontSize:11, color:"rgba(255,255,255,0.48)", fontFamily:"'Space Mono',monospace", lineHeight:1.7 }}>
+          Only confirm after the 30M candle fully closes at the trigger. Wicks don't count.
+        </div>
+      </div>
+    );
+  }
+
+  // Mobile — dropdown as before
   return (
     <div style={{ marginBottom:16 }}>
       <button onClick={() => setOpen(o => !o)}
@@ -4673,8 +4686,8 @@ function SoftPassScenariosPanel({ plan, onActivate }) {
       </button>
       {open && (
         <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.08)", borderTop:"none", borderRadius:"0 0 10px 10px", padding:"14px", animation:"fadein 0.25s ease both" }}>
-          <ScenarioCard s={bull} type="bull" />
           <ScenarioCard s={bear} type="bear" />
+          <ScenarioCard s={bull} type="bull" />
           <div style={{ padding:"8px 12px", background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:8, fontSize:11, color:"rgba(255,255,255,0.48)", fontFamily:"'Space Mono',monospace", lineHeight:1.7 }}>
             Only confirm after the 30M candle fully closes at the trigger. Wicks don't count.
           </div>
@@ -6543,7 +6556,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 </div>
 
                 {/* Scenarios — collapsible dropdown (proper component, no IIFE) */}
-                <SoftPassScenariosPanel plan={plan} onActivate={(scenario, bias) => {
+                <SoftPassScenariosPanel plan={plan} isMobile={isMobile} onActivate={(scenario, bias) => {
                   // Check 3TF alignment before assigning grade
                   // A+ requires Daily + 4H + 1H all agreeing with the activated bias
                   const tf = plan.timeframe_reads || {};
@@ -6641,9 +6654,13 @@ Use ONLY these times. All earlier time references in this conversation are stale
                             `Price pulls back to the retest zone, then the next 30M close confirms`,
                           ]
                       ).map((cond, i) => {
-                        const isChecked = !!checkedItems[i];
+                        const ctNow = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
+                        const ctMins = ctNow.getHours() * 60 + ctNow.getMinutes();
+                        const sessionOpen = ctMins >= 8 * 60 + 30 && ctMins <= 10 * 60 + 30;
+                        const isNYCondition = /NY execution window|NY session|session.*open|8:30.*10:30/i.test(cond);
+                        const isChecked = isNYCondition && sessionOpen ? true : !!checkedItems[i];
                         return (
-                          <div key={i} onClick={() => setCheckedItems(prev => ({ ...prev, [i]: !prev[i] }))}
+                          <div key={i} onClick={() => { if (!(isNYCondition && sessionOpen)) setCheckedItems(prev => ({ ...prev, [i]: !prev[i] })); }}
                             style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "7px 10px", background: isChecked ? "rgba(127,255,107,0.04)" : "rgba(255,255,255,0.03)", border: `1px solid ${isChecked ? "rgba(127,255,107,0.25)" : "rgba(255,255,255,0.06)"}`, borderRadius: 6, cursor: "pointer", transition: "all 0.15s" }}>
                             <div style={{ width: 14, height: 14, borderRadius: 3, border: `1.5px solid ${isChecked ? "#7fff6b" : "rgba(255,209,102,0.4)"}`, flexShrink: 0, marginTop: 1, background: isChecked ? "#7fff6b" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}>
                               {isChecked && <span style={{ fontSize: 9, color: "#1e1a35", fontWeight: 900 }}>✓</span>}
