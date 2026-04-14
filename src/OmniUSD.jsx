@@ -4830,10 +4830,13 @@ function FullAnalysisPanel({ plan }) {
                     else if (isSupp){ dot = "S"; labelColor = "#7fff6b"; }
                     else if (isCrit){ dot = "→"; labelColor = "#ffd166"; }
                     else            { dot = "→"; labelColor = "#8878aa"; }
+                    // Strip the label prefix (e.g. "support: ", "resistance: ", "critical: ")
+                    const displayText = lvl.replace(/^(support|resistance|critical|invalidation|trigger)\s*:\s*/i, "")
+                      .replace(/\b(critical)\b/gi, "watch level");
                     return (
                       <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:10, padding:"8px 0", borderBottom: i < plan.key_levels.length-1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
                         <span style={{ flexShrink:0, fontSize:11, fontWeight:900, color:labelColor, fontFamily:"'Space Mono',monospace", minWidth:12 }}>{dot}</span>
-                        <span style={{ fontSize:14, color:"rgba(255,255,255,0.8)", lineHeight:1.6 }}>{lvl}</span>
+                        <span style={{ fontSize:14, color:"rgba(255,255,255,0.8)", lineHeight:1.6 }}>{displayText}</span>
                       </div>
                     );
                   })
