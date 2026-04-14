@@ -4816,7 +4816,45 @@ function FullAnalysisPanel({ plan }) {
 
           {/* ── KEY LEVELS TABLE — hidden after soft pass activation ── */}
           {!plan._activatedFromSoftPass && (<>
-            <SectionHeader icon="🎯" label="KEY LEVELS" color="#ffd166"/>
+            <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10 }}>
+              <span style={{ fontSize:14 }}>🎯</span>
+              <span style={{ fontSize:13, fontWeight:900, letterSpacing:"0.14em", color:"#ffd166", fontFamily:"'Space Mono',monospace" }}>KEY LEVELS</span>
+              <div style={{ position:"relative", display:"inline-flex" }}
+                onMouseEnter={e => e.currentTarget.querySelector(".kl-tooltip").style.display="block"}
+                onMouseLeave={e => e.currentTarget.querySelector(".kl-tooltip").style.display="none"}>
+                <div style={{ width:16, height:16, borderRadius:"50%", border:"1px solid rgba(255,255,255,0.25)", display:"flex", alignItems:"center", justifyContent:"center", cursor:"default", fontSize:9, fontWeight:900, color:"rgba(255,255,255,0.4)", fontFamily:"'Space Mono',monospace" }}>?</div>
+                <div className="kl-tooltip" style={{ display:"none", position:"absolute", left:"50%", transform:"translateX(-50%)", bottom:"calc(100% + 8px)", width:300, background:"#1a1630", border:"1px solid rgba(255,255,255,0.12)", borderRadius:8, padding:"12px 14px", zIndex:99, boxShadow:"0 4px 20px rgba(0,0,0,0.6)" }}>
+                  <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+                    {(plan.key_levels || []).map((lvl, i) => {
+                      const isRes  = lvl.toLowerCase().includes("resistance") || lvl.toLowerCase().includes("resist");
+                      const isSupp = lvl.toLowerCase().includes("support");
+                      const isInval= lvl.toLowerCase().includes("invalidat");
+                      const label  = isInval ? "Invalidation" : isRes ? "Resistance" : isSupp ? "Support" : "Watch level";
+                      const dot    = isInval ? "✕" : isRes ? "R" : isSupp ? "S" : "→";
+                      const dotColor = isInval || isRes ? "#ff6b6b" : isSupp ? "#7fff6b" : "#ffd166";
+                      const displayText = lvl.replace(/^(support|resistance|critical|invalidation|trigger)\s*:\s*/i, "");
+                      const explanation = isSupp
+                        ? `Price held here recently. If it returns and holds, buyers are still in control. If it breaks below — the bullish case weakens.`
+                        : isRes
+                        ? `Sellers have defended this level. A 30M close above it means buyers broke through — that could be the trigger.`
+                        : isInval
+                        ? `If price closes beyond this level, the plan is off. Do not trade in the original direction if this is hit.`
+                        : `This is an extended target or reference level. Watch for reaction here if price reaches it.`;
+                      return (
+                        <div key={i} style={{ borderBottom: i < (plan.key_levels||[]).length-1 ? "1px solid rgba(255,255,255,0.06)" : "none", paddingBottom: i < (plan.key_levels||[]).length-1 ? 10 : 0 }}>
+                          <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:4 }}>
+                            <span style={{ fontSize:11, fontWeight:900, color:dotColor, fontFamily:"'Space Mono',monospace" }}>{dot}</span>
+                            <span style={{ fontSize:12, fontWeight:700, color:dotColor, fontFamily:"'Space Mono',monospace" }}>{label}</span>
+                            <span style={{ fontSize:11, color:"rgba(255,255,255,0.5)", fontFamily:"monospace" }}>{displayText.split("—")[0]?.trim()}</span>
+                          </div>
+                          <div style={{ fontSize:11, color:"rgba(255,255,255,0.65)", lineHeight:1.7, fontFamily:"'Space Mono',monospace" }}>{explanation}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
             <div style={{ display:"flex", flexDirection:"column", gap:0 }}>
               {plan.key_levels && plan.key_levels.length > 0
                 ? plan.key_levels.map((lvl, i) => {
