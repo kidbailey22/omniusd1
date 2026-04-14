@@ -2472,7 +2472,7 @@ Return ONLY this JSON — no markdown, no explanation, no preamble:
   "bias": "SHORT|LONG|NEUTRAL",
   "confidence": "HIGH|MEDIUM|LOW",
   "confidence_score": 0,
-  "summary": "2-3 sentences plain English for a 16-year-old. What the charts show, current phase, which session this targets.",
+  "summary": "1-2 sentences max. Plain English. What the instrument is doing and what the trader should watch for. No jargon.",
   "market_structure": "HH/HL or LH/LL with key price levels",
   "brc_phase": "PRE-BREAK|RETEST_COOKING|CONTINUATION|EXPIRED",
   "trigger_level": "exact price only — no words, no description",
@@ -4636,7 +4636,7 @@ function SoftPassScenariosPanel({ plan, onActivate, isMobile }) {
             fontFamily:"inherit", cursor:"pointer",
             border: isConfirming ? "none" : `1px solid ${color}44`,
             transition:"all 0.2s" }}>
-          {isConfirming ? `Confirm ${bias === "LONG" ? "Long" : "Short"} →` : `Confirm ${bias === "LONG" ? "Long" : "Short"} Scenario`}
+          {isConfirming ? `Confirm ${bias === "LONG" ? "Long" : "Short"} →` : `Use ${bias === "LONG" ? "Long" : "Short"} Plan`}
         </button>
         {isConfirming && (
           <button onClick={() => setConfirming(null)}
@@ -4648,7 +4648,7 @@ function SoftPassScenariosPanel({ plan, onActivate, isMobile }) {
           <div style={{ marginTop:10, display:"inline-flex", alignItems:"center", gap:7, padding:"7px 14px", background:`${color}12`, border:`1px solid ${color}44`, borderRadius:20, cursor:"default" }}>
             <span style={{ fontSize:12 }}>🔔</span>
             <span style={{ fontSize:12, fontWeight:700, color, fontFamily:"'Space Mono',monospace", letterSpacing:"0.04em" }}>
-              SET ALERT — {trigger} — 30M close {dir} activates {bias}
+              Set alert: {trigger}<br/>30M close {dir} = {bias.toLowerCase()}
             </span>
           </div>
         )}
@@ -6391,7 +6391,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
       {/* ══ PHASE: PLAN SUMMARY ════════════════════════════════════════════════ */}
       {appPage === "dashboard" && phase === "plan" && plan && (
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: isMobile ? "20px 16px" : "32px 24px", animation: "slide 0.35s ease both" }}>
-          <div style={{ width: "100%", maxWidth: 520 }}>
+          <div style={{ width: "100%", maxWidth: isMobile ? 520 : 720 }}>
 
           {/* ── BLOCKED STATE — instrument mismatch or chart error ── */}
           {plan._blocked && (
@@ -6517,7 +6517,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
 
             {/* Summary */}
             <div style={{ padding: "14px 16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10, marginBottom: 16, fontSize: 13, color: "#ccc4e8", lineHeight: 1.7 }}>
-              {plan.summary}{plan.grade !== "A+" && plan.grade !== "PASS" && plan.grade !== "SOFT PASS" && plan.summary && !plan.summary.toLowerCase().includes("not executable") ? " This is not executable yet." : ""}
+            {plan.summary}{plan.grade !== "A+" && plan.grade !== "PASS" && plan.grade !== "SOFT PASS" && plan.summary && !plan.summary.toLowerCase().includes("not executable") ? " This is not executable yet." : ""}
             </div>
 
             {/* Session context note — always show on weekends */}
@@ -6546,7 +6546,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 <div style={{ padding:"12px 16px", background:"rgba(0,229,255,0.04)", border:"1px solid rgba(0,229,255,0.2)", borderLeft:"3px solid #00e5ff", borderRadius:0, marginBottom:16 }}>
                   <div style={{ fontSize:13, fontWeight:900, letterSpacing:"0.16em", color:"#00e5ff", marginBottom:6, fontFamily:"'Space Mono',monospace" }}>👁 PRE-MARKET WATCH</div>
                   <div style={{ fontSize:14, color:"rgba(255,255,255,0.8)", lineHeight:1.7 }}>
-                    No entry yet — structure is forming. Two scenarios to watch at session open. <strong style={{ color:"#f0ecff" }}>One activates. The other doesn't.</strong>
+                    No entry yet — structure is forming. Two scenarios to watch at session open. <strong style={{ color:"#f0ecff" }}>One confirms. The other is invalid.</strong>
                   </div>
                   {plan._scoutMode && plan._preMarketScout && !plan._misaligned && (
                     <div style={{ marginTop:10, padding:"8px 12px", background:"rgba(0,204,255,0.06)", border:"1px solid rgba(0,204,255,0.2)", borderRadius:7, fontSize:12, color:"rgba(0,204,255,0.8)", fontFamily:"'Space Mono',monospace", lineHeight:1.6 }}>
@@ -6597,10 +6597,17 @@ Use ONLY these times. All earlier time references in this conversation are stale
 
                 {/* Nav buttons */}
                 <div style={{ display:"flex", gap:8, marginBottom:8 }}>
-                  <button onClick={() => { setPhase("upload"); setImages(Array(5).fill(null)); }}
-                    style={{ flex:1, padding:"11px", borderRadius:8, border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.04)", color:"rgba(255,255,255,0.8)", fontSize:14, fontWeight:700, letterSpacing:"0.08em", fontFamily:"inherit", cursor:"pointer" }}>
-                    ↩ New Analysis
-                  </button>
+                  {messages.length > 0 ? (
+                    <button onClick={() => setPhase("live")}
+                      style={{ flex:1, padding:"11px", borderRadius:8, border:"none", background:"linear-gradient(135deg,#00e5ff,#0099bb)", color:"#fff", fontSize:13, fontWeight:700, letterSpacing:"0.1em", fontFamily:"inherit", cursor:"pointer" }}>
+                      ← Back to Live Session
+                    </button>
+                  ) : (
+                    <button onClick={() => setPhase("upload")}
+                      style={{ flex:1, padding:"11px", borderRadius:8, border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.04)", color:"rgba(255,255,255,0.6)", fontSize:13, fontWeight:700, letterSpacing:"0.08em", fontFamily:"inherit", cursor:"pointer" }}>
+                      ← Back
+                    </button>
+                  )}
                 </div>
 
                 {/* Full Analysis collapsible */}
