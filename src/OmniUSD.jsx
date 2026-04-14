@@ -4771,16 +4771,37 @@ function FullAnalysisPanel({ plan }) {
           <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
             {[
               { tf:"Daily", key:"daily", color:"#ff6bff" },
-              { tf:"4H",    key:"four_hour", color:"#00e5ff" },
-              { tf:"1H",    key:"one_hour", color:"#7fff6b" },
-              { tf:"30M",   key:"m30", color:"#ffd166" },
-              { tf:"15M",   key:"m15", color:"#ff9a3c" },
+              { tf:"4H",    key:"h4",    color:"#00e5ff" },
+              { tf:"1H",    key:"h1",    color:"#7fff6b" },
+              { tf:"30M",   key:"m30",   color:"#ffd166" },
+              { tf:"15M",   key:"m15",   color:"#ff9a3c" },
             ].map(({ tf, key, color }) => {
               const tfData = plan.timeframe_reads?.[key] || plan.plain_english?.[key];
               const bias = typeof tfData === "object" ? tfData.bias : null;
               const structure = typeof tfData === "object" ? tfData.structure : (tfData || (tf === "Daily" ? plan.market_structure : null));
               const keyLevel = typeof tfData === "object" && tfData.key_level ? tfData.key_level : null;
               if (!structure && !bias) return null;
+
+              // If Daily field contains compressed multi-TF text, split into labeled lines
+              if (tf === "Daily" && structure && /4H:|1H:|Current:/i.test(structure)) {
+                const lines = structure.split(/,\s*(?=Daily:|4H:|1H:|Current:)/i).filter(Boolean);
+                return (
+                  <div key={tf} style={{ display:"flex", flexDirection:"column", gap:4 }}>
+                    {lines.map((line, li) => {
+                      const colonIdx = line.indexOf(":");
+                      const label = colonIdx > -1 ? line.slice(0, colonIdx).trim() : tf;
+                      const text = colonIdx > -1 ? line.slice(colonIdx + 1).trim() : line;
+                      const lColor = /daily/i.test(label) ? "#ff6bff" : /4h/i.test(label) ? "#00e5ff" : /1h/i.test(label) ? "#7fff6b" : /current/i.test(label) ? "#ffd166" : "#8878aa";
+                      return (
+                        <div key={li} style={{ display:"flex", alignItems:"baseline", gap:10, padding:"7px 12px", background:"rgba(255,255,255,0.02)", borderLeft:`2px solid ${lColor}` }}>
+                          <span style={{ fontSize:11, fontWeight:900, color:lColor, letterSpacing:"0.1em", fontFamily:"'Space Mono',monospace", flexShrink:0, minWidth:52 }}>{label}</span>
+                          <span style={{ fontSize:13, color:"rgba(255,255,255,0.75)", lineHeight:1.5 }}>{text}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              }
               return (
                 <div key={tf} style={{ display:"flex", alignItems:"baseline", gap:10, padding:"7px 12px", background:"rgba(255,255,255,0.02)", border:`1px solid rgba(255,255,255,0.05)`, borderLeft:`2px solid ${color}`, borderRadius:0 }}>
                   <span style={{ fontSize:11, fontWeight:900, color, letterSpacing:"0.1em", fontFamily:"'Space Mono',monospace", flexShrink:0, minWidth:36 }}>{tf}</span>
