@@ -5340,11 +5340,23 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
   const [dragOverSlot, setDragOverSlot] = useState(null);
   const [uploadCounts, setUploadCounts] = useState({});
   // Plan chat state
-  const [planChatMessages, setPlanChatMessages] = useState([]);
+  const [planChatByInstrument, setPlanChatByInstrument] = useState({});
   const [planChatInput, setPlanChatInput] = useState("");
   const [planChatLoading, setPlanChatLoading] = useState(false);
   const [planChatOpen, setPlanChatOpen] = useState(false);
-  const [checkedItems, setCheckedItems] = useState({});
+  const [checkedByInstrument, setCheckedByInstrument] = useState({});
+
+  // Derived per-instrument state
+  const planChatMessages = planChatByInstrument[instrument] || [];
+  const setPlanChatMessages = (val) => setPlanChatByInstrument(prev => ({
+    ...prev,
+    [instrument]: typeof val === "function" ? val(prev[instrument] || []) : val
+  }));
+  const checkedItems = checkedByInstrument[instrument] || {};
+  const setCheckedItems = (val) => setCheckedByInstrument(prev => ({
+    ...prev,
+    [instrument]: typeof val === "function" ? val(prev[instrument] || {}) : val
+  }));
   const PLAN_CHAT_LIMIT = 4;
   const [showChart, setShowChart] = useState(false);
   const [propFirmMode, setPropFirmMode] = useState(() => {
@@ -5838,18 +5850,28 @@ Use ONLY these times. All earlier time references in this conversation are stale
     setLoading(true);
 
     try {
-      const res = await fetch("/api/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1024,
-          system: getLivePrompt(plan, selectedSession, isDevMode()),
-          messages: newHistory,
-        }),
-      });
-
-      const data = await res.json();
+      let res, data, attempts = 0;
+      while (attempts < 3) {
+        res = await fetch("/api/analyze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "claude-sonnet-4-20250514",
+            max_tokens: 1024,
+            system: getLivePrompt(plan, selectedSession, isDevMode()),
+            messages: newHistory,
+          }),
+        });
+        data = await res.json();
+        if (res.status === 529 || res.status === 429 || res.status === 500) {
+          attempts++;
+          if (attempts < 3) {
+            await new Promise(r => setTimeout(r, attempts * 2000));
+            continue;
+          }
+        }
+        break;
+      }
       if (!res.ok) {
         const errMsg = data?.error?.message || data?.message || `API error ${res.status}`;
         const isOverload = res.status === 529 || res.status === 429 || errMsg.toLowerCase().includes("overload");
