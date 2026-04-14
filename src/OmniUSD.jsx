@@ -4726,13 +4726,12 @@ function FullAnalysisPanel({ plan }) {
   const StatusRow = ({ label, status }) => {
     const isPass = status === "✅";
     const isFail = status === "🔴" || status === "❌";
+    const icon = isPass ? "✓" : isFail ? "✕" : "△";
     const color = isPass ? "#7fff6b" : isFail ? "#ff6b6b" : "#ffd166";
     return (
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"8px 0", borderBottom:"1px solid rgba(255,255,255,0.04)" }}>
-        <span style={{ fontSize:13, color: isPass ? "rgba(255,255,255,0.6)" : isFail ? "rgba(255,107,107,0.8)" : "rgba(255,255,255,0.85)", fontFamily:"'Space Mono',monospace" }}>{label}</span>
-        <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-          <div style={{ width:8, height:8, borderRadius:"50%", background: isPass ? "#7fff6b" : isFail ? "#ff6b6b" : "#ffd166", flexShrink:0 }}/>
-        </div>
+        <span style={{ fontSize:13, color: isPass ? "rgba(255,255,255,0.55)" : isFail ? "rgba(255,107,107,0.85)" : "rgba(255,255,255,0.85)", fontFamily:"'Space Mono',monospace" }}>{label}</span>
+        <span style={{ fontSize:12, fontWeight:900, color, fontFamily:"'Space Mono',monospace", width:16, textAlign:"center" }}>{icon}</span>
       </div>
     );
   };
@@ -4754,11 +4753,11 @@ function FullAnalysisPanel({ plan }) {
 
           {/* ── HEADER — Fix 5: split into two lines ── */}
           <div style={{ padding:"12px 16px", background:"rgba(255,107,255,0.05)", border:"1px solid rgba(255,107,255,0.2)", borderRadius:8, marginBottom:20, textAlign:"center" }}>
-            <div style={{ fontSize:13, fontWeight:900, letterSpacing:"0.18em", color:"#ff6bff", marginBottom:4, fontFamily:"'Space Mono',monospace" }}>🏆 OMNIUSD — FULL ANALYSIS</div>
-            <div style={{ fontSize:13, color:"rgba(255,255,255,0.85)", fontFamily:"'Space Mono',monospace", marginBottom:2 }}>
+            <div style={{ fontSize:13, fontWeight:900, letterSpacing:"0.18em", color:"#ff6bff", marginBottom:6, fontFamily:"'Space Mono',monospace" }}>🏆 OMNIUSD — FULL ANALYSIS</div>
+            <div style={{ fontSize:13, color:"rgba(255,255,255,0.85)", fontFamily:"'Space Mono',monospace", marginBottom:4 }}>
               {plan.instrument} · {dateStr}
             </div>
-            <div style={{ fontSize:11, color:"rgba(255,255,255,0.45)", fontFamily:"'Space Mono',monospace" }}>
+            <div style={{ fontSize:10, color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace", letterSpacing:"0.04em" }}>
               {plan.grade === "SOFT PASS" || plan.grade === "PASS"
                 ? "Pre-market only — no executable plan until NY opens at 8:30 AM CT"
                 : plan.session_note?.split("—")[0]?.trim() || "NY Session"}
@@ -4811,23 +4810,6 @@ function FullAnalysisPanel({ plan }) {
                 </div>
               );
             })}
-          </div>
-
-          {/* BRC Phase steps */}
-          <div style={{ marginTop:14, display:"flex", flexDirection:"column", gap:8 }}>
-            <div style={{ fontSize:13, fontWeight:900, letterSpacing:"0.12em", color:"#ff6bff", fontFamily:"'Space Mono',monospace", marginBottom:4 }}>BRC PHASE</div>
-            {[
-              { step:"Break",        price: plan.trigger_level, done: plan.brc_phase === "RETEST_COOKING" || plan.brc_phase === "CONTINUATION" },
-              { step:"Correction",   price: plan.retest_zone,   done: plan.brc_phase === "CONTINUATION" },
-              { step:"Continuation", price: plan.trigger_level, done: false },
-            ].map(({ step, price, done }) => (
-              <div key={step} style={{ display:"flex", alignItems:"center", gap:10 }}>
-                <span style={{ fontSize:14, flexShrink:0 }}>{done ? "✅" : "⏳"}</span>
-                <span style={{ fontSize:14, color: done ? "#7fff6b" : "rgba(255,255,255,0.8)", fontFamily:"'Space Mono',monospace" }}>
-                  {step}{price ? `: ${price}` : ""}
-                </span>
-              </div>
-            ))}
           </div>
 
           {divider}
