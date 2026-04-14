@@ -4764,8 +4764,32 @@ function FullAnalysisPanel({ plan }) {
             </div>
           </div>
 
-          {/* ── MARKET STRUCTURE & BRC PHASES ── */}
-          <SectionHeader icon="📊" label="MARKET STRUCTURE & BRC PHASES" color="#00e5ff"/>
+          {/* ── MARKET STRUCTURE ── */}
+          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10 }}>
+            <span style={{ fontSize:14 }}>📊</span>
+            <span style={{ fontSize:13, fontWeight:900, letterSpacing:"0.14em", color:"#00e5ff", fontFamily:"'Space Mono',monospace" }}>MARKET STRUCTURE</span>
+            <div style={{ position:"relative", display:"inline-flex" }}
+              onMouseEnter={e => e.currentTarget.querySelector(".ms-tooltip").style.display="block"}
+              onMouseLeave={e => e.currentTarget.querySelector(".ms-tooltip").style.display="none"}>
+              <div style={{ width:16, height:16, borderRadius:"50%", border:"1px solid rgba(255,255,255,0.25)", display:"flex", alignItems:"center", justifyContent:"center", cursor:"default", fontSize:9, fontWeight:900, color:"rgba(255,255,255,0.4)", fontFamily:"'Space Mono',monospace" }}>?</div>
+              <div className="ms-tooltip" style={{ display:"none", position:"absolute", left:"50%", transform:"translateX(-50%)", bottom:"calc(100% + 8px)", width:300, background:"#1a1630", border:"1px solid rgba(255,255,255,0.12)", borderRadius:8, padding:"12px 14px", zIndex:99, boxShadow:"0 4px 20px rgba(0,0,0,0.6)" }}>
+                <div style={{ display:"flex", flexDirection:"column", gap:8, fontSize:11, fontFamily:"'Space Mono',monospace", lineHeight:1.8 }}>
+                  {[
+                    { label:"BULLISH", color:"#7fff6b",  desc:"Price is making higher highs and higher lows. Buyers are in control on this timeframe." },
+                    { label:"BEARISH", color:"#ff6b6b",  desc:"Price is making lower highs and lower lows. Sellers are in control." },
+                    { label:"HH / HL", color:"#7fff6b",  desc:"Higher High / Higher Low — bullish structure confirmed." },
+                    { label:"LH / LL", color:"#ff6b6b",  desc:"Lower High / Lower Low — bearish structure confirmed." },
+                    { label:"RANGING / MIXED", color:"#ffd166", desc:"No clear direction yet. Wait for price to pick a side before acting." },
+                  ].map(({ label, color, desc }) => (
+                    <div key={label} style={{ borderBottom:"1px solid rgba(255,255,255,0.05)", paddingBottom:8 }}>
+                      <div style={{ fontWeight:900, color, marginBottom:2 }}>{label}</div>
+                      <div style={{ color:"rgba(255,255,255,0.6)" }}>{desc}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
 
           <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
             {[
