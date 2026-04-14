@@ -164,7 +164,7 @@ BRC METHODOLOGY — NON-NEGOTIABLE RULES:
 - 4H confirms direction. D+4H agree = bias locked.
 - 1H is execution TF. ALL 3 (D+4H+1H) must agree for A+ grade.
 - 30M is the trigger. A 30M candle CLOSE above/below a level triggers entry — wicks don't count.
-- 15M is entry refinement and rejection confirmation.
+
 - BRC sequence: BREAK → RETEST → CONTINUATION (all 3 required)
   Step 1 — BREAK: 30M closes above/below key level. Note it. Do NOT enter yet.
   Step 2 — RETEST: Price pulls back to the level. Watch it.
@@ -266,9 +266,9 @@ If price is at 70,600 and the session low was 68,770:
 The trigger level is always the NEAREST price that, if broken by a 30M close, confirms the next move.
 
 CHART VALIDATION — CRITICAL FIRST:
-Images submitted in order: [1]=Daily, [2]=4H, [3]=1H, [4]=30M, [5]=15M. Selected instrument: ${instrument}.
+Images submitted in order: [1]=Daily, [2]=4H, [3]=1H, [4]=30M. Selected instrument: ${instrument}.
 
-STEP 1 — INSTRUMENT CHECK: Before checking timeframes, inspect all 5 charts for the instrument/ticker symbol visible on the chart (pair name, symbol, title bar, watermark, or price scale).
+STEP 1 — INSTRUMENT CHECK: Before checking timeframes, inspect all 4 charts for the instrument/ticker symbol visible on the chart (pair name, symbol, title bar, watermark, or price scale).
 
 ACCEPTED ALIASES — these ticker labels are valid for each instrument:
 - XAUUSD: XAUUSD, GOLD, GC, MGC, MGC1!, MGCM2026, MGCM6, MGCH2026, MGCU2026, MGCZ2026, XAU, GOLD/USD
@@ -284,11 +284,10 @@ ACCEPTED ALIASES — these ticker labels are valid for each instrument:
 INSTRUMENT MISMATCH = hard block. Do NOT proceed with analysis if instrument_valid=false.
 
 STEP 2 — TIMEFRAME CHECK: Inspect EVERY image for timeframe indicators (chart title, interval selector, candle size, time axis). This check is MANDATORY and NON-NEGOTIABLE.
-- Slot 1 MUST be a Daily chart. If it shows 4H, 1H, 30M, 15M, or any other timeframe → charts_valid=false, stop immediately.
+- Slot 1 MUST be a Daily chart. If it shows 4H, 1H, 30M, or any other timeframe → charts_valid=false, stop immediately.
 - Slot 2 MUST be a 4H chart. Wrong timeframe → charts_valid=false, stop.
 - Slot 3 MUST be a 1H chart. Wrong timeframe → charts_valid=false, stop.
 - Slot 4 MUST be a 30M chart. Wrong timeframe → charts_valid=false, stop.
-- Slot 5 MUST be a 15M chart. Wrong timeframe → charts_valid=false, stop.
 - If you CANNOT clearly read the timeframe from the image → mark that slot invalid → charts_valid=false, stop.
 - A false pass on a wrong chart is worse than a false fail. When in doubt, reject.
 - NEVER generate a plan if any slot has the wrong chart. No exceptions.
@@ -349,7 +348,7 @@ CRITICAL LEVELS — all four must stay within the SAME operational framework (no
 CRITICAL RULE — every operational sentence must include exact price or zone.
 
 Respond ONLY with a JSON object, no markdown, no backticks:
-{"charts_valid":true,"instrument_valid":true,"instrument_detected":"string","chart_validation":{"daily":{"expected":"Daily","detected":"string","signals":[],"valid":true},"h4":{"expected":"4H","detected":"string","signals":[],"valid":true},"h1":{"expected":"1H","detected":"string","signals":[],"valid":true},"m30":{"expected":"30M","detected":"string","signals":[],"valid":true},"m15":{"expected":"15M","detected":"string","signals":[],"valid":true}},"primary_decision":{"bias":"SHORT|LONG|NEUTRAL","status":"VALID|WAITING|INVALIDATED","confidence":"HIGH|MEDIUM|LOW","confidence_reason":"string","grade":"A+|A|B|C|PASS"},"execution_plan":{"direction":"LONG|SHORT|NEUTRAL","break_trigger_level":"price only","retest_zone":"price or zone only","retest_confirmation_rule":"text rule only — no prices","session_restriction":"text only — when to trade","entry":"price or zone only","confirmation_trigger":"price only","stop_tight":"price only","stop_wide":"price only","tp1":"price only","tp2":"price only","runner":"price only","risk_reward":"string","size":"FULL SIZE|HALF SIZE|QUARTER SIZE"},"invalidation":"string","bias_levels":{"trigger_levels":"string","invalidation_levels":"string","acceleration_levels":"string"},"why":{"structure":"string","liquidity":"string","htf_alignment":"string","session_timing":"string","momentum":"string"},"icc_phase":"BREAK|RETEST|CONTINUATION|PRE-SETUP","alignment":"FULL ALIGN|COOKING|MISALIGNED|COUNTER-TREND ONLY","timeframe_reads":{"daily":{"bias":"BULLISH|BEARISH|NEUTRAL","structure":"string","key_level":"string"},"h4":{"bias":"BULLISH|BEARISH|NEUTRAL","structure":"string","key_level":"string"},"h1":{"bias":"BULLISH|BEARISH|NEUTRAL","structure":"string","key_level":"string"},"m30":{"bias":"BULLISH|BEARISH|NEUTRAL","structure":"string","key_level":"string"},"m15":{"bias":"BULLISH|BEARISH|NEUTRAL","structure":"string","key_level":"string"}},"secondary_plan":{"condition":"string","direction":"LONG|SHORT|NONE","entry":"price only","stop":"price only","tp1":"price only","tp2":"price only","runner":"price only","size":"FULL SIZE|HALF SIZE|QUARTER SIZE","warning":"string"},"critical_levels":{"long_trigger":"price only","short_trigger":"price only","major_support":"price only","major_resistance":"price only"},"trigger_conditions":{"long_trigger":"string","short_trigger":"string","risk_state":"string"},"plain_english":{"structure":"string","brc_phase":"string","key_levels":"string","trade_plan":"string","verdict":"string","psychological_rule":"Once entered, hands off. Trust the system. Pre-market movement is information — not permission."}}`;
+{"charts_valid":true,"instrument_valid":true,"instrument_detected":"string","chart_validation":{"daily":{"expected":"Daily","detected":"string","signals":[],"valid":true},"h4":{"expected":"4H","detected":"string","signals":[],"valid":true},"h1":{"expected":"1H","detected":"string","signals":[],"valid":true},"m30":{"expected":"30M","detected":"string","signals":[],"valid":true}},"primary_decision":{"bias":"SHORT|LONG|NEUTRAL","status":"VALID|WAITING|INVALIDATED","confidence":"HIGH|MEDIUM|LOW","confidence_reason":"string","grade":"A+|A|B|C|PASS"},"execution_plan":{"direction":"LONG|SHORT|NEUTRAL","break_trigger_level":"price only","retest_zone":"price or zone only","retest_confirmation_rule":"text rule only — no prices","session_restriction":"text only — when to trade","entry":"price or zone only","confirmation_trigger":"price only","stop_tight":"price only","stop_wide":"price only","tp1":"price only","tp2":"price only","runner":"price only","risk_reward":"string","size":"FULL SIZE|HALF SIZE|QUARTER SIZE"},"invalidation":"string","bias_levels":{"trigger_levels":"string","invalidation_levels":"string","acceleration_levels":"string"},"why":{"structure":"string","liquidity":"string","htf_alignment":"string","session_timing":"string","momentum":"string"},"icc_phase":"BREAK|RETEST|CONTINUATION|PRE-SETUP","alignment":"FULL ALIGN|COOKING|MISALIGNED|COUNTER-TREND ONLY","timeframe_reads":{"daily":{"bias":"BULLISH|BEARISH|NEUTRAL","structure":"string","key_level":"string"},"h4":{"bias":"BULLISH|BEARISH|NEUTRAL","structure":"string","key_level":"string"},"h1":{"bias":"BULLISH|BEARISH|NEUTRAL","structure":"string","key_level":"string"},"m30":{"bias":"BULLISH|BEARISH|NEUTRAL","structure":"string","key_level":"string"}},"secondary_plan":{"condition":"string","direction":"LONG|SHORT|NONE","entry":"price only","stop":"price only","tp1":"price only","tp2":"price only","runner":"price only","size":"FULL SIZE|HALF SIZE|QUARTER SIZE","warning":"string"},"critical_levels":{"long_trigger":"price only","short_trigger":"price only","major_support":"price only","major_resistance":"price only"},"trigger_conditions":{"long_trigger":"string","short_trigger":"string","risk_state":"string"},"plain_english":{"structure":"string","brc_phase":"string","key_levels":"string","trade_plan":"string","verdict":"string","psychological_rule":"Once entered, hands off. Trust the system. Pre-market movement is information — not permission."}}`;
 }
 
 
@@ -511,7 +510,6 @@ const TF_SLOTS=[
   {key:"h4",   label:"4-Hour",  short:"4H", color:"#00e5ff",desc:"Confirms direction"},
   {key:"h1",   label:"1-Hour",  short:"1H", color:"#7fff6b",desc:"Execution timeframe"},
   {key:"m30",  label:"30-Min",  short:"30M",color:"#ffd166",desc:"Trigger timeframe"},
-  {key:"m15",  label:"15-Min",  short:"15M",color:"#ff9a3c",desc:"Entry refinement"},
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1529,7 +1527,7 @@ function Onboarding({onSelect}){
                   <span style={{fontSize:11,fontWeight:900,padding:"3px 10px",borderRadius:20,background:"rgba(0,229,255,0.1)",border:"1px solid rgba(0,229,255,0.25)",color:"#00e5ff",letterSpacing:"0.08em",fontFamily:"'Space Mono',monospace"}}>RECOMMENDED</span>
                 </div>
                 <div style={{fontSize:13,color:"var(--t-muted3)",lineHeight:1.7,marginBottom:16}}>
-                  The most widely used charting platform. Free plan works perfectly for OmniUSD — Daily, 4H, 1H, 30M, and 15M charts available on all instruments.
+                  The most widely used charting platform. Free plan works perfectly for OmniUSD — Daily, 4H, 1H, and 30M charts available on all instruments.
                 </div>
                 <a href="https://www.tradingview.com/OmniUSD?aff_id=164890" target="_blank" rel="noopener noreferrer"
                   style={{display:"block",width:"100%",padding:"11px 20px",borderRadius:9,background:"linear-gradient(135deg,#00e5ff,#0099bb)",color:"#1e1a35",fontSize:13,fontWeight:900,letterSpacing:"0.08em",fontFamily:"inherit",textDecoration:"none",textAlign:"center",cursor:"pointer",boxSizing:"border-box"}}>
@@ -1752,7 +1750,7 @@ function Onboarding({onSelect}){
             {/* Commitments */}
             <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:32}}>
               {[
-                {n:"01", rule:"Upload before the session. Not during it.", detail:"Pre-market scouting opens at 7:00 AM CT. Upload your 5 charts before 8:30 AM CT so you have time to study the plan before execution begins."},
+                {n:"01", rule:"Upload before the session. Not during it.", detail:"Pre-market scouting opens at 7:00 AM CT. Upload your 4 charts before 8:30 AM CT so you have time to study the plan before execution begins."},
                 {n:"02", rule:"8:30 to 10:30 AM CT. Nothing outside that.", detail:"OmniUSD is built for the NY session open — the highest conviction, highest volume window in the market. Outside this window, you wait."},
                 {n:"03", rule:"A+ setups only. Pass on everything else.", detail:"You will see B-grade setups that look good. You will feel pressure to act. The system says PASS — you pass. Six A+ trades per month beats thirty B-grade trades every time."},
                 {n:"04", rule:"30M close is the trigger. Wicks are noise.", detail:"Price touching a level is information. Price wicking through a level is information. Only a 30M candle closing beyond the level gives you permission to act."},
@@ -1815,7 +1813,7 @@ function TrustPanel({anime}){
       {/* How it works — 3 steps, always visible */}
       <div style={{display:"flex",gap:0,marginBottom:12,background:"var(--t-c2)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:14,overflow:"hidden"}}>
         {[
-          {n:"1",icon:"📸",title:"Upload 5 Charts",desc:"Daily · 4H · 1H · 30M · 15M — from your active broker only",color:"#ff6bff"},
+          {n:"1",icon:"📸",title:"Upload 5 Charts",desc:"Daily · 4H · 1H · 30M — from your active broker only",color:"#ff6bff"},
           {n:"2",icon:"🧠",title:"Engine Reads All 5",desc:`Applies BRC rules across every timeframe and generates your structured plan`,color:"#00e5ff"},
           {n:"3",icon:"⚡",title:"Execute by the Rules",desc:"Follow the Live Tracker step by step — Tier 1, Tier 2, Retest, then limit order",color:"#7fff6b"},
         ].map((step,i)=>(
@@ -1842,7 +1840,7 @@ function TrustPanel({anime}){
           <div style={{padding:"16px 20px",borderBottom:"1px solid rgba(255,255,255,0.05)",background:"var(--t-c2)"}}>
             <p style={{fontSize:14,color:"var(--t-muted)",margin:0,lineHeight:1.75}}>
               This is a <strong style={{color:"var(--t-text)"}}>rules-based execution engine</strong> built on the BRC / Smart Money Concepts methodology.
-              It reads chart structure across 5 timeframes and applies the same 6 rules on every single analysis — no exceptions, no overrides.
+              It reads chart structure across 4 timeframes and applies the same 6 rules on every single analysis — no exceptions, no overrides.
               The output is a structured trade plan, not a prediction. <strong style={{color:"var(--t-text)"}}>You are still responsible for your own execution and risk management.</strong>
             </p>
           </div>
@@ -1885,7 +1883,7 @@ function LoadingScreen({T=DARK}){
     "Confirming 4H alignment",
     "Mapping 1H execution context",
     "Checking 30M trigger zone",
-    "Refining 15M entry logic",
+    "Analyzing trigger levels",
     "Building session plan",
   ];
   const [stageIdx,setStageIdx]=useState(0);
@@ -2329,18 +2327,18 @@ Must AGREE with Daily + 4H direction.
 1H conflicts = SOFT PASS immediately. Stop here.
 ❌ NEVER: A+ when 1H = Bearish and trade is LONG
 ❌ NEVER: A+ when 1H = Bullish and trade is SHORT
-❌ NEVER: Use 15M or 30M to override a conflicting 4H or 1H
+❌ NEVER: Use 30M to override a conflicting 4H or 1H
 
 STEP 4 — Only if ALL 3 agree (3/3 FULL ALIGNMENT):
 Check 30M for entry trigger.
-Check 15M for early warning.
+
 Now you may consider A+.
 
 WHAT MUST NEVER HAPPEN:
 ❌ A+ when 4H = Mixed or opposite Daily
 ❌ A+ when 1H disagrees with Daily + 4H
 ❌ A+ when session window is CLOSED
-❌ Using 15M or 30M to justify overriding higher TF conflicts
+❌ Using 30M to justify overriding higher TF conflicts
 
 RULE 2 — THE 30M CLOSE IS THE ONLY ENTRY TRIGGER
 Price touching a level = information, not permission.
@@ -3422,7 +3420,7 @@ function detectTFFromFilename(filename) {
   if (f.match(/240|4h|4hr|4hour/)) return 1; // 4H
   if (f.match(/60|1h[^4]|1hr|1hour/)) return 2; // 1H
   if (f.match(/30m|30min|30\b/)) return 3; // 30M
-  if (f.match(/15m|15min|15\b/)) return 4; // 15M
+  
   return -1; // unknown
 }
 
@@ -3433,15 +3431,14 @@ function BulkUploadZone({ images, setImages, readSlotFile, dragOverSlot, setDrag
   const fileInputRef = useRef(null);
 
   const SLOTS = [
-    { tf: "Daily", label: "D",   role: "Bias",       color: "#ff6bff" },
-    { tf: "4H",    label: "4H",  role: "Structure",  color: "#00e5ff" },
-    { tf: "1H",    label: "1H",  role: "Setup",      color: "#7fff6b" },
-    { tf: "30M",   label: "30M", role: "Trigger",    color: "#ffd166" },
-    { tf: "15M",   label: "15M", role: "Refinement", color: "#ff9a3c" },
+    { tf: "Daily", label: "D",   role: "Bias",      color: "#ff6bff" },
+    { tf: "4H",    label: "4H",  role: "Structure", color: "#00e5ff" },
+    { tf: "1H",    label: "1H",  role: "Setup",     color: "#7fff6b" },
+    { tf: "30M",   label: "30M", role: "Trigger",   color: "#ffd166" },
   ];
 
   const uploadedCount = images.filter(Boolean).length;
-  const allReady = uploadedCount === 5;
+  const allReady = uploadedCount === 4;
 
   function processFiles(files) {
     const imgs = Array.from(files).filter(f => f.type.startsWith("image/")).slice(0, 10);
@@ -3449,7 +3446,7 @@ function BulkUploadZone({ images, setImages, readSlotFile, dragOverSlot, setDrag
     setAnimating(true);
 
     // Try to auto-detect timeframes
-    const assigned = Array(5).fill(null);
+    const assigned = Array(4).fill(null);
     const leftover = [];
 
     imgs.forEach(file => {
@@ -3506,7 +3503,7 @@ function BulkUploadZone({ images, setImages, readSlotFile, dragOverSlot, setDrag
       `}</style>
 
       {/* Drop zone */}
-      {uploadedCount < 5 && (
+      {uploadedCount < 4 && (
         <div
           onDragOver={e => { e.preventDefault(); setIsDragOver(true); }}
           onDragLeave={() => setIsDragOver(false)}
@@ -3540,10 +3537,10 @@ function BulkUploadZone({ images, setImages, readSlotFile, dragOverSlot, setDrag
               {isDragOver ? "↓" : "📁"}
             </div>
             <div style={{ fontSize: 14, fontWeight: 700, color: isDragOver ? "#ff6bff" : "#f0ecff", marginBottom: 6 }}>
-              {isDragOver ? "Drop all 5 charts here" : "Select or drop all 5 charts at once"}
+              {isDragOver ? "Drop all 4 charts here" : "Select or drop all 4 charts at once"}
             </div>
             <div style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", lineHeight: 1.6 }}>
-              Daily · 4H · 1H · 30M · 15M — select all at once or one by one
+              Daily · 4H · 1H · 30M — select all at once or one by one
             </div>
             <div style={{ fontSize: 13, color: "rgba(255,107,255,0.5)", marginTop: 8, fontFamily: "'Space Mono',monospace" }}>
             </div>
@@ -3633,7 +3630,7 @@ function BulkUploadZone({ images, setImages, readSlotFile, dragOverSlot, setDrag
             <div style={{ fontSize: 13, fontWeight: 700, color: "#7fff6b" }}>All 5 charts ready</div>
             <div style={{ fontSize: 13, color: "rgba(127,255,107,0.6)", fontFamily: "'Space Mono',monospace" }}>Hit generate to build your session plan</div>
           </div>
-          <button onClick={() => { setImages(Array(5).fill(null)); }}
+          <button onClick={() => { setImages(Array(4).fill(null)); }}
             style={{ marginLeft: "auto", fontSize: 8, fontWeight: 700, padding: "3px 9px", borderRadius: 5, border: "1px solid rgba(255,255,255,0.1)", background: "none", color: "rgba(255,255,255,0.75)", cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}>
             Clear all
           </button>
@@ -3641,7 +3638,7 @@ function BulkUploadZone({ images, setImages, readSlotFile, dragOverSlot, setDrag
       )}
 
       {/* Progress bar */}
-      {uploadedCount > 0 && uploadedCount < 5 && (
+      {uploadedCount > 0 && uploadedCount < 4 && (
         <div style={{ marginTop: 10 }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
             <span style={{ fontSize: 13, color: "#8878aa", fontFamily: "'Space Mono',monospace" }}>{uploadedCount} / 5 charts</span>
@@ -3691,13 +3688,6 @@ function ChartSetupPage({ onClose }) {
       perfect: "Shows current consolidation, swing highs and lows, and the exact levels for Tier 1 and Tier 2 confirmation. This is your entry trigger timeframe.",
       tooLittle: "1 day — misses consolidation zones",
       tooMuch: "1 week — stale levels pollute the read",
-    },
-    {
-      short: "15M", tf: "15-Minute", lookback: "1–2 days",  color: "#ff9a3c",
-      shows: "Current momentum + early warning only",
-      perfect: "Early warning only. You need the last 24–48 hours of candle behavior to read current momentum. Nothing more is needed or useful on this timeframe.",
-      tooLittle: "4 hours — not enough context",
-      tooMuch: "3 days — analysis paralysis",
     },
   ];
 
@@ -4797,7 +4787,6 @@ function FullAnalysisPanel({ plan }) {
               { tf:"4H",    key:"h4",    color:"#00e5ff" },
               { tf:"1H",    key:"h1",    color:"#7fff6b" },
               { tf:"30M",   key:"m30",   color:"#ffd166" },
-              { tf:"15M",   key:"m15",   color:"#ff9a3c" },
             ].map(({ tf, key, color }) => {
               const tfData = plan.timeframe_reads?.[key] || plan.plain_english?.[key];
               const bias = typeof tfData === "object" ? tfData.bias : null;
@@ -5294,7 +5283,7 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
       setTimeout(() => window.location.reload(), 2000);
     }
   }, []);
-  const [images, setImages] = useState(Array(5).fill(null)); // each slot: {file, preview} or null
+  const [images, setImages] = useState(Array(4).fill(null)); // each slot: {file, preview} or null
 
   function readSlotFile(file, i) {
     if (!file) return;
@@ -5439,7 +5428,7 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
 
   // ── STEP 1: Analyze charts ──────────────────────────────────────────────────
   async function analyzeCharts() {
-    if (images.filter(Boolean).length < 5) return;
+    if (images.filter(Boolean).length < 4) return;
     const mktStatus = getMarketStatus(instrument, selectedSession);
     if ((mktStatus.state === "closed" || mktStatus.state === "wrong_session") && !isDevMode()) return;
 
@@ -5518,7 +5507,7 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
           model: "claude-sonnet-4-20250514",
           max_tokens: 1000,
           system: getAnalysisPrompt(instrument, selectedSession, isDevMode()),
-          messages: [{ role: "user", content: [...imgBlocks, { type: "text", text: `Analyze these ${instrument} charts. Daily first, then 4H, 1H, 30M, 15M. Return only the JSON.` }] }],
+          messages: [{ role: "user", content: [...imgBlocks, { type: "text", text: `Analyze these ${instrument} charts. Daily first, then 4H, 1H, 30M. Return only the JSON.` }] }],
         }),
       });
 
@@ -5542,7 +5531,7 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
           // Free retry — go back to upload, no cooldown hit
           setUploadCounts(prev => ({ ...prev, [instrument]: Math.max(0, (prev[instrument] || 1) - 1) }));
           setPlan(null);
-          setImages(Array(5).fill(null));
+          setImages(Array(4).fill(null));
           setPhase("upload");
           alert(`Wrong charts — these show ${detected}, not ${expected}. Upload your ${expected} charts and try again.`);
           return;
@@ -6015,7 +6004,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 {/* Drawer nav items */}
                 <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 0" }}>
                   {[
-                    { label: "Dashboard", icon: "◈", action: () => { setAppPage("dashboard"); setPhase("upload"); setImages(Array(5).fill(null)); setDrawerOpen(false); }, active: appPage === "dashboard" },
+                    { label: "Dashboard", icon: "◈", action: () => { setAppPage("dashboard"); setPhase("upload"); setImages(Array(4).fill(null)); setDrawerOpen(false); }, active: appPage === "dashboard" },
                     { label: "History", icon: "📋", action: () => { setAppPage("history"); setDrawerOpen(false); }, active: appPage === "history", color: "#7fff6b" },
                     { label: "Results", icon: "📈", action: () => { setAppPage("results"); setDrawerOpen(false); }, active: appPage === "results", color: "#00ccff" },
                     { label: "Settings", icon: "⚙", action: () => { setAppPage("settings"); setDrawerOpen(false); }, active: appPage === "settings", color: "#ff6bff" },
@@ -6026,7 +6015,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                     ] : []),
                     ...(phase === "live" ? [
                       { label: "View Plan", icon: "📄", action: () => { setPhase("plan"); setDrawerOpen(false); }, color: "#ffd166" },
-                      { label: "New Analysis", icon: "↩", action: () => { setPhase("upload"); setImages(Array(5).fill(null)); setDrawerOpen(false); }, color: "rgba(255,255,255,0.75)" },
+                      { label: "New Analysis", icon: "↩", action: () => { setPhase("upload"); setImages(Array(4).fill(null)); setDrawerOpen(false); }, color: "rgba(255,255,255,0.75)" },
                     ] : []),
                   ].map((item, i) => (
                     <button key={i} onClick={item.action}
@@ -6094,7 +6083,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
             <button onClick={() => setAppPage(appPage === "faq" ? "dashboard" : "faq")} style={{ fontSize: 13, fontWeight: 700, color: appPage === "faq" ? "#00e5ff" : "#8878aa", background: appPage === "faq" ? "rgba(0,229,255,0.08)" : "none", border: `1px solid ${appPage === "faq" ? "rgba(0,229,255,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>Help & FAQ</button>
             {phase === "live" && (<>
               <button onClick={() => setPhase("plan")} style={{ fontSize: 13, fontWeight: 700, color: "#ffd166", background: "rgba(255,209,102,0.08)", border: "1px solid rgba(255,209,102,0.25)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>View Plan</button>
-              <button onClick={() => { setPhase("upload"); setImages(Array(5).fill(null)); }} style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.75)", background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>NEW ANALYSIS</button>
+              <button onClick={() => { setPhase("upload"); setImages(Array(4).fill(null)); }} style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.75)", background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>NEW ANALYSIS</button>
             </>)}
             {onSignOut && <button onClick={() => {
               const allSess = loadSessions();
@@ -6165,9 +6154,9 @@ Use ONLY these times. All earlier time references in this conversation are stale
             {/* FAQ items */}
             <div style={{ display:"flex", flexDirection:"column", gap:0, border:"1px solid rgba(255,255,255,0.07)", borderRadius:12, overflow:"hidden" }}>
               {[
-                { q:"You only need to upload charts once per instrument per session.", a:"Select your instrument first, then upload all 5 timeframes (Daily, 4H, 1H, 30M, 15M). Your plan generates automatically. You do not need to re-upload unless you switch instruments or start a new session.", highlight:true },
+                { q:"You only need to upload charts once per instrument per session.", a:"Select your instrument first, then upload all 4 timeframes (Daily, 4H, 1H, 30M). Your plan generates automatically. You do not need to re-upload unless you switch instruments or start a new session.", highlight:true },
                 { q:"When should I upload the charts?", a:"Upload 30–60 minutes before your session opens. For the NY session, upload between 7:30–8:00 AM CT. Do not upload during the session — the plan is built on pre-session structure." },
-                { q:"What timeframes does BRC use?", a:"Five timeframes: Daily (bias), 4H (structure), 1H (setup), 30M (trigger), 15M (refinement). The 30M candle close is the only valid entry signal. All five are required." },
+                { q:"What timeframes does BRC use?", a:"Four timeframes: Daily (bias), 4H (structure), 1H (setup), 30M (trigger). The 30M candle close is the only valid entry signal. All four are required." },
                 { q:"Every chart must show the instrument and timeframe.", a:"The ticker (e.g. BTCUSD) and timeframe (e.g. 1H, 30M) must be clearly visible in every screenshot. If either is not visible, your upload will be rejected. Take screenshots with labels showing.", highlight:true },
                 { q:"What if the setup does not confirm?", a:"You do nothing. If the BRC sequence is incomplete, the result is PASS. No execution UI appears. A clean PASS protects your account. Not every session has a trade." },
                 { q:"Why does OmniUSD cut off at 10:30 AM CT?", a:"10:30 AM CT marks the end of the institutional execution window. From 8:30 to 10:30 AM CT, banks and institutions are actively executing — volume is highest, levels are respected, breaks are clean. After 10:30 AM, institutional participation drops and what remains is retail noise and choppy price action. The four valid 30M closes are 9:00, 9:30, 10:00, and 10:30 AM CT. If Tier 2 has not confirmed by 10:30 AM the plan expires — no exceptions. This is the discipline that keeps the system profitable." },
@@ -6209,7 +6198,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 Upload your charts.<br/>Start the session.
               </h1>
               <div style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.6 }}>
-                Select one instrument and upload all 5 timeframes for the NY session.
+                Select one instrument and upload all 4 timeframes for the NY session.
               </div>
             </div>
 
@@ -6430,13 +6419,13 @@ Use ONLY these times. All earlier time references in this conversation are stale
             <BulkUploadZone images={images} setImages={setImages} readSlotFile={readSlotFile} dragOverSlot={dragOverSlot} setDragOverSlot={setDragOverSlot} />
 
             {/* Progress indicator — only shows after first chart added */}
-            {images.filter(Boolean).length > 0 && images.filter(Boolean).length < 5 && (
+            {images.filter(Boolean).length > 0 && images.filter(Boolean).length < 4 && (
               <div style={{ marginTop: 12 }}>
                 <div style={{ height: 3, background: "rgba(255,255,255,0.08)", borderRadius: 2, overflow: "hidden" }}>
-                  <div style={{ height: "100%", width: `${(images.filter(Boolean).length / 5) * 100}%`, background: "linear-gradient(90deg,#ff6bff,#00e5ff)", borderRadius: 2, transition: "width 0.3s ease" }}/>
+                  <div style={{ height: "100%", width: `${(images.filter(Boolean).length / 4) * 100}%`, background: "linear-gradient(90deg,#ff6bff,#00e5ff)", borderRadius: 2, transition: "width 0.3s ease" }}/>
                 </div>
                 <div style={{ textAlign: "center", fontSize: 11, color: "rgba(255,255,255,0.48)", marginTop: 6 }}>
-                  {images.filter(Boolean).length} of 5 charts added
+                  {images.filter(Boolean).length} of 4 charts added
                 </div>
               </div>
             )}
@@ -6444,11 +6433,11 @@ Use ONLY these times. All earlier time references in this conversation are stale
             {/* CTA */}
             {(() => {
               const mkt = instrument ? getMarketStatus(instrument, selectedSession) : { state: "closed" };
-              const chartsReady = images.filter(Boolean).length === 5;
+              const chartsReady = images.filter(Boolean).length >= 4;
               const canGenerate = (chartsReady && instrument && (mkt.state === "live" || mkt.state === "prep" || mkt.state === "london")) || (chartsReady && instrument && isDevMode());
 
               const btnLabel = !instrument ? "SELECT AN INSTRUMENT ABOVE"
-                : !chartsReady ? (images.filter(Boolean).length === 0 ? "SELECT YOUR 5 CHARTS" : `ADD ${5 - images.filter(Boolean).length} MORE CHART${5 - images.filter(Boolean).length !== 1 ? "S" : ""}`)
+                : !chartsReady ? (images.filter(Boolean).length === 0 ? "SELECT YOUR CHARTS" : `ADD ${4 - images.filter(Boolean).length} MORE CHART${4 - images.filter(Boolean).length !== 1 ? "S" : ""}`)
                 : isDevMode() && (mkt.state === "closed" || mkt.state === "wrong_session") ? "⚡ DEV — GENERATE PLAN →"
                 : mkt.state === "closed" ? "WINDOW CLOSED — COME BACK AT 8:30 AM CT"
                 : mkt.state === "wrong_session" ? `${instrument} — NY SESSION ONLY`
@@ -6538,7 +6527,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                   <div style={{ fontSize:14, color:"rgba(255,255,255,0.75)", lineHeight:1.8 }}>
                     1. Open your broker platform<br/>
                     2. Make sure the <span style={{ color:"#ffd166" }}>instrument ticker</span> is visible in the chart title<br/>
-                    3. Make sure the <span style={{ color:"#ffd166" }}>timeframe</span> (D, 4H, 1H, 30M, 15M) is visible<br/>
+                    3. Make sure the <span style={{ color:"#ffd166" }}>timeframe</span> (D, 4H, 1H, 30M) is visible<br/>
                     4. Take a new screenshot and re-upload
                   </div>
                 </div>
@@ -6552,7 +6541,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 </div>
               )}
               <div style={{ textAlign:"center" }}>
-                <button onClick={() => { setPhase("upload"); setImages(Array(5).fill(null)); }}
+                <button onClick={() => { setPhase("upload"); setImages(Array(4).fill(null)); }}
                   style={{ fontFamily:"inherit", fontSize:14, fontWeight:700, letterSpacing:"0.1em", padding:"10px 24px", borderRadius:8, border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.04)", color:"#8878aa", cursor:"pointer" }}>
                   ← Back
                 </button>
@@ -6979,7 +6968,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                       ))}
                     </div>
 
-                    <button onClick={() => { setPhase("upload"); setImages(Array(5).fill(null)); }}
+                    <button onClick={() => { setPhase("upload"); setImages(Array(4).fill(null)); }}
                       style={{ width:"100%", fontSize:13, fontWeight:700, letterSpacing:"0.1em", padding:"11px", borderRadius:8, border:"1px solid rgba(255,255,255,0.08)", background:"rgba(255,255,255,0.03)", color:"#8878aa", cursor:"pointer", fontFamily:"inherit" }}>
                       ← New Analysis
                     </button>
@@ -6991,7 +6980,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                   <div style={{ padding:"16px", background:"rgba(255,107,107,0.06)", border:"1px solid rgba(255,107,107,0.2)", borderRadius:10, textAlign:"center" }}>
                     <div style={{ fontSize:14, color:"#ff8080", fontWeight:700, marginBottom:6 }}>No valid entry — PASS</div>
                     <div style={{ fontSize:14, color:"#8878aa", marginBottom:14 }}>{plan.pass_reason || "No A+ BRC sequence formed. Wait for fresh structure."}</div>
-                    <button onClick={() => { setPhase("upload"); setImages(Array(5).fill(null)); }}
+                    <button onClick={() => { setPhase("upload"); setImages(Array(4).fill(null)); }}
                       style={{ fontSize:13, fontWeight:700, letterSpacing:"0.08em", padding:"8px 20px", borderRadius:8, border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.04)", color:"#8878aa", cursor:"pointer", fontFamily:"inherit" }}>
                       ← New Analysis
                     </button>
@@ -9530,7 +9519,7 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
     {tier:"ELITE",color:"#ff6bff",price:"$59",instruments:["XAUUSD","BTCUSD","NAS100","US30","USOIL","US500"],popular:false},
   ];
   const steps=[
-    {n:"01",title:"Upload 5 charts",desc:"Daily · 4H · 1H · 30M · 15M. BRC needs all five to grade the setup correctly."},
+    {n:"01",title:"Upload 4 charts",desc:"Daily · 4H · 1H · 30M. BRC needs all four to grade the setup correctly."},
     {n:"02",title:"Get your plan",desc:"Grade. Bias. Trigger. Retest zone. Stop. TP1. TP2. Runner. Size. From your actual charts."},
     {n:"03",title:"Execute the phases",desc:"Phase 1 confirms the break. Phase 2 confirms the retest. Phase 3 is the green light."},
   ];
@@ -9612,7 +9601,7 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
               <span style={{display:"block",background:"linear-gradient(135deg,#ff6bff,#00e5ff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Start executing.</span>
             </h1>
             <p className="land-fade" style={{fontFamily:"'Space Mono',monospace",fontSize:14,color:"rgba(255,255,255,0.85)",lineHeight:1.7,maxWidth:520,marginBottom:32,animationDelay:"0.2s",fontWeight:700}}>
-              Upload 5 charts. Get a locked BRC plan. Execute with precision during the only window that matters — 8:30 to 10:30 AM CT.
+              Upload 4 charts. Get a locked BRC plan. Execute with precision during the only window that matters — 8:30 to 10:30 AM CT.
             </p>
             <div className="land-fade" style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap",marginBottom:44,animationDelay:"0.3s"}}>
               <button onClick={onEnterApp}
@@ -9625,7 +9614,7 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
             {/* 3-step product loop */}
             <div className="land-fade" style={{display:"flex",flexDirection:"column",gap:0,border:"1px solid rgba(255,255,255,0.07)",borderRadius:10,overflow:"hidden",animationDelay:"0.4s"}}>
               {[
-                {n:"1",title:"Upload 5 charts before 8:30 AM CT",sub:"Daily · 4H · 1H · 30M · 15M. Pre-market scouting from 7:00 AM CT.",color:"#00e5ff"},
+                {n:"1",title:"Upload 4 charts before 8:30 AM CT",sub:"Daily · 4H · 1H · 30M. Pre-market scouting from 7:00 AM CT.",color:"#00e5ff"},
                 {n:"2",title:"Get your locked NY session plan",sub:"Grade, bias, key levels, trigger, stops, and targets — built for the 8:30–10:30 AM CT window.",color:"#7fff6b"},
                 {n:"3",title:"Execute candle by candle in NY session",sub:"OmniUSD tells you what to watch at 9:00 AM, 9:30 AM, and 10:00 AM CT. When a tier confirms — it tells you to act.",color:"#ff6bff"},
               ].map((r,i)=>(
@@ -10193,7 +10182,7 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
             },
             {
               q:"What timeframes does BRC use?",
-              a:"Five timeframes: Daily (bias), 4H (structure), 1H (setup), 30M (trigger), 15M (refinement). The 30M candle close is the only valid entry signal. All five are required — missing one means the plan cannot be graded accurately.",
+              a:"Four timeframes: Daily (bias), 4H (structure), 1H (setup), 30M (trigger). The 30M candle close is the only valid entry signal. All four are required — missing one means the plan cannot be graded accurately.",
             },
             {
               q:"What sessions can I trade?",
@@ -10209,7 +10198,7 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
             },
             {
               q:"How do I take the correct screenshot?",
-              a:"Watch the setup tutorial above, or follow these steps:\n\n1. Open TradingView and load your instrument\n2. Set each chart to the correct lookback (Daily=6mo, 4H=4-6wk, 1H=5-7d, 30M=3-5d, 15M=1-2d)\n3. Make sure the instrument ticker AND timeframe label are both clearly visible on screen\n4. Take a full screenshot of each chart\n5. Upload all 5 in OmniUSD\n\nPro tip: Install the free OmniLens indicator on TradingView. It automatically marks your lookback periods, labels market structure (HH/HL/LH/LL), and shows 30M candle body strength — making the screenshot process foolproof. Get it at tradingview.com (search OmniLens by OmniUSD).",
+              a:"Watch the setup tutorial above, or follow these steps:\n\n1. Open TradingView and load your instrument\n2. Set each chart to the correct lookback (Daily=6mo, 4H=4-6wk, 1H=5-7d, 30M=3-5d)\n3. Make sure the instrument ticker AND timeframe label are both clearly visible on screen\n4. Take a full screenshot of each chart\n5. Upload all 5 in OmniUSD\n\nPro tip: Install the free OmniLens indicator on TradingView. It automatically marks your lookback periods, labels market structure (HH/HL/LH/LL), and shows 30M candle body strength — making the screenshot process foolproof. Get it at tradingview.com (search OmniLens by OmniUSD).",
               highlight: true,
             },
             {
