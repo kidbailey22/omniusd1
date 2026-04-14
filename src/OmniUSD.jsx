@@ -279,9 +279,10 @@ ACCEPTED ALIASES — these ticker labels are valid for each instrument:
 - US500: US500, SPX, ES, ES1!, ESM2026, ESM6, ESH2026, ESU2026, ESZ2026, SP500, SPX500, S&P500
 
 - If the ticker on the charts matches ANY of the accepted aliases for ${instrument}, set instrument_valid=true.
-- If the charts show a ticker that belongs to a DIFFERENT instrument entirely, set instrument_valid=false and instrument_detected= what you actually see.
+- If the charts show a ticker that belongs to a DIFFERENT instrument entirely, set instrument_valid=false and instrument_detected= what you actually see. This is a HARD BLOCK — do NOT proceed with analysis.
+- Example: User selected XAUUSD but charts show USOIL or NAS100 → instrument_valid=false immediately.
 - If you cannot clearly identify the instrument on any chart, set instrument_valid=false with instrument_detected="unreadable".
-INSTRUMENT MISMATCH = hard block. Do NOT proceed with analysis if instrument_valid=false.
+INSTRUMENT MISMATCH = hard block. Do NOT proceed with analysis if instrument_valid=false. Return the JSON with charts_valid=false and stop.
 
 STEP 2 — TIMEFRAME CHECK: Inspect EVERY image for timeframe indicators (chart title, interval selector, candle size, time axis). This check is MANDATORY and NON-NEGOTIABLE.
 - Slot 1 MUST be a Daily chart. If it shows 4H, 1H, 30M, or any other timeframe → charts_valid=false, stop immediately.
@@ -3627,7 +3628,7 @@ function BulkUploadZone({ images, setImages, readSlotFile, dragOverSlot, setDrag
         <div style={{ padding: "10px 14px", background: "rgba(127,255,107,0.06)", border: "1px solid rgba(127,255,107,0.3)", borderRadius: 8, display: "flex", alignItems: "center", gap: 10, animation: "readyGlow 2s ease infinite" }}>
           <span style={{ fontSize: 16 }}>✅</span>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#7fff6b" }}>All 5 charts ready</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#7fff6b" }}>All 4 charts ready</div>
             <div style={{ fontSize: 13, color: "rgba(127,255,107,0.6)", fontFamily: "'Space Mono',monospace" }}>Hit generate to build your session plan</div>
           </div>
           <button onClick={() => { setImages(Array(4).fill(null)); }}
@@ -6358,6 +6359,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                             } else {
                               setInstrument(sym); setPlan(null); setMessages([]);
                               setTier1(false); setTier2(false);
+                              setImages(Array(4).fill(null));
                             }
                           }}
                           style={{ fontSize: 13, fontWeight: 700, padding: subLabel ? "5px 10px 7px" : "6px 12px", borderRadius: 7, border: `1px solid ${borderColor}`, background: bgColor, color: textColor, cursor, fontFamily: "inherit", opacity: isLocked ? 0.4 : 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2, boxShadow: isSelected && !hasActivePlan ? "0 0 12px rgba(255,107,255,0.15)" : "none", transition: "all 0.15s" }}>
