@@ -2484,7 +2484,7 @@ Return ONLY this JSON — no markdown, no explanation, no preamble:
   "alert_levels": ["price 1", "price 2"],
   "key_levels": ["support: price — method", "resistance: price — method", "critical: price"],
   "current_phase": "PRE-BREAK|RETEST_COOKING|CONTINUATION|EXPIRED",
-  "confidence_reason": "multi-timeframe logic explaining the score",
+  "confidence_reason": "3-4 short sentences. One sentence per timeframe that matters. End with why this keeps the grade where it is. No jargon. Example: 'Daily structure is still unclear after volatility. 4H remains bullish but 1H is consolidating. 30M is conflicting. That keeps this in soft pass for now.'",
   "session_note": "which session this targets and why",
   "friday_note": "Friday caution note if applicable, empty string otherwise",
   "pass_reason": "if hard PASS — exactly why. Empty string otherwise.",
@@ -4724,11 +4724,15 @@ function FullAnalysisPanel({ plan }) {
   const divider = <div style={{ height:1, background:"rgba(255,255,255,0.06)", margin:"16px 0" }}/>;
 
   const StatusRow = ({ label, status }) => {
-    const color = status === "✅" ? "#7fff6b" : status === "🔴" || status === "❌" ? "#ff6b6b" : "#ffd166";
+    const isPass = status === "✅";
+    const isFail = status === "🔴" || status === "❌";
+    const color = isPass ? "#7fff6b" : isFail ? "#ff6b6b" : "#ffd166";
     return (
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"7px 0", borderBottom:"1px solid rgba(255,255,255,0.04)" }}>
-        <span style={{ fontSize:14, color:"rgba(255,255,255,0.8)", fontFamily:"'Space Mono',monospace" }}>{label}</span>
-        <span style={{ fontSize:14, color }}>{status}</span>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"8px 0", borderBottom:"1px solid rgba(255,255,255,0.04)" }}>
+        <span style={{ fontSize:13, color: isPass ? "rgba(255,255,255,0.6)" : isFail ? "rgba(255,107,107,0.8)" : "rgba(255,255,255,0.85)", fontFamily:"'Space Mono',monospace" }}>{label}</span>
+        <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+          <div style={{ width:8, height:8, borderRadius:"50%", background: isPass ? "#7fff6b" : isFail ? "#ff6b6b" : "#ffd166", flexShrink:0 }}/>
+        </div>
       </div>
     );
   };
@@ -4764,7 +4768,7 @@ function FullAnalysisPanel({ plan }) {
           {/* ── MARKET STRUCTURE & BRC PHASES ── */}
           <SectionHeader icon="📊" label="MARKET STRUCTURE & BRC PHASES" color="#00e5ff"/>
 
-          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+          <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
             {[
               { tf:"Daily", key:"daily", color:"#ff6bff" },
               { tf:"4H",    key:"four_hour", color:"#00e5ff" },
@@ -4773,14 +4777,16 @@ function FullAnalysisPanel({ plan }) {
               { tf:"15M",   key:"m15", color:"#ff9a3c" },
             ].map(({ tf, key, color }) => {
               const tfData = plan.timeframe_reads?.[key] || plan.plain_english?.[key];
-              const text = typeof tfData === "object"
-                ? `${tfData.bias || ""} — ${tfData.structure || ""} ${tfData.key_level ? `| Key: ${tfData.key_level}` : ""}`.trim()
-                : tfData || (tf === "Daily" ? plan.market_structure : null);
-              if (!text) return null;
+              const bias = typeof tfData === "object" ? tfData.bias : null;
+              const structure = typeof tfData === "object" ? tfData.structure : (tfData || (tf === "Daily" ? plan.market_structure : null));
+              const keyLevel = typeof tfData === "object" && tfData.key_level ? tfData.key_level : null;
+              if (!structure && !bias) return null;
               return (
-                <div key={tf} style={{ padding:"10px 14px", background:"rgba(255,255,255,0.02)", border:`1px solid ${color}22`, borderLeft:`3px solid ${color}`, borderRadius:0 }}>
-                  <div style={{ fontSize:13, fontWeight:900, color, letterSpacing:"0.1em", marginBottom:4, fontFamily:"'Space Mono',monospace" }}>{tf}</div>
-                  <div style={{ fontSize:14, color:"rgba(255,255,255,0.8)", lineHeight:1.8 }}>{text}</div>
+                <div key={tf} style={{ display:"flex", alignItems:"baseline", gap:10, padding:"7px 12px", background:"rgba(255,255,255,0.02)", border:`1px solid rgba(255,255,255,0.05)`, borderLeft:`2px solid ${color}`, borderRadius:0 }}>
+                  <span style={{ fontSize:11, fontWeight:900, color, letterSpacing:"0.1em", fontFamily:"'Space Mono',monospace", flexShrink:0, minWidth:36 }}>{tf}</span>
+                  {bias && <span style={{ fontSize:12, fontWeight:700, color, fontFamily:"'Space Mono',monospace", flexShrink:0 }}>{bias}</span>}
+                  {bias && structure && <span style={{ fontSize:12, color:"rgba(255,255,255,0.3)" }}>·</span>}
+                  <span style={{ fontSize:13, color:"rgba(255,255,255,0.75)", lineHeight:1.5 }}>{structure}{keyLevel ? ` · ${keyLevel}` : ""}</span>
                 </div>
               );
             })}
