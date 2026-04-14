@@ -7250,6 +7250,50 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 <div ref={bottomRef}/>
               </div>
 
+              {/* Quick Action Buttons */}
+              {messages.filter(m=>m.role==="user").length < 30 && (() => {
+                const dir = plan?.bias === "SHORT" ? "below" : "above";
+                const trigger = plan?.trigger_level || "trigger";
+                const isShortBias = plan?.bias === "SHORT";
+
+                // Contextual buttons based on tier state
+                const quickActions = !tier1 ? [
+                  // Pre-Tier 1 — waiting for break
+                  { label: `30M closed ${dir} ${trigger}`, msg: `30M closed ${dir} ${trigger}` },
+                  { label: "Wick only — no close", msg: "It was a wick, not a close" },
+                  { label: "Didn't confirm", msg: `30M did not close ${dir} ${trigger}` },
+                  { label: "Is this still valid?", msg: "Is this setup still valid?" },
+                ] : !tier2 ? [
+                  // Post-Tier 1 — waiting for retest/Tier 2
+                  { label: "Retest holding", msg: "Price is retesting and holding the level" },
+                  { label: "Retest failed", msg: "Retest failed — price broke back through" },
+                  { label: `30M closed ${dir} ${trigger}`, msg: `Tier 2 — 30M closed ${dir} ${trigger}` },
+                  { label: "Should I move stop?", msg: "Should I move my stop to breakeven?" },
+                ] : [
+                  // Post-Tier 2 — order placed
+                  { label: "Limit order placed", msg: "Limit order is placed" },
+                  { label: "Order cancelled", msg: "I cancelled the order" },
+                  { label: "Session closing soon", msg: "Session is about to close — what do I do?" },
+                  { label: "Trade hit TP1", msg: "Price hit TP1" },
+                ];
+
+                return (
+                  <div style={{ padding:"6px 16px 0", display:"flex", gap:6, flexWrap:"wrap" }}>
+                    {quickActions.map((a, i) => (
+                      <button key={i} onClick={() => {
+                        setInput(a.msg);
+                        setTimeout(() => inputRef.current?.focus(), 50);
+                      }}
+                        style={{ fontSize:10, fontWeight:700, padding:"5px 10px", borderRadius:20, border:"1px solid rgba(255,255,255,0.12)", background:"rgba(255,255,255,0.04)", color:"rgba(255,255,255,0.6)", cursor:"pointer", fontFamily:"'Space Mono',monospace", letterSpacing:"0.04em", whiteSpace:"nowrap", transition:"all 0.15s" }}
+                        onMouseEnter={e => { e.target.style.background="rgba(255,107,255,0.1)"; e.target.style.borderColor="rgba(255,107,255,0.3)"; e.target.style.color="#ff6bff"; }}
+                        onMouseLeave={e => { e.target.style.background="rgba(255,255,255,0.04)"; e.target.style.borderColor="rgba(255,255,255,0.12)"; e.target.style.color="rgba(255,255,255,0.6)"; }}>
+                        {a.label}
+                      </button>
+                    ))}
+                  </div>
+                );
+              })()}
+
               {/* Input */}
               <div style={{ padding: "8px 16px 14px", borderTop: "1px solid rgba(255,255,255,0.06)", display: "flex", gap: 8, flexShrink: 0 }}>
                 {messages.filter(m=>m.role==="user").length >= 30 ? (
