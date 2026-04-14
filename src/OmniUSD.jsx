@@ -4978,7 +4978,32 @@ function FullAnalysisPanel({ plan }) {
           )}
 
           {/* ── FINAL VERDICT ── */}
-          <SectionHeader icon="✅" label="FINAL VERDICT" color="#7fff6b"/>
+          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10 }}>
+            <span style={{ fontSize:14 }}>✅</span>
+            <span style={{ fontSize:13, fontWeight:900, letterSpacing:"0.14em", color:"#7fff6b", fontFamily:"'Space Mono',monospace" }}>FINAL VERDICT</span>
+            <div style={{ position:"relative", display:"inline-flex" }}
+              onMouseEnter={e => e.currentTarget.querySelector(".fv-tooltip").style.display="block"}
+              onMouseLeave={e => e.currentTarget.querySelector(".fv-tooltip").style.display="none"}>
+              <div style={{ width:16, height:16, borderRadius:"50%", border:"1px solid rgba(255,255,255,0.25)", display:"flex", alignItems:"center", justifyContent:"center", cursor:"default", fontSize:9, fontWeight:900, color:"rgba(255,255,255,0.4)", fontFamily:"'Space Mono',monospace" }}>?</div>
+              <div className="fv-tooltip" style={{ display:"none", position:"absolute", left:"50%", transform:"translateX(-50%)", bottom:"calc(100% + 8px)", width:300, background:"#1a1630", border:"1px solid rgba(255,255,255,0.12)", borderRadius:8, padding:"12px 14px", zIndex:99, boxShadow:"0 4px 20px rgba(0,0,0,0.6)" }}>
+                <div style={{ display:"flex", flexDirection:"column", gap:8, fontSize:11, fontFamily:"'Space Mono',monospace", lineHeight:1.8 }}>
+                  {[
+                    { label:"Daily macro bias",   desc:"The overall market direction on the Daily chart. Must be bullish for a long, bearish for a short." },
+                    { label:"3TF alignment",       desc:"Daily, 4H, and 1H all pointing the same direction. All 3 must agree for the strongest setups." },
+                    { label:"BRC sequence",        desc:"Break, Retest, and Continuation have all formed in order. This is the entry pattern." },
+                    { label:"R:R minimum 1.5:1",   desc:"For every $1 risked, the target pays at least $1.50. Below this the trade is not worth taking." },
+                    { label:"Session timing",      desc:"The setup is valid during the NY session window — 8:30 to 10:30 AM CT only." },
+                    { label:"30M trigger defined", desc:"There is a clear price level where a 30M candle close confirms the entry. No trigger = no trade." },
+                  ].map(({ label, desc }, i, arr) => (
+                    <div key={label} style={{ borderBottom: i < arr.length-1 ? "1px solid rgba(255,255,255,0.05)" : "none", paddingBottom: i < arr.length-1 ? 8 : 0 }}>
+                      <div style={{ fontWeight:900, color:"rgba(255,255,255,0.85)", marginBottom:2 }}>{label}</div>
+                      <div style={{ color:"rgba(255,255,255,0.55)" }}>{desc}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
 
           <div style={{ padding:"12px 14px", background: plan.grade === "A+" ? "rgba(127,255,107,0.06)" : plan.grade === "PASS" ? "rgba(136,120,170,0.06)" : "rgba(255,209,102,0.06)", border:`1px solid ${plan.grade === "A+" ? "rgba(127,255,107,0.25)" : plan.grade === "PASS" ? "rgba(136,120,170,0.2)" : "rgba(255,209,102,0.2)"}`, borderRadius:8, marginBottom:14 }}>
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:10 }}>
