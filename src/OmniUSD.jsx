@@ -2482,7 +2482,7 @@ Return ONLY this JSON — no markdown, no explanation, no preamble:
   "tp2": "exact price only — REQUIRED. Look for the next swing high (if SHORT) or swing low (if LONG) beyond TP1 on the 1H or 4H chart. Always populate. If unclear use 1.5x the TP1 distance from entry.",
   "runner": "exact price only — REQUIRED. Look for the major HTF level beyond TP2. If unclear use 2x the TP1 distance from entry. Never leave blank — always calculate a number.",
   "alert_levels": ["price 1", "price 2"],
-  "key_levels": ["support: price — method", "resistance: price — method", "critical: price"],
+  "key_levels": ["support: price — one plain sentence explaining what happens if price holds here", "resistance: price — one plain sentence explaining what happens if price fails here", "invalidation: price — one plain sentence explaining why this level cancels the plan"],
   "current_phase": "PRE-BREAK|RETEST_COOKING|CONTINUATION|EXPIRED",
   "confidence_reason": "3-4 short sentences. One sentence per timeframe that matters. End with why this keeps the grade where it is. No jargon. Example: 'Daily structure is still unclear after volatility. 4H remains bullish but 1H is consolidating. 30M is conflicting. That keeps this in soft pass for now.'",
   "session_note": "which session this targets and why",
@@ -4814,38 +4814,45 @@ function FullAnalysisPanel({ plan }) {
 
           {divider}
 
-          {/* ── KEY LEVELS TABLE ── */}
-          <SectionHeader icon="🎯" label="KEY LEVELS" color="#ffd166"/>
-          <div style={{ display:"flex", flexDirection:"column", gap:0 }}>
-            {plan.key_levels && plan.key_levels.length > 0
-              ? plan.key_levels.map((lvl, i) => {
-                  const isRes = lvl.toLowerCase().includes("resistance") || lvl.toLowerCase().includes("resist");
-                  const isSupp = lvl.toLowerCase().includes("support");
-                  const isCrit = lvl.toLowerCase().includes("critical") || lvl.toLowerCase().includes("trigger");
-                  const dot = isRes ? "🔴" : isSupp ? "🟢" : isCrit ? "🟡" : "→";
-                  return (
-                    <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:10, padding:"8px 0", borderBottom: i < plan.key_levels.length-1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
-                      <span style={{ flexShrink:0, fontSize:11 }}>{dot}</span>
-                      <span style={{ fontSize:14, color:"rgba(255,255,255,0.8)", lineHeight:1.6 }}>{lvl}</span>
+          {/* ── KEY LEVELS TABLE — hidden after soft pass activation ── */}
+          {!plan._activatedFromSoftPass && (<>
+            <SectionHeader icon="🎯" label="KEY LEVELS" color="#ffd166"/>
+            <div style={{ display:"flex", flexDirection:"column", gap:0 }}>
+              {plan.key_levels && plan.key_levels.length > 0
+                ? plan.key_levels.map((lvl, i) => {
+                    const isRes = lvl.toLowerCase().includes("resistance") || lvl.toLowerCase().includes("resist");
+                    const isSupp = lvl.toLowerCase().includes("support");
+                    const isCrit = lvl.toLowerCase().includes("critical") || lvl.toLowerCase().includes("trigger");
+                    const isInval = lvl.toLowerCase().includes("invalidat");
+                    let dot, labelColor;
+                    if (isInval)    { dot = "✕"; labelColor = "#ff6b6b"; }
+                    else if (isRes) { dot = "R"; labelColor = "#ff6b6b"; }
+                    else if (isSupp){ dot = "S"; labelColor = "#7fff6b"; }
+                    else if (isCrit){ dot = "→"; labelColor = "#ffd166"; }
+                    else            { dot = "→"; labelColor = "#8878aa"; }
+                    return (
+                      <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:10, padding:"8px 0", borderBottom: i < plan.key_levels.length-1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
+                        <span style={{ flexShrink:0, fontSize:11, fontWeight:900, color:labelColor, fontFamily:"'Space Mono',monospace", minWidth:12 }}>{dot}</span>
+                        <span style={{ fontSize:14, color:"rgba(255,255,255,0.8)", lineHeight:1.6 }}>{lvl}</span>
+                      </div>
+                    );
+                  })
+                : [
+                    plan.trigger_level && { label:"🟡 Trigger Level", val: plan.trigger_level },
+                    plan.retest_zone   && { label:"🟡 Retest Zone",   val: plan.retest_zone },
+                    plan.stop_loss     && { label:"🔴 Stop Loss",     val: plan.stop_loss },
+                    plan.tp1           && { label:"🟢 TP1",           val: plan.tp1 },
+                    plan.tp2           && { label:"🟢 TP2",           val: plan.tp2 },
+                  ].filter(Boolean).map((r, i) => (
+                    <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"7px 0", borderBottom:"1px solid rgba(255,255,255,0.04)" }}>
+                      <span style={{ fontSize:14, color:"rgba(255,255,255,0.85)" }}>{r.label}</span>
+                      <span style={{ fontSize:14, fontWeight:700, color:"#ffd166", fontFamily:"monospace" }}>{r.val}</span>
                     </div>
-                  );
-                })
-              : [
-                  plan.trigger_level && { label:"🟡 Trigger Level", val: plan.trigger_level },
-                  plan.retest_zone   && { label:"🟡 Retest Zone",   val: plan.retest_zone },
-                  plan.stop_loss     && { label:"🔴 Stop Loss",     val: plan.stop_loss },
-                  plan.tp1           && { label:"🟢 TP1",           val: plan.tp1 },
-                  plan.tp2           && { label:"🟢 TP2",           val: plan.tp2 },
-                ].filter(Boolean).map((r, i) => (
-                  <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"7px 0", borderBottom:"1px solid rgba(255,255,255,0.04)" }}>
-                    <span style={{ fontSize:14, color:"rgba(255,255,255,0.85)" }}>{r.label}</span>
-                    <span style={{ fontSize:14, fontWeight:700, color:"#ffd166", fontFamily:"monospace" }}>{r.val}</span>
-                  </div>
-                ))
-            }
-          </div>
-
-          {divider}
+                  ))
+              }
+            </div>
+            {divider}
+          </>)}
 
           {/* ── TRADE PLAN ── */}
           {plan.grade !== "PASS" && plan.grade !== "SOFT PASS" && (
