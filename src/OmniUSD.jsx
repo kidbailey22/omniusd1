@@ -4748,11 +4748,16 @@ function FullAnalysisPanel({ plan }) {
       {open && (
         <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.08)", borderTop:"none", borderRadius:"0 0 10px 10px", padding:"20px 18px", animation:"fadein 0.25s ease both" }}>
 
-          {/* ── HEADER ── */}
+          {/* ── HEADER — Fix 5: split into two lines ── */}
           <div style={{ padding:"12px 16px", background:"rgba(255,107,255,0.05)", border:"1px solid rgba(255,107,255,0.2)", borderRadius:8, marginBottom:20, textAlign:"center" }}>
             <div style={{ fontSize:13, fontWeight:900, letterSpacing:"0.18em", color:"#ff6bff", marginBottom:4, fontFamily:"'Space Mono',monospace" }}>🏆 OMNIUSD — FULL ANALYSIS</div>
-            <div style={{ fontSize:13, color:"rgba(255,255,255,0.85)", fontFamily:"'Space Mono',monospace" }}>
-              {plan.instrument} · {dateStr} · {plan.session_note?.split("—")[0]?.trim() || "NY Session"}
+            <div style={{ fontSize:13, color:"rgba(255,255,255,0.85)", fontFamily:"'Space Mono',monospace", marginBottom:2 }}>
+              {plan.instrument} · {dateStr}
+            </div>
+            <div style={{ fontSize:11, color:"rgba(255,255,255,0.45)", fontFamily:"'Space Mono',monospace" }}>
+              {plan.grade === "SOFT PASS" || plan.grade === "PASS"
+                ? "Pre-market only — no executable plan until NY opens at 8:30 AM CT"
+                : plan.session_note?.split("—")[0]?.trim() || "NY Session"}
             </div>
           </div>
 
@@ -4924,18 +4929,18 @@ function FullAnalysisPanel({ plan }) {
             </div>
           </div>
 
-          {/* THE WHY */}
+          {/* THE WHY — Fix 2: tighter copy */}
           <div style={{ padding:"12px 14px", background:"rgba(0,229,255,0.04)", border:"1px solid rgba(0,229,255,0.15)", borderLeft:"3px solid #00e5ff", borderRadius:0, marginBottom:14 }}>
             <div style={{ fontSize:13, fontWeight:900, letterSpacing:"0.16em", color:"#00e5ff", marginBottom:8, fontFamily:"'Space Mono',monospace" }}>THE WHY</div>
-            <div style={{ fontSize:14, color:"rgba(255,255,255,0.8)", lineHeight:1.9 }}>
+            <div style={{ fontSize:14, color:"rgba(255,255,255,0.8)", lineHeight:1.8 }}>
               {plan.confidence_reason || plan.plain_english?.trade_plan || plan.plain_english?.verdict || plan.summary}
             </div>
           </div>
 
-          {/* DEDUCTIONS */}
+          {/* WHAT THIS STILL NEEDS — Fix 1: renamed, Fix 3: cleaner bullets */}
           {plan.what_still_needed && plan.what_still_needed.length > 0 && (
             <div style={{ padding:"12px 14px", background:"rgba(255,154,60,0.04)", border:"1px solid rgba(255,154,60,0.15)", borderLeft:"3px solid #ff9a3c", borderRadius:0, marginBottom:14 }}>
-              <div style={{ fontSize:13, fontWeight:900, letterSpacing:"0.14em", color:"#ff9a3c", marginBottom:8, fontFamily:"'Space Mono',monospace" }}>DEDUCTIONS / WHAT STILL NEEDED</div>
+              <div style={{ fontSize:13, fontWeight:900, letterSpacing:"0.14em", color:"#ff9a3c", marginBottom:8, fontFamily:"'Space Mono',monospace" }}>WHAT THIS STILL NEEDS</div>
               <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
                 {plan.what_still_needed.map((d, i) => (
                   <div key={i} style={{ display:"flex", gap:8, fontSize:14, color:"rgba(255,255,255,0.85)", lineHeight:1.6 }}>
@@ -4946,16 +4951,6 @@ function FullAnalysisPanel({ plan }) {
               </div>
             </div>
           )}
-
-          {divider}
-
-          {/* ── PSYCHOLOGICAL RULE ── */}
-          <div style={{ padding:"14px 16px", background:"rgba(255,107,255,0.05)", border:"1px solid rgba(255,107,255,0.2)", borderRadius:8 }}>
-            <div style={{ fontSize:13, fontWeight:900, letterSpacing:"0.16em", color:"#ff6bff", marginBottom:10, fontFamily:"'Space Mono',monospace" }}>🧠 PSYCHOLOGICAL RULE</div>
-            <div style={{ fontSize:14, color:"rgba(255,255,255,0.75)", lineHeight:2, fontStyle:"italic" }}>
-              "The 15-minute warning gets me ready. The 30-minute close puts me in the trade. No 30-minute close, no trade. Pre-market movement is information — not permission."
-            </div>
-          </div>
 
         </div>
       )}
