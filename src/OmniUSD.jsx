@@ -6115,6 +6115,10 @@ Use ONLY these times. All earlier time references in this conversation are stale
                   <span style={{ width: 6, height: 6, borderRadius: "50%", background: windowClosed ? "#ff6b6b" : "#7fff6b", animation: windowOpen ? "pulse 1.5s ease infinite" : "none" }}/>
                   <span style={{ fontSize: 12, fontWeight: 700, color: windowClosed ? "#ff6b6b" : "#7fff6b" }}>{windowClosed ? "SESSION CLOSED" : "LIVE"}</span>
                 </div>
+                <button onClick={() => setPhase("plan")}
+                  style={{ fontSize: 12, fontWeight: 700, color: "#ffd166", background: "rgba(255,209,102,0.08)", border: "1px solid rgba(255,209,102,0.25)", borderRadius: 6, padding: "3px 10px", cursor: "pointer", fontFamily: "inherit" }}>
+                  View Plan
+                </button>
                 <button onClick={() => setDrawerOpen(o => !o)}
                   style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 7, padding: "5px 10px", cursor: "pointer", color: "#f0ecff", fontSize: 14, lineHeight: 1, fontFamily: "inherit" }}>
                   ☰
