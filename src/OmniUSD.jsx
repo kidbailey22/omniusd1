@@ -6411,7 +6411,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                           onClick={() => {
                             if (isLocked) return;
                             if (hasActivePlan) {
-                              setPlan(sess.plan); setPhase(sess.phase); setInstrument(sym);
+                              setPlan(sess.plan); setPhase("plan"); setInstrument(sym);
                               setTier1(sess.tier1 || false); setTier2(sess.tier2 || false);
                               setSessionState(sess.sessionState || "WATCHING");
                               setMessages(sess.messages || []); setSessionHistory(sess.sessionHistory || []);
