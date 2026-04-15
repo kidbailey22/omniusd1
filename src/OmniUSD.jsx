@@ -7020,13 +7020,6 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 {i < 3 && <div style={{ width: 14, height: 1, background: t.done ? "#7fff6b" : "rgba(255,255,255,0.08)", marginRight: 3 }}/>}
               </div>
             ))}
-            {/* Status badge — desktop only, mobile already shows it in header */}
-            {!isMobile && (
-              <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 5, padding: "2px 9px", borderRadius: 20, background: `${stateObj.color}14`, border: `1px solid ${stateObj.color}44`, flexShrink: 0 }}>
-                {stateObj.dot && <span style={{ width: 4, height: 4, borderRadius: "50%", background: stateObj.color, animation: "pulse 1.5s ease infinite", display: "inline-block" }}/>}
-                <span style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.1em", color: stateObj.color }}>{stateObj.label}</span>
-              </div>
-            )}
           </div>
 
           {/* ── MULTI-INSTRUMENT STATUS BAR — desktop only ── */}
@@ -7143,7 +7136,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
               ) : (
                 <>
                   {/* DESKTOP: original vertical layout */}
-                  <div style={{ padding: "10px 14px", borderBottom: "1px solid rgba(255,255,255,0.05)", background: "rgba(255,255,255,0.02)" }}>
+                  <div style={{ padding: "12px 14px", borderBottom: "1px solid rgba(255,255,255,0.05)", background: "rgba(255,255,255,0.02)" }}>
                     {/* 30M Close Windows — desktop left column */}
                     {(() => {
                       const ctNow = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
@@ -7152,12 +7145,10 @@ Use ONLY these times. All earlier time references in this conversation are stale
                       const candles = ["8:30","9:00","9:30","10:00","10:30"];
                       const candleMinsArr = [8*60+30, 9*60, 9*60+30, 10*60, 10*60+30];
                       const windowClosed = nowMins > 10*60+30;
-                      const nextCandle = candles.find((c, i) => nowMins <= candleMinsArr[i]);
-                      const nextCandleLabel = nextCandle ? candleToUserTime({ et: nextCandle }) : null;
                       return (
                         <div>
-                          <div style={{ fontSize:8, fontWeight:700, letterSpacing:"0.14em", color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace", marginBottom:6 }}>30M CLOSE WINDOWS</div>
-                          <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:3, marginBottom:8 }}>
+                          <div style={{ fontSize:8, fontWeight:700, letterSpacing:"0.14em", color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace", marginBottom:8 }}>30M CLOSE WINDOWS</div>
+                          <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:4, marginBottom:10 }}>
                             {candles.map((c, i) => {
                               const cMins = candleMinsArr[i];
                               const isPast = nowMins > cMins;
@@ -7181,18 +7172,15 @@ Use ONLY these times. All earlier time references in this conversation are stale
                                 timeColor="rgba(255,255,255,0.4)"; sub=""; subColor="transparent";
                               }
                               return (
-                                <div key={i} style={{ background:bg, border, borderRadius:6, padding:"5px 2px", textAlign:"center" }}>
-                                  <div style={{ fontSize:10, fontWeight:700, color:timeColor, fontFamily:"'Space Mono',monospace" }}>{c}</div>
-                                  <div style={{ fontSize:7, fontWeight:700, color:subColor, marginTop:1, minHeight:8 }}>{sub}</div>
+                                <div key={i} style={{ background:bg, border, borderRadius:6, padding:"6px 2px", textAlign:"center" }}>
+                                  <div style={{ fontSize:11, fontWeight:700, color:timeColor, fontFamily:"'Space Mono',monospace" }}>{c}</div>
+                                  <div style={{ fontSize:8, fontWeight:700, color:subColor, marginTop:2, minHeight:9 }}>{sub}</div>
                                 </div>
                               );
                             })}
                           </div>
-                          {/* Single line — next close or session over */}
-                          <div style={{ fontSize:9, fontFamily:"'Space Mono',monospace", color: windowClosed ? "rgba(255,107,107,0.6)" : "rgba(255,255,255,0.4)", lineHeight:1.5 }}>
-                            {windowClosed
-                              ? `Session closed · ${ctTime}`
-                              : `Next close · ${nextClose} · ${ctTime}`}
+                          <div style={{ fontSize:10, fontFamily:"'Space Mono',monospace", color: windowClosed ? "rgba(255,107,107,0.6)" : "rgba(255,255,255,0.4)", lineHeight:1.5 }}>
+                            {windowClosed ? `Session closed · ${ctTime}` : `Next · ${nextClose} · ${ctTime}`}
                           </div>
                         </div>
                       );
@@ -7331,10 +7319,10 @@ Use ONLY these times. All earlier time references in this conversation are stale
 
                 return (
                   <div style={{ display:"flex", gap:0, borderBottom: "1px solid rgba(255,255,255,0.05)", flexShrink: 0 }}>
-                    <div style={{ flex:1, padding: "10px 18px" }}>
-                      <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.18em", color: tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#8878aa", marginBottom: 4, fontFamily: "'Space Mono',monospace" }}>LATEST UPDATE</div>
-                      <div style={{ fontSize: 13, color: tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "rgba(255,255,255,0.7)", fontFamily: "'Space Mono',monospace", lineHeight: 1.5 }}>{firstLine}</div>
-                      {milestone.time && <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", marginTop: 3, fontFamily: "'Space Mono',monospace" }}>{milestone.time} CT</div>}
+                  <div style={{ flex:1, padding: "12px 18px" }}>
+                      <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.18em", color: tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#8878aa", marginBottom: 6, fontFamily: "'Space Mono',monospace" }}>LATEST UPDATE</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "rgba(255,255,255,0.7)", fontFamily: "'Space Mono',monospace", lineHeight: 1.5 }}>{firstLine}</div>
+                      {milestone.time && <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", marginTop: 4, fontFamily: "'Space Mono',monospace" }}>{milestone.time} CT</div>}
                     </div>
                     {next && !tier2 && (
                       <div style={{ padding: "10px 18px", borderLeft:"1px solid rgba(255,255,255,0.06)", textAlign:"center", minWidth:90 }}>
@@ -7349,6 +7337,24 @@ Use ONLY these times. All earlier time references in this conversation are stale
 
               {/* ── ZONE 3: SESSION LOG — milestones only, no transcript ── */}
               <div style={{ flex: 1, overflowY: "auto", padding: "12px 18px 6px" }}>
+
+                {/* Countdown to next close — structure element */}
+                {(() => {
+                  const ctNow = new Date(new Date().toLocaleString("en-US",{timeZone:"America/Chicago"}));
+                  const nowMins = ctNow.getHours()*60+ctNow.getMinutes();
+                  const slots = [{t:"9:00 AM",m:9*60},{t:"9:30 AM",m:9*60+30},{t:"10:00 AM",m:10*60},{t:"10:30 AM",m:10*60+30}];
+                  const next = slots.find(s => nowMins < s.m);
+                  if (!next || tier2) return null;
+                  const minsLeft = next.m - nowMins;
+                  const isFinal = next.t === "10:30 AM";
+                  return (
+                    <div style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"6px 12px", borderRadius:6, background: isFinal ? "rgba(255,107,107,0.08)" : "rgba(0,204,255,0.06)", border:`1px solid ${isFinal ? "rgba(255,107,107,0.25)" : "rgba(0,204,255,0.2)"}`, marginBottom:14 }}>
+                      <span style={{ fontSize:9, fontWeight:900, letterSpacing:"0.12em", color: isFinal ? "#ff6b6b" : "#00ccff", fontFamily:"'Space Mono',monospace" }}>NEXT CLOSE</span>
+                      <span style={{ fontSize:13, fontWeight:700, color: isFinal ? "#ff6b6b" : "#00ccff", fontFamily:"'Space Mono',monospace" }}>{next.t}</span>
+                      <span style={{ fontSize:9, color: isFinal ? "rgba(255,107,107,0.5)" : "rgba(0,204,255,0.5)", fontFamily:"'Space Mono',monospace" }}>{minsLeft}m</span>
+                    </div>
+                  );
+                })()}
                 {messages.length === 0 && (
                   <div style={{ color:"rgba(255,255,255,0.2)", fontSize:11, marginTop:16, fontFamily:"'Space Mono',monospace", lineHeight:1.8 }}>
                     Session open. Watching for first 30M close.
@@ -7378,11 +7384,11 @@ Use ONLY these times. All earlier time references in this conversation are stale
                   if (milestones.length === 0) return null;
                   return (
                     <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
-                      <div style={{ fontSize:8, fontWeight:900, letterSpacing:"0.14em", color:"rgba(255,255,255,0.2)", fontFamily:"'Space Mono',monospace", marginBottom:4 }}>SESSION LOG</div>
-                      {milestones.map((m, i) => (
+                      <div style={{ fontSize:8, fontWeight:900, letterSpacing:"0.14em", color:"rgba(255,255,255,0.25)", fontFamily:"'Space Mono',monospace", marginBottom:4 }}>RECENT EVENTS</div>
+                      {milestones.slice(-2).map((m, i) => (
                         <div key={i} style={{ display:"flex", gap:10, alignItems:"flex-start" }}>
                           <span style={{ fontSize:9, color:"rgba(255,255,255,0.2)", fontFamily:"'Space Mono',monospace", flexShrink:0, minWidth:36 }}>{m.time}</span>
-                          <span style={{ fontSize:12, color:"rgba(255,255,255,0.5)", fontFamily:"'Space Mono',monospace", lineHeight:1.5 }}>{m.line}</span>
+                          <span style={{ fontSize:12, color:"rgba(255,255,255,0.45)", fontFamily:"'Space Mono',monospace", lineHeight:1.5 }}>{m.line}</span>
                         </div>
                       ))}
                     </div>
@@ -7418,7 +7424,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 ] : !tier2 ? [
                   { label: "Retest holding", msg: "Price is retesting and holding the level" },
                   { label: "Retest failed", msg: "Retest failed — price broke back through" },
-                  { label: `Tier 2 above ${_t}`, msg: `Tier 2 — 30M closed ${dir} ${_t} at `, needsPrice: true },
+                  { label: `Tier 2 confirmed`, msg: `Tier 2 — 30M closed ${dir} ${_t} at `, needsPrice: true },
                   { label: "Move stop?", msg: "Should I move my stop to breakeven?" },
                 ] : [
                   { label: "Limit order placed", msg: "Limit order is placed" },
