@@ -6073,7 +6073,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
           )}
         </>) : (
 
-        /* ── DESKTOP HEADER — focused execution bar ── */
+        /* ── DESKTOP HEADER ── */
         <div style={{ padding: "10px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           {/* Left: logo + plan context */}
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -6087,20 +6087,32 @@ Use ONLY these times. All earlier time references in this conversation are stale
               </div>
             )}
           </div>
-          {/* Right: time + live status + menu */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          {/* Right: full nav OR live-only menu */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 12, color: "#8878aa" }}><span style={{ color: "#00e5ff", fontWeight: 700 }}>{ctTime}</span> {getUserTZShort()}</span>
-            {phase === "live" && (
-              <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                <span style={{ width: 6, height: 6, borderRadius: "50%", background: windowClosed ? "#ff6b6b" : "#7fff6b", animation: windowOpen ? "pulse 1.5s ease infinite" : "none" }}/>
-                <span style={{ fontSize: 12, fontWeight: 700, color: windowClosed ? "#ff6b6b" : "#7fff6b" }}>{windowClosed ? "SESSION CLOSED" : "LIVE"}</span>
-              </div>
+            {phase === "live" ? (
+              <>
+                <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: windowClosed ? "#ff6b6b" : "#7fff6b", animation: windowOpen ? "pulse 1.5s ease infinite" : "none" }}/>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: windowClosed ? "#ff6b6b" : "#7fff6b" }}>{windowClosed ? "SESSION CLOSED" : "LIVE"}</span>
+                </div>
+                <button onClick={() => setDrawerOpen(o => !o)}
+                  style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 7, padding: "5px 10px", cursor: "pointer", color: "#f0ecff", fontSize: 14, lineHeight: 1, fontFamily: "inherit" }}>
+                  ☰
+                </button>
+              </>
+            ) : (
+              <>
+                <button onClick={() => setAppPage(appPage === "chartsetup" ? "dashboard" : "chartsetup")} style={{ fontSize: 13, fontWeight: 700, color: "#ffd166", background: appPage === "chartsetup" ? "rgba(255,209,102,0.12)" : "rgba(255,209,102,0.06)", border: `1px solid rgba(255,209,102,${appPage === "chartsetup" ? "0.6" : "0.4"})`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit", animation: appPage === "chartsetup" ? "none" : "goldPulse 2s ease-in-out infinite" }}>Chart Setup</button>
+                <button onClick={() => setAppPage(appPage === "history" ? "dashboard" : "history")} style={{ fontSize: 13, fontWeight: 700, color: appPage === "history" ? "#7fff6b" : "#8878aa", background: appPage === "history" ? "rgba(127,255,107,0.08)" : "none", border: `1px solid ${appPage === "history" ? "rgba(127,255,107,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>History</button>
+                <button onClick={() => setAppPage(appPage === "results" ? "dashboard" : "results")} style={{ fontSize: 13, fontWeight: 700, color: appPage === "results" ? "#00ccff" : "#8878aa", background: appPage === "results" ? "rgba(0,204,255,0.08)" : "none", border: `1px solid ${appPage === "results" ? "rgba(0,204,255,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>Results</button>
+                {OWNER_EMAILS.includes(profile?.email) && <button onClick={() => setAppPage(appPage === "tradelog" ? "dashboard" : "tradelog")} style={{ fontSize: 13, fontWeight: 700, color: appPage === "tradelog" ? "#cc44ff" : "#8878aa", background: appPage === "tradelog" ? "rgba(204,68,255,0.1)" : "none", border: `1px solid ${appPage === "tradelog" ? "rgba(204,68,255,0.35)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>Log Trade</button>}
+                <button onClick={() => setAppPage(appPage === "settings" ? "dashboard" : "settings")} style={{ fontSize: 13, fontWeight: 700, color: appPage === "settings" ? "#ff6bff" : "#8878aa", background: appPage === "settings" ? "rgba(255,107,255,0.1)" : "none", border: `1px solid ${appPage === "settings" ? "rgba(255,107,255,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>Settings</button>
+                <button onClick={() => setAppPage(appPage === "faq" ? "dashboard" : "faq")} style={{ fontSize: 13, fontWeight: 700, color: appPage === "faq" ? "#00e5ff" : "#8878aa", background: appPage === "faq" ? "rgba(0,229,255,0.08)" : "none", border: `1px solid ${appPage === "faq" ? "rgba(0,229,255,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>Help & FAQ</button>
+                {phase === "plan" && <button onClick={() => setPhase("upload")} style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.6)", background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>← Back</button>}
+                {onSignOut && <button onClick={() => { onSignOut(); }} style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", padding: "4px 6px" }}>Sign out</button>}
+              </>
             )}
-            {/* Menu button — all navigation moved here */}
-            <button onClick={() => setDrawerOpen(o => !o)}
-              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 7, padding: "5px 10px", cursor: "pointer", color: "#f0ecff", fontSize: 14, lineHeight: 1, fontFamily: "inherit" }}>
-              ☰
-            </button>
           </div>
         </div>
         )}
