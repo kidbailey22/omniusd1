@@ -2525,6 +2525,9 @@ function sanitizeLiveContent(text) {
     .replace(/squeaked\s+it[.,]?\s*/gi, "")
     .replace(/only by a narrow margin\.?\s*/gi, "")
     .replace(/\bbarely\b/gi, "")
+    // Clean up raw "X is above Y. confirmed." → "confirmed above Y at X."
+    .replace(/(\d[\d,]+)\s+is\s+(above|below)\s+(\d[\d,]+)\.\s*confirmed\.?/gi, (_, price, dir, level) =>
+      `Close confirmed ${dir} ${level} at ${price}.`)
     .replace(/\s{2,}/g, " ")
     .trim();
 }
@@ -7275,19 +7278,25 @@ Use ONLY these times. All earlier time references in this conversation are stale
                   <div style={{ padding: "10px 12px 0" }}>
                     <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", letterSpacing: "0.14em", marginBottom: 8, fontFamily:"'Space Mono',monospace" }}>KEY LEVELS</div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-                      {[
-                        { l: "Trigger", v: sp(plan.trigger_level), c: plan.bias === "SHORT" ? "#ff6b6b" : "#7fff6b" },
-                        { l: "Retest",  v: sp(plan.retest_zone),   c: "#ffd166" },
-                        { l: "Stop",    v: sp(plan.stop_loss),     c: "#ff6b6b" },
-                        { l: "TP1",     v: sp(plan.tp1),           c: "#7fff6b" },
-                        ...(plan.tp2 ? [{ l: "TP2", v: sp(plan.tp2), c: "#7fff6b" }] : []),
-                        ...(plan.runner ? [{ l: "Runner", v: sp(plan.runner), c: "#00e5ff" }] : []),
-                      ].map((r, i, arr) => (
-                        <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: i < arr.length-1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
-                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontFamily:"'Space Mono',monospace" }}>{r.l}</span>
-                          <span style={{ fontSize: 13, fontWeight: 700, color: r.c, fontFamily: "monospace" }}>{r.v || "—"}</span>
-                        </div>
-                      ))}
+                      {(() => {
+                        const sp = v => { if (!v || v === "—") return null; const m = String(v).match(/^([0-9,]+(?:\.[0-9]+)?)/); return m ? m[1].trim() : v; };
+                        const trigVal = sp(plan.trigger_level);
+                        const retestVal = sp(plan.retest_zone);
+                        const sameValue = trigVal && retestVal && trigVal === retestVal;
+                        return [
+                          { l: sameValue ? "Trigger close" : "Trigger", v: trigVal, c: plan.bias === "SHORT" ? "#ff6b6b" : "#7fff6b" },
+                          { l: sameValue ? "Retest level" : "Retest",   v: retestVal, c: "#ffd166" },
+                          { l: "Stop",    v: sp(plan.stop_loss),     c: "#ff6b6b" },
+                          { l: "TP1",     v: sp(plan.tp1),           c: "#7fff6b" },
+                          ...(plan.tp2 ? [{ l: "TP2", v: sp(plan.tp2), c: "#7fff6b" }] : []),
+                          ...(plan.runner ? [{ l: "Runner", v: sp(plan.runner), c: "#00e5ff" }] : []),
+                        ].map((r, i, arr) => (
+                          <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: i < arr.length-1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
+                            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontFamily:"'Space Mono',monospace" }}>{r.l}</span>
+                            <span style={{ fontSize: 13, fontWeight: 700, color: r.c, fontFamily: "monospace" }}>{r.v || "—"}</span>
+                          </div>
+                        ));
+                      })()}
                     </div>
                   </div>
                     );
@@ -7405,6 +7414,8 @@ Use ONLY these times. All earlier time references in this conversation are stale
 
                 {/* Countdown to next close — structure element */}
                 {(() => {
+                  const sp = v => { const m = String(v||"").match(/^([0-9,]+(?:\.[0-9]+)?)/); return m ? m[1] : v; };
+                  const trig = sp(plan?.trigger_level) || "trigger";
                   const ctNow = new Date(new Date().toLocaleString("en-US",{timeZone:"America/Chicago"}));
                   const nowMins = ctNow.getHours()*60+ctNow.getMinutes();
                   const slots = [{t:"9:00 AM",m:9*60},{t:"9:30 AM",m:9*60+30},{t:"10:00 AM",m:10*60},{t:"10:30 AM",m:10*60+30}];
@@ -7412,11 +7423,18 @@ Use ONLY these times. All earlier time references in this conversation are stale
                   if (!next || tier2) return null;
                   const minsLeft = next.m - nowMins;
                   const isFinal = next.t === "10:30 AM";
+                  const dir = plan?.bias === "SHORT" ? "below" : "above";
+                  const actionLine = tier1
+                    ? `Tier 2 must close ${dir} ${trig}`
+                    : `Tier 1 must close ${dir} ${trig}`;
                   return (
-                    <div style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"6px 12px", borderRadius:6, background: isFinal ? "rgba(255,107,107,0.08)" : "rgba(0,204,255,0.06)", border:`1px solid ${isFinal ? "rgba(255,107,107,0.25)" : "rgba(0,204,255,0.2)"}`, marginBottom:14 }}>
-                      <span style={{ fontSize:9, fontWeight:900, letterSpacing:"0.12em", color: isFinal ? "#ff6b6b" : "#00ccff", fontFamily:"'Space Mono',monospace" }}>NEXT CLOSE</span>
-                      <span style={{ fontSize:13, fontWeight:700, color: isFinal ? "#ff6b6b" : "#00ccff", fontFamily:"'Space Mono',monospace" }}>{next.t}</span>
-                      <span style={{ fontSize:9, color: isFinal ? "rgba(255,107,107,0.5)" : "rgba(0,204,255,0.5)", fontFamily:"'Space Mono',monospace" }}>{minsLeft}m</span>
+                    <div style={{ padding:"10px 14px", borderRadius:6, background: isFinal ? "rgba(255,107,107,0.06)" : "rgba(0,204,255,0.05)", border:`1px solid ${isFinal ? "rgba(255,107,107,0.2)" : "rgba(0,204,255,0.18)"}`, marginBottom:14, display:"inline-block", minWidth:220 }}>
+                      <div style={{ fontSize:8, fontWeight:900, letterSpacing:"0.14em", color: isFinal ? "#ff6b6b" : "#00ccff", fontFamily:"'Space Mono',monospace", marginBottom:4 }}>NEXT CLOSE</div>
+                      <div style={{ display:"flex", alignItems:"baseline", gap:10, marginBottom:4 }}>
+                        <span style={{ fontSize:16, fontWeight:700, color: isFinal ? "#ff6b6b" : "#00ccff", fontFamily:"'Space Mono',monospace" }}>{next.t}</span>
+                        <span style={{ fontSize:10, color: isFinal ? "rgba(255,107,107,0.5)" : "rgba(0,204,255,0.5)", fontFamily:"'Space Mono',monospace" }}>closes in {minsLeft}m</span>
+                      </div>
+                      <div style={{ fontSize:10, color:"rgba(255,255,255,0.4)", fontFamily:"'Space Mono',monospace" }}>{actionLine}</div>
                     </div>
                   );
                 })()}
@@ -7481,15 +7499,25 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 const dir = plan?.bias === "SHORT" ? "below" : "above";
                 const opp = plan?.bias === "SHORT" ? "above" : "below";
                 const _t = (() => { const m = String(plan?.trigger_level||"").match(/^([0-9,]+(?:\.[0-9]+)?)/); return m ? m[1] : plan?.trigger_level || "trigger"; })();
+                const confirmLabel = tier1 ? `Tier 2 confirmed ${dir} ${_t}` : `Tier 1 confirmed ${dir} ${_t}`;
+                const failLabel = tier1 ? `Tier 2 failed ${opp} ${_t}` : `Didn't close ${dir} ${_t}`;
+                const confirmMsg = `30M closed ${dir} ${_t} at `;
+                const failMsg = `30M closed ${opp} ${_t} at `;
                 return (
                   <div style={{ padding:"6px 16px 0", display:"flex", gap:8 }}>
-                    <button onClick={() => { setInput(`30M closed ${dir} ${_t} at `); setTimeout(() => { if (inputRef.current) { inputRef.current.focus(); inputRef.current.setSelectionRange(999,999); } }, 50); }}
+                    <button onClick={() => {
+                      setInput(confirmMsg);
+                      setTimeout(() => { if (inputRef.current) { inputRef.current.focus(); inputRef.current.setSelectionRange(999,999); } }, 50);
+                    }}
                       style={{ fontSize:11, fontWeight:700, padding:"6px 14px", borderRadius:20, border:"1px solid rgba(0,229,255,0.35)", background:"rgba(0,229,255,0.07)", color:"#00e5ff", cursor:"pointer", fontFamily:"'Space Mono',monospace", letterSpacing:"0.04em", whiteSpace:"nowrap" }}>
-                      Closed {dir} {_t}
+                      {confirmLabel}
                     </button>
-                    <button onClick={() => { setInput(`30M closed ${opp} ${_t} at `); setTimeout(() => { if (inputRef.current) { inputRef.current.focus(); inputRef.current.setSelectionRange(999,999); } }, 50); }}
+                    <button onClick={() => {
+                      setInput(failMsg);
+                      setTimeout(() => { if (inputRef.current) { inputRef.current.focus(); inputRef.current.setSelectionRange(999,999); } }, 50);
+                    }}
                       style={{ fontSize:11, fontWeight:700, padding:"6px 14px", borderRadius:20, border:"1px solid rgba(255,107,107,0.25)", background:"rgba(255,107,107,0.06)", color:"#ff8080", cursor:"pointer", fontFamily:"'Space Mono',monospace", letterSpacing:"0.04em", whiteSpace:"nowrap" }}>
-                      Closed {opp} {_t}
+                      {failLabel}
                     </button>
                   </div>
                 );
@@ -7526,14 +7554,14 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 };
                 const tvSymbol = tvSymbols[plan?.instrument] || "XAUUSD";
                 const chartPhaseLabel = tier2 ? "LIMIT PLACED" : tier1 ? "RETEST WATCH" : "BREAK WATCH";
+                const chartColor = tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00ccff";
                 return (
                   <div style={{ flexShrink:0, borderTop:"2px solid rgba(255,255,255,0.07)" }}>
-                    {/* Fix 2+3: Integrated chart header with label + toggle */}
                     <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"7px 14px", background:"rgba(255,255,255,0.02)" }}>
-                      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                        <span style={{ fontSize:9, fontWeight:900, letterSpacing:"0.14em", color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace" }}>LIVE CHART</span>
-                        <span style={{ fontSize:8, color:"rgba(255,255,255,0.2)", fontFamily:"'Space Mono',monospace" }}>30M · {plan?.instrument}</span>
-                        <span style={{ fontSize:8, fontWeight:700, padding:"1px 6px", borderRadius:3, background: tier2 ? "rgba(127,255,107,0.1)" : tier1 ? "rgba(255,209,102,0.1)" : "rgba(0,204,255,0.1)", color: tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00ccff", fontFamily:"'Space Mono',monospace", letterSpacing:"0.08em" }}>{chartPhaseLabel}</span>
+                      <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                        <span style={{ fontSize:9, fontWeight:900, letterSpacing:"0.12em", color:chartColor, fontFamily:"'Space Mono',monospace" }}>
+                          LIVE CHART · 30M · {chartPhaseLabel}
+                        </span>
                       </div>
                       <button onClick={() => setShowChart(c => !c)}
                         style={{ padding:"3px 10px", background:"none", border:`1px solid ${showChart ? "rgba(255,255,255,0.1)" : "rgba(127,255,107,0.3)"}`, borderRadius:4, color: showChart ? "rgba(255,255,255,0.4)" : "#7fff6b", fontSize:10, fontWeight:700, letterSpacing:"0.08em", fontFamily:"'Space Mono',monospace", cursor:"pointer", animation: showChart ? "none" : "goldPulse 2s ease-in-out infinite" }}>
