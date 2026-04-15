@@ -7476,47 +7476,21 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 </div>
               )}
 
-              {/* Quick Action Buttons */}
-              {messages.filter(m=>m.role==="user").length < 30 && (() => {
+              {/* Quick Action Buttons — two only, gone after Tier 2 */}
+              {!tier2 && messages.filter(m=>m.role==="user").length < 30 && (() => {
                 const dir = plan?.bias === "SHORT" ? "below" : "above";
-                const trigger = plan?.trigger_level || "trigger";
-                const _t = (() => { const m = String(trigger).match(/^([0-9,]+(?:\.[0-9]+)?)/); return m ? m[1] : trigger; })();
-
-                const quickActions = !tier1 ? [
-                  { label: `Closed ${dir} ${_t}`, msg: `30M closed ${dir} ${_t} at `, needsPrice: true },
-                  { label: "Wick only", msg: "It was a wick, not a close" },
-                  { label: "Didn't confirm", msg: `30M did not close ${dir} ${_t}` },
-                  { label: "Still valid?", msg: "Is this setup still valid?" },
-                ] : !tier2 ? [
-                  { label: "Retest holding", msg: "Price is retesting and holding the level" },
-                  { label: "Retest failed", msg: "Retest failed — price broke back through" },
-                  { label: `Tier 2 confirmed`, msg: `Tier 2 — 30M closed ${dir} ${_t} at `, needsPrice: true },
-                  { label: "Move stop?", msg: "Should I move my stop to breakeven?" },
-                ] : [
-                  { label: "Limit order placed", msg: "Limit order is placed" },
-                  { label: "Hit TP1", msg: "Price hit TP1" },
-                  { label: "Hit stop loss", msg: "Price hit the stop loss" },
-                  { label: "Trail to breakeven", msg: "Should I trail stop to breakeven?" },
-                ];
-
+                const opp = plan?.bias === "SHORT" ? "above" : "below";
+                const _t = (() => { const m = String(plan?.trigger_level||"").match(/^([0-9,]+(?:\.[0-9]+)?)/); return m ? m[1] : plan?.trigger_level || "trigger"; })();
                 return (
-                  <div style={{ padding:"6px 16px 0", display:"flex", gap:6, flexWrap:"wrap", alignItems:"center" }}>
-                    {quickActions.map((a, i) => (
-                      <button key={i} onClick={() => {
-                        setInput(a.msg);
-                        setTimeout(() => {
-                          if (inputRef.current) {
-                            inputRef.current.focus();
-                            inputRef.current.setSelectionRange(a.msg.length, a.msg.length);
-                          }
-                        }, 50);
-                      }}
-                        style={{ fontSize:10, fontWeight:700, padding:"5px 10px", borderRadius:20, border:`1px solid ${a.needsPrice ? "rgba(0,229,255,0.3)" : "rgba(255,255,255,0.12)"}`, background: a.needsPrice ? "rgba(0,229,255,0.06)" : "rgba(255,255,255,0.04)", color: a.needsPrice ? "#00e5ff" : "rgba(255,255,255,0.6)", cursor:"pointer", fontFamily:"'Space Mono',monospace", letterSpacing:"0.04em", whiteSpace:"nowrap", transition:"all 0.15s" }}
-                        onMouseEnter={e => { e.currentTarget.style.background=a.needsPrice?"rgba(0,229,255,0.12)":"rgba(255,107,255,0.1)"; e.currentTarget.style.borderColor=a.needsPrice?"rgba(0,229,255,0.5)":"rgba(255,107,255,0.3)"; e.currentTarget.style.color=a.needsPrice?"#00e5ff":"#ff6bff"; }}
-                        onMouseLeave={e => { e.currentTarget.style.background=a.needsPrice?"rgba(0,229,255,0.06)":"rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor=a.needsPrice?"rgba(0,229,255,0.3)":"rgba(255,255,255,0.12)"; e.currentTarget.style.color=a.needsPrice?"#00e5ff":"rgba(255,255,255,0.6)"; }}>
-                        {a.label}
-                      </button>
-                    ))}
+                  <div style={{ padding:"6px 16px 0", display:"flex", gap:8 }}>
+                    <button onClick={() => { setInput(`30M closed ${dir} ${_t} at `); setTimeout(() => { if (inputRef.current) { inputRef.current.focus(); inputRef.current.setSelectionRange(999,999); } }, 50); }}
+                      style={{ fontSize:11, fontWeight:700, padding:"6px 14px", borderRadius:20, border:"1px solid rgba(0,229,255,0.35)", background:"rgba(0,229,255,0.07)", color:"#00e5ff", cursor:"pointer", fontFamily:"'Space Mono',monospace", letterSpacing:"0.04em", whiteSpace:"nowrap" }}>
+                      Closed {dir} {_t}
+                    </button>
+                    <button onClick={() => { setInput(`30M closed ${opp} ${_t} at `); setTimeout(() => { if (inputRef.current) { inputRef.current.focus(); inputRef.current.setSelectionRange(999,999); } }, 50); }}
+                      style={{ fontSize:11, fontWeight:700, padding:"6px 14px", borderRadius:20, border:"1px solid rgba(255,107,107,0.25)", background:"rgba(255,107,107,0.06)", color:"#ff8080", cursor:"pointer", fontFamily:"'Space Mono',monospace", letterSpacing:"0.04em", whiteSpace:"nowrap" }}>
+                      Closed {opp} {_t}
+                    </button>
                   </div>
                 );
               })()}
