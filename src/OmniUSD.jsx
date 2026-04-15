@@ -7310,7 +7310,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
             <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
               {/* ── COMMAND BLOCK: Current Instruction + Latest Update ── */}
-              <div style={{ flexShrink: 0, borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(0,0,0,0.12)", borderLeft: `3px solid ${tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00e5ff"}` }}>
+              <div style={{ flexShrink: 0, borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(0,0,0,0.12)", borderLeft: `3px solid ${tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00e5ff"}`, boxShadow: `inset 3px 0 12px ${tier2 ? "rgba(127,255,107,0.03)" : tier1 ? "rgba(255,209,102,0.03)" : "rgba(0,229,255,0.03)"}` }}>
 
               {/* ── ZONE 1: CURRENT INSTRUCTION ── */}
               {(() => {
@@ -7446,20 +7446,23 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 {(() => {
                   const milestones = [];
                   const seenContent = new Set();
+                  const seenPrices = new Set(); // deduplicate by price to avoid "Tier 1 confirmed at X" + "Close confirmed above Y at X"
                   messages.forEach((msg, i) => {
                     if (msg.content?.includes("Connection interrupted")) return;
                     if (msg.content?.includes("Empty response")) return;
-                    // Only show Omni milestone lines — skip user messages from log
                     if (msg.role === "user") return;
-                    // Skip opening NEXT ACTION
                     if (msg.content?.includes("NEXT ACTION") && i <= 1) return;
                     const firstLine = sanitizeLiveContent((msg.content || "")
                       .replace(/\[CURRENT TIME[\s\S]*?---\n/g, "")
                       .replace(/<!--SIGNAL:.*?-->/gs, "")
                       .replace(/\*\*(.*?)\*\*/g, "$1")
                       .split("\n").find(l => l.trim()) || "");
-                    // Skip uncertain/negative language lines
                     if (/barely|right —|squeaked|narrow margin|doesn't count/i.test(firstLine)) return;
+                    // Skip "Close confirmed above X at Y" if we already have a Tier confirm for same price
+                    const priceMatch = firstLine.match(/at ([\d,]+)/i);
+                    const priceKey = priceMatch ? priceMatch[1] : null;
+                    if (priceKey && seenPrices.has(priceKey) && /close confirmed/i.test(firstLine)) return;
+                    if (priceKey) seenPrices.add(priceKey);
                     const key = firstLine.slice(0, 50);
                     if (seenContent.has(key)) return;
                     seenContent.add(key);
@@ -7532,7 +7535,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 ) : (
                   <>
                     <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendMessage()}
-                      placeholder="Type what the candle closed at..."
+                      placeholder={tier2 ? "Order placed. Hands off." : tier1 ? "Type the 9:30 close price..." : "Type the candle close price..."}
                       style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 8, padding: "10px 14px", fontSize: isMobile ? 13 : 12, color: "#f0ecff", fontFamily: "inherit", outline: "none" }}/>
                     <button onClick={sendMessage} disabled={loading || !input.trim()}
                       style={{ padding: "9px 18px", borderRadius: 8, border: "none", background: input.trim() && !loading ? "linear-gradient(135deg,#ff6bff,#7b2fff)" : "rgba(255,255,255,0.05)", color: input.trim() && !loading ? "#fff" : "#8878aa", fontSize: 13, fontWeight: 700, letterSpacing: "0.08em", cursor: input.trim() && !loading ? "pointer" : "not-allowed", fontFamily: "inherit", transition: "all 0.2s" }}>
