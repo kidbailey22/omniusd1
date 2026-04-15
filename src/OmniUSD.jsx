@@ -2513,6 +2513,22 @@ Return ONLY this JSON — no markdown, no explanation, no preamble:
 }`;
 }
 
+// ── Live content sanitizer — strips hesitant/uncertain language before display ──
+function sanitizeLiveContent(text) {
+  if (!text) return text;
+  return text
+    .replace(/—\s*tight close/gi, "")
+    .replace(/—\s*barely\s+\w+/gi, "")
+    .replace(/barely counts as confirmed/gi, "confirmed")
+    .replace(/barely confirmed/gi, "confirmed")
+    .replace(/right —\s*/gi, "")
+    .replace(/squeaked\s+it[.,]?\s*/gi, "")
+    .replace(/only by a narrow margin\.?\s*/gi, "")
+    .replace(/\bbarely\b/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 function getLivePrompt(plan, session = "NY", devMode = false) {
   const ct = getCTTime();
   const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
@@ -7318,7 +7334,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                     !m.content?.includes("Tier 2 confirmed")
                   );
                   if (lastOmni) {
-                    const clean = lastOmni.content
+                    const clean = sanitizeLiveContent(lastOmni.content
                       .replace(/<!--SIGNAL:.*?-->/gs, "")
                       .replace(/\*\*(NEXT ACTION)\*\*/g, "")
                       .replace(/\*\*(.*?)\*\*/g, "$1")
@@ -7326,7 +7342,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                       .replace(/^NEXT ACTION[^\n]*\n+/i, "")
                       .replace(/🕐 Next check:.*$/m, "")
                       .replace(/📋 Activated from Soft Pass.*$/m, "")
-                      .trim();
+                      .trim());
                     lines = clean.split("\n").filter(l => l.trim()).slice(0, 4);
                   } else {
                     lines = [
@@ -7361,10 +7377,10 @@ Use ONLY these times. All earlier time references in this conversation are stale
                    m.content?.toLowerCase().includes("invalid"))
                 );
                 if (!milestone) return null;
-                const firstLine = milestone.content
+                const firstLine = sanitizeLiveContent(milestone.content
                   .replace(/<!--SIGNAL:.*?-->/gs, "")
                   .replace(/\*\*(.*?)\*\*/g, "$1")
-                  .split("\n").find(l => l.trim()) || "";
+                  .split("\n").find(l => l.trim()) || "");
 
                 // Also show NEXT CHECK block
                 const ctNow = new Date(new Date().toLocaleString("en-US",{timeZone:"America/Chicago"}));
@@ -7419,11 +7435,11 @@ Use ONLY these times. All earlier time references in this conversation are stale
                     if (msg.role === "user") return;
                     // Skip opening NEXT ACTION
                     if (msg.content?.includes("NEXT ACTION") && i <= 1) return;
-                    const firstLine = (msg.content || "")
+                    const firstLine = sanitizeLiveContent((msg.content || "")
                       .replace(/\[CURRENT TIME[\s\S]*?---\n/g, "")
                       .replace(/<!--SIGNAL:.*?-->/gs, "")
                       .replace(/\*\*(.*?)\*\*/g, "$1")
-                      .split("\n").find(l => l.trim()) || "";
+                      .split("\n").find(l => l.trim()) || "");
                     // Skip uncertain/negative language lines
                     if (/barely|right —|squeaked|narrow margin|doesn't count/i.test(firstLine)) return;
                     const key = firstLine.slice(0, 50);
@@ -7571,8 +7587,6 @@ Use ONLY these times. All earlier time references in this conversation are stale
                       </>
                     )}
                   </div>
-                );
-              })()}
                 );
               })()}
 
