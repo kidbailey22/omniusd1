@@ -4570,9 +4570,10 @@ function SoftPassScenariosPanel({ plan, onActivate, isMobile }) {
 
   // Strip text from price fields — same as main plan stripPrice
   function stripP(v) {
-    if (!v) return v;
-    const m = String(v).match(/^([0-9,.\s–\-]+(?:\s*[–\-]\s*[0-9,.]+)?)/);
-    return m ? m[1].trim() : v;
+    if (!v || v === "—" || v === "null" || v === "N/A") return v;
+    const m = String(v).match(/^([0-9,]+(?:\.[0-9]+)?(?:\s*[–\-]\s*[0-9,]+(?:\.[0-9]+)?)?)/);
+    if (!m) return v;
+    return m[1].trim().replace(/[–\-]\s*$/, "").trim();
   }
 
   function handleActivate(s, bias) {
@@ -5743,7 +5744,8 @@ Questions remaining after this one: ${PLAN_CHAT_LIMIT - planChatMessages.filter(
 
     const sessCfg = SESSION_CONFIG[selectedSession] || SESSION_CONFIG.NY;
     const direction = activePlan.bias === "SHORT" ? "below" : "above";
-    const trigger = activePlan.trigger_level || "the trigger level";
+    const rawTrigger = activePlan.trigger_level || "the trigger level";
+    const trigger = (() => { const m = String(rawTrigger).match(/^([0-9,]+(?:\.[0-9]+)?)/); return m ? m[1].trim() : rawTrigger; })();
 
     // Find next valid candle close for this session
     const candleObjs = sessCfg.candles || [];
@@ -6071,51 +6073,34 @@ Use ONLY these times. All earlier time references in this conversation are stale
           )}
         </>) : (
 
-        /* ── DESKTOP HEADER — unchanged ── */
-        <div style={{ padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        /* ── DESKTOP HEADER — focused execution bar ── */
+        <div style={{ padding: "10px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          {/* Left: logo + plan context */}
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <OmniLogo size={32} />
+            <OmniLogo size={28} />
             <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.1em", background: "linear-gradient(90deg,#ff6bff,#00e5ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>OmniUSD</span>
-            <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.1em", padding: "2px 8px", borderRadius: 4, background: `${(TIER_CONFIG[profile?.tier]||TIER_CONFIG.starter).color}18`, border: `1px solid ${(TIER_CONFIG[profile?.tier]||TIER_CONFIG.starter).color}44`, color: (TIER_CONFIG[profile?.tier]||TIER_CONFIG.starter).color }}>
-              {(TIER_CONFIG[profile?.tier]||TIER_CONFIG.starter).label.toUpperCase()}
-            </span>
             {plan && phase !== "upload" && (
-              <div style={{ display: "flex", gap: 6 }}>
-                <span style={{ fontSize: 13, fontWeight: 700, padding: "2px 8px", background: `${gradeColor}14`, border: `1px solid ${gradeColor}44`, borderRadius: 4, color: gradeColor }}>{plan.grade}</span>
-                <span style={{ fontSize: 13, fontWeight: 700, padding: "2px 8px", background: `${biasColor}14`, border: `1px solid ${biasColor}44`, borderRadius: 4, color: biasColor }}>{plan.bias}</span>
-                <span style={{ fontSize: 13, fontWeight: 700, padding: "2px 8px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, color: "#8878aa" }}>{plan.instrument}</span>
+              <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#f0ecff" }}>{plan.instrument}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, padding: "1px 6px", background: `${biasColor}14`, border: `1px solid ${biasColor}44`, borderRadius: 4, color: biasColor }}>{plan.bias}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, padding: "1px 6px", background: `${gradeColor}14`, border: `1px solid ${gradeColor}44`, borderRadius: 4, color: gradeColor }}>{plan.grade}</span>
               </div>
             )}
           </div>
+          {/* Right: time + live status + menu */}
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ fontSize: 13, color: "#8878aa" }}><span style={{ color: "#00e5ff", fontWeight: 700 }}>{ctTime}</span> {getUserTZShort()}</div>
-            
+            <span style={{ fontSize: 12, color: "#8878aa" }}><span style={{ color: "#00e5ff", fontWeight: 700 }}>{ctTime}</span> {getUserTZShort()}</span>
             {phase === "live" && (
               <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
                 <span style={{ width: 6, height: 6, borderRadius: "50%", background: windowClosed ? "#ff6b6b" : "#7fff6b", animation: windowOpen ? "pulse 1.5s ease infinite" : "none" }}/>
-                <span style={{ fontSize: 13, fontWeight: 700, color: windowClosed ? "#ff6b6b" : "#7fff6b" }}>{windowClosed ? "SESSION CLOSED" : "LIVE"}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: windowClosed ? "#ff6b6b" : "#7fff6b" }}>{windowClosed ? "SESSION CLOSED" : "LIVE"}</span>
               </div>
             )}
-            <button onClick={() => setAppPage(appPage === "chartsetup" ? "dashboard" : "chartsetup")} style={{ fontSize: 13, fontWeight: 700, color: appPage === "chartsetup" ? "#ffd166" : "#ffd166", background: appPage === "chartsetup" ? "rgba(255,209,102,0.12)" : "rgba(255,209,102,0.06)", border: `1px solid rgba(255,209,102,${appPage === "chartsetup" ? "0.6" : "0.4"})`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit", boxShadow: appPage === "chartsetup" ? "none" : "0 0 8px rgba(255,209,102,0.2)", animation: appPage === "chartsetup" ? "none" : "goldPulse 2s ease-in-out infinite" }}>Chart Setup</button>
-            <button onClick={() => setAppPage(appPage === "history" ? "dashboard" : "history")} style={{ fontSize: 13, fontWeight: 700, color: appPage === "history" ? "#7fff6b" : "#8878aa", background: appPage === "history" ? "rgba(127,255,107,0.08)" : "none", border: `1px solid ${appPage === "history" ? "rgba(127,255,107,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>History</button>
-            <button onClick={() => setAppPage(appPage === "results" ? "dashboard" : "results")} style={{ fontSize: 13, fontWeight: 700, color: appPage === "results" ? "#00ccff" : "#8878aa", background: appPage === "results" ? "rgba(0,204,255,0.08)" : "none", border: `1px solid ${appPage === "results" ? "rgba(0,204,255,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>Results</button>
-            {OWNER_EMAILS.includes(profile?.email) && (
-              <button onClick={() => setAppPage(appPage === "tradelog" ? "dashboard" : "tradelog")} style={{ fontSize: 13, fontWeight: 700, color: appPage === "tradelog" ? "#cc44ff" : "#8878aa", background: appPage === "tradelog" ? "rgba(204,68,255,0.1)" : "none", border: `1px solid ${appPage === "tradelog" ? "rgba(204,68,255,0.35)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>Log Trade</button>
-            )}
-            <button onClick={() => setAppPage(appPage === "settings" ? "dashboard" : "settings")} style={{ fontSize: 13, fontWeight: 700, color: appPage === "settings" ? "#ff6bff" : "#8878aa", background: appPage === "settings" ? "rgba(255,107,255,0.1)" : "none", border: `1px solid ${appPage === "settings" ? "rgba(255,107,255,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>Settings</button>
-            <button onClick={() => setAppPage(appPage === "faq" ? "dashboard" : "faq")} style={{ fontSize: 13, fontWeight: 700, color: appPage === "faq" ? "#00e5ff" : "#8878aa", background: appPage === "faq" ? "rgba(0,229,255,0.08)" : "none", border: `1px solid ${appPage === "faq" ? "rgba(0,229,255,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>Help & FAQ</button>
-            {phase === "live" && (<>
-              <button onClick={() => setPhase("plan")} style={{ fontSize: 13, fontWeight: 700, color: "#ffd166", background: "rgba(255,209,102,0.08)", border: "1px solid rgba(255,209,102,0.25)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>View Plan</button>
-              <button onClick={() => { setPhase("upload"); setImages(Array(4).fill(null)); }} style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.75)", background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>NEW ANALYSIS</button>
-            </>)}
-            {onSignOut && <button onClick={() => {
-              const allSess = loadSessions();
-              const hasActive = Object.values(allSess).some(s => s?.plan && s?.phase && s?.phase !== "upload");
-              if (hasActive) {
-                if (!window.confirm("⚠️ You have an active session today.\n\nLogging out will erase your current plans and charts. You will be in cooldown if you log back in and try to re-upload.\n\nAre you sure you want to log out?")) return;
-              }
-              onSignOut();
-            }} style={{ fontSize: 13, color: "rgba(255,255,255,0.38)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", padding: "4px 6px" }}>Sign out</button>}
+            {/* Menu button — all navigation moved here */}
+            <button onClick={() => setDrawerOpen(o => !o)}
+              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 7, padding: "5px 10px", cursor: "pointer", color: "#f0ecff", fontSize: 14, lineHeight: 1, fontFamily: "inherit" }}>
+              ☰
+            </button>
           </div>
         </div>
         )}
@@ -7213,39 +7198,32 @@ Use ONLY these times. All earlier time references in this conversation are stale
                       );
                     })()}
                   </div>
-                  <div style={{ margin: "10px 12px 0", padding: "10px 12px", background: tier2 ? "rgba(127,255,107,0.06)" : tier1 ? "rgba(255,209,102,0.06)" : "rgba(0,229,255,0.05)", border: `1px solid ${tier2 ? "rgba(127,255,107,0.25)" : tier1 ? "rgba(255,209,102,0.25)" : "rgba(0,229,255,0.18)"}`, borderLeft: `3px solid ${tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00e5ff"}`, borderRadius: 0 }}>
-                    <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.14em", color: tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00e5ff", marginBottom: 5 }}>LIVE STATUS</div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: "#f0ecff", lineHeight: 1.5 }}>
-                      {tier2 ? `Limit order ready at ${plan.retest_zone}.`
-                        : tier1 ? `Tier 1 confirmed. Watching for Tier 2.`
-                        : `Watching for 30M close ${plan.bias === "SHORT" ? "below" : "above"} ${plan.trigger_level}.`}
+                  <div style={{ margin: "8px 12px 0", padding: "8px 12px", background: tier2 ? "rgba(127,255,107,0.06)" : tier1 ? "rgba(255,209,102,0.06)" : "rgba(0,229,255,0.05)", border: `1px solid ${tier2 ? "rgba(127,255,107,0.2)" : tier1 ? "rgba(255,209,102,0.2)" : "rgba(0,229,255,0.15)"}`, borderLeft: `2px solid ${tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00e5ff"}`, borderRadius: 0 }}>
+                    <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.14em", color: tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00e5ff", marginBottom: 3, fontFamily:"'Space Mono',monospace" }}>PHASE</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: "#f0ecff", lineHeight: 1.4 }}>
+                      {tier2 ? "Tier 2 ✓ — Order placed"
+                        : tier1 ? "Tier 1 ✓ — Watch for Tier 2"
+                        : `Watching — ${plan.bias === "SHORT" ? "below" : "above"} ${_stripFn(plan.trigger_level)}`}
                     </div>
-                    {!tier1 && <div style={{ fontSize: 13, color: "#8878aa", marginTop: 4, lineHeight: 1.5 }}>No entry until candle fully closes.</div>}
-                    {tier1 && !tier2 && <div style={{ fontSize: 13, color: "rgba(255,209,102,0.6)", marginTop: 4, lineHeight: 1.5 }}>Do not enter yet. Wait for Tier 2.</div>}
                   </div>
-                  <div style={{ padding: "14px 12px 0" }}>
-                    <div style={{ fontSize: 8, color: "rgba(255,255,255,0.38)", letterSpacing: "0.14em", marginBottom: 10 }}>LOCKED PLAN</div>
+
+                  {/* Key levels — clean prices only */}
+                  <div style={{ padding: "10px 12px 0" }}>
+                    <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", letterSpacing: "0.14em", marginBottom: 8, fontFamily:"'Space Mono',monospace" }}>KEY LEVELS</div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
                       {[
-                        { l: "Trigger", v: plan.trigger_level, c: plan.bias === "SHORT" ? "#ff6b6b" : "#7fff6b" },
-                        { l: "Retest",  v: plan.retest_zone,   c: "#ffd166" },
-                        { l: "Stop",    v: plan.stop_loss,     c: "#ff6b6b" },
-                        { l: "TP1",     v: plan.tp1,           c: "#7fff6b" },
-                        { l: "TP2",     v: plan.tp2,           c: "#7fff6b" },
-                        { l: "Runner",  v: plan.runner,        c: "#00e5ff" },
-                      ].map((r, i) => (
-                        <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: i < 5 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
-                          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.8)" }}>{r.l}</span>
-                          <span style={{ fontSize: 13, fontWeight: 700, color: r.c, fontFamily: "monospace" }}>{r.v}</span>
+                        { l: "Trigger", v: _stripFn(plan.trigger_level), c: plan.bias === "SHORT" ? "#ff6b6b" : "#7fff6b" },
+                        { l: "Retest",  v: _stripFn(plan.retest_zone),   c: "#ffd166" },
+                        { l: "Stop",    v: _stripFn(plan.stop_loss),     c: "#ff6b6b" },
+                        { l: "TP1",     v: _stripFn(plan.tp1),           c: "#7fff6b" },
+                        ...(plan.tp2 ? [{ l: "TP2", v: _stripFn(plan.tp2), c: "#7fff6b" }] : []),
+                        ...(plan.runner ? [{ l: "Runner", v: _stripFn(plan.runner), c: "#00e5ff" }] : []),
+                      ].map((r, i, arr) => (
+                        <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: i < arr.length-1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
+                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontFamily:"'Space Mono',monospace" }}>{r.l}</span>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: r.c, fontFamily: "monospace" }}>{r.v || "—"}</span>
                         </div>
                       ))}
-                    </div>
-                  </div>
-                  <div style={{ padding: "14px 12px", marginTop: "auto", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                      <span style={{ fontSize: 13, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "rgba(255,107,107,0.1)", border: "1px solid rgba(255,107,107,0.25)", color: "#ff6b6b" }}>{plan.instrument}</span>
-                      <span style={{ fontSize: 13, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "rgba(255,107,107,0.1)", border: "1px solid rgba(255,107,107,0.25)", color: "#ff6b6b" }}>{plan.bias}</span>
-                      <span style={{ fontSize: 13, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "rgba(127,255,107,0.08)", border: "1px solid rgba(127,255,107,0.2)", color: "#7fff6b" }}>{plan.grade}</span>
                     </div>
                   </div>
                 </>
@@ -7253,24 +7231,56 @@ Use ONLY these times. All earlier time references in this conversation are stale
 
             </div>
 
-            {/* ── RIGHT COLUMN — chat ── */}
+            {/* ── RIGHT COLUMN — focused execution ── */}
             <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
-              {/* Messages */}
-              <div style={{ flex: 1, overflowY: "auto", padding: "10px 14px 6px" }}>
-                {messages.map((msg, i) => (
-                  <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: msg.role === "user" ? "flex-end" : "flex-start", marginBottom: msg.role === "user" ? 6 : 10, animation: "slide 0.2s ease both" }}>
-                    <div style={{ maxWidth: "82%", padding: msg.role === "user" ? "7px 12px" : "9px 13px", borderRadius: msg.role === "user" ? "10px 10px 3px 10px" : "10px 10px 10px 3px", background: msg.role === "user" ? "rgba(255,107,255,0.08)" : "rgba(255,255,255,0.04)", border: msg.role === "user" ? "1px solid rgba(255,107,255,0.18)" : "1px solid rgba(255,255,255,0.07)", fontSize: isMobile ? 13 : 12, lineHeight: 1.7, color: msg.role === "user" ? "#f0ecff" : "#ccc4e8" }} dangerouslySetInnerHTML={{ __html: fmt(msg.content) }}/>
-                    <span style={{ fontSize: 8, color: "rgba(255,255,255,0.25)", marginTop: 2, paddingLeft: 3, paddingRight: 3 }}>{msg.role === "user" ? "You" : "OmniUSD"} · {msg.time} CT</span>
+              {/* CURRENT INSTRUCTION — always top, always visible */}
+              {messages.length > 0 && (() => {
+                const lastOmni = [...messages].reverse().find(m => m.role === "assistant");
+                if (!lastOmni) return null;
+                const clean = lastOmni.content
+                  .replace(/<!--SIGNAL:.*?-->/g, "")
+                  .replace(/\*\*(.*?)\*\*/g, "$1")
+                  .replace(/\*(.*?)\*/g, "$1")
+                  .trim();
+                return (
+                  <div style={{ padding: "12px 16px", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(0,229,255,0.03)", flexShrink: 0 }}>
+                    <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.16em", color: "#00e5ff", marginBottom: 6, fontFamily: "'Space Mono',monospace" }}>CURRENT INSTRUCTION</div>
+                    <div style={{ fontSize: 13, color: "#f0ecff", lineHeight: 1.7, fontFamily: "'Space Mono',monospace", whiteSpace: "pre-line" }}>{clean}</div>
                   </div>
-                ))}
-                {loading && (
-                  <div style={{ display: "flex", marginBottom: 10 }}>
-                    <div style={{ padding: "9px 13px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "10px 10px 10px 3px" }}>
-                      <div style={{ display: "flex", gap: 4 }}>
-                        {[0,1,2].map(d => <span key={d} style={{ width: 5, height: 5, borderRadius: "50%", background: "#ff6bff", animation: `pulse 1s ease ${d*0.2}s infinite`, display: "inline-block" }}/>)}
+                );
+              })()}
+
+              {/* EVENT LOG — concise system updates + user reports */}
+              <div style={{ flex: 1, overflowY: "auto", padding: "8px 16px 4px" }}>
+                {messages.length === 0 && (
+                  <div style={{ textAlign:"center", color:"rgba(255,255,255,0.25)", fontSize:12, marginTop:40, fontFamily:"'Space Mono',monospace" }}>
+                    Session started. Watching for first close.
+                  </div>
+                )}
+                {messages.map((msg, i) => {
+                  const isUser = msg.role === "user";
+                  const isLast = i === messages.length - 1;
+                  const clean = (msg.content || "")
+                    .replace(/<!--SIGNAL:.*?-->/g, "")
+                    .replace(/\*\*(.*?)\*\*/g, "$1")
+                    .replace(/\*(.*?)\*/g, "$1")
+                    .replace(/\[CURRENT TIME[^\]]*\]\n.*?---\n/s, "")
+                    .trim();
+                  if (!clean) return null;
+                  return (
+                    <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 6, opacity: isLast ? 1 : 0.65 }}>
+                      <span style={{ fontSize: 9, color: isUser ? "rgba(255,107,255,0.6)" : "rgba(0,229,255,0.5)", fontFamily:"'Space Mono',monospace", marginTop: 2, flexShrink: 0, minWidth: 28 }}>{msg.time}</span>
+                      <div style={{ flex: 1, fontSize: 12, color: isUser ? "rgba(255,255,255,0.55)" : "#ccc4e8", lineHeight: 1.6, fontFamily: isUser ? "inherit" : "'Space Mono',monospace" }}>
+                        {isUser && <span style={{ color:"rgba(255,107,255,0.5)", marginRight: 4 }}>↑</span>}
+                        {clean}
                       </div>
                     </div>
+                  );
+                })}
+                {loading && (
+                  <div style={{ display: "flex", gap: 4, padding: "4px 0" }}>
+                    {[0,1,2].map(d => <span key={d} style={{ width:4, height:4, borderRadius:"50%", background:"#00e5ff", animation:`pulse 1s ease ${d*0.2}s infinite`, display:"inline-block" }}/>)}
                   </div>
                 )}
                 <div ref={bottomRef}/>
@@ -7494,7 +7504,7 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
   const tr=result.timeframe_reads||{};
 
   // Shared price extraction — used in current state bar AND tracker
-  const _stripFn=(v)=>{if(!v||v==="—")return v||"—";const m=v.match(/^([0-9,.\s–\-]+(?:\s*[–\-]\s*[0-9,.]+)?)/);return m?m[1].trim():v;};
+  const _stripFn=(v)=>{if(!v||v==="—")return v||"—";const m=String(v).match(/^([0-9,]+(?:\.[0-9]+)?(?:\s*[–\-]\s*[0-9,]+(?:\.[0-9]+)?)?)/);if(!m)return v;return m[1].trim().replace(/[–\-]\s*$/,"").trim()||"—";};
   const triggerLevel=_stripFn(ep.break_trigger_level||(isShort?(cl.short_trigger||cl.long_trigger||"—"):(cl.long_trigger||cl.short_trigger||"—")));
   const retestZone  =_stripFn(ep.retest_zone||ep.entry||(isShort?cl.major_resistance:cl.major_support)||"—");
   const stopLevel   =ep.stop_tight||ep.stop_wide||"—";
