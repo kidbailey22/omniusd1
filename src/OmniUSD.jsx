@@ -2627,7 +2627,7 @@ Tier 1 confirmed strong:
 "Tier 1 confirmed at [price].\nWatch the [next time] close for Tier 2."
 
 Tier 1 confirmed barely:
-"Tier 1 confirmed at [price] — narrow margin.\nWatch the [next time] close closely for Tier 2."
+"Tier 1 confirmed at [price].\nWatch the [next time] close closely for Tier 2."
 
 Candle didn't confirm:
 "[Time] closed ${plan.bias==="SHORT"?"above":"below"} ${plan.trigger_level}. Not confirmed.\n[Next time] is the next window."
@@ -7285,7 +7285,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
             <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
               {/* ── COMMAND BLOCK: Current Instruction + Latest Update ── */}
-              <div style={{ flexShrink: 0, borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(0,0,0,0.15)" }}>
+              <div style={{ flexShrink: 0, borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(0,0,0,0.12)", borderLeft: `3px solid ${tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00e5ff"}` }}>
 
               {/* ── ZONE 1: CURRENT INSTRUCTION ── */}
               {(() => {
@@ -7524,7 +7524,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 )}
               </div>
 
-              {/* TradingView Chart — collapsible */}
+              {/* TradingView Chart — integrated section */}
               {(() => {
                 const tvSymbols = {
                   XAUUSD: "XAUUSD",
@@ -7535,21 +7535,31 @@ Use ONLY these times. All earlier time references in this conversation are stale
                   US500:  "US500",
                 };
                 const tvSymbol = tvSymbols[plan?.instrument] || "XAUUSD";
+                const chartPhaseLabel = tier2 ? "LIMIT PLACED" : tier1 ? "RETEST WATCH" : "BREAK WATCH";
                 return (
-                  <div style={{ flexShrink:0, borderTop:"1px solid rgba(255,255,255,0.06)" }}>
-                    <button onClick={() => setShowChart(c => !c)}
-                      style={{ width:"100%", padding:"7px 14px", background: showChart ? "rgba(255,255,255,0.02)" : "rgba(127,255,107,0.05)", border:"none", borderTop: showChart ? "none" : "1px solid rgba(127,255,107,0.15)", color: showChart ? "rgba(255,255,255,0.4)" : "#7fff6b", fontSize:11, fontWeight:700, letterSpacing:"0.1em", fontFamily:"'Space Mono',monospace", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"space-between", animation: showChart ? "none" : "goldPulse 2s ease-in-out infinite" }}>
-                      <span>📊 {showChart ? "HIDE CHART" : "SHOW CHART"}</span>
-                      <span style={{ fontSize:9 }}>{showChart ? "▴" : "▾"}</span>
-                    </button>
+                  <div style={{ flexShrink:0, borderTop:"2px solid rgba(255,255,255,0.07)" }}>
+                    {/* Fix 2+3: Integrated chart header with label + toggle */}
+                    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"7px 14px", background:"rgba(255,255,255,0.02)" }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                        <span style={{ fontSize:9, fontWeight:900, letterSpacing:"0.14em", color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace" }}>LIVE CHART</span>
+                        <span style={{ fontSize:8, color:"rgba(255,255,255,0.2)", fontFamily:"'Space Mono',monospace" }}>30M · {plan?.instrument}</span>
+                        <span style={{ fontSize:8, fontWeight:700, padding:"1px 6px", borderRadius:3, background: tier2 ? "rgba(127,255,107,0.1)" : tier1 ? "rgba(255,209,102,0.1)" : "rgba(0,204,255,0.1)", color: tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00ccff", fontFamily:"'Space Mono',monospace", letterSpacing:"0.08em" }}>{chartPhaseLabel}</span>
+                      </div>
+                      <button onClick={() => setShowChart(c => !c)}
+                        style={{ padding:"3px 10px", background:"none", border:`1px solid ${showChart ? "rgba(255,255,255,0.1)" : "rgba(127,255,107,0.3)"}`, borderRadius:4, color: showChart ? "rgba(255,255,255,0.4)" : "#7fff6b", fontSize:10, fontWeight:700, letterSpacing:"0.08em", fontFamily:"'Space Mono',monospace", cursor:"pointer", animation: showChart ? "none" : "goldPulse 2s ease-in-out infinite" }}>
+                        {showChart ? "HIDE" : "SHOW"}
+                      </button>
+                    </div>
                     {showChart && (
                       <>
+                        {/* Fix 6: More visible prop firm disclaimer */}
                         {propFirmMode && (
-                          <div style={{ padding:"4px 12px", background:"rgba(255,209,102,0.06)", borderBottom:"1px solid rgba(255,209,102,0.15)", fontSize:10, color:"rgba(255,209,102,0.6)", fontFamily:"'Space Mono',monospace", textAlign:"center" }}>
+                          <div style={{ padding:"5px 14px", background:"rgba(255,209,102,0.08)", borderBottom:"1px solid rgba(255,209,102,0.2)", fontSize:11, fontWeight:700, color:"rgba(255,209,102,0.8)", fontFamily:"'Space Mono',monospace", letterSpacing:"0.04em" }}>
                             ⚠ Spot price shown — prop firm prices may differ slightly
                           </div>
                         )}
-                        <div style={{ height: isMobile ? 280 : 300, background:"#131722" }}>
+                        {/* Fix 4: Slightly smaller chart height */}
+                        <div style={{ height: isMobile ? 240 : 260, background:"#131722" }}>
                           <iframe
                             key={tvSymbol}
                             src={`https://s.tradingview.com/widgetembed/?symbol=${encodeURIComponent(tvSymbol)}&interval=30&theme=dark&style=1&locale=en&hide_top_toolbar=0&hide_legend=0&allow_symbol_change=0&save_image=0`}
@@ -7561,6 +7571,8 @@ Use ONLY these times. All earlier time references in this conversation are stale
                       </>
                     )}
                   </div>
+                );
+              })()}
                 );
               })()}
 
