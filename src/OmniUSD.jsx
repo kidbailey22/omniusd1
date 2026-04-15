@@ -7241,81 +7241,151 @@ Use ONLY these times. All earlier time references in this conversation are stale
 
             </div>
 
-            {/* ── RIGHT COLUMN — focused execution ── */}
+            {/* ── RIGHT COLUMN — structured execution feed ── */}
             <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
-              {/* CURRENT INSTRUCTION — always top, always visible */}
-              {messages.length > 0 && (() => {
-                const lastOmni = [...messages].reverse().find(m => m.role === "assistant");
-                if (!lastOmni) return null;
-                const clean = lastOmni.content
-                  .replace(/<!--SIGNAL:.*?-->/g, "")
-                  .replace(/\*\*(.*?)\*\*/g, "$1")
-                  .replace(/\*(.*?)\*/g, "$1")
-                  .trim();
+              {/* ── ZONE 1: CURRENT INSTRUCTION ── */}
+              {(() => {
+                const lastOmni = [...messages].reverse().find(m => m.role === "assistant" && !m.content?.includes("Connection interrupted"));
+                const clean = lastOmni
+                  ? lastOmni.content
+                      .replace(/<!--SIGNAL:.*?-->/gs, "")
+                      .replace(/\*\*(NEXT ACTION)\*\*/g, "")
+                      .replace(/\*\*(.*?)\*\*/g, "$1")
+                      .replace(/\*(.*?)\*/g, "$1")
+                      .replace(/^NEXT ACTION[^\n]*\n+/i, "")
+                      .replace(/🕐 Next check:.*$/m, "")
+                      .replace(/📋 Activated from Soft Pass.*$/m, "")
+                      .trim()
+                  : null;
+
+                const instruction = clean || (messages.length === 0
+                  ? `Watch the next 30M close ${plan?.bias === "SHORT" ? "below" : "above"} ${plan?.trigger_level || "the trigger level"}.\nIf it confirms — send the close.\nIf not — send the closing price.\nWicks don't count.`
+                  : null);
+
+                if (!instruction) return null;
                 return (
-                  <div style={{ padding: "12px 16px", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(0,229,255,0.03)", flexShrink: 0 }}>
-                    <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.16em", color: "#00e5ff", marginBottom: 6, fontFamily: "'Space Mono',monospace" }}>CURRENT INSTRUCTION</div>
-                    <div style={{ fontSize: 13, color: "#f0ecff", lineHeight: 1.7, fontFamily: "'Space Mono',monospace", whiteSpace: "pre-line" }}>{clean}</div>
+                  <div style={{ padding: "14px 18px", borderBottom: "1px solid rgba(255,255,255,0.07)", background: "rgba(0,229,255,0.025)", flexShrink: 0 }}>
+                    <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.18em", color: "#00e5ff", marginBottom: 8, fontFamily: "'Space Mono',monospace" }}>CURRENT INSTRUCTION</div>
+                    <div style={{ fontSize: 14, color: "#f0ecff", lineHeight: 1.8, fontFamily: "'Space Mono',monospace", whiteSpace: "pre-line" }}>{instruction}</div>
                   </div>
                 );
               })()}
 
-              {/* EVENT LOG — concise system updates + user reports */}
-              <div style={{ flex: 1, overflowY: "auto", padding: "8px 16px 4px" }}>
+              {/* ── ZONE 2: LATEST CONFIRMED UPDATE ── */}
+              {(() => {
+                // Find the last meaningful Omni milestone (tier confirm, limit placed, etc.)
+                const milestone = [...messages].reverse().find(m =>
+                  m.role === "assistant" &&
+                  !m.content?.includes("Connection interrupted") &&
+                  (m.content?.toLowerCase().includes("tier 1") ||
+                   m.content?.toLowerCase().includes("tier 2") ||
+                   m.content?.toLowerCase().includes("limit") ||
+                   m.content?.toLowerCase().includes("confirmed") ||
+                   m.content?.toLowerCase().includes("retest") ||
+                   m.content?.toLowerCase().includes("stop") ||
+                   m.content?.toLowerCase().includes("invalid"))
+                );
+                if (!milestone || messages.length === 0) return null;
+                const firstLine = milestone.content
+                  .replace(/<!--SIGNAL:.*?-->/gs, "")
+                  .replace(/\*\*(.*?)\*\*/g, "$1")
+                  .split("\n").find(l => l.trim()) || "";
+                return (
+                  <div style={{ padding: "10px 18px", borderBottom: "1px solid rgba(255,255,255,0.05)", flexShrink: 0 }}>
+                    <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.18em", color: tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#8878aa", marginBottom: 4, fontFamily: "'Space Mono',monospace" }}>LATEST UPDATE</div>
+                    <div style={{ fontSize: 13, color: tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "rgba(255,255,255,0.7)", fontFamily: "'Space Mono',monospace", lineHeight: 1.5 }}>{firstLine}</div>
+                    {milestone.time && <div style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", marginTop: 3, fontFamily: "'Space Mono',monospace" }}>{milestone.time} CT</div>}
+                  </div>
+                );
+              })()}
+
+              {/* ── ZONE 3: SESSION MILESTONES — key events only ── */}
+              <div style={{ flex: 1, overflowY: "auto", padding: "10px 18px 6px" }}>
                 {messages.length === 0 && (
-                  <div style={{ textAlign:"center", color:"rgba(255,255,255,0.25)", fontSize:12, marginTop:40, fontFamily:"'Space Mono',monospace" }}>
-                    Session started. Watching for first close.
+                  <div style={{ color:"rgba(255,255,255,0.2)", fontSize:11, marginTop:20, fontFamily:"'Space Mono',monospace", lineHeight:1.8 }}>
+                    Session open. Watching for first 30M close.
                   </div>
                 )}
-                {messages.map((msg, i) => {
-                  const isUser = msg.role === "user";
-                  const isLast = i === messages.length - 1;
-                  const clean = (msg.content || "")
-                    .replace(/<!--SIGNAL:.*?-->/g, "")
-                    .replace(/\*\*(.*?)\*\*/g, "$1")
-                    .replace(/\*(.*?)\*/g, "$1")
-                    .replace(/\[CURRENT TIME[^\]]*\]\n.*?---\n/s, "")
-                    .trim();
-                  if (!clean) return null;
-                  return (
-                    <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 6, opacity: isLast ? 1 : 0.65 }}>
-                      <span style={{ fontSize: 9, color: isUser ? "rgba(255,107,255,0.6)" : "rgba(0,229,255,0.5)", fontFamily:"'Space Mono',monospace", marginTop: 2, flexShrink: 0, minWidth: 28 }}>{msg.time}</span>
-                      <div style={{ flex: 1, fontSize: 12, color: isUser ? "rgba(255,255,255,0.55)" : "#ccc4e8", lineHeight: 1.6, fontFamily: isUser ? "inherit" : "'Space Mono',monospace" }}>
-                        {isUser && <span style={{ color:"rgba(255,107,255,0.5)", marginRight: 4 }}>↑</span>}
-                        {clean}
+                {/* Build milestone list — only meaningful events, no errors, no duplicates */}
+                {(() => {
+                  const milestones = [];
+                  const seenContent = new Set();
+                  messages.forEach((msg, i) => {
+                    // Skip connection errors
+                    if (msg.content?.includes("Connection interrupted")) return;
+                    if (msg.content?.includes("Empty response")) return;
+                    // Skip the opening NEXT ACTION message — it's in Zone 1
+                    if (msg.role === "assistant" && msg.content?.includes("NEXT ACTION") && i === 0) return;
+                    // For user messages — only show if meaningful (not duplicates)
+                    const cleanText = (msg.content || "")
+                      .replace(/\[CURRENT TIME[\s\S]*?---\n/g, "")
+                      .replace(/<!--SIGNAL:.*?-->/gs, "")
+                      .replace(/\*\*(.*?)\*\*/g, "$1")
+                      .replace(/\*(.*?)\*/g, "$1")
+                      .trim();
+                    if (!cleanText) return;
+                    // Deduplicate by content
+                    const key = cleanText.slice(0, 60);
+                    if (seenContent.has(key)) return;
+                    seenContent.add(key);
+                    milestones.push({ ...msg, cleanText });
+                  });
+
+                  if (milestones.length === 0) return null;
+                  return milestones.map((msg, i) => {
+                    const isUser = msg.role === "user";
+                    const isLast = i === milestones.length - 1;
+                    return (
+                      <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 8, opacity: isLast ? 1 : 0.5 }}>
+                        <span style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", fontFamily:"'Space Mono',monospace", marginTop: 2, flexShrink: 0, minWidth: 36 }}>{msg.time}</span>
+                        <div style={{ flex: 1 }}>
+                          {isUser
+                            ? <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontFamily:"inherit", lineHeight: 1.5 }}>↑ {msg.cleanText}</div>
+                            : <div style={{ fontSize: 12, color: "#ccc4e8", fontFamily: "'Space Mono',monospace", lineHeight: 1.6 }}>{msg.cleanText.split("\n")[0]}</div>
+                          }
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  });
+                })()}
                 {loading && (
-                  <div style={{ display: "flex", gap: 4, padding: "4px 0" }}>
+                  <div style={{ display: "flex", gap: 4, padding: "4px 0", marginLeft: 46 }}>
                     {[0,1,2].map(d => <span key={d} style={{ width:4, height:4, borderRadius:"50%", background:"#00e5ff", animation:`pulse 1s ease ${d*0.2}s infinite`, display:"inline-block" }}/>)}
                   </div>
                 )}
                 <div ref={bottomRef}/>
               </div>
 
+              {/* ── CONNECTION ERROR BANNER — inline, near input, not in feed ── */}
+              {messages.length > 0 && messages[messages.length-1]?.content?.includes("Connection interrupted") && (
+                <div style={{ margin:"0 16px 4px", padding:"6px 12px", background:"rgba(255,107,107,0.08)", border:"1px solid rgba(255,107,107,0.2)", borderRadius:6, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                  <span style={{ fontSize:11, color:"rgba(255,107,107,0.8)", fontFamily:"'Space Mono',monospace" }}>⚠ Connection interrupted — retype your message</span>
+                  <button onClick={() => sendMessage()} style={{ fontSize:10, color:"#ff6b6b", background:"none", border:"none", cursor:"pointer", fontFamily:"'Space Mono',monospace", fontWeight:700 }}>RETRY</button>
+                </div>
+              )}
+
               {/* Quick Action Buttons */}
               {messages.filter(m=>m.role==="user").length < 30 && (() => {
                 const dir = plan?.bias === "SHORT" ? "below" : "above";
                 const trigger = plan?.trigger_level || "trigger";
+                const _t = (() => { const m = String(trigger).match(/^([0-9,]+(?:\.[0-9]+)?)/); return m ? m[1] : trigger; })();
 
                 const quickActions = !tier1 ? [
-                  { label: `Closed ${dir} ${trigger}`, msg: `30M closed ${dir} ${trigger} at `, needsPrice: true },
+                  { label: `Closed ${dir} ${_t}`, msg: `30M closed ${dir} ${_t} at `, needsPrice: true },
                   { label: "Wick only", msg: "It was a wick, not a close" },
-                  { label: "Didn't confirm", msg: `30M did not close ${dir} ${trigger}` },
+                  { label: "Didn't confirm", msg: `30M did not close ${dir} ${_t}` },
                   { label: "Still valid?", msg: "Is this setup still valid?" },
                 ] : !tier2 ? [
                   { label: "Retest holding", msg: "Price is retesting and holding the level" },
                   { label: "Retest failed", msg: "Retest failed — price broke back through" },
-                  { label: `T2 closed ${dir}`, msg: `Tier 2 — 30M closed ${dir} ${trigger} at `, needsPrice: true },
+                  { label: `Tier 2 confirmed · ${_t}`, msg: `Tier 2 — 30M closed ${dir} ${_t} at `, needsPrice: true },
                   { label: "Move stop?", msg: "Should I move my stop to breakeven?" },
                 ] : [
-                  { label: "Limit placed", msg: "Limit order is placed" },
-                  { label: "Order cancelled", msg: "I cancelled the order" },
-                  { label: "Session closing", msg: "Session is about to close — what do I do?" },
+                  { label: "Limit order placed", msg: "Limit order is placed" },
                   { label: "Hit TP1", msg: "Price hit TP1" },
+                  { label: "Hit stop loss", msg: "Price hit the stop loss" },
+                  { label: "Trail to breakeven", msg: "Should I trail stop to breakeven?" },
                 ];
 
                 return (
