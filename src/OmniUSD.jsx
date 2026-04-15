@@ -7199,25 +7199,33 @@ Use ONLY these times. All earlier time references in this conversation are stale
                     })()}
                   </div>
                   <div style={{ margin: "8px 12px 0", padding: "8px 12px", background: tier2 ? "rgba(127,255,107,0.06)" : tier1 ? "rgba(255,209,102,0.06)" : "rgba(0,229,255,0.05)", border: `1px solid ${tier2 ? "rgba(127,255,107,0.2)" : tier1 ? "rgba(255,209,102,0.2)" : "rgba(0,229,255,0.15)"}`, borderLeft: `2px solid ${tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00e5ff"}`, borderRadius: 0 }}>
+                    {(() => {
+                      const sp = v => { if (!v || v === "—") return v || "—"; const m = String(v).match(/^([0-9,]+(?:\.[0-9]+)?)/); return m ? m[1].trim() : v; };
+                      return (<>
                     <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.14em", color: tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#00e5ff", marginBottom: 3, fontFamily:"'Space Mono',monospace" }}>PHASE</div>
                     <div style={{ fontSize: 12, fontWeight: 700, color: "#f0ecff", lineHeight: 1.4 }}>
                       {tier2 ? "Tier 2 ✓ — Order placed"
                         : tier1 ? "Tier 1 ✓ — Watch for Tier 2"
-                        : `Watching — ${plan.bias === "SHORT" ? "below" : "above"} ${_stripFn(plan.trigger_level)}`}
+                        : `Watching — ${plan.bias === "SHORT" ? "below" : "above"} ${sp(plan.trigger_level)}`}
                     </div>
+                      </>);
+                    })()}
                   </div>
 
                   {/* Key levels — clean prices only */}
+                  {(() => {
+                    const sp = v => { if (!v || v === "—") return null; const m = String(v).match(/^([0-9,]+(?:\.[0-9]+)?)/); return m ? m[1].trim() : v; };
+                    return (
                   <div style={{ padding: "10px 12px 0" }}>
                     <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", letterSpacing: "0.14em", marginBottom: 8, fontFamily:"'Space Mono',monospace" }}>KEY LEVELS</div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
                       {[
-                        { l: "Trigger", v: _stripFn(plan.trigger_level), c: plan.bias === "SHORT" ? "#ff6b6b" : "#7fff6b" },
-                        { l: "Retest",  v: _stripFn(plan.retest_zone),   c: "#ffd166" },
-                        { l: "Stop",    v: _stripFn(plan.stop_loss),     c: "#ff6b6b" },
-                        { l: "TP1",     v: _stripFn(plan.tp1),           c: "#7fff6b" },
-                        ...(plan.tp2 ? [{ l: "TP2", v: _stripFn(plan.tp2), c: "#7fff6b" }] : []),
-                        ...(plan.runner ? [{ l: "Runner", v: _stripFn(plan.runner), c: "#00e5ff" }] : []),
+                        { l: "Trigger", v: sp(plan.trigger_level), c: plan.bias === "SHORT" ? "#ff6b6b" : "#7fff6b" },
+                        { l: "Retest",  v: sp(plan.retest_zone),   c: "#ffd166" },
+                        { l: "Stop",    v: sp(plan.stop_loss),     c: "#ff6b6b" },
+                        { l: "TP1",     v: sp(plan.tp1),           c: "#7fff6b" },
+                        ...(plan.tp2 ? [{ l: "TP2", v: sp(plan.tp2), c: "#7fff6b" }] : []),
+                        ...(plan.runner ? [{ l: "Runner", v: sp(plan.runner), c: "#00e5ff" }] : []),
                       ].map((r, i, arr) => (
                         <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: i < arr.length-1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
                           <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontFamily:"'Space Mono',monospace" }}>{r.l}</span>
@@ -7226,6 +7234,8 @@ Use ONLY these times. All earlier time references in this conversation are stale
                       ))}
                     </div>
                   </div>
+                    );
+                  })()}
                 </>
               )}
 
