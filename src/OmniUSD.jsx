@@ -7044,6 +7044,32 @@ Use ONLY these times. All earlier time references in this conversation are stale
             )}
           </div>
 
+          {/* ── MULTI-INSTRUMENT STATUS BAR — desktop only ── */}
+          {!isMobile && (() => {
+            const allSessions = loadSessions();
+            const activeInstruments = Object.entries(allSessions).filter(([sym, sess]) => sess?.phase === "live" && sess?.plan);
+            if (activeInstruments.length < 2) return null;
+            return (
+              <div style={{ display:"flex", alignItems:"center", gap:6, padding:"0 16px", height:28, borderBottom:"1px solid rgba(255,255,255,0.05)", background:"rgba(255,255,255,0.01)", flexShrink:0, overflowX:"auto" }}>
+                <span style={{ fontSize:8, fontWeight:900, letterSpacing:"0.12em", color:"rgba(255,255,255,0.25)", fontFamily:"'Space Mono',monospace", flexShrink:0 }}>ACTIVE</span>
+                {activeInstruments.map(([sym, sess]) => {
+                  const t1 = sess.tier1 || false;
+                  const t2 = sess.tier2 || false;
+                  const isCurrentInstrument = sym === instrument;
+                  const statusColor = t2 ? "#ff6bff" : t1 ? "#ffd166" : "#00e5ff";
+                  const statusText = t2 ? "T2 ✓" : t1 ? "T1 ✓" : "watching";
+                  return (
+                    <button key={sym} onClick={() => setInstrument(sym)}
+                      style={{ display:"flex", alignItems:"center", gap:5, padding:"2px 8px", borderRadius:12, border:`1px solid ${isCurrentInstrument ? statusColor+"66" : "rgba(255,255,255,0.1)"}`, background: isCurrentInstrument ? statusColor+"14" : "rgba(255,255,255,0.03)", cursor:"pointer", flexShrink:0, fontFamily:"inherit" }}>
+                      <span style={{ fontSize:9, fontWeight:900, color: isCurrentInstrument ? statusColor : "rgba(255,255,255,0.5)", letterSpacing:"0.06em" }}>{sym}</span>
+                      <span style={{ fontSize:8, fontWeight:700, color: isCurrentInstrument ? statusColor : "rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace" }}>{statusText}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })()}
+
           {/* ── TWO COLUMN BODY ── */}
           <div style={{ flex: 1, display: "flex", flexDirection: isMobile ? "column" : "row", overflow: "hidden" }}>
 
@@ -7254,40 +7280,40 @@ Use ONLY these times. All earlier time references in this conversation are stale
               {messages.filter(m=>m.role==="user").length < 30 && (() => {
                 const dir = plan?.bias === "SHORT" ? "below" : "above";
                 const trigger = plan?.trigger_level || "trigger";
-                const isShortBias = plan?.bias === "SHORT";
 
-                // Contextual buttons based on tier state
                 const quickActions = !tier1 ? [
-                  // Pre-Tier 1 — waiting for break
-                  { label: `30M closed ${dir} ${trigger}`, msg: `30M closed ${dir} ${trigger}` },
-                  { label: "Wick only — no close", msg: "It was a wick, not a close" },
+                  { label: `Closed ${dir} ${trigger}`, msg: `30M closed ${dir} ${trigger} at `, needsPrice: true },
+                  { label: "Wick only", msg: "It was a wick, not a close" },
                   { label: "Didn't confirm", msg: `30M did not close ${dir} ${trigger}` },
-                  { label: "Is this still valid?", msg: "Is this setup still valid?" },
+                  { label: "Still valid?", msg: "Is this setup still valid?" },
                 ] : !tier2 ? [
-                  // Post-Tier 1 — waiting for retest/Tier 2
                   { label: "Retest holding", msg: "Price is retesting and holding the level" },
                   { label: "Retest failed", msg: "Retest failed — price broke back through" },
-                  { label: `30M closed ${dir} ${trigger}`, msg: `Tier 2 — 30M closed ${dir} ${trigger}` },
-                  { label: "Should I move stop?", msg: "Should I move my stop to breakeven?" },
+                  { label: `T2 closed ${dir}`, msg: `Tier 2 — 30M closed ${dir} ${trigger} at `, needsPrice: true },
+                  { label: "Move stop?", msg: "Should I move my stop to breakeven?" },
                 ] : [
-                  // Post-Tier 2 — order placed
-                  { label: "Limit order placed", msg: "Limit order is placed" },
+                  { label: "Limit placed", msg: "Limit order is placed" },
                   { label: "Order cancelled", msg: "I cancelled the order" },
-                  { label: "Session closing soon", msg: "Session is about to close — what do I do?" },
-                  { label: "Trade hit TP1", msg: "Price hit TP1" },
+                  { label: "Session closing", msg: "Session is about to close — what do I do?" },
+                  { label: "Hit TP1", msg: "Price hit TP1" },
                 ];
 
                 return (
-                  <div style={{ padding:"6px 16px 0", display:"flex", gap:6, flexWrap:"wrap" }}>
+                  <div style={{ padding:"6px 16px 0", display:"flex", gap:6, flexWrap:"wrap", alignItems:"center" }}>
                     {quickActions.map((a, i) => (
                       <button key={i} onClick={() => {
                         setInput(a.msg);
-                        setTimeout(() => inputRef.current?.focus(), 50);
+                        setTimeout(() => {
+                          if (inputRef.current) {
+                            inputRef.current.focus();
+                            inputRef.current.setSelectionRange(a.msg.length, a.msg.length);
+                          }
+                        }, 50);
                       }}
-                        style={{ fontSize:10, fontWeight:700, padding:"5px 10px", borderRadius:20, border:"1px solid rgba(255,255,255,0.12)", background:"rgba(255,255,255,0.04)", color:"rgba(255,255,255,0.6)", cursor:"pointer", fontFamily:"'Space Mono',monospace", letterSpacing:"0.04em", whiteSpace:"nowrap", transition:"all 0.15s" }}
-                        onMouseEnter={e => { e.target.style.background="rgba(255,107,255,0.1)"; e.target.style.borderColor="rgba(255,107,255,0.3)"; e.target.style.color="#ff6bff"; }}
-                        onMouseLeave={e => { e.target.style.background="rgba(255,255,255,0.04)"; e.target.style.borderColor="rgba(255,255,255,0.12)"; e.target.style.color="rgba(255,255,255,0.6)"; }}>
-                        {a.label}
+                        style={{ fontSize:10, fontWeight:700, padding:"5px 10px", borderRadius:20, border:`1px solid ${a.needsPrice ? "rgba(0,229,255,0.3)" : "rgba(255,255,255,0.12)"}`, background: a.needsPrice ? "rgba(0,229,255,0.06)" : "rgba(255,255,255,0.04)", color: a.needsPrice ? "#00e5ff" : "rgba(255,255,255,0.6)", cursor:"pointer", fontFamily:"'Space Mono',monospace", letterSpacing:"0.04em", whiteSpace:"nowrap", transition:"all 0.15s" }}
+                        onMouseEnter={e => { e.currentTarget.style.background=a.needsPrice?"rgba(0,229,255,0.12)":"rgba(255,107,255,0.1)"; e.currentTarget.style.borderColor=a.needsPrice?"rgba(0,229,255,0.5)":"rgba(255,107,255,0.3)"; e.currentTarget.style.color=a.needsPrice?"#00e5ff":"#ff6bff"; }}
+                        onMouseLeave={e => { e.currentTarget.style.background=a.needsPrice?"rgba(0,229,255,0.06)":"rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor=a.needsPrice?"rgba(0,229,255,0.3)":"rgba(255,255,255,0.12)"; e.currentTarget.style.color=a.needsPrice?"#00e5ff":"rgba(255,255,255,0.6)"; }}>
+                        {a.label}{a.needsPrice ? " + price" : ""}
                       </button>
                     ))}
                   </div>
