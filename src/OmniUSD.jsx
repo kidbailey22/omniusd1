@@ -2627,7 +2627,7 @@ Tier 1 confirmed strong:
 "Tier 1 confirmed at [price].\nWatch the [next time] close for Tier 2."
 
 Tier 1 confirmed barely:
-"Tier 1 confirmed at [price] — narrow margin.\nTier 2 needs to hold clean. Watch the [next time] close."
+"Tier 1 confirmed at [price] — narrow margin.\nWatch the [next time] close closely for Tier 2."
 
 Candle didn't confirm:
 "[Time] closed ${plan.bias==="SHORT"?"above":"below"} ${plan.trigger_level}. Not confirmed.\n[Next time] is the next window."
@@ -6106,6 +6106,46 @@ Use ONLY these times. All earlier time references in this conversation are stale
         )}
       </header>
 
+      {/* ── DRAWER — renders for both mobile and desktop ── */}
+      {drawerOpen && !isMobile && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 200 }} onClick={() => setDrawerOpen(false)}>
+          <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}/>
+          <div onClick={e => e.stopPropagation()}
+            style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: 240, background: "#1e1a35", borderLeft: "1px solid rgba(255,107,255,0.2)", display: "flex", flexDirection: "column", animation: "slide 0.2s ease both" }}>
+            <div style={{ padding: "18px 20px 14px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                <OmniLogo size={24} />
+                <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.1em", background: "linear-gradient(90deg,#ff6bff,#00e5ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>OmniUSD</span>
+              </div>
+              <button onClick={() => setDrawerOpen(false)} style={{ background: "none", border: "none", color: "#8878aa", cursor: "pointer", fontSize: 18, lineHeight: 1 }}>×</button>
+            </div>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 0" }}>
+              {[
+                { label: "Chart Setup", icon: "📐", action: () => { setAppPage("chartsetup"); setDrawerOpen(false); }, active: appPage === "chartsetup", color: "#ffd166" },
+                { label: "History", icon: "📋", action: () => { setAppPage("history"); setDrawerOpen(false); }, active: appPage === "history", color: "#7fff6b" },
+                { label: "Results", icon: "📈", action: () => { setAppPage("results"); setDrawerOpen(false); }, active: appPage === "results", color: "#00ccff" },
+                { label: "Settings", icon: "⚙", action: () => { setAppPage("settings"); setDrawerOpen(false); }, active: appPage === "settings", color: "#ff6bff" },
+                { label: "Help & FAQ", icon: "?", action: () => { setAppPage("faq"); setDrawerOpen(false); }, active: appPage === "faq", color: "#00e5ff" },
+                ...(OWNER_EMAILS.includes(profile?.email) ? [{ label: "Log Trade", icon: "✏", action: () => { setAppPage("tradelog"); setDrawerOpen(false); }, active: appPage === "tradelog", color: "#cc44ff" }] : []),
+                ...(phase === "live" ? [
+                  { label: "View Plan", icon: "📄", action: () => { setPhase("plan"); setDrawerOpen(false); }, color: "#ffd166" },
+                  { label: "New Analysis", icon: "↩", action: () => { setPhase("upload"); setImages(Array(4).fill(null)); setDrawerOpen(false); }, color: "rgba(255,255,255,0.6)" },
+                ] : []),
+              ].map((item, i) => (
+                <button key={i} onClick={item.action}
+                  style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px 20px", background: item.active ? "rgba(255,107,255,0.08)" : "none", border: "none", cursor: "pointer", fontFamily: "inherit", textAlign: "left", borderLeft: item.active ? "2px solid #ff6bff" : "2px solid transparent" }}>
+                  <span style={{ fontSize: 14, width: 20, textAlign: "center", flexShrink: 0 }}>{item.icon}</span>
+                  <span style={{ fontSize: 13, fontWeight: item.active ? 700 : 500, color: item.active ? "#f0ecff" : (item.color || "#8878aa") }}>{item.label}</span>
+                </button>
+              ))}
+            </div>
+            <div style={{ padding: "14px 20px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+              {onSignOut && <button onClick={() => { onSignOut(); setDrawerOpen(false); }} style={{ fontSize: 13, color: "rgba(255,107,107,0.6)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>Sign out</button>}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ══ SETTINGS PAGE ══════════════════════════════════════════════════════ */}
       {appPage === "settings" && (
         <SettingsPage profile={profile} onSignOut={onSignOut} onClose={() => setAppPage("dashboard")} />
@@ -7232,7 +7272,10 @@ Use ONLY these times. All earlier time references in this conversation are stale
             {/* ── RIGHT COLUMN — structured execution feed ── */}
             <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
-              {/* ── ZONE 1: CURRENT INSTRUCTION — what to do RIGHT NOW ── */}
+              {/* ── COMMAND BLOCK: Current Instruction + Latest Update ── */}
+              <div style={{ flexShrink: 0, borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(0,0,0,0.15)" }}>
+
+              {/* ── ZONE 1: CURRENT INSTRUCTION ── */}
               {(() => {
                 const sp = v => { const m = String(v||"").match(/^([0-9,]+(?:\.[0-9]+)?)/); return m ? m[1] : v; };
                 const dir = plan?.bias === "SHORT" ? "below" : "above";
@@ -7318,22 +7361,16 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 const next = slots.find(s => nowMins < s.m);
 
                 return (
-                  <div style={{ display:"flex", gap:0, borderBottom: "1px solid rgba(255,255,255,0.05)", flexShrink: 0 }}>
-                  <div style={{ flex:1, padding: "12px 18px" }}>
+                  <div style={{ flexShrink: 0 }}>
+                  <div style={{ padding: "12px 18px" }}>
                       <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.18em", color: tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#8878aa", marginBottom: 6, fontFamily: "'Space Mono',monospace" }}>LATEST UPDATE</div>
                       <div style={{ fontSize: 14, fontWeight: 700, color: tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "rgba(255,255,255,0.7)", fontFamily: "'Space Mono',monospace", lineHeight: 1.5 }}>{firstLine}</div>
                       {milestone.time && <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", marginTop: 4, fontFamily: "'Space Mono',monospace" }}>{milestone.time} CT</div>}
                     </div>
-                    {next && !tier2 && (
-                      <div style={{ padding: "10px 18px", borderLeft:"1px solid rgba(255,255,255,0.06)", textAlign:"center", minWidth:90 }}>
-                        <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.18em", color: "#00e5ff", marginBottom: 4, fontFamily: "'Space Mono',monospace" }}>NEXT CHECK</div>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: "#00e5ff", fontFamily: "'Space Mono',monospace" }}>{next.t}</div>
-                        <div style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", marginTop: 2, fontFamily: "'Space Mono',monospace" }}>CT</div>
-                      </div>
-                    )}
                   </div>
                 );
               })()}
+              </div>{/* end COMMAND BLOCK */}
 
               {/* ── ZONE 3: SESSION LOG — milestones only, no transcript ── */}
               <div style={{ flex: 1, overflowY: "auto", padding: "12px 18px 6px" }}>
@@ -7375,7 +7412,8 @@ Use ONLY these times. All earlier time references in this conversation are stale
                       .replace(/<!--SIGNAL:.*?-->/gs, "")
                       .replace(/\*\*(.*?)\*\*/g, "$1")
                       .split("\n").find(l => l.trim()) || "";
-                    if (!firstLine) return;
+                    // Skip uncertain/negative language lines
+                    if (/barely|right —|squeaked|narrow margin|doesn't count/i.test(firstLine)) return;
                     const key = firstLine.slice(0, 50);
                     if (seenContent.has(key)) return;
                     seenContent.add(key);
@@ -7448,7 +7486,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                         style={{ fontSize:10, fontWeight:700, padding:"5px 10px", borderRadius:20, border:`1px solid ${a.needsPrice ? "rgba(0,229,255,0.3)" : "rgba(255,255,255,0.12)"}`, background: a.needsPrice ? "rgba(0,229,255,0.06)" : "rgba(255,255,255,0.04)", color: a.needsPrice ? "#00e5ff" : "rgba(255,255,255,0.6)", cursor:"pointer", fontFamily:"'Space Mono',monospace", letterSpacing:"0.04em", whiteSpace:"nowrap", transition:"all 0.15s" }}
                         onMouseEnter={e => { e.currentTarget.style.background=a.needsPrice?"rgba(0,229,255,0.12)":"rgba(255,107,255,0.1)"; e.currentTarget.style.borderColor=a.needsPrice?"rgba(0,229,255,0.5)":"rgba(255,107,255,0.3)"; e.currentTarget.style.color=a.needsPrice?"#00e5ff":"#ff6bff"; }}
                         onMouseLeave={e => { e.currentTarget.style.background=a.needsPrice?"rgba(0,229,255,0.06)":"rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor=a.needsPrice?"rgba(0,229,255,0.3)":"rgba(255,255,255,0.12)"; e.currentTarget.style.color=a.needsPrice?"#00e5ff":"rgba(255,255,255,0.6)"; }}>
-                        {a.label}{a.needsPrice ? " + price" : ""}
+                        {a.label}
                       </button>
                     ))}
                   </div>
@@ -7488,7 +7526,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 return (
                   <div style={{ flexShrink:0, borderTop:"1px solid rgba(255,255,255,0.06)" }}>
                     <button onClick={() => setShowChart(c => !c)}
-                      style={{ width:"100%", padding:"7px 14px", background:"rgba(255,255,255,0.02)", border:"none", color:"rgba(255,255,255,0.4)", fontSize:11, fontWeight:700, letterSpacing:"0.1em", fontFamily:"'Space Mono',monospace", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                      style={{ width:"100%", padding:"7px 14px", background: showChart ? "rgba(255,255,255,0.02)" : "rgba(127,255,107,0.05)", border:"none", borderTop: showChart ? "none" : "1px solid rgba(127,255,107,0.15)", color: showChart ? "rgba(255,255,255,0.4)" : "#7fff6b", fontSize:11, fontWeight:700, letterSpacing:"0.1em", fontFamily:"'Space Mono',monospace", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"space-between", animation: showChart ? "none" : "goldPulse 2s ease-in-out infinite" }}>
                       <span>📊 {showChart ? "HIDE CHART" : "SHOW CHART"}</span>
                       <span style={{ fontSize:9 }}>{showChart ? "▴" : "▾"}</span>
                     </button>
