@@ -2624,10 +2624,10 @@ Never ask them to rephrase. If you're not 100% sure what they mean, make your be
 ━━━ WHAT YOU SAY FOR KEY MOMENTS ━━━
 
 Tier 1 confirmed strong:
-"Tier 1 confirmed above ${plan.trigger_level}.\nSend the candle close. Watch the [next time] close for Tier 2."
+"Tier 1 confirmed at [price].\nWatch the [next time] close for Tier 2."
 
 Tier 1 confirmed barely:
-"Tier 1 confirmed — tight close at [price].\nTier 2 needs to hold clean. Watch [next time]."
+"Tier 1 confirmed at [price] — narrow margin.\nTier 2 needs to hold clean. Watch the [next time] close."
 
 Candle didn't confirm:
 "[Time] closed ${plan.bias==="SHORT"?"above":"below"} ${plan.trigger_level}. Not confirmed.\n[Next time] is the next window."
@@ -7244,11 +7244,38 @@ Use ONLY these times. All earlier time references in this conversation are stale
             {/* ── RIGHT COLUMN — structured execution feed ── */}
             <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
-              {/* ── ZONE 1: CURRENT INSTRUCTION ── */}
+              {/* ── ZONE 1: CURRENT INSTRUCTION — what to do RIGHT NOW ── */}
               {(() => {
-                const lastOmni = [...messages].reverse().find(m => m.role === "assistant" && !m.content?.includes("Connection interrupted"));
-                const clean = lastOmni
-                  ? lastOmni.content
+                const sp = v => { const m = String(v||"").match(/^([0-9,]+(?:\.[0-9]+)?)/); return m ? m[1] : v; };
+                const dir = plan?.bias === "SHORT" ? "below" : "above";
+                const trig = sp(plan?.trigger_level) || "the trigger level";
+
+                // Build a clean instruction based on tier state — never repeat the latest update
+                let lines = [];
+                if (tier2) {
+                  lines = ["Limit order placed.", "Hands off. Let the trade work."];
+                } else if (tier1) {
+                  // Pull next close time from the tracker
+                  const ctNow = new Date(new Date().toLocaleString("en-US",{timeZone:"America/Chicago"}));
+                  const nowMins = ctNow.getHours()*60+ctNow.getMinutes();
+                  const slots = [{t:"9:00 AM",m:9*60},{t:"9:30 AM",m:9*60+30},{t:"10:00 AM",m:10*60},{t:"10:30 AM",m:10*60+30}];
+                  const next = slots.find(s => nowMins < s.m);
+                  const nextLabel = next ? next.t : "10:30 AM";
+                  lines = [
+                    `Watch the ${nextLabel} close for Tier 2.`,
+                    `If it closes ${dir} ${trig}, place the limit.`,
+                    "If not, wait.",
+                  ];
+                } else {
+                  // Find last instruction from Omni that isn't a tier confirm
+                  const lastOmni = [...messages].reverse().find(m =>
+                    m.role === "assistant" &&
+                    !m.content?.includes("Connection interrupted") &&
+                    !m.content?.includes("Tier 1 confirmed") &&
+                    !m.content?.includes("Tier 2 confirmed")
+                  );
+                  if (lastOmni) {
+                    const clean = lastOmni.content
                       .replace(/<!--SIGNAL:.*?-->/gs, "")
                       .replace(/\*\*(NEXT ACTION)\*\*/g, "")
                       .replace(/\*\*(.*?)\*\*/g, "$1")
@@ -7256,110 +7283,122 @@ Use ONLY these times. All earlier time references in this conversation are stale
                       .replace(/^NEXT ACTION[^\n]*\n+/i, "")
                       .replace(/🕐 Next check:.*$/m, "")
                       .replace(/📋 Activated from Soft Pass.*$/m, "")
-                      .trim()
-                  : null;
+                      .trim();
+                    lines = clean.split("\n").filter(l => l.trim()).slice(0, 4);
+                  } else {
+                    lines = [
+                      `Watch the next 30M close ${dir} ${trig}.`,
+                      "If it confirms — send the close.",
+                      "If not — send the closing price.",
+                      "Wicks don't count.",
+                    ];
+                  }
+                }
 
-                const instruction = clean || (messages.length === 0
-                  ? `Watch the next 30M close ${plan?.bias === "SHORT" ? "below" : "above"} ${plan?.trigger_level || "the trigger level"}.\nIf it confirms — send the close.\nIf not — send the closing price.\nWicks don't count.`
-                  : null);
-
-                if (!instruction) return null;
                 return (
                   <div style={{ padding: "14px 18px", borderBottom: "1px solid rgba(255,255,255,0.07)", background: "rgba(0,229,255,0.025)", flexShrink: 0 }}>
                     <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.18em", color: "#00e5ff", marginBottom: 8, fontFamily: "'Space Mono',monospace" }}>CURRENT INSTRUCTION</div>
-                    <div style={{ fontSize: 14, color: "#f0ecff", lineHeight: 1.8, fontFamily: "'Space Mono',monospace", whiteSpace: "pre-line" }}>{instruction}</div>
+                    {lines.map((line, i) => (
+                      <div key={i} style={{ fontSize: 14, color: i === 0 ? "#f0ecff" : "rgba(255,255,255,0.6)", lineHeight: 1.8, fontFamily: "'Space Mono',monospace" }}>{line}</div>
+                    ))}
                   </div>
                 );
               })()}
 
-              {/* ── ZONE 2: LATEST CONFIRMED UPDATE ── */}
+              {/* ── ZONE 2: LATEST UPDATE — last confirmed milestone, distinct from instruction ── */}
               {(() => {
-                // Find the last meaningful Omni milestone (tier confirm, limit placed, etc.)
                 const milestone = [...messages].reverse().find(m =>
                   m.role === "assistant" &&
                   !m.content?.includes("Connection interrupted") &&
-                  (m.content?.toLowerCase().includes("tier 1") ||
-                   m.content?.toLowerCase().includes("tier 2") ||
-                   m.content?.toLowerCase().includes("limit") ||
-                   m.content?.toLowerCase().includes("confirmed") ||
-                   m.content?.toLowerCase().includes("retest") ||
-                   m.content?.toLowerCase().includes("stop") ||
+                  (m.content?.toLowerCase().includes("tier 1 confirmed") ||
+                   m.content?.toLowerCase().includes("tier 2 confirmed") ||
+                   m.content?.toLowerCase().includes("place limit") ||
+                   m.content?.toLowerCase().includes("order in") ||
+                   m.content?.toLowerCase().includes("retest failed") ||
                    m.content?.toLowerCase().includes("invalid"))
                 );
-                if (!milestone || messages.length === 0) return null;
+                if (!milestone) return null;
                 const firstLine = milestone.content
                   .replace(/<!--SIGNAL:.*?-->/gs, "")
                   .replace(/\*\*(.*?)\*\*/g, "$1")
                   .split("\n").find(l => l.trim()) || "";
+
+                // Also show NEXT CHECK block
+                const ctNow = new Date(new Date().toLocaleString("en-US",{timeZone:"America/Chicago"}));
+                const nowMins = ctNow.getHours()*60+ctNow.getMinutes();
+                const slots = [{t:"9:00 AM",m:9*60},{t:"9:30 AM",m:9*60+30},{t:"10:00 AM",m:10*60},{t:"10:30 AM",m:10*60+30}];
+                const next = slots.find(s => nowMins < s.m);
+
                 return (
-                  <div style={{ padding: "10px 18px", borderBottom: "1px solid rgba(255,255,255,0.05)", flexShrink: 0 }}>
-                    <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.18em", color: tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#8878aa", marginBottom: 4, fontFamily: "'Space Mono',monospace" }}>LATEST UPDATE</div>
-                    <div style={{ fontSize: 13, color: tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "rgba(255,255,255,0.7)", fontFamily: "'Space Mono',monospace", lineHeight: 1.5 }}>{firstLine}</div>
-                    {milestone.time && <div style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", marginTop: 3, fontFamily: "'Space Mono',monospace" }}>{milestone.time} CT</div>}
+                  <div style={{ display:"flex", gap:0, borderBottom: "1px solid rgba(255,255,255,0.05)", flexShrink: 0 }}>
+                    <div style={{ flex:1, padding: "10px 18px" }}>
+                      <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.18em", color: tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "#8878aa", marginBottom: 4, fontFamily: "'Space Mono',monospace" }}>LATEST UPDATE</div>
+                      <div style={{ fontSize: 13, color: tier2 ? "#7fff6b" : tier1 ? "#ffd166" : "rgba(255,255,255,0.7)", fontFamily: "'Space Mono',monospace", lineHeight: 1.5 }}>{firstLine}</div>
+                      {milestone.time && <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", marginTop: 3, fontFamily: "'Space Mono',monospace" }}>{milestone.time} CT</div>}
+                    </div>
+                    {next && !tier2 && (
+                      <div style={{ padding: "10px 18px", borderLeft:"1px solid rgba(255,255,255,0.06)", textAlign:"center", minWidth:90 }}>
+                        <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: "0.18em", color: "#00e5ff", marginBottom: 4, fontFamily: "'Space Mono',monospace" }}>NEXT CHECK</div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: "#00e5ff", fontFamily: "'Space Mono',monospace" }}>{next.t}</div>
+                        <div style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", marginTop: 2, fontFamily: "'Space Mono',monospace" }}>CT</div>
+                      </div>
+                    )}
                   </div>
                 );
               })()}
 
-              {/* ── ZONE 3: SESSION MILESTONES — key events only ── */}
-              <div style={{ flex: 1, overflowY: "auto", padding: "10px 18px 6px" }}>
+              {/* ── ZONE 3: SESSION LOG — milestones only, no transcript ── */}
+              <div style={{ flex: 1, overflowY: "auto", padding: "12px 18px 6px" }}>
                 {messages.length === 0 && (
-                  <div style={{ color:"rgba(255,255,255,0.2)", fontSize:11, marginTop:20, fontFamily:"'Space Mono',monospace", lineHeight:1.8 }}>
+                  <div style={{ color:"rgba(255,255,255,0.2)", fontSize:11, marginTop:16, fontFamily:"'Space Mono',monospace", lineHeight:1.8 }}>
                     Session open. Watching for first 30M close.
                   </div>
                 )}
-                {/* Build milestone list — only meaningful events, no errors, no duplicates */}
                 {(() => {
                   const milestones = [];
                   const seenContent = new Set();
                   messages.forEach((msg, i) => {
-                    // Skip connection errors
                     if (msg.content?.includes("Connection interrupted")) return;
                     if (msg.content?.includes("Empty response")) return;
-                    // Skip the opening NEXT ACTION message — it's in Zone 1
-                    if (msg.role === "assistant" && msg.content?.includes("NEXT ACTION") && i === 0) return;
-                    // For user messages — only show if meaningful (not duplicates)
-                    const cleanText = (msg.content || "")
+                    // Only show Omni milestone lines — skip user messages from log
+                    if (msg.role === "user") return;
+                    // Skip opening NEXT ACTION
+                    if (msg.content?.includes("NEXT ACTION") && i <= 1) return;
+                    const firstLine = (msg.content || "")
                       .replace(/\[CURRENT TIME[\s\S]*?---\n/g, "")
                       .replace(/<!--SIGNAL:.*?-->/gs, "")
                       .replace(/\*\*(.*?)\*\*/g, "$1")
-                      .replace(/\*(.*?)\*/g, "$1")
-                      .trim();
-                    if (!cleanText) return;
-                    // Deduplicate by content
-                    const key = cleanText.slice(0, 60);
+                      .split("\n").find(l => l.trim()) || "";
+                    if (!firstLine) return;
+                    const key = firstLine.slice(0, 50);
                     if (seenContent.has(key)) return;
                     seenContent.add(key);
-                    milestones.push({ ...msg, cleanText });
+                    milestones.push({ time: msg.time, line: firstLine });
                   });
-
                   if (milestones.length === 0) return null;
-                  return milestones.map((msg, i) => {
-                    const isUser = msg.role === "user";
-                    const isLast = i === milestones.length - 1;
-                    return (
-                      <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 8, opacity: isLast ? 1 : 0.5 }}>
-                        <span style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", fontFamily:"'Space Mono',monospace", marginTop: 2, flexShrink: 0, minWidth: 36 }}>{msg.time}</span>
-                        <div style={{ flex: 1 }}>
-                          {isUser
-                            ? <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontFamily:"inherit", lineHeight: 1.5 }}>↑ {msg.cleanText}</div>
-                            : <div style={{ fontSize: 12, color: "#ccc4e8", fontFamily: "'Space Mono',monospace", lineHeight: 1.6 }}>{msg.cleanText.split("\n")[0]}</div>
-                          }
+                  return (
+                    <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                      <div style={{ fontSize:8, fontWeight:900, letterSpacing:"0.14em", color:"rgba(255,255,255,0.2)", fontFamily:"'Space Mono',monospace", marginBottom:4 }}>SESSION LOG</div>
+                      {milestones.map((m, i) => (
+                        <div key={i} style={{ display:"flex", gap:10, alignItems:"flex-start" }}>
+                          <span style={{ fontSize:9, color:"rgba(255,255,255,0.2)", fontFamily:"'Space Mono',monospace", flexShrink:0, minWidth:36 }}>{m.time}</span>
+                          <span style={{ fontSize:12, color:"rgba(255,255,255,0.5)", fontFamily:"'Space Mono',monospace", lineHeight:1.5 }}>{m.line}</span>
                         </div>
-                      </div>
-                    );
-                  });
+                      ))}
+                    </div>
+                  );
                 })()}
                 {loading && (
-                  <div style={{ display: "flex", gap: 4, padding: "4px 0", marginLeft: 46 }}>
+                  <div style={{ display: "flex", gap: 4, padding: "8px 0", marginLeft: 46 }}>
                     {[0,1,2].map(d => <span key={d} style={{ width:4, height:4, borderRadius:"50%", background:"#00e5ff", animation:`pulse 1s ease ${d*0.2}s infinite`, display:"inline-block" }}/>)}
                   </div>
                 )}
                 <div ref={bottomRef}/>
               </div>
 
-              {/* ── CONNECTION ERROR BANNER — inline, near input, not in feed ── */}
+              {/* ── CONNECTION ERROR BANNER ── */}
               {messages.length > 0 && messages[messages.length-1]?.content?.includes("Connection interrupted") && (
-                <div style={{ margin:"0 16px 4px", padding:"6px 12px", background:"rgba(255,107,107,0.08)", border:"1px solid rgba(255,107,107,0.2)", borderRadius:6, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                <div style={{ margin:"0 16px 4px", padding:"6px 12px", background:"rgba(255,107,107,0.08)", border:"1px solid rgba(255,107,107,0.2)", borderRadius:6, display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
                   <span style={{ fontSize:11, color:"rgba(255,107,107,0.8)", fontFamily:"'Space Mono',monospace" }}>⚠ Connection interrupted — retype your message</span>
                   <button onClick={() => sendMessage()} style={{ fontSize:10, color:"#ff6b6b", background:"none", border:"none", cursor:"pointer", fontFamily:"'Space Mono',monospace", fontWeight:700 }}>RETRY</button>
                 </div>
@@ -7379,7 +7418,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 ] : !tier2 ? [
                   { label: "Retest holding", msg: "Price is retesting and holding the level" },
                   { label: "Retest failed", msg: "Retest failed — price broke back through" },
-                  { label: `Tier 2 confirmed · ${_t}`, msg: `Tier 2 — 30M closed ${dir} ${_t} at `, needsPrice: true },
+                  { label: `Tier 2 above ${_t}`, msg: `Tier 2 — 30M closed ${dir} ${_t} at `, needsPrice: true },
                   { label: "Move stop?", msg: "Should I move my stop to breakeven?" },
                 ] : [
                   { label: "Limit order placed", msg: "Limit order is placed" },
