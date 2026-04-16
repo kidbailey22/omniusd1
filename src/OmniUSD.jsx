@@ -2992,7 +2992,7 @@ function SettingsPage({profile, onSignOut, onClose}) {
                   {JSON.parse(localStorage.getItem("omniusd_prop_firm_mode")||"false") ? "✓ Prop firm mode ON" : "Prop firm mode OFF"}
                 </div>
                 <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"rgba(255,255,255,0.35)",marginTop:2}}>
-                  {JSON.parse(localStorage.getItem("omniusd_prop_firm_mode")||"false") ? "Chart shows: MGC · NQ · YM · ES · MSI" : "Chart shows: XAUUSD · NQ · YM · ES · MSI"}
+                  {JSON.parse(localStorage.getItem("omniusd_prop_firm_mode")||"false") ? "Chart shows: MGC · NQ · YM · ES · SI" : "Chart shows: XAUUSD · NQ · YM · ES · SI"}
                 </div>
               </div>
               <button onClick={() => {
@@ -6374,7 +6374,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
 
               const propFirmTickers = {
                 XAUUSD: "MGC", EURUSD: "6E", NAS100: "NQ",
-                US30: "YM", XAGUSD: "MSI", US500: "ES",
+                US30: "YM", XAGUSD: "SI", US500: "ES",
               };
 
               return (
