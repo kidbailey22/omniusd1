@@ -134,13 +134,13 @@ const supabase = (() => {
 // ─── Sample trades ─────────────────────────────────────────────────────────
 const SAMPLE_TRADES = [
   { id:1, date:"Mar 10, 2026", time:"9:14 AM",  instrument:"XAUUSD", direction:"LONG",  entry:2318.50, exit:2341.20, phase:"Continuation", d:"🐂", h4:"🐂", h1:"🐂", result:"WIN",  pnl:+22.7 },
-  { id:2, date:"Mar 07, 2026", time:"10:02 AM", instrument:"BTCUSD", direction:"SHORT", entry:88420,   exit:87100,   phase:"Retest",       d:"🐻", h4:"🐻", h1:"🐻", result:"WIN",  pnl:+18.3 },
-  { id:3, date:"Mar 05, 2026", time:"8:48 AM",  instrument:"USOIL",  direction:"LONG",  entry:71.40,   exit:70.90,   phase:"Break",        d:"🐂", h4:"🐂", h1:"🐻", result:"LOSS", pnl:-7.2  },
+  { id:2, date:"Mar 07, 2026", time:"10:02 AM", instrument:"EURUSD", direction:"SHORT", entry:88420,   exit:87100,   phase:"Retest",       d:"🐻", h4:"🐻", h1:"🐻", result:"WIN",  pnl:+18.3 },
+  { id:3, date:"Mar 05, 2026", time:"8:48 AM",  instrument:"XAGUSD",  direction:"LONG",  entry:71.40,   exit:70.90,   phase:"Break",        d:"🐂", h4:"🐂", h1:"🐻", result:"LOSS", pnl:-7.2  },
   { id:4, date:"Mar 03, 2026", time:"9:33 AM",  instrument:"XAUUSD", direction:"LONG",  entry:2295.00, exit:2318.40, phase:"Continuation", d:"🐂", h4:"🐂", h1:"🐂", result:"WIN",  pnl:+31.4 },
-  { id:5, date:"Feb 28, 2026", time:"11:15 AM", instrument:"BTCUSD", direction:"SHORT", entry:91200,   exit:89800,   phase:"Retest",       d:"🐻", h4:"🐻", h1:"🐻", result:"WIN",  pnl:+24.1 },
-  { id:6, date:"Feb 25, 2026", time:"9:05 AM",  instrument:"USOIL",  direction:"SHORT", entry:74.20,   exit:73.10,   phase:"Continuation", d:"🐻", h4:"🐻", h1:"🐻", result:"WIN",  pnl:+19.8 },
+  { id:5, date:"Feb 28, 2026", time:"11:15 AM", instrument:"EURUSD", direction:"SHORT", entry:91200,   exit:89800,   phase:"Retest",       d:"🐻", h4:"🐻", h1:"🐻", result:"WIN",  pnl:+24.1 },
+  { id:6, date:"Feb 25, 2026", time:"9:05 AM",  instrument:"XAGUSD",  direction:"SHORT", entry:74.20,   exit:73.10,   phase:"Continuation", d:"🐻", h4:"🐻", h1:"🐻", result:"WIN",  pnl:+19.8 },
   { id:7, date:"Feb 21, 2026", time:"10:44 AM", instrument:"XAUUSD", direction:"LONG",  entry:2271.80, exit:2268.50, phase:"Break",        d:"🐂", h4:"🐻", h1:"🐂", result:"LOSS", pnl:-8.1  },
-  { id:8, date:"Feb 19, 2026", time:"9:21 AM",  instrument:"BTCUSD", direction:"LONG",  entry:95400,   exit:97200,   phase:"Continuation", d:"🐂", h4:"🐂", h1:"🐂", result:"WIN",  pnl:+27.6 },
+  { id:8, date:"Feb 19, 2026", time:"9:21 AM",  instrument:"EURUSD", direction:"LONG",  entry:95400,   exit:97200,   phase:"Continuation", d:"🐂", h4:"🐂", h1:"🐂", result:"WIN",  pnl:+27.6 },
 ];
 const totalPnl   = SAMPLE_TRADES.reduce((s,t)=>s+t.pnl,0);
 const wins       = SAMPLE_TRADES.filter(t=>t.result==="WIN").length;
@@ -191,7 +191,7 @@ After a large break move, you look for:
 - Even a small bounce of $100–$500 qualifies as a retest
 - A 30M candle close in the break direction after the retest = CONTINUATION (Step 3) = YOUR ENTRY
 
-REAL EXAMPLE — BTCUSD MARCH 18, 2026 (A+ TRADE):
+REAL EXAMPLE — EURUSD MARCH 18, 2026 (A+ TRADE):
 Daily: BEARISH from $97,938. General says SHORT.
 $76,012 = liquidity grab / failed breakout. Institutions rejected price hard.
 Flush from $76,012 → $71,723 = the BREAK ✅
@@ -238,14 +238,14 @@ PHASE DETECTION RULES:
 DO NOT anchor to levels from previous sessions. Read the current chart fresh every time.
 The break level is always relative to WHERE PRICE IS RIGHT NOW — not where it was yesterday.
 
-REAL EXAMPLE (March 20 BTCUSD):
+REAL EXAMPLE (March 20 EURUSD):
 Chart shows: High 76,012 → Low 68,770 → Current price 70,604 (bouncing)
 The break DOWN already ran from 76,012 to 68,770. That is the Break.
 Current bounce 68,770 → 70,604 = the Retest forming.
 DO NOT say "wait for break below 71,723" — that level was broken 2 days ago.
 Correct read: RETEST phase. Watch for 30M close back below 70,000–70,200 for continuation short.
 
-REAL EXAMPLE (March 18 BTCUSD):
+REAL EXAMPLE (March 18 EURUSD):
 Chart shows: High 76,012 → flush to 71,723 → tiny bounce to 71,878 → current 71,878
 Break: 76,012 → 71,723 ✅
 Retest: bounce to 71,878 (only $155 — still valid) ✅  
@@ -272,15 +272,15 @@ STEP 1 — INSTRUMENT CHECK: Before checking timeframes, inspect all 4 charts fo
 
 ACCEPTED ALIASES — these ticker labels are valid for each instrument:
 - XAUUSD: XAUUSD, GOLD, GC, MGC, MGC1!, MGCM2026, MGCM6, MGCH2026, MGCU2026, MGCZ2026, XAU, GOLD/USD
-- BTCUSD: BTCUSD, BTC, BTCUSDT, BITCOIN, BTC/USD, BTCPERP
+- EURUSD: EURUSD, EUR/USD, EURUSD=X, FXEURUSD
 - NAS100: NAS100, NASDAQ, NQ, NQ1!, NQM2026, NQM6, NQH2026, NQU2026, NQZ2026, US100, NDX, USTEC, USTECH
 - US30: US30, DOW, YM, YM1!, YMM2026, YMM6, YMH2026, YMU2026, YMZ2026, DJIA, DJ30, WALL ST
-- USOIL: USOIL, WTI, CL, CL1!, CLM2026, CLK2026, CLK6, CLM6, CRUDE, OIL
+- XAGUSD: XAGUSD, SILVER, SI, SI1!, MSI, XAGUSD=X, SILVER/USD
 - US500: US500, SPX, ES, ES1!, ESM2026, ESM6, ESH2026, ESU2026, ESZ2026, SP500, SPX500, S&P500
 
 - If the ticker on the charts matches ANY of the accepted aliases for ${instrument}, set instrument_valid=true.
 - If the charts show a ticker that belongs to a DIFFERENT instrument entirely, set instrument_valid=false and instrument_detected= what you actually see. This is a HARD BLOCK — do NOT proceed with analysis.
-- Example: User selected XAUUSD but charts show USOIL or NAS100 → instrument_valid=false immediately.
+- Example: User selected XAUUSD but charts show XAGUSD or NAS100 → instrument_valid=false immediately.
 - If you cannot clearly identify the instrument on any chart, set instrument_valid=false with instrument_detected="unreadable".
 INSTRUMENT MISMATCH = hard block. Do NOT proceed with analysis if instrument_valid=false. Return the JSON with charts_valid=false and stop.
 
@@ -406,9 +406,9 @@ function isDevMode() {
 }
 
 const TIER_CONFIG = {
-  starter: { label:"Starter", price:"$29/mo", priceId:"price_1TEyC2EOq82Vh8foSZIKCsG9", instruments:["XAUUSD","BTCUSD"],         dailyCap:3,  color:"#ffd166" },
-  pro:     { label:"Pro",     price:"$39/mo", priceId:"price_1TEyEmEOq82Vh8foLEEFkBbV", instruments:["XAUUSD","BTCUSD","NAS100","US30"], dailyCap:5,  color:"#00e5ff" },
-  elite:   { label:"Elite",   price:"$59/mo", priceId:"price_1TEyHFEOq82Vh8fokJEvZNFn", instruments:["XAUUSD","BTCUSD","NAS100","US30","USOIL","US500"], dailyCap:10, color:"#ff6bff" },
+  starter: { label:"Starter", price:"$29/mo", priceId:"price_1TEyC2EOq82Vh8foSZIKCsG9", instruments:["XAUUSD","EURUSD"],         dailyCap:3,  color:"#ffd166" },
+  pro:     { label:"Pro",     price:"$39/mo", priceId:"price_1TEyEmEOq82Vh8foLEEFkBbV", instruments:["XAUUSD","EURUSD","NAS100","US30"], dailyCap:5,  color:"#00e5ff" },
+  elite:   { label:"Elite",   price:"$59/mo", priceId:"price_1TEyHFEOq82Vh8fokJEvZNFn", instruments:["XAUUSD","EURUSD","NAS100","US30","XAGUSD","US500"], dailyCap:10, color:"#ff6bff" },
 };
 
 const CURRENT_TIER = isDevMode() ? "elite" : "starter";
@@ -1320,8 +1320,8 @@ function Onboarding({onSelect}){
     {id:"XAUUSD", label:"Gold",    sub:"XAUUSD", color:"#ffd166"},
     {id:"NAS100", label:"Nasdaq",  sub:"NAS100",  color:"#00e5ff"},
     {id:"US30",   label:"Dow",     sub:"US30",    color:"#7fff6b"},
-    {id:"BTCUSD", label:"Bitcoin", sub:"BTCUSD",  color:"#ff9a3c"},
-    {id:"USOIL",  label:"Oil",     sub:"USOIL",   color:"#ff6b6b"},
+    {id:"EURUSD", label:"Euro/USD", sub:"EURUSD",  color:"#00e5ff"},
+    {id:"XAGUSD",  label:"Silver",   sub:"XAGUSD",   color:"#aaaacc"},
     {id:"US500",  label:"S&P 500", sub:"US500",   color:"#ff6bff"},
   ];
 
@@ -2155,7 +2155,7 @@ function getMarketStatus(instrument, session = "NY") {
   const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
   const day = now.getDay();
   const mins = now.getHours() * 60 + now.getMinutes();
-  const isBTC = instrument === "BTCUSD";
+  const isBTC = instrument === "EURUSD";
   const isXAU = instrument === "XAUUSD";
   const londonEligible = isBTC || isXAU;
 
@@ -2167,7 +2167,7 @@ function getMarketStatus(instrument, session = "NY") {
     return { open: false, state: "closed", reason: "Markets are closed.", comeback: "Next NY session: Monday at 8:30 AM CT." };
   }
 
-  // ── LONDON OPEN — BTCUSD + XAUUSD ONLY (2:00–4:00 AM CT) ─────────────
+  // ── LONDON OPEN — EURUSD + XAUUSD ONLY (2:00–4:00 AM CT) ─────────────
   if (mins >= 2 * 60 && mins < 4 * 60) {
     if (londonEligible) {
       return {
@@ -2248,7 +2248,7 @@ function getAnalysisPrompt(instrument, session = "NY", devMode = false) {
   const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
   const day = now.getDay();
   const nowMins = ct.mins;
-  const isBTC = instrument === "BTCUSD";
+  const isBTC = instrument === "EURUSD";
   const sessCfg = SESSION_CONFIG[session] || SESSION_CONFIG.NY;
   const fit = SESSION_INSTRUMENT_FIT[instrument]?.[session] || "ok";
   const advisory = SESSION_ADVISORIES[instrument]?.[session] || null;
@@ -2260,12 +2260,12 @@ function getAnalysisPrompt(instrument, session = "NY", devMode = false) {
   if (day === 6) {
     sessionContext = "TODAY IS SATURDAY. Traditional markets are CLOSED. No NY session today. No London session today.";
     if (isBTC) {
-      sessionContext += " BTCUSD trades 24/7 — next BRC execution window is Asian session (Sunday ~8:00 PM CT) or NY session (Monday ~8:30 AM CT).";
+      sessionContext += " EURUSD next BRC window: London open (2:00 AM CT) or NY session (8:30 AM CT).";
       sessionWarning = "Do NOT frame as NY session setup. Grade structure only. Note the correct next window.";
     }
   } else if (day === 0 && nowMins < 14 * 60) {
     sessionContext = "TODAY IS SUNDAY. Markets not yet open. Asian session opens ~8:00 PM CT.";
-    if (isBTC) sessionWarning = "Do NOT frame as NY session. Next window: Asian session tonight or NY Monday.";
+    if (isBTC) sessionWarning = "NY session is the primary window. London open also valid for EURUSD.";
   } else if (day === 0 && nowMins >= 14 * 60) {
     sessionContext = "TODAY IS SUNDAY. Asian session prep window — opens ~8:00 PM CT. NY session is Monday.";
   } else {
@@ -2368,7 +2368,7 @@ OmniUSD is a NEW YORK SESSION product. This is permanent and non-negotiable.
 
 PRIMARY EXECUTION WINDOW: NY Session ONLY — 8:30–10:30 AM CT. Hard cutoff 10:30 AM CT.
 PRE-MARKET SCOUT: 7:00–8:30 AM CT — analysis allowed, SCOUT grade only, no executable plan.
-LONDON EXCEPTION: BTCUSD and XAUUSD ONLY may be analyzed during London open (2:00–4:00 AM CT). Maximum grade B+. Always add size warning: "LONDON OPEN — Lower conviction than NY session. Reduce size."
+LONDON EXCEPTION: EURUSD and XAUUSD ONLY may be analyzed during London open (2:00–4:00 AM CT). Maximum grade B+. Always add size warning: "LONDON OPEN — Lower conviction than NY session. Reduce size."
 
 OUTSIDE NY WINDOW (all other instruments, all other times):
 - grade = "PASS"
@@ -2537,7 +2537,7 @@ function getLivePrompt(plan, session = "NY", devMode = false) {
   const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
   const day = now.getDay(); // 0=Sun, 1=Mon...6=Sat
   const nowMins = ct.mins;
-  const isBTC = plan.instrument === "BTCUSD";
+  const isBTC = plan.instrument === "EURUSD";
   const sessCfg = SESSION_CONFIG[session] || SESSION_CONFIG.NY;
 
   // Build accurate session status
@@ -2552,7 +2552,7 @@ function getLivePrompt(plan, session = "NY", devMode = false) {
     windowStatus = "SATURDAY — NO VALID SESSION ❌";
     sessionWarning = `CRITICAL CONTEXT — IT IS SATURDAY:
 - Traditional markets are CLOSED. No NY session, no London session.
-- Even BTCUSD has thin, choppy weekend volume with no institutional participation.
+- Even EURUSD has thinner weekend volume with no institutional participation.
 - THIS IS NOT A VALID BRC EXECUTION WINDOW.
 - If the trader asks about entering: tell them clearly — DO NOT TRADE NOW. Weekend moves are unreliable and do not count as BRC confirmations.
 - Next valid execution window: Sunday Asian session (~8:00 PM CT) OR Monday NY session (~8:30 AM CT).
@@ -2992,7 +2992,7 @@ function SettingsPage({profile, onSignOut, onClose}) {
                   {JSON.parse(localStorage.getItem("omniusd_prop_firm_mode")||"false") ? "✓ Prop firm mode ON" : "Prop firm mode OFF"}
                 </div>
                 <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:"rgba(255,255,255,0.35)",marginTop:2}}>
-                  {JSON.parse(localStorage.getItem("omniusd_prop_firm_mode")||"false") ? "Chart shows: MGC · NQ · YM · ES · CL" : "Chart shows: XAUUSD · NQ · YM · ES · CL"}
+                  {JSON.parse(localStorage.getItem("omniusd_prop_firm_mode")||"false") ? "Chart shows: MGC · NQ · YM · ES · MSI" : "Chart shows: XAUUSD · NQ · YM · ES · MSI"}
                 </div>
               </div>
               <button onClick={() => {
@@ -3266,7 +3266,7 @@ const SESSION_CONFIG = {
       { label: "11:30 PM ET", h: 23, m: 30 },
     ],
     candleMins: [20*60, 20*60+30, 21*60, 21*60+30, 22*60, 22*60+30],
-    desc: "Singapore/HK open. Best for BTCUSD.",
+    desc: "Singapore/HK open. Best for EURUSD.",
   },
   LONDON_NY: {
     label: "London/NY Overlap",
@@ -3294,10 +3294,10 @@ const SESSION_CONFIG = {
 // "best" = optimal, "ok" = valid with advisory, "block" = hard blocked
 const SESSION_INSTRUMENT_FIT = {
   XAUUSD:  { NY:"best", LONDON:"ok",    ASIAN:"ok",    LONDON_NY:"best" },
-  BTCUSD:  { NY:"best", LONDON:"ok",    ASIAN:"best",  LONDON_NY:"best" },
+  EURUSD:  { NY:"best", LONDON:"best",  ASIAN:"ok",    LONDON_NY:"best" },
   NAS100:  { NY:"best", LONDON:"block", ASIAN:"block", LONDON_NY:"best" },
   US30:    { NY:"best", LONDON:"block", ASIAN:"block", LONDON_NY:"best" },
-  USOIL:   { NY:"best", LONDON:"ok",    ASIAN:"ok",    LONDON_NY:"best" },
+  XAGUSD:  { NY:"best", LONDON:"ok",    ASIAN:"ok",    LONDON_NY:"best" },
   US500:   { NY:"best", LONDON:"block", ASIAN:"block", LONDON_NY:"best" },
 };
 
@@ -3306,17 +3306,17 @@ const SESSION_ADVISORIES = {
     LONDON: "XAUUSD trades in London but NY is where institutional money moves gold. Expect wider spreads and slower moves in London. BRC setups here are valid but less reliable.",
     ASIAN:  "XAUUSD has very thin liquidity in the Asian session. Moves can be choppy and misleading. BRC works best on XAUUSD during NY (8:30–10:30 AM CT) when volume is highest. Proceed with extra caution.",
   },
-  BTCUSD: {
-    LONDON: "BTCUSD trades 24/7 but London session can produce choppy moves before NY takes over. Valid for BRC but NY produces cleaner follow-through.",
-    ASIAN:  null, // no advisory — BTCUSD Asian is genuinely good
+  EURUSD: {
+    LONDON: "EURUSD is at its strongest during London session — this is the primary euro trading window. BRC setups here are valid. NY open adds a second momentum window.",
+    ASIAN:  "EURUSD has moderate Asian volume. Moves can be slower and less directional. NY session produces cleaner BRC follow-through.",
+  },
+  XAGUSD: {
+    LONDON: "Silver moves in London but the biggest institutional volume comes at NY open. London XAGUSD setups are valid but expect thinner follow-through.",
+    ASIAN:  "Silver has very thin volume in the Asian session. Wide spreads and low participation make BRC setups unreliable here.",
   },
   US500: {
     LONDON: "US500 is a US equity index. The US market is CLOSED during London session. No valid BRC execution here — NY session only.",
     ASIAN:  "US500 is a US equity index. The US market is CLOSED during the Asian session. NY session only.",
-  },
-  USOIL: {
-    LONDON: "USOIL moves in London but the biggest volume comes at the NY open — especially around the 9:30 AM EIA report. London USOIL setups are valid but lighter.",
-    ASIAN:  "USOIL has very thin volume in the Asian session. Wide spreads and low participation make BRC setups unreliable here.",
   },
 };
 
@@ -3842,7 +3842,7 @@ function TradeLoggerPage({ profile, onClose }) {
   const OWNER = OWNER_EMAILS[0];
   const isMobile = useWindowWidth() <= 768;
   const GRADES = ["A+","A","B","C","PASS"];
-  const INSTRUMENTS = ["XAUUSD","BTCUSD","NAS100","US30","USOIL","US500"];
+  const INSTRUMENTS = ["XAUUSD","EURUSD","NAS100","US30","XAGUSD","US500"];
   const RESULTS = ["WIN","LOSS","BE","PASS","MISSED","CANCELLED"];
 
   const empty = { instrument:"XAUUSD", grade:"A+", direction:"LONG", entry:"", stop:"", tp1:"", rr:"", result_usd:"", outcome:"WIN", note:"", trade_date: new Date().toISOString().slice(0,10) };
@@ -6240,7 +6240,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 { q:"You only need to upload charts once per instrument per session.", a:"Select your instrument first, then upload all 4 timeframes (Daily, 4H, 1H, 30M). Your plan generates automatically. You do not need to re-upload unless you switch instruments or start a new session.", highlight:true },
                 { q:"When should I upload the charts?", a:"Upload 30–60 minutes before your session opens. For the NY session, upload between 7:30–8:00 AM CT. Do not upload during the session — the plan is built on pre-session structure." },
                 { q:"What timeframes does BRC use?", a:"Four timeframes: Daily (bias), 4H (structure), 1H (setup), 30M (trigger). The 30M candle close is the only valid entry signal. All four are required." },
-                { q:"Every chart must show the instrument and timeframe.", a:"The ticker (e.g. BTCUSD) and timeframe (e.g. 1H, 30M) must be clearly visible in every screenshot. If either is not visible, your upload will be rejected. Take screenshots with labels showing.", highlight:true },
+                { q:"Every chart must show the instrument and timeframe.", a:"The ticker (e.g. EURUSD) and timeframe (e.g. 1H, 30M) must be clearly visible in every screenshot. If either is not visible, your upload will be rejected. Take screenshots with labels showing.", highlight:true },
                 { q:"What if the setup does not confirm?", a:"You do nothing. If the BRC sequence is incomplete, the result is PASS. No execution UI appears. A clean PASS protects your account. Not every session has a trade." },
                 { q:"Why does OmniUSD cut off at 10:30 AM CT?", a:"10:30 AM CT marks the end of the institutional execution window. From 8:30 to 10:30 AM CT, banks and institutions are actively executing — volume is highest, levels are respected, breaks are clean. After 10:30 AM, institutional participation drops and what remains is retail noise and choppy price action. The four valid 30M closes are 9:00, 9:30, 10:00, and 10:30 AM CT. If Tier 2 has not confirmed by 10:30 AM the plan expires — no exceptions. This is the discipline that keeps the system profitable." },
                 { q:"Can I use this for a prop firm challenge?", a:"Yes — this is one of the strongest use cases. Limit orders only, hard session cutoffs, A+ setups only. These are exactly the rules prop firms require." },
@@ -6368,13 +6368,13 @@ Use ONLY these times. All earlier time references in this conversation are stale
             {(() => {
               const userTier = profile?.tier || "starter";
               const tierCfg = TIER_CONFIG[userTier] || TIER_CONFIG.starter;
-              const allInstruments = ["XAUUSD","BTCUSD","NAS100","US30","USOIL","US500"];
+              const allInstruments = ["XAUUSD","EURUSD","NAS100","US30","XAGUSD","US500"];
               const allowed = tierCfg.instruments;
               const allSessions = loadSessions();
 
               const propFirmTickers = {
-                XAUUSD: "MGC", BTCUSD: "BTC", NAS100: "NQ",
-                US30: "YM", USOIL: "CL", US500: "ES",
+                XAUUSD: "MGC", EURUSD: "6E", NAS100: "NQ",
+                US30: "YM", XAGUSD: "MSI", US500: "ES",
               };
 
               return (
@@ -6456,7 +6456,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
             })()}
 
             {/* London session toggle — only for BTC/XAU */}
-            {(instrument === "BTCUSD" || instrument === "XAUUSD") && (
+            {(instrument === "EURUSD" || instrument === "XAUUSD") && (
               <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 20 }}>
                 {[
                   { key: "NY", label: "NY SESSION", sub: `${etToUserTime(8,30,false)}–${etToUserTime(10,30,false)} ${getUserTZShort()}`, color: "#7fff6b" },
@@ -7553,10 +7553,10 @@ Use ONLY these times. All earlier time references in this conversation are stale
               {(() => {
                 const tvSymbols = {
                   XAUUSD: "XAUUSD",
-                  BTCUSD: "BTCUSD",
+                  EURUSD: "EURUSD",
                   NAS100: "NAS100",
                   US30:   "US30",
-                  USOIL:  "USOIL",
+                  XAGUSD: "XAGUSD",
                   US500:  "US500",
                 };
                 const tvSymbol = tvSymbols[plan?.instrument] || "XAUUSD";
@@ -7695,8 +7695,8 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
   // TradingView — shared across all phases
   const TV_SYMBOLS={
     XAUUSD:"OANDA:XAUUSD",NAS100:"CAPITALCOM:US100",
-    US30:"CAPITALCOM:US30",BTCUSD:"COINBASE:BTCUSD",
-    USOIL:"TVC:USOIL",US500:"OANDA:SPX500USD",
+    US30:"CAPITALCOM:US30",EURUSD:"FX:EURUSD",
+    XAGUSD:"TVC:SILVER",US500:"OANDA:SPX500USD",
   };
   const tvSym=TV_SYMBOLS[instrument]||`OANDA:${instrument}`;
   const tvInterval=tradeState==="EXECUTABLE"?"15":"30"; // Phase 3 → 15M, else 30M
@@ -9631,15 +9631,15 @@ function PricingPage({onBack, onPaid}){
 
   const plans=[
     {key:"starter", label:"Starter", price:"$29", period:"/month", color:"#ffd166",
-     instruments:["XAUUSD","BTCUSD"],
+     instruments:["XAUUSD","EURUSD"],
      features:["Full BRC 3-phase execution tracker","Session-aware guidance","AI session plans"],
      priceId:TIER_CONFIG.starter.priceId, popular:false, trial:false},
     {key:"pro",     label:"Pro",     price:"$39", period:"/month", color:"#00e5ff",
-     instruments:["XAUUSD","BTCUSD","NAS100","US30"],
+     instruments:["XAUUSD","EURUSD","NAS100","US30"],
      features:["Full BRC 3-phase execution tracker","Session-aware guidance","AI session plans","Priority access to new features"],
      priceId:TIER_CONFIG.pro.priceId, popular:true, trial:true},
     {key:"elite",   label:"Elite",   price:"$59", period:"/month", color:"#ff6bff",
-     instruments:["XAUUSD","BTCUSD","NAS100","US30","USOIL","US500"],
+     instruments:["XAUUSD","EURUSD","NAS100","US30","XAGUSD","US500"],
      features:["Full BRC 3-phase execution tracker","Session-aware guidance","AI session plans","Early access to all new features"],
      priceId:TIER_CONFIG.elite.priceId, popular:false, trial:false},
   ];
@@ -9828,9 +9828,9 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
   const [hoveredPlan,setHoveredPlan]=useState(null);
   const isMobile = useWindowWidth() <= 768;
   const plans=[
-    {tier:"STARTER",color:"#ffd166",price:"$29",instruments:["XAUUSD","BTCUSD"],popular:false},
-    {tier:"PRO",color:"#00e5ff",price:"$39",instruments:["XAUUSD","BTCUSD","NAS100","US30"],popular:true},
-    {tier:"ELITE",color:"#ff6bff",price:"$59",instruments:["XAUUSD","BTCUSD","NAS100","US30","USOIL","US500"],popular:false},
+    {tier:"STARTER",color:"#ffd166",price:"$29",instruments:["XAUUSD","EURUSD"],popular:false},
+    {tier:"PRO",color:"#00e5ff",price:"$39",instruments:["XAUUSD","EURUSD","NAS100","US30"],popular:true},
+    {tier:"ELITE",color:"#ff6bff",price:"$59",instruments:["XAUUSD","EURUSD","NAS100","US30","XAGUSD","US500"],popular:false},
   ];
   const steps=[
     {n:"01",title:"Upload 4 charts",desc:"Daily · 4H · 1H · 30M. BRC needs all four to grade the setup correctly."},
@@ -9970,7 +9970,7 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
           <div style={{padding:"10px 16px",background:"rgba(255,255,255,0.03)",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
             <div style={{display:"flex",alignItems:"center",gap:8}}>
               <span style={{fontFamily:"'Space Mono',monospace",fontSize:14,fontWeight:700,color:"#ff6bff"}}>◈ OmniUSD</span>
-              {[{l:"BTCUSD",c:"#ff6b6b"},{l:"SHORT",c:"#ff6b6b"},{l:"A+",c:"#7fff6b"}].map(b=>(
+              {[{l:"EURUSD SHORT A+",c:"#7fff6b"}].map(b=>(
                 <span key={b.l} style={{fontFamily:"'Space Mono',monospace",fontSize:13,padding:"2px 7px",borderRadius:4,background:`${b.c}14`,border:`1px solid ${b.c}33`,color:b.c}}>{b.l}</span>
               ))}
             </div>
@@ -10041,7 +10041,7 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
               <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:8}}>
                 <div style={{display:"flex",justifyContent:"flex-start"}}>
                   <div style={{maxWidth:"90%",padding:"9px 12px",borderRadius:"10px 10px 10px 3px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.07)",fontFamily:"'Space Mono',monospace",fontSize:13,color:"#ccc4e8",lineHeight:1.8}}>
-                    Live session active — BTCUSD SHORT.<br/>
+                    Live session active — EURUSD SHORT.<br/>
                     <span style={{color:"#00e5ff"}}>Wicks don't count. Only 30M closes trigger action.</span>
                   </div>
                 </div>
@@ -10320,9 +10320,9 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
         {/* Trade results ticker */}
         <div style={{display:"flex",gap:10,flexWrap:"wrap",justifyContent:"center",marginBottom:56}}>
           {[
-            {instr:"BTCUSD",dir:"LONG",grade:"A+",result:"+2.7R",date:"Mar 18"},
+            {instr:"EURUSD",dir:"LONG",grade:"A+",result:"+2.7R",date:"Mar 18"},
             {instr:"XAUUSD",dir:"SHORT",grade:"A+",result:"+2.1R",date:"Mar 14"},
-            {instr:"BTCUSD",dir:"SHORT",grade:"A+",result:"+1.8R",date:"Mar 12"},
+            {instr:"EURUSD SHORT A+",result:"+1.8R",date:"Mar 12"},
             {instr:"NAS100",dir:"LONG",grade:"A+",result:"+3.2R",date:"Mar 9"},
             {instr:"XAUUSD",dir:"LONG",grade:"A+",result:"+1.6R",date:"Mar 6"},
           ].map((t,i) => (
@@ -10342,7 +10342,7 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
               quote:"I used to freeze at the trigger. OmniUSD just tells me exactly what to wait for and what to do when it happens. That clarity changed everything.",
               name:"Marcus T.",
               location:"Chicago, IL",
-              detail:"BTCUSD trader · 3 months",
+              detail:"EURUSD trader · 3 months",
               initials:"MT",
               color:"#ff6bff",
             },
@@ -10467,8 +10467,8 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
               a:"You wait for tomorrow. OmniUSD is built on quality over quantity. If you miss today's window, the market will be there tomorrow. Chasing a setup outside the execution window is exactly how traders turn a good system into a losing one. The hard cutoff at 10:30 AM CT is not a limitation — it is the discipline that protects the account.",
             },
             {
-              q:"Why not trade London for BTCUSD and XAUUSD?",
-              a:"London open analysis is allowed for BTCUSD and XAUUSD because these two instruments maintain enough volume outside NY to produce readable structure. But the maximum grade is B+ — never A+. London creates the setup. NY confirms and executes it. Entering during London means entering before the institutional confirmation that makes BRC work. OmniUSD waits for the confirmation, not the setup.",
+              q:"Why not trade London for EURUSD and XAUUSD?",
+              a:"London open analysis is allowed for EURUSD and XAUUSD because these two instruments maintain enough volume outside NY to produce readable structure. But the maximum grade is B+ — never A+. London creates the setup. NY confirms and executes it. Entering during London means entering before the institutional confirmation that makes BRC work. OmniUSD waits for the confirmation, not the setup.",
             },
             {
               q:"Is this just another signal service?",
@@ -10500,7 +10500,7 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
             },
             {
               q:"What sessions can I trade?",
-              a:"OmniUSD is built exclusively for the New York session — 8:30 to 10:30 AM CT. This is the only window where institutional volume, level respect, and BRC follow-through are all aligned. Pre-market scouting opens at 7:00 AM CT. Hard cutoff is 10:30 AM CT — no new entries after that.\n\nException: BTCUSD and XAUUSD can be analyzed during London open (2:00–4:00 AM CT) with a maximum grade of B+. All other instruments are NY session only.",
+              a:"OmniUSD is built exclusively for the New York session — 8:30 to 10:30 AM CT. This is the only window where institutional volume, level respect, and BRC follow-through are all aligned. Pre-market scouting opens at 7:00 AM CT. Hard cutoff is 10:30 AM CT — no new entries after that.\n\nException: EURUSD and XAUUSD can be analyzed during London open (2:00–4:00 AM CT) with a maximum grade of B+. All other instruments are NY session only.",
             },
             {
               q:"Why does OmniUSD cut off at 10:30 AM CT?",
@@ -10521,7 +10521,7 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
             },
             {
               q:"What instruments are supported?",
-              a:"BTCUSD and XAUUSD on Starter. Pro adds NAS100, US30, and more. Elite unlocks all instruments including US500 (S&P 500) and additional pairs. All instruments use the same BRC methodology.",
+              a:"EURUSD and XAUUSD on Starter. Pro adds NAS100, US30. Elite unlocks all instruments including XAGUSD (Silver) and US500 (S&P 500). All instruments use the same BRC methodology.",
             },
             {
               q:"Do I need trading experience?",
