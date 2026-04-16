@@ -5661,7 +5661,25 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
         }
       } catch (_) {}
 
-      setPlan(parsed);
+      // ── PRICE SANITY CHECK — catch instrument misreads ──────────────────────
+      // If the AI returns trigger levels that are wildly wrong for the instrument, block it
+      const triggerNum = parseFloat(String(parsed.trigger_level || "").replace(/,/g, ""));
+      const priceSanity = {
+        US30:   { min: 20000,  max: 80000  },
+        NAS100: { min: 10000,  max: 50000  },
+        US500:  { min: 3000,   max: 12000  },
+        XAUUSD: { min: 1000,   max: 10000  },
+        XAGUSD: { min: 10,     max: 200    },
+        EURUSD: { min: 0.8,    max: 1.6    },
+      };
+      const sanity = priceSanity[instrument];
+      if (sanity && triggerNum && (triggerNum < sanity.min || triggerNum > sanity.max)) {
+        setImages(Array(4).fill(null));
+        setPhase("upload");
+        setUploadCounts(prev => ({ ...prev, [instrument]: Math.max(0, (prev[instrument] || 1) - 1) }));
+        alert(`Price mismatch — the levels returned (${parsed.trigger_level}) don't match ${instrument}. This usually means the wrong charts were uploaded. Please re-upload your ${instrument} charts.`);
+        return;
+      }
       setPlanChatMessages([]);
       setPlanChatOpen(false);
       setCheckedItems({});
