@@ -886,8 +886,8 @@ function OmniUSDApp(){
 
   const chipLabel = profile.tierLabel || "Starter";
 
-  // ── HOME = Unified Dashboard — full screen, bypasses old wrapper ──
-  if(page==="home") return <UnifiedDashboard
+  // ── APP / HOME = Unified Dashboard ──
+  if(view==="app" || page==="home") return <UnifiedDashboard
     profile={profile}
     onJournalEntry={(entry)=>{
       const newJournal=[{...entry,id:Date.now(),outcome:null},...journal];
