@@ -5391,6 +5391,19 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
   const [propFirmMode, setPropFirmMode] = useState(() => {
     try { return localStorage.getItem("omniusd_prop_firm_mode") === "true"; } catch { return false; }
   });
+  const [sidebarTrades, setSidebarTrades] = useState([]);
+  React.useEffect(() => {
+    async function loadSidebarTrades() {
+      try {
+        const tok = JSON.parse(localStorage.getItem("omniusd_session")||"{}").access_token || SUPABASE_KEY;
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/trades?select=outcome,grade,instrument&order=trade_date.desc&limit=100`, {
+          headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${tok}` }
+        });
+        if (res.ok) { const d = await res.json(); if (Array.isArray(d)) setSidebarTrades(d); }
+      } catch {}
+    }
+    loadSidebarTrades();
+  }, []);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
   const fileRef = useRef(null);
@@ -6655,8 +6668,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
 
           {/* ── RIGHT PANEL — desktop only ── */}
           {!isMobile && (() => {
-            let journal = [];
-            try { journal = JSON.parse(localStorage.getItem(EXEC_JOURNAL_KEY) || "[]"); } catch {}
+            const journal = sidebarTrades;
 
             const wins   = journal.filter(t => t.outcome === "WIN").length;
             const losses = journal.filter(t => t.outcome === "LOSS").length;
