@@ -3678,6 +3678,38 @@ function BulkUploadZone({ images, setImages, readSlotFile, dragOverSlot, setDrag
 // SESSION HISTORY PAGE
 // ═══════════════════════════════════════════════════════════════════════════
 function ChartSetupPage({ onClose }) {
+  const [expanded, setExpanded] = React.useState(null);
+
+  const TF = [
+    {
+      short: "D",   tf: "Daily",     lookback: "6 months",  color: "#ff6bff",
+      shows: "Full macro trend + major levels",
+      perfect: "Captures the complete trend cycle — every major high, low, and rejection is visible. Too little and you miss the macro trend. Too much and old levels confuse the read.",
+      tooLittle: "1 month — misses macro trend",
+      tooMuch: "1 year — old levels confuse analysis",
+    },
+    {
+      short: "4H",  tf: "4-Hour",    lookback: "4–6 weeks", color: "#00e5ff",
+      shows: "Intermediate structure + BRC phases",
+      perfect: "Shows the full correction phase — lower highs, consolidation zones, and the setup forming between Daily and 1H. Less than 4 weeks and the structure disappears.",
+      tooLittle: "1 week — misses intermediate structure",
+      tooMuch: "3 months — too many old levels",
+    },
+    {
+      short: "1H",  tf: "1-Hour",    lookback: "5–7 days",  color: "#7fff6b",
+      shows: "Entry structure + current BRC sequence",
+      perfect: "Shows active retest zones and the BRC sequence forming right now. This is where entry levels, stop zones, and the current phase are most readable.",
+      tooLittle: "1 day — misses entry structure",
+      tooMuch: "2 weeks — too much noise",
+    },
+    {
+      short: "30M", tf: "30-Minute", lookback: "3–5 days",  color: "#ffd166",
+      shows: "Trigger levels + Tier 1 / Tier 2 zones",
+      perfect: "Shows current consolidation, swing highs and lows, and the exact levels for Tier 1 and Tier 2 confirmation. This is your entry trigger timeframe.",
+      tooLittle: "1 day — misses consolidation zones",
+      tooMuch: "1 week — stale levels pollute the read",
+    },
+  ];
 
   return (
     <div style={{ flex:1, overflowY:"auto", padding:"28px 20px", animation:"fadein 0.3s ease both" }}>
@@ -3715,10 +3747,81 @@ function ChartSetupPage({ onClose }) {
           <div style={{ fontSize:12, color:"rgba(255,255,255,0.62)", lineHeight:1.8, marginBottom:10 }}>
             We built a free indicator that automatically marks your chart lookback periods, labels market structure (HH/HL/LH/LL), and shows 30M candle body strength. Makes the screenshot process foolproof.
           </div>
-          <a href="https://www.tradingview.com/script/WMVM782N-OmniLens-Market-Structure-Chart-Lookback-by-OmniUSD/" target="_blank" rel="noopener noreferrer"
+          <a href="https://www.tradingview.com/PLACEHOLDER_INDICATOR_LINK" target="_blank" rel="noopener noreferrer"
             style={{ display:"inline-block", fontSize:11, fontWeight:700, color:"#ffd166", fontFamily:"'Space Mono',monospace", textDecoration:"none", padding:"7px 14px", borderRadius:6, border:"1px solid rgba(255,209,102,0.3)", background:"rgba(255,209,102,0.06)", cursor:"pointer" }}>
             GET OMNI LENS ON TRADINGVIEW →
           </a>
+        </div>
+
+        {/* Warning */}
+        <div style={{ padding:"9px 13px", background:"rgba(255,107,107,0.06)", border:"1px solid rgba(255,107,107,0.18)", borderLeft:"3px solid #ff6b6b", borderRadius:0, marginBottom:20 }}>
+          <div style={{ fontSize:11, color:"rgba(255,255,255,0.62)", fontFamily:"'Space Mono',monospace", lineHeight:1.7 }}>
+            Wrong lookback = bad analysis. <strong style={{ color:"#ff6b6b" }}>These are requirements, not suggestions.</strong>
+          </div>
+        </div>
+
+        {/* ── QUICK REFERENCE TABLE — primary view ── */}
+        <div style={{ background:"rgba(255,209,102,0.03)", border:"1px solid rgba(255,209,102,0.15)", borderRadius:10, overflow:"hidden", marginBottom:16 }}>
+          <div style={{ padding:"10px 16px", borderBottom:"1px solid rgba(255,209,102,0.1)" }}>
+            <div style={{ fontFamily:"'Space Mono',monospace", fontSize:9, fontWeight:900, letterSpacing:"0.14em", color:"#ffd166" }}>QUICK REFERENCE</div>
+          </div>
+          {TF.map((r, i) => (
+            <div key={r.short} style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 16px", borderBottom: i < TF.length-1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
+              <div style={{ width:30, height:30, borderRadius:6, background:`${r.color}14`, border:`1px solid ${r.color}33`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                <span style={{ fontFamily:"'Space Mono',monospace", fontSize:10, fontWeight:900, color:r.color }}>{r.short}</span>
+              </div>
+              <span style={{ fontSize:12, color:"rgba(255,255,255,0.55)", flex:1 }}>{r.tf}</span>
+              <span style={{ fontSize:13, fontWeight:900, color:r.color, fontFamily:"monospace" }}>{r.lookback}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* ── ACCORDION — expandable detail ── */}
+        <div style={{ fontFamily:"'Space Mono',monospace", fontSize:9, fontWeight:900, letterSpacing:"0.14em", color:"rgba(255,255,255,0.3)", marginBottom:10 }}>
+          TAP ANY TIMEFRAME FOR DETAILS
+        </div>
+        <div style={{ display:"flex", flexDirection:"column", gap:6, marginBottom:20 }}>
+          {TF.map((r) => {
+            const isOpen = expanded === r.short;
+            return (
+              <div key={r.short} style={{ background:"rgba(255,255,255,0.03)", border:`1px solid ${isOpen ? r.color+"44" : "rgba(255,255,255,0.06)"}`, borderRadius:10, overflow:"hidden", transition:"border 0.2s" }}>
+                {/* Header */}
+                <button onClick={() => setExpanded(isOpen ? null : r.short)}
+                  style={{ width:"100%", display:"flex", alignItems:"center", gap:12, padding:"12px 14px", background:"none", border:"none", cursor:"pointer", fontFamily:"inherit", textAlign:"left" }}>
+                  <div style={{ width:28, height:28, borderRadius:6, background:`${r.color}14`, border:`1px solid ${r.color}33`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                    <span style={{ fontFamily:"'Space Mono',monospace", fontSize:10, fontWeight:900, color:r.color }}>{r.short}</span>
+                  </div>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontSize:13, fontWeight:700, color:"#f0ecff" }}>{r.tf}</div>
+                    <div style={{ fontSize:10, color:"rgba(255,255,255,0.4)", fontFamily:"'Space Mono',monospace" }}>{r.shows}</div>
+                  </div>
+                  <div style={{ textAlign:"right", flexShrink:0, marginRight:8 }}>
+                    <span style={{ fontSize:13, fontWeight:900, color:r.color, fontFamily:"monospace" }}>{r.lookback}</span>
+                  </div>
+                  <span style={{ color:"rgba(255,255,255,0.3)", fontSize:13, flexShrink:0, transform:isOpen?"rotate(180deg)":"none", transition:"transform 0.2s" }}>▾</span>
+                </button>
+
+                {/* Expanded detail */}
+                {isOpen && (
+                  <div style={{ padding:"0 14px 14px", animation:"fadein 0.2s ease both" }}>
+                    <div style={{ fontSize:12, color:"rgba(255,255,255,0.62)", lineHeight:1.8, marginBottom:10, paddingTop:4, borderTop:"1px solid rgba(255,255,255,0.05)" }}>
+                      {r.perfect}
+                    </div>
+                    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:6 }}>
+                      <div style={{ padding:"6px 10px", background:"rgba(255,107,107,0.05)", border:"1px solid rgba(255,107,107,0.15)", borderRadius:7 }}>
+                        <div style={{ fontSize:9, color:"#ff6b6b", fontFamily:"'Space Mono',monospace", fontWeight:700, marginBottom:3 }}>❌ TOO LITTLE</div>
+                        <div style={{ fontSize:11, color:"rgba(255,255,255,0.5)", lineHeight:1.5 }}>{r.tooLittle}</div>
+                      </div>
+                      <div style={{ padding:"6px 10px", background:"rgba(255,107,107,0.05)", border:"1px solid rgba(255,107,107,0.15)", borderRadius:7 }}>
+                        <div style={{ fontSize:9, color:"#ff6b6b", fontFamily:"'Space Mono',monospace", fontWeight:700, marginBottom:3 }}>❌ TOO MUCH</div>
+                        <div style={{ fontSize:11, color:"rgba(255,255,255,0.5)", lineHeight:1.5 }}>{r.tooMuch}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {/* CTA */}
@@ -6187,7 +6290,78 @@ Use ONLY these times. All earlier time references in this conversation are stale
 
       {/* ══ PHASE: UPLOAD ══════════════════════════════════════════════════════ */}
       {appPage === "dashboard" && phase === "upload" && (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", padding: isMobile ? "28px 16px 32px" : "48px 24px 32px", animation: "fadein 0.3s ease both" }}>
+        <div style={{ flex: 1, display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "center" : "flex-start", justifyContent: isMobile ? "flex-start" : "center", padding: isMobile ? "28px 16px 32px" : "24px 20px", animation: "fadein 0.3s ease both", overflowY: "auto" }}>
+
+          {/* ── LEFT PANEL — desktop only ── */}
+          {!isMobile && (() => {
+            const allSess = loadSessions();
+            const today = new Date().toDateString();
+            const todayPlans = Object.entries(allSess)
+              .filter(([, sess]) => sess?.plan && sess?.savedAt && new Date(sess.savedAt).toDateString() === today)
+              .map(([sym, sess]) => ({ instrument: sym, grade: sess.plan.grade, confidence: sess.plan.confidence_score || 0, bias: sess.plan.bias, sess }))
+              .sort((a, b) => (b.confidence || 0) - (a.confidence || 0));
+
+            const gc = g => g==="A+"?"#cc44ff":g==="A"?"#00e5ff":g==="B"?"#ffd166":g==="C"?"#ff9a3c":"rgba(255,255,255,0.3)";
+            const isPass = g => g==="PASS"||g==="SOFT PASS";
+
+            return (
+              <div style={{ width:220, flexShrink:0, paddingRight:16 }}>
+                <div style={{ fontSize:9, fontWeight:900, letterSpacing:"0.16em", color:"rgba(255,255,255,0.25)", marginBottom:12, fontFamily:"'Space Mono',monospace" }}>✓ ANALYZED TODAY</div>
+                <div style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:10, padding:12 }}>
+                  <div style={{ fontSize:9, fontWeight:900, letterSpacing:"0.16em", color:"rgba(255,255,255,0.35)", marginBottom:10, fontFamily:"'Space Mono',monospace" }}>TODAY'S PLANS</div>
+                  {todayPlans.length === 0 ? (
+                    <div style={{ display:"flex", flexDirection:"column", alignItems:"center", textAlign:"center", padding:"24px 12px", gap:8 }}>
+                      <div style={{ fontSize:20, opacity:0.3 }}>📋</div>
+                      <div style={{ fontSize:10, color:"rgba(255,255,255,0.3)", lineHeight:1.6, fontFamily:"'Space Mono',monospace" }}>No plans yet today.<br/>Upload charts to<br/>get started.</div>
+                    </div>
+                  ) : todayPlans.map((item, i) => {
+                    const gradeC = gc(item.grade);
+                    const pass = isPass(item.grade);
+                    const dirColor = item.bias==="LONG"?"#7fff6b":item.bias==="SHORT"?"#ff6b6b":"rgba(255,255,255,0.2)";
+                    const conf = typeof item.confidence === "number" ? item.confidence : 0;
+                    return (
+                      <div key={item.instrument} style={{ paddingTop:i>0?9:0, paddingBottom:9, borderBottom:i<todayPlans.length-1?"1px solid rgba(255,255,255,0.05)":"none" }}>
+                        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:6 }}>
+                          <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                            <span style={{ fontSize:9, fontWeight:900, color:"rgba(255,255,255,0.2)", fontFamily:"'Space Mono',monospace" }}>{i+1}</span>
+                            <span style={{ fontSize:12, fontWeight:900, color:"rgba(255,255,255,0.8)", fontFamily:"'Space Mono',monospace" }}>{item.instrument}</span>
+                          </div>
+                          <span style={{ fontSize:9, fontWeight:900, padding:"2px 7px", borderRadius:4, background:`${gradeC}22`, border:`1px solid ${gradeC}44`, color:gradeC, fontFamily:"'Space Mono',monospace" }}>{item.grade}</span>
+                        </div>
+                        <div style={{ height:3, background:"rgba(255,255,255,0.07)", borderRadius:2, overflow:"hidden", marginBottom:4 }}>
+                          <div style={{ height:"100%", width:`${conf}%`, background:gradeC, borderRadius:2 }}/>
+                        </div>
+                        <div style={{ display:"flex", justifyContent:"space-between", fontSize:9, color:"rgba(255,255,255,0.28)", marginBottom:7, fontFamily:"'Space Mono',monospace" }}>
+                          <span style={{ color:dirColor, fontWeight:900 }}>{item.bias==="LONG"?"▲ LONG":item.bias==="SHORT"?"▼ SHORT":"—"}</span>
+                          <span style={{ color:gradeC, fontWeight:900 }}>{conf}%</span>
+                        </div>
+                        {pass ? (
+                          <button disabled style={{ width:"100%", padding:"3px 10px", borderRadius:6, border:"1px solid rgba(255,255,255,0.08)", background:"rgba(255,255,255,0.02)", color:"rgba(255,255,255,0.25)", fontSize:12, fontWeight:700, fontFamily:"inherit", cursor:"default", boxSizing:"border-box" }}>
+                            NO SETUP — PASS
+                          </button>
+                        ) : (
+                          <button onClick={() => {
+                            setPlan(item.sess.plan);
+                            setPhase("plan");
+                            setInstrument(item.instrument);
+                            setTier1(item.sess.tier1||false);
+                            setTier2(item.sess.tier2||false);
+                            setSessionState(item.sess.sessionState||"WATCHING");
+                            setMessages(item.sess.messages||[]);
+                            setSessionHistory(item.sess.sessionHistory||[]);
+                          }} style={{ width:"100%", padding:"3px 10px", borderRadius:6, border:"1px solid rgba(255,209,102,0.25)", background:"rgba(255,209,102,0.08)", color:"#ffd166", fontSize:12, fontWeight:700, fontFamily:"inherit", cursor:"pointer", boxSizing:"border-box" }}>
+                            View Plan
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* ── CENTER — existing upload flow ── */}
           <div style={{ width: "100%", maxWidth: 560 }}>
 
             {/* Header */}
@@ -6478,6 +6652,126 @@ Use ONLY these times. All earlier time references in this conversation are stale
             </div>
 
           </div>
+
+          {/* ── RIGHT PANEL — desktop only ── */}
+          {!isMobile && (() => {
+            let journal = [];
+            try { journal = JSON.parse(localStorage.getItem(EXEC_JOURNAL_KEY) || "[]"); } catch {}
+
+            const wins   = journal.filter(t => t.outcome === "WIN").length;
+            const losses = journal.filter(t => t.outcome === "LOSS").length;
+            const be     = journal.filter(t => t.outcome === "BE").length;
+            const executed = wins + losses + be;
+            const winRate = executed > 0 ? Math.round((wins / executed) * 100) : 0;
+
+            const gradeRank = {"A+":4,"A":3,"B":2,"C":1};
+            const gradedT = journal.filter(t => t.grade && gradeRank[t.grade]);
+            const avgGradeNum = gradedT.length > 0 ? gradedT.reduce((s,t) => s+(gradeRank[t.grade]||0),0)/gradedT.length : 0;
+            const avgGradeLabel = avgGradeNum>=3.5?"A+":avgGradeNum>=2.5?"A":avgGradeNum>=1.5?"B":avgGradeNum>0?"C":"—";
+            const avgGradeColor = {"A+":"#7fff6b","A":"#00e5ff","B":"#ffd166","C":"#ff9a3c","—":"#8878aa"}[avgGradeLabel];
+
+            const last8 = journal.filter(t => ["WIN","LOSS","BE"].includes(t.outcome)).slice(-8);
+            const dotC = o => o==="WIN"?"#7fff6b":o==="LOSS"?"#ff6b6b":"#ffd166";
+
+            // Streak
+            const exec = journal.filter(t => ["WIN","LOSS","BE"].includes(t.outcome));
+            let streak = 0, streakType = null;
+            for (let i = exec.length-1; i >= 0; i--) {
+              if (i === exec.length-1) { streakType = exec[i].outcome; streak = 1; }
+              else if (exec[i].outcome === streakType) streak++;
+              else break;
+            }
+            const streakColor = streakType==="WIN"?"#7fff6b":streakType==="LOSS"?"#ff6b6b":"#ffd166";
+            const streakLabel = streak > 0 ? `${streak} ${streakType === "WIN" ? "win" : streakType === "LOSS" ? "loss" : "BE"}${streak > 1 ? "s" : ""}` : "—";
+
+            // Best instrument
+            const instrMap = {};
+            journal.forEach(t => {
+              if (!t.instrument || !["WIN","LOSS","BE"].includes(t.outcome)) return;
+              if (!instrMap[t.instrument]) instrMap[t.instrument] = {w:0,l:0,be:0,total:0};
+              instrMap[t.instrument].total++;
+              if (t.outcome==="WIN") instrMap[t.instrument].w++;
+              else if (t.outcome==="LOSS") instrMap[t.instrument].l++;
+              else instrMap[t.instrument].be++;
+            });
+            const bestEntry = Object.entries(instrMap).filter(([,v])=>v.total>0).sort(([,a],[,b])=>(b.w/b.total)-(a.w/a.total))[0];
+            const mostEntry = Object.entries(instrMap).sort(([,a],[,b])=>b.total-a.total)[0];
+
+            const panelCard = { background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:10, padding:12, marginBottom:12 };
+            const cardLabel = { fontSize:9, fontWeight:900, letterSpacing:"0.16em", color:"rgba(255,255,255,0.35)", marginBottom:10, fontFamily:"'Space Mono',monospace" };
+
+            return (
+              <div style={{ width:210, flexShrink:0, paddingLeft:16 }}>
+                <div style={{ fontSize:9, fontWeight:900, letterSpacing:"0.16em", color:"rgba(255,255,255,0.25)", marginBottom:12, fontFamily:"'Space Mono',monospace" }}>◎ YOUR STATS</div>
+
+                {/* Performance */}
+                <div style={panelCard}>
+                  <div style={cardLabel}>PERFORMANCE</div>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline" }}>
+                    <div>
+                      <div style={{ fontSize:9, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace", marginBottom:2 }}>WIN RATE</div>
+                      <div style={{ fontSize:22, fontWeight:900, color: executed===0?"#8878aa":winRate>=60?"#7fff6b":winRate>=40?"#ffd166":"#ff6b6b", lineHeight:1, fontFamily:"monospace" }}>{executed===0?"—":`${winRate}%`}</div>
+                    </div>
+                    <div style={{ textAlign:"right" }}>
+                      <div style={{ fontSize:9, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace", marginBottom:2 }}>AVG GRADE</div>
+                      <div style={{ fontSize:18, fontWeight:900, color:avgGradeColor, fontFamily:"monospace" }}>{avgGradeLabel}</div>
+                    </div>
+                  </div>
+                  {executed > 0 && (
+                    <div style={{ height:5, background:"rgba(255,255,255,0.08)", borderRadius:3, overflow:"hidden", margin:"8px 0" }}>
+                      <div style={{ height:"100%", width:`${winRate}%`, background:"#7fff6b", borderRadius:3 }}/>
+                    </div>
+                  )}
+                  <div style={{ display:"flex", gap:6, marginTop:8 }}>
+                    {[["W",wins,"#7fff6b"],["L",losses,"#ff6b6b"],["BE",be,"#ffd166"]].map(([lbl,val,col])=>(
+                      <div key={lbl} style={{ flex:1, textAlign:"center", padding:"5px 4px", borderRadius:6, background:`${col}10`, fontSize:10, fontWeight:900, color:col, fontFamily:"'Space Mono',monospace" }}>{val}{lbl}</div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Last 8 trades */}
+                {last8.length > 0 && (
+                  <div style={panelCard}>
+                    <div style={cardLabel}>LAST {Math.min(last8.length,8)} TRADES</div>
+                    <div style={{ display:"flex", gap:5, flexWrap:"wrap" }}>
+                      {last8.map((t,i) => (
+                        <div key={i} style={{ width:10, height:10, borderRadius:"50%", background:dotC(t.outcome) }}/>
+                      ))}
+                    </div>
+                    <div style={{ fontSize:9, color:"rgba(255,255,255,0.25)", marginTop:8, fontFamily:"'Space Mono',monospace" }}>green=W · red=L · amber=BE</div>
+                    <div style={{ height:1, background:"rgba(255,255,255,0.06)", margin:"8px 0" }}/>
+                    <div style={{ fontSize:9, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace" }}>CURRENT STREAK</div>
+                    <div style={{ fontSize:14, fontWeight:900, color:streakColor, marginTop:3, fontFamily:"monospace" }}>{streakLabel}</div>
+                  </div>
+                )}
+
+                {/* Best instrument */}
+                {bestEntry && (
+                  <div style={panelCard}>
+                    <div style={cardLabel}>BEST INSTRUMENT</div>
+                    <div style={{ fontSize:15, fontWeight:900, color:"#f0ecff", marginBottom:4, fontFamily:"'Space Mono',monospace" }}>{bestEntry[0]}</div>
+                    <div style={{ fontSize:10, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace" }}>{bestEntry[1].w}W · {bestEntry[1].l}L · {bestEntry[1].total>0?Math.round((bestEntry[1].w/bestEntry[1].total)*100):0}% win rate</div>
+                    {mostEntry && mostEntry[0] !== bestEntry[0] && (
+                      <>
+                        <div style={{ height:1, background:"rgba(255,255,255,0.06)", margin:"8px 0" }}/>
+                        <div style={{ fontSize:9, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace" }}>MOST TRADED</div>
+                        <div style={{ fontSize:13, fontWeight:900, color:"#00e5ff", marginTop:3, fontFamily:"'Space Mono',monospace" }}>{mostEntry[0]}</div>
+                        <div style={{ fontSize:10, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace" }}>{mostEntry[1].total} sessions</div>
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {/* Empty state — no journal data yet */}
+                {executed === 0 && (
+                  <div style={{ ...panelCard, textAlign:"center", padding:"20px 12px" }}>
+                    <div style={{ fontSize:9, color:"rgba(255,255,255,0.25)", fontFamily:"'Space Mono',monospace", lineHeight:1.8 }}>Stats appear here<br/>after your first<br/>logged trade.</div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
         </div>
       )}
 
