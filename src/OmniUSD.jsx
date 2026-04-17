@@ -6351,23 +6351,8 @@ Use ONLY these times. All earlier time references in this conversation are stale
                           <span style={{ color:gradeC, fontWeight:900 }}>{conf}%</span>
                         </div>
                         {pass ? (
-                          <button disabled style={{ width:"100%", padding:"3px 10px", borderRadius:6, border:"1px solid rgba(255,255,255,0.08)", background:"rgba(255,255,255,0.02)", color:"rgba(255,255,255,0.25)", fontSize:12, fontWeight:700, fontFamily:"inherit", cursor:"default", boxSizing:"border-box" }}>
-                            NO SETUP — PASS
-                          </button>
-                        ) : (
-                          <button onClick={() => {
-                            setPlan(item.sess.plan);
-                            setPhase("plan");
-                            setInstrument(item.instrument);
-                            setTier1(item.sess.tier1||false);
-                            setTier2(item.sess.tier2||false);
-                            setSessionState(item.sess.sessionState||"WATCHING");
-                            setMessages(item.sess.messages||[]);
-                            setSessionHistory(item.sess.sessionHistory||[]);
-                          }} style={{ width:"100%", padding:"3px 10px", borderRadius:6, border:"1px solid rgba(255,209,102,0.25)", background:"rgba(255,209,102,0.08)", color:"#ffd166", fontSize:12, fontWeight:700, fontFamily:"inherit", cursor:"pointer", boxSizing:"border-box" }}>
-                            View Plan
-                          </button>
-                        )}
+                          <div style={{ fontSize:10, color:"rgba(255,255,255,0.2)", fontFamily:"'Space Mono',monospace", textAlign:"center", padding:"2px 0" }}>NO SETUP — PASS</div>
+                        ) : null}
                       </div>
                     );
                   })}
@@ -6528,7 +6513,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                         borderColor = `${gradeC}55`; bgColor = `${gradeC}12`;
                         textColor = gradeC; cursor = "pointer";
                         label = propFirmMode ? `${sym} · ${futuresTicker}` : sym;
-                        subLabel = `${sess.plan.grade} · RESUME`;
+                        subLabel = `RESUME`;
                       } else if (inCooldown) {
                         borderColor = "rgba(255,154,60,0.3)"; bgColor = "rgba(255,154,60,0.06)";
                         textColor = "rgba(255,154,60,0.6)"; cursor = "default";
