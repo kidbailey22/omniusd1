@@ -2832,7 +2832,7 @@ function SettingsPage({profile, onSignOut, onClose}) {
 
         {/* Section tabs */}
         <div style={{display:"flex",gap:4,marginBottom:20,background:"rgba(255,255,255,0.03)",padding:4,borderRadius:10,overflowX:"auto"}}>
-          {[{id:"account",l:"Account"},{id:"plan",l:"Plan"},{id:"preferences",l:"Preferences"},{id:"danger",l:"Danger Zone"},...(isDevMode()?[{id:"storage",l:"🔧 Storage"}]:[])].map(t=>(
+          {[{id:"account",l:"Account"},{id:"plan",l:"Plan"},{id:"preferences",l:"Preferences"},{id:"broker",l:"Broker"},{id:"danger",l:"Danger Zone"},...(isDevMode()?[{id:"storage",l:"🔧 Storage"}]:[])].map(t=>(
             <button key={t.id} onClick={()=>setSection(t.id)}
               style={{flex:1,padding:"7px 4px",borderRadius:7,border:"none",fontFamily:"'Space Mono',monospace",fontSize:13,fontWeight:700,letterSpacing:"0.06em",cursor:"pointer",transition:"all 0.15s",
                 background:section===t.id?"rgba(255,107,255,0.12)":"none",
@@ -3039,6 +3039,118 @@ function SettingsPage({profile, onSignOut, onClose}) {
             </>)}
           </div>
         )}
+
+        {/* ── BROKER ── */}
+        {section === "broker" && (() => {
+          const [webhookUrl, setWebhookUrl] = React.useState(() => localStorage.getItem("omniusd_pc_webhook") || "");
+          const [licenseId, setLicenseId]   = React.useState(() => localStorage.getItem("omniusd_pc_license") || "");
+          const [acctType, setAcctType]     = React.useState(() => localStorage.getItem("omniusd_acct_type") || "prop");
+          const [ctType, setCtType]         = React.useState(() => localStorage.getItem("omniusd_ct_type") || "micro");
+          const [defContracts, setDefContracts] = React.useState(() => parseInt(localStorage.getItem("omniusd_def_contracts") || "1"));
+          const [saved, setSaved]           = React.useState(false);
+          const [testing, setTesting]       = React.useState(false);
+          const [testMsg, setTestMsg]       = React.useState(null);
+
+          function saveBroker() {
+            localStorage.setItem("omniusd_pc_webhook", webhookUrl);
+            localStorage.setItem("omniusd_pc_license", licenseId);
+            localStorage.setItem("omniusd_acct_type", acctType);
+            localStorage.setItem("omniusd_ct_type", ctType);
+            localStorage.setItem("omniusd_def_contracts", String(defContracts));
+            setSaved(true);
+            setTimeout(() => setSaved(false), 2000);
+          }
+
+          async function testConnection() {
+            if (!webhookUrl) { setTestMsg({type:"error", text:"Enter a webhook URL first."}); return; }
+            setTesting(true); setTestMsg(null);
+            try {
+              await fetch(webhookUrl, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({test:true, source:"omniusd"}) });
+              setTestMsg({type:"success", text:"Webhook fired. Check PineConnector for a test ping."});
+            } catch(e) { setTestMsg({type:"error", text:"Could not reach webhook URL. Check your connection."}); }
+            setTesting(false);
+          }
+
+          const connected = webhookUrl && licenseId;
+          return (
+            <div style={{display:"flex",flexDirection:"column",gap:16}}>
+              <div style={card}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
+                  <span style={lbl}>PINECONNECTOR</span>
+                  {connected && <span style={{fontSize:9,fontWeight:900,padding:"3px 10px",borderRadius:3,background:"rgba(127,255,107,0.1)",color:"#7fff6b",border:"1px solid rgba(127,255,107,0.25)",fontFamily:"'Space Mono',monospace"}}>CONNECTED</span>}
+                </div>
+                <div style={{marginBottom:14}}>
+                  <div style={{fontSize:10,color:"#8878aa",fontFamily:"'Space Mono',monospace",marginBottom:6,letterSpacing:"0.1em"}}>WEBHOOK URL</div>
+                  <input value={webhookUrl} onChange={e=>setWebhookUrl(e.target.value)} placeholder="https://pineconnector.net/webhook/..."
+                    style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:6,padding:"9px 12px",fontSize:12,color:"#f0ecff",fontFamily:"'Space Mono',monospace",outline:"none"}}/>
+                  <div style={{fontSize:10,color:"rgba(255,255,255,0.25)",marginTop:4,fontFamily:"'Space Mono',monospace"}}>Found in your PineConnector dashboard.</div>
+                </div>
+                <div style={{marginBottom:14}}>
+                  <div style={{fontSize:10,color:"#8878aa",fontFamily:"'Space Mono',monospace",marginBottom:6,letterSpacing:"0.1em"}}>LICENSE ID</div>
+                  <input value={licenseId} onChange={e=>setLicenseId(e.target.value)} placeholder="PC-XXXXXXXXXX"
+                    style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:6,padding:"9px 12px",fontSize:12,color:"#f0ecff",fontFamily:"'Space Mono',monospace",outline:"none"}}/>
+                </div>
+                <button onClick={testConnection} disabled={testing}
+                  style={{width:"100%",padding:"9px",borderRadius:7,border:"1px solid rgba(0,229,255,0.3)",background:"rgba(0,229,255,0.06)",color:"#00e5ff",fontSize:12,fontWeight:700,fontFamily:"'Space Mono',monospace",cursor:"pointer",marginBottom:8}}>
+                  {testing ? "TESTING..." : "TEST CONNECTION →"}
+                </button>
+                {testMsg && <div style={{fontSize:11,fontFamily:"'Space Mono',monospace",color:testMsg.type==="success"?"#7fff6b":"#ff6b6b",padding:"6px 10px",borderRadius:6,background:testMsg.type==="success"?"rgba(127,255,107,0.06)":"rgba(255,107,107,0.06)"}}>{testMsg.text}</div>}
+              </div>
+              <div style={card}>
+                <span style={lbl}>ACCOUNT TYPE</span>
+                <div style={{display:"flex",gap:8,marginBottom:4}}>
+                  {[{id:"prop",l:"Prop Firm"},{id:"live",l:"Live Account"}].map(o=>(
+                    <button key={o.id} onClick={()=>setAcctType(o.id)}
+                      style={{flex:1,padding:"9px",borderRadius:7,border:`1px solid ${acctType===o.id?(o.id==="prop"?"rgba(0,229,255,0.4)":"rgba(255,107,107,0.4)"):"rgba(255,255,255,0.1)"}`,background:acctType===o.id?(o.id==="prop"?"rgba(0,229,255,0.08)":"rgba(255,107,107,0.08)"):"none",color:acctType===o.id?(o.id==="prop"?"#00e5ff":"#ff6b6b"):"#8878aa",fontSize:12,fontWeight:700,fontFamily:"'Space Mono',monospace",cursor:"pointer"}}>
+                      {o.l}
+                    </button>
+                  ))}
+                </div>
+                <div style={{fontSize:10,color:"rgba(255,255,255,0.25)",fontFamily:"'Space Mono',monospace",lineHeight:1.6}}>
+                  {acctType==="prop" ? "Prop firm disclaimer shown on order ticket." : "⚠ Live account — real capital disclaimer shown."}
+                </div>
+              </div>
+              <div style={card}>
+                <span style={lbl}>CONTRACT TYPE</span>
+                <div style={{display:"flex",gap:8,marginBottom:4}}>
+                  {[{id:"micro",l:"Micro"},{id:"mini",l:"Mini"}].map(o=>(
+                    <button key={o.id} onClick={()=>setCtType(o.id)}
+                      style={{flex:1,padding:"9px",borderRadius:7,border:`1px solid ${ctType===o.id?"rgba(255,107,255,0.4)":"rgba(255,255,255,0.1)"}`,background:ctType===o.id?"rgba(255,107,255,0.08)":"none",color:ctType===o.id?"#ff6bff":"#8878aa",fontSize:12,fontWeight:700,fontFamily:"'Space Mono',monospace",cursor:"pointer"}}>
+                      {o.l}
+                    </button>
+                  ))}
+                </div>
+                <div style={{fontSize:10,color:"rgba(255,255,255,0.25)",fontFamily:"'Space Mono',monospace",lineHeight:1.6}}>
+                  {ctType==="micro" ? "MNQ · MYM · MES · MGC · MSI · M6E" : "NQ · YM · ES · GC · SI · 6E"}
+                </div>
+              </div>
+              <div style={card}>
+                <span style={lbl}>DEFAULT CONTRACTS</span>
+                <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:4}}>
+                  <button onClick={()=>setDefContracts(c=>Math.max(1,c-1))} style={{width:32,height:32,borderRadius:6,border:"1px solid rgba(255,255,255,0.12)",background:"rgba(255,255,255,0.05)",color:"#f0ecff",fontSize:18,cursor:"pointer",fontFamily:"monospace",display:"flex",alignItems:"center",justifyContent:"center"}}>−</button>
+                  <span style={{fontSize:18,fontWeight:700,fontFamily:"monospace",color:"#f0ecff",minWidth:24,textAlign:"center"}}>{defContracts}</span>
+                  <button onClick={()=>setDefContracts(c=>Math.min(20,c+1))} style={{width:32,height:32,borderRadius:6,border:"1px solid rgba(255,255,255,0.12)",background:"rgba(255,255,255,0.05)",color:"#f0ecff",fontSize:18,cursor:"pointer",fontFamily:"monospace",display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>
+                </div>
+                <div style={{fontSize:10,color:"rgba(255,255,255,0.25)",fontFamily:"'Space Mono',monospace"}}>Pre-filled on the order ticket. You can always adjust before sending.</div>
+              </div>
+              <div style={{padding:"12px 14px",borderRadius:8,background:"rgba(0,229,255,0.04)",border:"1px solid rgba(0,229,255,0.12)"}}>
+                <div style={{fontSize:9,fontWeight:900,letterSpacing:"0.14em",color:"#00e5ff",marginBottom:8,fontFamily:"'Space Mono',monospace"}}>HOW IT WORKS</div>
+                <div style={{fontSize:11,color:"rgba(255,255,255,0.4)",lineHeight:1.8,fontFamily:"'Space Mono',monospace"}}>
+                  1. Tier 2 confirms in OmniUSD<br/>
+                  2. Order ticket pops with your levels pre-filled<br/>
+                  3. Adjust contracts if needed<br/>
+                  4. Tap SEND ORDER — webhook fires to PineConnector<br/>
+                  5. PineConnector places limit in Tradovate via TradingView<br/>
+                  6. Hands off. Let the trade work.
+                </div>
+              </div>
+              <button onClick={saveBroker}
+                style={{width:"100%",padding:"12px",borderRadius:10,border:"none",background:saved?"rgba(127,255,107,0.2)":"linear-gradient(135deg,#cc44ff,#00ccff)",color:saved?"#7fff6b":"#1e1a35",fontSize:13,fontWeight:900,letterSpacing:"0.12em",fontFamily:"inherit",cursor:"pointer"}}>
+                {saved ? "✓ SAVED" : "SAVE BROKER SETTINGS →"}
+              </button>
+            </div>
+          );
+        })()}
 
         {/* ── STORAGE INSPECTOR (owner only) ── */}
         {section === "storage" && isDevMode() && (() => {
