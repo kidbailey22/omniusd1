@@ -3843,7 +3843,7 @@ function TradeLoggerPage({ profile, onClose }) {
   const isMobile = useWindowWidth() <= 768;
   const GRADES = ["A+","A","B","C","PASS"];
   const INSTRUMENTS = ["XAUUSD","EURUSD","NAS100","US30","XAGUSD","US500"];
-  const RESULTS = ["WIN","LOSS","BE","PASS","MISSED","CANCELLED"];
+  const RESULTS = ["WIN","LOSS","BE","PASS","MISSED","CANCELLED","NO SETUP"];
 
   const empty = { instrument:"XAUUSD", grade:"A+", direction:"LONG", entry:"", stop:"", tp1:"", rr:"", result_usd:"", outcome:"WIN", note:"", trade_date: new Date().toISOString().slice(0,10) };
   const [form, setForm] = useState(empty);
@@ -3953,7 +3953,7 @@ function TradeLoggerPage({ profile, onClose }) {
 
   const inp = { width:"100%", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:8, padding:"9px 12px", fontSize:13, color:"#f0ecff", fontFamily:"inherit", outline:"none", boxSizing:"border-box" };
   const sel = { ...inp, appearance:"none", cursor:"pointer" };
-  const outcomeColor = { WIN:"#7fff6b", LOSS:"#ff6b6b", BE:"#ffd166", PASS:"#8878aa", MISSED:"#ff9a3c", CANCELLED:"#00ccff" };
+  const outcomeColor = { WIN:"#7fff6b", LOSS:"#ff6b6b", BE:"#ffd166", PASS:"#8878aa", MISSED:"#ff9a3c", CANCELLED:"#00ccff", "NO SETUP":"#6655aa" };
 
   return (
     <div style={{ flex:1, overflowY:"auto", padding: isMobile ? "20px 16px" : "32px 24px", animation:"fadein 0.3s ease both" }}>
@@ -3985,6 +3985,13 @@ function TradeLoggerPage({ profile, onClose }) {
                 {INSTRUMENTS.map(i=><option key={i} value={i}>{i}</option>)}
               </select>
             </div>
+            <div>
+              <div style={{ fontSize:10, color:"#8878aa", fontFamily:"'Space Mono',monospace", letterSpacing:"0.12em", marginBottom:6 }}>OUTCOME</div>
+              <select value={form.outcome} onChange={e=>setForm(f=>({...f,outcome:e.target.value}))} style={{...sel, color: outcomeColor[form.outcome]}}>
+                {RESULTS.map(r=><option key={r} value={r}>{r}</option>)}
+              </select>
+            </div>
+            {form.outcome !== "NO SETUP" && (<>
             <div>
               <div style={{ fontSize:10, color:"#8878aa", fontFamily:"'Space Mono',monospace", letterSpacing:"0.12em", marginBottom:6 }}>GRADE</div>
               <select value={form.grade} onChange={e=>setForm(f=>({...f,grade:e.target.value}))} style={sel}>
@@ -4019,12 +4026,7 @@ function TradeLoggerPage({ profile, onClose }) {
               <div style={{ fontSize:10, color:"#8878aa", fontFamily:"'Space Mono',monospace", letterSpacing:"0.12em", marginBottom:6 }}>RESULT ($)</div>
               <input type="number" placeholder="e.g. 94.50" value={form.result_usd} onChange={e=>setForm(f=>({...f,result_usd:e.target.value}))} style={inp}/>
             </div>
-            <div>
-              <div style={{ fontSize:10, color:"#8878aa", fontFamily:"'Space Mono',monospace", letterSpacing:"0.12em", marginBottom:6 }}>OUTCOME</div>
-              <select value={form.outcome} onChange={e=>setForm(f=>({...f,outcome:e.target.value}))} style={{...sel, color: outcomeColor[form.outcome]}}>
-                {RESULTS.map(r=><option key={r} value={r}>{r}</option>)}
-              </select>
-            </div>
+            </>)}
           </div>
           <div style={{ marginBottom:14 }}>
             <div style={{ fontSize:10, color:"#8878aa", fontFamily:"'Space Mono',monospace", letterSpacing:"0.12em", marginBottom:6 }}>NOTE</div>
@@ -4116,10 +4118,11 @@ function PublicResultsPage({ onClose, isStandalone = false }) {
   }, []);
 
   // ── Compute stats ──────────────────────────────────────────────────────
-  const executed = trades.filter(t => t.outcome !== "MISSED" && t.outcome !== "PASS" && t.outcome !== "CANCELLED");
+  const executed = trades.filter(t => t.outcome !== "MISSED" && t.outcome !== "PASS" && t.outcome !== "CANCELLED" && t.outcome !== "NO SETUP");
   const passes   = trades.filter(t => t.outcome === "PASS" || t.grade === "PASS");
   const missed   = trades.filter(t => t.outcome === "MISSED");
   const cancelled = trades.filter(t => t.outcome === "CANCELLED");
+  const noSetup  = trades.filter(t => t.outcome === "NO SETUP");
   const wins     = executed.filter(t => t.outcome === "WIN");
   const losses   = executed.filter(t => t.outcome === "LOSS");
   const be       = executed.filter(t => t.outcome === "BE");
