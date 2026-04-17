@@ -6307,6 +6307,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
 
           {/* ── LEFT PANEL — desktop only ── */}
           {!isMobile && (() => {
+            try {
             const allSess = loadSessions();
             const today = new Date().toDateString();
             const todayPlans = Object.entries(allSess)
@@ -6372,6 +6373,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 </div>
               </div>
             );
+            } catch(e) { return null; }
           })()}
 
           {/* ── CENTER — existing upload flow ── */}
@@ -6668,6 +6670,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
 
           {/* ── RIGHT PANEL — desktop only ── */}
           {!isMobile && (() => {
+            try {
             const journal = sidebarTrades;
 
             const wins   = journal.filter(t => t.outcome === "WIN").length;
@@ -6782,6 +6785,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 )}
               </div>
             );
+            } catch(e) { return null; }
           })()}
 
         </div>
