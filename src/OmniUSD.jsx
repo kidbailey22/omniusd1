@@ -4245,11 +4245,11 @@ function PublicResultsPage({ onClose, isStandalone = false }) {
                           style={{ display:"flex", alignItems:"center", gap:10, padding:"12px 16px", flexWrap:"nowrap", cursor: hasNote ? "pointer" : "default" }}>
                           <span style={{ fontFamily:"'Space Mono',monospace", fontSize:10, color:"#8878aa", minWidth:72, flexShrink:0 }}>{t.trade_date}</span>
                           <span style={{ fontFamily:"'Space Mono',monospace", fontSize:12, fontWeight:700, color:"#cc44ff", minWidth:64, flexShrink:0 }}>{t.instrument}</span>
-                          <span style={{ fontSize:10, fontWeight:700, padding:"2px 6px", borderRadius:4, background:"rgba(204,68,255,0.08)", border:"1px solid rgba(204,68,255,0.18)", color:"#cc44ff", flexShrink:0 }}>{t.grade}</span>
-                          <span style={{ fontSize:10, fontWeight:700, padding:"2px 6px", borderRadius:4, flexShrink:0,
+                          {t.outcome !== "NO SETUP" && <span style={{ fontSize:10, fontWeight:700, padding:"2px 6px", borderRadius:4, background:"rgba(204,68,255,0.08)", border:"1px solid rgba(204,68,255,0.18)", color:"#cc44ff", flexShrink:0 }}>{t.grade}</span>}
+                          {t.outcome !== "NO SETUP" && <span style={{ fontSize:10, fontWeight:700, padding:"2px 6px", borderRadius:4, flexShrink:0,
                             background: t.direction==="LONG"?"rgba(127,255,107,0.06)":"rgba(255,107,107,0.06)",
                             border:`1px solid ${t.direction==="LONG"?"rgba(127,255,107,0.18)":"rgba(255,107,107,0.18)"}`,
-                            color: t.direction==="LONG"?"#7fff6b":"#ff6b6b" }}>{t.direction}</span>
+                            color: t.direction==="LONG"?"#7fff6b":"#ff6b6b" }}>{t.direction}</span>}
                           {t.rr && <span style={{ fontFamily:"'Space Mono',monospace", fontSize:10, color:"#8878aa", flexShrink:0 }}>{t.rr}</span>}
                           {/* Note preview — single line truncated */}
                           {hasNote && !isOpen && (
