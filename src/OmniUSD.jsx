@@ -5605,6 +5605,13 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
         parsed.pass_reason = "Weekend — markets are thin and unreliable. No valid BRC execution window until Sunday Asian session or Monday NY session. Structure noted — come back when a proper session opens.";
       }
 
+      // ── CONFIDENCE GATE — force PASS if AI confidence is too low ──────────
+      const _conf = parseFloat(parsed.confidence_score || 0);
+      if (_conf > 0 && _conf <= 35 && parsed.grade !== "PASS" && parsed.grade !== "SOFT PASS" && !isDevMode()) {
+        parsed.grade = "PASS";
+        parsed.pass_reason = `Confidence too low (${_conf}%) — structure is unclear. No valid setup today. Come back when the AI reads the charts with higher conviction.`;
+      }
+
       // ── SESSION WINDOW GATE ────────────────────────────────────────────
       const _mktStatus = getMarketStatus(instrument, selectedSession);
 
