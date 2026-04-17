@@ -886,8 +886,8 @@ function OmniUSDApp(){
 
   const chipLabel = profile.tierLabel || "Starter";
 
-  // ── HOME = Unified Dashboard — full screen, bypasses old wrapper ──
-  if(page==="home") return <UnifiedDashboard
+  // ── APP / HOME = Unified Dashboard ──
+  if(view==="app" || page==="home") return <UnifiedDashboard
     profile={profile}
     onJournalEntry={(entry)=>{
       const newJournal=[{...entry,id:Date.now(),outcome:null},...journal];
@@ -5391,6 +5391,19 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
   const [propFirmMode, setPropFirmMode] = useState(() => {
     try { return localStorage.getItem("omniusd_prop_firm_mode") === "true"; } catch { return false; }
   });
+  const [sidebarTrades, setSidebarTrades] = useState([]);
+  React.useEffect(() => {
+    async function loadSidebarTrades() {
+      try {
+        const tok = JSON.parse(localStorage.getItem("omniusd_session")||"{}").access_token || SUPABASE_KEY;
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/trades?select=outcome,grade,instrument&order=trade_date.desc&limit=100`, {
+          headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${tok}` }
+        });
+        if (res.ok) { const d = await res.json(); if (Array.isArray(d)) setSidebarTrades(d); }
+      } catch {}
+    }
+    loadSidebarTrades();
+  }, []);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
   const fileRef = useRef(null);
@@ -6291,7 +6304,80 @@ Use ONLY these times. All earlier time references in this conversation are stale
 
       {/* ══ PHASE: UPLOAD ══════════════════════════════════════════════════════ */}
       {appPage === "dashboard" && phase === "upload" && (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", padding: isMobile ? "28px 16px 32px" : "48px 24px 32px", animation: "fadein 0.3s ease both" }}>
+        <div style={{ flex: 1, display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "center" : "flex-start", justifyContent: isMobile ? "flex-start" : "center", padding: isMobile ? "28px 16px 32px" : "24px 20px", animation: "fadein 0.3s ease both", overflowY: "auto" }}>
+
+          {/* ── LEFT PANEL — desktop only ── */}
+          {!isMobile && (() => {
+            try {
+            const allSess = loadSessions();
+            const today = new Date().toDateString();
+            const todayPlans = Object.entries(allSess)
+              .filter(([, sess]) => sess?.plan && sess?.savedAt && new Date(sess.savedAt).toDateString() === today)
+              .map(([sym, sess]) => ({ instrument: sym, grade: sess.plan.grade, confidence: sess.plan.confidence_score || 0, bias: sess.plan.bias, sess }))
+              .sort((a, b) => (b.confidence || 0) - (a.confidence || 0));
+
+            const gc = g => g==="A+"?"#cc44ff":g==="A"?"#00e5ff":g==="B"?"#ffd166":g==="C"?"#ff9a3c":"rgba(255,255,255,0.3)";
+            const isPass = g => g==="PASS"||g==="SOFT PASS";
+
+            return (
+              <div style={{ width:220, flexShrink:0, paddingRight:16 }}>
+                <div style={{ fontSize:9, fontWeight:900, letterSpacing:"0.16em", color:"rgba(255,255,255,0.25)", marginBottom:12, fontFamily:"'Space Mono',monospace" }}>✓ ANALYZED TODAY</div>
+                <div style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:10, padding:12 }}>
+                  <div style={{ fontSize:9, fontWeight:900, letterSpacing:"0.16em", color:"rgba(255,255,255,0.35)", marginBottom:10, fontFamily:"'Space Mono',monospace" }}>TODAY'S PLANS</div>
+                  {todayPlans.length === 0 ? (
+                    <div style={{ display:"flex", flexDirection:"column", alignItems:"center", textAlign:"center", padding:"24px 12px", gap:8 }}>
+                      <div style={{ fontSize:20, opacity:0.3 }}>📋</div>
+                      <div style={{ fontSize:10, color:"rgba(255,255,255,0.3)", lineHeight:1.6, fontFamily:"'Space Mono',monospace" }}>No plans yet today.<br/>Upload charts to<br/>get started.</div>
+                    </div>
+                  ) : todayPlans.map((item, i) => {
+                    const gradeC = gc(item.grade);
+                    const pass = isPass(item.grade);
+                    const dirColor = item.bias==="LONG"?"#7fff6b":item.bias==="SHORT"?"#ff6b6b":"rgba(255,255,255,0.2)";
+                    const conf = typeof item.confidence === "number" ? item.confidence : 0;
+                    return (
+                      <div key={item.instrument} style={{ paddingTop:i>0?9:0, paddingBottom:9, borderBottom:i<todayPlans.length-1?"1px solid rgba(255,255,255,0.05)":"none" }}>
+                        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:6 }}>
+                          <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                            <span style={{ fontSize:9, fontWeight:900, color:"rgba(255,255,255,0.2)", fontFamily:"'Space Mono',monospace" }}>{i+1}</span>
+                            <span style={{ fontSize:12, fontWeight:900, color:"rgba(255,255,255,0.8)", fontFamily:"'Space Mono',monospace" }}>{item.instrument}</span>
+                          </div>
+                          <span style={{ fontSize:9, fontWeight:900, padding:"2px 7px", borderRadius:4, background:`${gradeC}22`, border:`1px solid ${gradeC}44`, color:gradeC, fontFamily:"'Space Mono',monospace" }}>{item.grade}</span>
+                        </div>
+                        <div style={{ height:3, background:"rgba(255,255,255,0.07)", borderRadius:2, overflow:"hidden", marginBottom:4 }}>
+                          <div style={{ height:"100%", width:`${conf}%`, background:gradeC, borderRadius:2 }}/>
+                        </div>
+                        <div style={{ display:"flex", justifyContent:"space-between", fontSize:9, color:"rgba(255,255,255,0.28)", marginBottom:7, fontFamily:"'Space Mono',monospace" }}>
+                          <span style={{ color:dirColor, fontWeight:900 }}>{item.bias==="LONG"?"▲ LONG":item.bias==="SHORT"?"▼ SHORT":"—"}</span>
+                          <span style={{ color:gradeC, fontWeight:900 }}>{conf}%</span>
+                        </div>
+                        {pass ? (
+                          <button disabled style={{ width:"100%", padding:"3px 10px", borderRadius:6, border:"1px solid rgba(255,255,255,0.08)", background:"rgba(255,255,255,0.02)", color:"rgba(255,255,255,0.25)", fontSize:12, fontWeight:700, fontFamily:"inherit", cursor:"default", boxSizing:"border-box" }}>
+                            NO SETUP — PASS
+                          </button>
+                        ) : (
+                          <button onClick={() => {
+                            setPlan(item.sess.plan);
+                            setPhase("plan");
+                            setInstrument(item.instrument);
+                            setTier1(item.sess.tier1||false);
+                            setTier2(item.sess.tier2||false);
+                            setSessionState(item.sess.sessionState||"WATCHING");
+                            setMessages(item.sess.messages||[]);
+                            setSessionHistory(item.sess.sessionHistory||[]);
+                          }} style={{ width:"100%", padding:"3px 10px", borderRadius:6, border:"1px solid rgba(255,209,102,0.25)", background:"rgba(255,209,102,0.08)", color:"#ffd166", fontSize:12, fontWeight:700, fontFamily:"inherit", cursor:"pointer", boxSizing:"border-box" }}>
+                            View Plan
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+            } catch(e) { return null; }
+          })()}
+
+          {/* ── CENTER — existing upload flow ── */}
           <div style={{ width: "100%", maxWidth: 560 }}>
 
             {/* Header */}
@@ -6582,6 +6668,127 @@ Use ONLY these times. All earlier time references in this conversation are stale
             </div>
 
           </div>
+
+          {/* ── RIGHT PANEL — desktop only ── */}
+          {!isMobile && (() => {
+            try {
+            const journal = sidebarTrades;
+
+            const wins   = journal.filter(t => t.outcome === "WIN").length;
+            const losses = journal.filter(t => t.outcome === "LOSS").length;
+            const be     = journal.filter(t => t.outcome === "BE").length;
+            const executed = wins + losses + be;
+            const winRate = executed > 0 ? Math.round((wins / executed) * 100) : 0;
+
+            const gradeRank = {"A+":4,"A":3,"B":2,"C":1};
+            const gradedT = journal.filter(t => t.grade && gradeRank[t.grade]);
+            const avgGradeNum = gradedT.length > 0 ? gradedT.reduce((s,t) => s+(gradeRank[t.grade]||0),0)/gradedT.length : 0;
+            const avgGradeLabel = avgGradeNum>=3.5?"A+":avgGradeNum>=2.5?"A":avgGradeNum>=1.5?"B":avgGradeNum>0?"C":"—";
+            const avgGradeColor = {"A+":"#7fff6b","A":"#00e5ff","B":"#ffd166","C":"#ff9a3c","—":"#8878aa"}[avgGradeLabel];
+
+            const last8 = journal.filter(t => ["WIN","LOSS","BE"].includes(t.outcome)).slice(-8);
+            const dotC = o => o==="WIN"?"#7fff6b":o==="LOSS"?"#ff6b6b":"#ffd166";
+
+            // Streak
+            const exec = journal.filter(t => ["WIN","LOSS","BE"].includes(t.outcome));
+            let streak = 0, streakType = null;
+            for (let i = exec.length-1; i >= 0; i--) {
+              if (i === exec.length-1) { streakType = exec[i].outcome; streak = 1; }
+              else if (exec[i].outcome === streakType) streak++;
+              else break;
+            }
+            const streakColor = streakType==="WIN"?"#7fff6b":streakType==="LOSS"?"#ff6b6b":"#ffd166";
+            const streakLabel = streak > 0 ? `${streak} ${streakType === "WIN" ? "win" : streakType === "LOSS" ? "loss" : "BE"}${streak > 1 ? "s" : ""}` : "—";
+
+            // Best instrument
+            const instrMap = {};
+            journal.forEach(t => {
+              if (!t.instrument || !["WIN","LOSS","BE"].includes(t.outcome)) return;
+              if (!instrMap[t.instrument]) instrMap[t.instrument] = {w:0,l:0,be:0,total:0};
+              instrMap[t.instrument].total++;
+              if (t.outcome==="WIN") instrMap[t.instrument].w++;
+              else if (t.outcome==="LOSS") instrMap[t.instrument].l++;
+              else instrMap[t.instrument].be++;
+            });
+            const bestEntry = Object.entries(instrMap).filter(([,v])=>v.total>0).sort(([,a],[,b])=>(b.w/b.total)-(a.w/a.total))[0];
+            const mostEntry = Object.entries(instrMap).sort(([,a],[,b])=>b.total-a.total)[0];
+
+            const panelCard = { background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:10, padding:12, marginBottom:12 };
+            const cardLabel = { fontSize:9, fontWeight:900, letterSpacing:"0.16em", color:"rgba(255,255,255,0.35)", marginBottom:10, fontFamily:"'Space Mono',monospace" };
+
+            return (
+              <div style={{ width:210, flexShrink:0, paddingLeft:16 }}>
+                <div style={{ fontSize:9, fontWeight:900, letterSpacing:"0.16em", color:"rgba(255,255,255,0.25)", marginBottom:12, fontFamily:"'Space Mono',monospace" }}>◎ YOUR STATS</div>
+
+                {/* Performance */}
+                <div style={panelCard}>
+                  <div style={cardLabel}>PERFORMANCE</div>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline" }}>
+                    <div>
+                      <div style={{ fontSize:9, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace", marginBottom:2 }}>WIN RATE</div>
+                      <div style={{ fontSize:22, fontWeight:900, color: executed===0?"#8878aa":winRate>=60?"#7fff6b":winRate>=40?"#ffd166":"#ff6b6b", lineHeight:1, fontFamily:"monospace" }}>{executed===0?"—":`${winRate}%`}</div>
+                    </div>
+                    <div style={{ textAlign:"right" }}>
+                      <div style={{ fontSize:9, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace", marginBottom:2 }}>AVG GRADE</div>
+                      <div style={{ fontSize:18, fontWeight:900, color:avgGradeColor, fontFamily:"monospace" }}>{avgGradeLabel}</div>
+                    </div>
+                  </div>
+                  {executed > 0 && (
+                    <div style={{ height:5, background:"rgba(255,255,255,0.08)", borderRadius:3, overflow:"hidden", margin:"8px 0" }}>
+                      <div style={{ height:"100%", width:`${winRate}%`, background:"#7fff6b", borderRadius:3 }}/>
+                    </div>
+                  )}
+                  <div style={{ display:"flex", gap:6, marginTop:8 }}>
+                    {[["W",wins,"#7fff6b"],["L",losses,"#ff6b6b"],["BE",be,"#ffd166"]].map(([lbl,val,col])=>(
+                      <div key={lbl} style={{ flex:1, textAlign:"center", padding:"5px 4px", borderRadius:6, background:`${col}10`, fontSize:10, fontWeight:900, color:col, fontFamily:"'Space Mono',monospace" }}>{val}{lbl}</div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Last 8 trades */}
+                {last8.length > 0 && (
+                  <div style={panelCard}>
+                    <div style={cardLabel}>LAST {Math.min(last8.length,8)} TRADES</div>
+                    <div style={{ display:"flex", gap:5, flexWrap:"wrap" }}>
+                      {last8.map((t,i) => (
+                        <div key={i} style={{ width:10, height:10, borderRadius:"50%", background:dotC(t.outcome) }}/>
+                      ))}
+                    </div>
+                    <div style={{ fontSize:9, color:"rgba(255,255,255,0.25)", marginTop:8, fontFamily:"'Space Mono',monospace" }}>green=W · red=L · amber=BE</div>
+                    <div style={{ height:1, background:"rgba(255,255,255,0.06)", margin:"8px 0" }}/>
+                    <div style={{ fontSize:9, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace" }}>CURRENT STREAK</div>
+                    <div style={{ fontSize:14, fontWeight:900, color:streakColor, marginTop:3, fontFamily:"monospace" }}>{streakLabel}</div>
+                  </div>
+                )}
+
+                {/* Best instrument */}
+                {bestEntry && (
+                  <div style={panelCard}>
+                    <div style={cardLabel}>BEST INSTRUMENT</div>
+                    <div style={{ fontSize:15, fontWeight:900, color:"#f0ecff", marginBottom:4, fontFamily:"'Space Mono',monospace" }}>{bestEntry[0]}</div>
+                    <div style={{ fontSize:10, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace" }}>{bestEntry[1].w}W · {bestEntry[1].l}L · {bestEntry[1].total>0?Math.round((bestEntry[1].w/bestEntry[1].total)*100):0}% win rate</div>
+                    {mostEntry && mostEntry[0] !== bestEntry[0] && (
+                      <>
+                        <div style={{ height:1, background:"rgba(255,255,255,0.06)", margin:"8px 0" }}/>
+                        <div style={{ fontSize:9, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace" }}>MOST TRADED</div>
+                        <div style={{ fontSize:13, fontWeight:900, color:"#00e5ff", marginTop:3, fontFamily:"'Space Mono',monospace" }}>{mostEntry[0]}</div>
+                        <div style={{ fontSize:10, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace" }}>{mostEntry[1].total} sessions</div>
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {/* Empty state — no journal data yet */}
+                {executed === 0 && (
+                  <div style={{ ...panelCard, textAlign:"center", padding:"20px 12px" }}>
+                    <div style={{ fontSize:9, color:"rgba(255,255,255,0.25)", fontFamily:"'Space Mono',monospace", lineHeight:1.8 }}>Stats appear here<br/>after your first<br/>logged trade.</div>
+                  </div>
+                )}
+              </div>
+            );
+            } catch(e) { return null; }
+          })()}
+
         </div>
       )}
 
