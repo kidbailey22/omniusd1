@@ -3715,7 +3715,7 @@ function ChartSetupPage({ onClose }) {
           <div style={{ fontSize:12, color:"rgba(255,255,255,0.62)", lineHeight:1.8, marginBottom:10 }}>
             We built a free indicator that automatically marks your chart lookback periods, labels market structure (HH/HL/LH/LL), and shows 30M candle body strength. Makes the screenshot process foolproof.
           </div>
-          <a href="https://www.tradingview.com/PLACEHOLDER_INDICATOR_LINK" target="_blank" rel="noopener noreferrer"
+          <a href="https://www.tradingview.com/script/WMVM782N-OmniLens-Market-Structure-Chart-Lookback-by-OmniUSD/" target="_blank" rel="noopener noreferrer"
             style={{ display:"inline-block", fontSize:11, fontWeight:700, color:"#ffd166", fontFamily:"'Space Mono',monospace", textDecoration:"none", padding:"7px 14px", borderRadius:6, border:"1px solid rgba(255,209,102,0.3)", background:"rgba(255,209,102,0.06)", cursor:"pointer" }}>
             GET OMNI LENS ON TRADINGVIEW →
           </a>
