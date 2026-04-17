@@ -5689,6 +5689,7 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
         alert(`Price mismatch — the levels returned (${parsed.trigger_level}) don't match ${instrument}. This usually means the wrong charts were uploaded. Please re-upload your ${instrument} charts.`);
         return;
       }
+      setPlan(parsed);
       setPlanChatMessages([]);
       setPlanChatOpen(false);
       setCheckedItems({});
