@@ -3869,7 +3869,7 @@ function TradeLoggerPage({ profile, onClose }) {
   useEffect(() => { if (profile?.email === OWNER) loadTrades(); }, []);
 
   async function saveTrade() {
-    if (!form.entry || !form.stop) { setMsg({ type:"error", text:"Entry and stop are required." }); return; }
+    if (!form.entry || !form.stop) { if (form.outcome !== "NO SETUP") { setMsg({ type:"error", text:"Entry and stop are required." }); return; } }
     setSaving(true); setMsg(null);
     try {
       const payload = {
@@ -3981,13 +3981,19 @@ function TradeLoggerPage({ profile, onClose }) {
             </div>
             <div>
               <div style={{ fontSize:10, color:"#8878aa", fontFamily:"'Space Mono',monospace", letterSpacing:"0.12em", marginBottom:6 }}>INSTRUMENT</div>
-              <select value={form.instrument} onChange={e=>setForm(f=>({...f,instrument:e.target.value}))} style={sel}>
-                {INSTRUMENTS.map(i=><option key={i} value={i}>{i}</option>)}
-              </select>
+              {form.outcome === "NO SETUP"
+                ? <div style={{ ...inp, color:"#6655aa", fontWeight:700, display:"flex", alignItems:"center" }}>ALL INSTRUMENTS</div>
+                : <select value={form.instrument} onChange={e=>setForm(f=>({...f,instrument:e.target.value}))} style={sel}>
+                    {INSTRUMENTS.map(i=><option key={i} value={i}>{i}</option>)}
+                  </select>
+              }
             </div>
             <div>
               <div style={{ fontSize:10, color:"#8878aa", fontFamily:"'Space Mono',monospace", letterSpacing:"0.12em", marginBottom:6 }}>OUTCOME</div>
-              <select value={form.outcome} onChange={e=>setForm(f=>({...f,outcome:e.target.value}))} style={{...sel, color: outcomeColor[form.outcome]}}>
+              <select value={form.outcome} onChange={e => {
+                const val = e.target.value;
+                setForm(f=>({...f, outcome: val, instrument: val === "NO SETUP" ? "ALL" : (f.instrument === "ALL" ? INSTRUMENTS[0] : f.instrument)}));
+              }} style={{...sel, color: outcomeColor[form.outcome]}}>
                 {RESULTS.map(r=><option key={r} value={r}>{r}</option>)}
               </select>
             </div>
