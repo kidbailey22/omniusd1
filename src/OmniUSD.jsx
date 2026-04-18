@@ -2532,8 +2532,14 @@ async function fireTradersPost(plan, contracts, ctType) {
     takeProfit: { limitPrice: sp(plan?.tp1) },
   };
   try {
-    const res = await fetch(webhookUrl, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload) });
-    return { ok: res.ok, status: res.status };
+    // Route through Vercel backend to avoid CORS — browsers can't POST directly to TradersPost
+    const res = await fetch("/api/broker", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ webhookUrl, payload }),
+    });
+    const data = await res.json();
+    return { ok: data.ok, status: data.status };
   } catch(e) { return { ok:false, error:e.message }; }
 }
 
@@ -2917,11 +2923,20 @@ function BrokerSettings({ card, lbl }) {
 
   async function testConnection() {
     if (!webhookUrl) { setTestMsg({type:"error", text:"Enter a webhook URL first."}); return; }
+    if (!webhookUrl.startsWith("https://webhooks.traderspost.io/")) { setTestMsg({type:"error", text:"URL must start with https://webhooks.traderspost.io/"}); return; }
     setTesting(true); setTestMsg(null);
     try {
-      const res = await fetch(webhookUrl, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ticker:"TEST", action:"buy", quantity:1}) });
-      setTestMsg(res.ok ? {type:"success", text:"Webhook reached TradersPost. Check your TradersPost dashboard."} : {type:"error", text:"Webhook responded with an error. Check your URL."});
-    } catch(e) { setTestMsg({type:"error", text:"Could not reach webhook URL. Check your connection."}); }
+      const res = await fetch("/api/broker", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ webhookUrl, payload: { ticker:"MNQ1!", action:"buy", orderType:"limit", limitPrice:"1", quantity:1 } }),
+      });
+      const data = await res.json();
+      setTestMsg(data.ok
+        ? {type:"success", text:"Connected. Check your TradersPost dashboard for the test signal."}
+        : {type:"error",   text:`TradersPost responded with status ${data.status}. Check your webhook URL.`}
+      );
+    } catch(e) { setTestMsg({type:"error", text:"Could not reach OmniUSD server. Try again."}); }
     setTesting(false);
   }
 
