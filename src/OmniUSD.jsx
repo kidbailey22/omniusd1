@@ -7033,39 +7033,6 @@ Use ONLY these times. All earlier time references in this conversation are stale
                   </div>
                 </div>
 
-                {/* Last 8 trades */}
-                {last8.length > 0 && (
-                  <div style={panelCard}>
-                    <div style={cardLabel}>LAST {Math.min(last8.length,8)} TRADES</div>
-                    <div style={{ display:"flex", gap:5, flexWrap:"wrap" }}>
-                      {last8.map((t,i) => (
-                        <div key={i} style={{ width:10, height:10, borderRadius:"50%", background:dotC(t.outcome) }}/>
-                      ))}
-                    </div>
-                    <div style={{ fontSize:9, color:"rgba(255,255,255,0.25)", marginTop:8, fontFamily:"'Space Mono',monospace" }}>green=W · red=L · amber=BE</div>
-                    <div style={{ height:1, background:"rgba(255,255,255,0.06)", margin:"8px 0" }}/>
-                    <div style={{ fontSize:9, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace" }}>CURRENT STREAK</div>
-                    <div style={{ fontSize:14, fontWeight:900, color:streakColor, marginTop:3, fontFamily:"monospace" }}>{streakLabel}</div>
-                  </div>
-                )}
-
-                {/* Best instrument */}
-                {bestEntry && (
-                  <div style={panelCard}>
-                    <div style={cardLabel}>BEST INSTRUMENT</div>
-                    <div style={{ fontSize:15, fontWeight:900, color:"#f0ecff", marginBottom:4, fontFamily:"'Space Mono',monospace" }}>{bestEntry[0]}</div>
-                    <div style={{ fontSize:10, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace" }}>{bestEntry[1].w}W · {bestEntry[1].l}L · {bestEntry[1].total>0?Math.round((bestEntry[1].w/bestEntry[1].total)*100):0}% win rate</div>
-                    {mostEntry && mostEntry[0] !== bestEntry[0] && (
-                      <>
-                        <div style={{ height:1, background:"rgba(255,255,255,0.06)", margin:"8px 0" }}/>
-                        <div style={{ fontSize:9, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace" }}>MOST TRADED</div>
-                        <div style={{ fontSize:13, fontWeight:900, color:"#00e5ff", marginTop:3, fontFamily:"'Space Mono',monospace" }}>{mostEntry[0]}</div>
-                        <div style={{ fontSize:10, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace" }}>{mostEntry[1].total} sessions</div>
-                      </>
-                    )}
-                  </div>
-                )}
-
                 {/* Empty state — no journal data yet */}
                 {executed === 0 && (
                   <div style={{ ...panelCard, textAlign:"center", padding:"20px 12px" }}>
