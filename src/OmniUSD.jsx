@@ -2514,6 +2514,206 @@ Return ONLY this JSON — no markdown, no explanation, no preamble:
 }
 
 // ── Live content sanitizer — strips hesitant/uncertain language before display ──
+// ── TradersPost webhook ───────────────────────────────────────────────────
+async function fireTradersPost(plan, contracts, ctType) {
+  const webhookUrl = localStorage.getItem("omniusd_tp_webhook");
+  if (!webhookUrl) return { ok: false, error: "No webhook URL configured" };
+  const FUTURES_MINI  = { NAS100:"NQ1!",  US30:"YM1!",  US500:"ES1!",  XAUUSD:"GC1!",  XAGUSD:"SI1!",  EURUSD:"6E1!"  };
+  const FUTURES_MICRO = { NAS100:"MNQ1!", US30:"MYM1!", US500:"MES1!", XAUUSD:"MGC1!", XAGUSD:"MSI1!", EURUSD:"M6E1!" };
+  const ticker = (ctType==="mini" ? FUTURES_MINI : FUTURES_MICRO)[plan?.instrument] || plan?.instrument;
+  const sp = v => { const m = String(v||"").match(/^([0-9,]+(?:\.[0-9]+)?)/); return m ? m[1].replace(/,/g,"") : v; };
+  const payload = {
+    ticker,
+    action: plan?.bias === "SHORT" ? "sell" : "buy",
+    orderType: "limit",
+    limitPrice: sp(plan?.trigger_level),
+    quantity: contracts,
+    stopLoss:   { type: "stop",  stopPrice:  sp(plan?.stop_loss) },
+    takeProfit: { limitPrice: sp(plan?.tp1) },
+  };
+  try {
+    const res = await fetch(webhookUrl, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload) });
+    return { ok: res.ok, status: res.status };
+  } catch(e) { return { ok:false, error:e.message }; }
+}
+
+// ── Order Ticket Modal ────────────────────────────────────────────────────
+function OrderTicketModal({ plan, onClose, contracts, setContracts }) {
+  const ctType   = localStorage.getItem("omniusd_ct_type") || "micro";
+  const acctType = localStorage.getItem("omniusd_acct_type") || "prop";
+  const hasTP    = !!(localStorage.getItem("omniusd_tp_webhook"));
+  const [sending, setSending] = useState(false);
+  const [result,  setResult]  = useState(null);
+
+  const TICK_MINI  = { NAS100:20, US30:5, US500:50, XAUUSD:10, XAGUSD:50, EURUSD:12.5 };
+  const TICK_MICRO = { NAS100:2,  US30:0.5, US500:5, XAUUSD:0.1, XAGUSD:1, EURUSD:1.25 };
+  const LABEL_MINI  = { NAS100:"NQ",  US30:"YM",  US500:"ES",  XAUUSD:"GC",  XAGUSD:"SI",  EURUSD:"6E"  };
+  const LABEL_MICRO = { NAS100:"MNQ", US30:"MYM", US500:"MES", XAUUSD:"MGC", XAGUSD:"MSI", EURUSD:"M6E" };
+
+  const tickVal = (ctType==="mini" ? TICK_MINI  : TICK_MICRO)[plan?.instrument] || 2;
+  const ticker  = (ctType==="mini" ? LABEL_MINI : LABEL_MICRO)[plan?.instrument] || plan?.instrument;
+  const ctLabel = ctType==="mini" ? "Mini" : "Micro";
+
+  const sp = v => { const m = String(v||"").match(/^([0-9,]+(?:\.[0-9]+)?)/); return m ? parseFloat(m[1].replace(/,/g,"")) : 0; };
+  const entry   = sp(plan?.trigger_level);
+  const stop    = sp(plan?.stop_loss);
+  const tp1     = sp(plan?.tp1);
+  const isShort = plan?.bias === "SHORT";
+  const stopPts = Math.abs(isShort ? stop - entry : entry - stop);
+  const profPts = Math.abs(isShort ? entry - tp1  : tp1  - entry);
+  const loss    = stopPts * tickVal * contracts;
+  const profit  = profPts * tickVal * contracts;
+  const rr      = loss > 0 ? profit / loss : 0;
+  const fmt     = n => n.toLocaleString("en-US", { minimumFractionDigits:0, maximumFractionDigits:2 });
+
+  const grade  = plan?.grade || "—";
+  const conf   = plan?.confidence_score;
+  const gradeC = grade==="A+"?"#cc44ff":grade==="A"?"#00e5ff":grade==="B"?"#ffd166":grade==="C"?"#ff9a3c":"#8878aa";
+  const disclaimer = acctType==="live"
+    ? "⚠ You are trading real capital. AI analysis only — not financial advice. OmniUSD is not responsible for losses."
+    : "AI analysis only — not financial advice. Verify this trade complies with your prop firm rules before sending.";
+
+  async function handleSend() {
+    setSending(true);
+    const res = await fireTradersPost(plan, contracts, ctType);
+    setSending(false);
+    if (res.ok) { setResult("sent"); setTimeout(() => { onClose(); setResult(null); }, 2500); }
+    else { setResult("error"); }
+  }
+
+  const M = { fontFamily:"'Space Mono',monospace" };
+  return (
+    <div style={{ position:"fixed", inset:0, zIndex:500, display:"flex", alignItems:"center", justifyContent:"center", background:"rgba(10,8,28,0.9)", backdropFilter:"blur(4px)", padding:16 }}
+      onClick={e => e.target===e.currentTarget && onClose()}>
+      <div style={{ width:"100%", maxWidth:440, background:"#16122e", border:"1px solid rgba(127,255,107,0.35)", borderRadius:12, overflow:"hidden" }}>
+
+        {/* Header */}
+        <div style={{ padding:"14px 18px", borderBottom:"1px solid rgba(255,255,255,0.07)", background:"rgba(127,255,107,0.04)" }}>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
+            <div>
+              <div style={{ fontSize:11, fontWeight:900, letterSpacing:"0.18em", color:"#7fff6b", ...M }}>ORDER TICKET</div>
+              <div style={{ fontSize:10, color:"rgba(255,255,255,0.3)", ...M, marginTop:2 }}>Review before sending</div>
+            </div>
+            <div style={{ display:"flex", alignItems:"center", gap:5, fontSize:9, fontWeight:900, padding:"3px 10px", borderRadius:3, background:"rgba(127,255,107,0.12)", color:"#7fff6b", border:"1px solid rgba(127,255,107,0.3)", ...M }}>
+              <span style={{ width:5, height:5, borderRadius:"50%", background:"#7fff6b", display:"inline-block", animation:"pulse 1.5s ease infinite" }}/>
+              TIER 2 CONFIRMED
+            </div>
+          </div>
+          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+            {conf && <span style={{ fontSize:9, fontWeight:900, padding:"2px 9px", borderRadius:3, background:"rgba(0,229,255,0.1)", color:"#00e5ff", border:"1px solid rgba(0,229,255,0.25)", ...M }}>{conf}% CONFIDENCE</span>}
+            <span style={{ fontSize:9, fontWeight:900, padding:"2px 9px", borderRadius:3, background:`${gradeC}18`, color:gradeC, border:`1px solid ${gradeC}44`, ...M }}>{grade}</span>
+            <span style={{ fontSize:9, padding:"2px 9px", borderRadius:3, background:acctType==="live"?"rgba(255,107,107,0.1)":"rgba(0,229,255,0.06)", color:acctType==="live"?"#ff6b6b":"rgba(0,229,255,0.6)", border:`1px solid ${acctType==="live"?"rgba(255,107,107,0.25)":"rgba(0,229,255,0.15)"}`, ...M, fontWeight:700 }}>
+              {acctType==="live" ? "LIVE ACCOUNT" : "PROP FIRM"}
+            </span>
+          </div>
+        </div>
+
+        <div style={{ padding:"16px 18px" }}>
+          {/* Instrument row */}
+          <div style={{ display:"flex", gap:10, marginBottom:12 }}>
+            {[
+              { l:"INSTRUMENT", v:`${plan?.instrument} · ${ticker}`, c:"#f0ecff" },
+              { l:"DIRECTION",  v:plan?.bias==="LONG"?"▲ LONG":"▼ SHORT", c:plan?.bias==="LONG"?"#7fff6b":"#ff6b6b" },
+              { l:"ORDER TYPE", v:"Limit", c:"#f0ecff" },
+            ].map((f,i)=>(
+              <div key={i} style={{ flex:1 }}>
+                <div style={{ fontSize:8, fontWeight:900, letterSpacing:"0.14em", color:"rgba(255,255,255,0.3)", ...M, marginBottom:4 }}>{f.l}</div>
+                <div style={{ fontSize:12, fontWeight:700, color:f.c, fontFamily:"monospace", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:6, padding:"7px 9px" }}>{f.v}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Levels */}
+          <div style={{ display:"flex", gap:10, marginBottom:14 }}>
+            {[
+              { l:"ENTRY",     v:plan?.trigger_level, c:"#f0ecff", bc:"rgba(255,255,255,0.08)" },
+              { l:"STOP LOSS", v:plan?.stop_loss,     c:"#ff6b6b", bc:"rgba(255,107,107,0.2)"  },
+              { l:"TP1",       v:plan?.tp1,           c:"#00e5ff", bc:"rgba(0,229,255,0.2)"    },
+            ].map((f,i)=>(
+              <div key={i} style={{ flex:1 }}>
+                <div style={{ fontSize:8, fontWeight:900, letterSpacing:"0.14em", color:"rgba(255,255,255,0.3)", ...M, marginBottom:4 }}>{f.l}</div>
+                <div style={{ fontSize:12, fontWeight:700, color:f.c, fontFamily:"monospace", background:`${f.c}08`, border:`1px solid ${f.bc}`, borderRadius:6, padding:"7px 9px" }}>{f.v||"—"}</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ height:1, background:"rgba(255,255,255,0.06)", margin:"14px 0" }}/>
+
+          {/* Contracts stepper */}
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
+            <div>
+              <div style={{ fontSize:9, fontWeight:900, letterSpacing:"0.14em", color:"rgba(255,255,255,0.4)", ...M }}>CONTRACTS</div>
+              <div style={{ fontSize:10, color:"rgba(255,255,255,0.25)", ...M, marginTop:2 }}>{ticker} {ctLabel} · ${tickVal}/point</div>
+            </div>
+            <div style={{ display:"flex", alignItems:"center", border:"1px solid rgba(255,255,255,0.12)", borderRadius:6, overflow:"hidden" }}>
+              <button onClick={()=>setContracts(c=>Math.max(1,c-1))} style={{ width:32, height:32, border:"none", background:"rgba(255,255,255,0.05)", color:"#f0ecff", fontSize:18, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>−</button>
+              <div style={{ width:40, height:32, display:"flex", alignItems:"center", justifyContent:"center", fontSize:14, fontWeight:700, fontFamily:"monospace", color:"#f0ecff", borderLeft:"1px solid rgba(255,255,255,0.08)", borderRight:"1px solid rgba(255,255,255,0.08)", background:"rgba(255,255,255,0.02)" }}>{contracts}</div>
+              <button onClick={()=>setContracts(c=>Math.min(20,c+1))} style={{ width:32, height:32, border:"none", background:"rgba(255,255,255,0.05)", color:"#f0ecff", fontSize:18, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>+</button>
+            </div>
+          </div>
+
+          {/* P&L */}
+          <div style={{ display:"flex", gap:10, marginBottom:10 }}>
+            <div style={{ flex:1, padding:"11px 13px", borderRadius:8, background:"rgba(255,107,107,0.05)", border:"1px solid rgba(255,107,107,0.2)" }}>
+              <div style={{ fontSize:8, fontWeight:900, letterSpacing:"0.12em", color:"rgba(255,107,107,0.6)", ...M, marginBottom:5 }}>PROJECTED LOSS</div>
+              <div style={{ fontSize:9, color:"rgba(255,255,255,0.2)", ...M, marginBottom:3 }}>{fmt(stopPts)} pts × ${tickVal} × {contracts}</div>
+              <div style={{ fontSize:20, fontWeight:900, fontFamily:"monospace", color:"#ff6b6b" }}>−${fmt(loss)}</div>
+            </div>
+            <div style={{ flex:1, padding:"11px 13px", borderRadius:8, background:"rgba(127,255,107,0.05)", border:"1px solid rgba(127,255,107,0.2)" }}>
+              <div style={{ fontSize:8, fontWeight:900, letterSpacing:"0.12em", color:"rgba(127,255,107,0.6)", ...M, marginBottom:5 }}>PROJECTED PROFIT</div>
+              <div style={{ fontSize:9, color:"rgba(255,255,255,0.2)", ...M, marginBottom:3 }}>{fmt(profPts)} pts × ${tickVal} × {contracts}</div>
+              <div style={{ fontSize:20, fontWeight:900, fontFamily:"monospace", color:"#7fff6b" }}>+${fmt(profit)}</div>
+            </div>
+          </div>
+
+          {/* R:R */}
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"7px 12px", borderRadius:6, marginBottom:14, background:rr>=1.5?"rgba(127,255,107,0.05)":"rgba(255,209,102,0.06)", border:`1px solid ${rr>=1.5?"rgba(127,255,107,0.2)":"rgba(255,209,102,0.2)"}` }}>
+            <span style={{ fontSize:9, fontWeight:900, letterSpacing:"0.14em", ...M, color:rr>=1.5?"rgba(127,255,107,0.7)":"rgba(255,209,102,0.7)" }}>R:R RATIO</span>
+            <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+              {rr<1.5 && <span style={{ fontSize:9, color:"rgba(255,209,102,0.6)", ...M }}>⚠ below 1.5:1 minimum</span>}
+              <span style={{ fontSize:13, fontWeight:700, fontFamily:"monospace", color:rr>=1.5?"#7fff6b":"#ffd166" }}>{rr.toFixed(2)}:1</span>
+            </div>
+          </div>
+
+          {/* Buttons */}
+          {result==="sent" ? (
+            <div style={{ padding:"12px", borderRadius:8, background:"rgba(127,255,107,0.1)", border:"1px solid rgba(127,255,107,0.3)", textAlign:"center", fontSize:13, fontWeight:900, color:"#7fff6b", ...M }}>
+              ✓ ORDER SENT — HANDS OFF
+            </div>
+          ) : result==="error" ? (
+            <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+              <div style={{ padding:"10px 12px", borderRadius:8, background:"rgba(255,107,107,0.08)", border:"1px solid rgba(255,107,107,0.25)", fontSize:11, color:"#ff6b6b", ...M }}>
+                ⚠ Webhook failed. Check Settings → Broker and try again.
+              </div>
+              <div style={{ display:"flex", gap:8 }}>
+                <button onClick={()=>setResult(null)} style={{ flex:1, padding:"10px", borderRadius:8, border:"1px solid rgba(255,255,255,0.1)", background:"none", color:"rgba(255,255,255,0.4)", fontSize:11, fontWeight:700, ...M, cursor:"pointer" }}>Retry</button>
+                <button onClick={onClose} style={{ flex:1, padding:"10px", borderRadius:8, border:"1px solid rgba(255,209,102,0.3)", background:"rgba(255,209,102,0.08)", color:"#ffd166", fontSize:11, fontWeight:700, ...M, cursor:"pointer" }}>Place Manually</button>
+              </div>
+            </div>
+          ) : (
+            <div style={{ display:"flex", gap:8, marginBottom:10 }}>
+              <button onClick={onClose} style={{ padding:"11px 14px", borderRadius:8, border:"1px solid rgba(255,255,255,0.1)", background:"none", color:"rgba(255,255,255,0.3)", fontSize:11, fontWeight:700, ...M, cursor:"pointer", whiteSpace:"nowrap" }}>Dismiss</button>
+              <button onClick={onClose} style={{ flex:1, padding:"11px 0", borderRadius:8, border:"1px solid rgba(255,209,102,0.3)", background:"rgba(255,209,102,0.08)", color:"#ffd166", fontSize:11, fontWeight:900, ...M, cursor:"pointer" }}>Place Manually</button>
+              {hasTP && <button onClick={handleSend} disabled={sending} style={{ flex:1.5, padding:"11px 0", borderRadius:8, border:"none", background:sending?"rgba(127,255,107,0.3)":"linear-gradient(135deg,#7fff6b,#00e5ff)", color:"#1e1a35", fontSize:12, fontWeight:900, ...M, cursor:"pointer", letterSpacing:"0.1em" }}>{sending?"SENDING...":"SEND ORDER →"}</button>}
+            </div>
+          )}
+
+          {hasTP && result!=="sent" && (
+            <div style={{ display:"flex", alignItems:"center", gap:5, justifyContent:"center", marginBottom:8 }}>
+              <span style={{ width:5, height:5, borderRadius:"50%", background:"#00e5ff", display:"inline-block" }}/>
+              <span style={{ fontSize:9, color:"rgba(255,255,255,0.2)", ...M }}>TradersPost · Tradovate · MFFU</span>
+            </div>
+          )}
+
+          <div style={{ fontSize:9, color:acctType==="live"?"rgba(255,107,107,0.45)":"rgba(255,255,255,0.2)", ...M, textAlign:"center", lineHeight:1.6 }}>
+            {disclaimer}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function sanitizeLiveContent(text) {
   if (!text) return text;
   return text
@@ -2699,8 +2899,7 @@ function DashFaqRow({item, isLast}) {
 }
 
 function BrokerSettings({ card, lbl }) {
-  const [webhookUrl, setWebhookUrl] = useState(() => localStorage.getItem("omniusd_pc_webhook") || "");
-  const [licenseId, setLicenseId]   = useState(() => localStorage.getItem("omniusd_pc_license") || "");
+  const [webhookUrl, setWebhookUrl] = useState(() => localStorage.getItem("omniusd_tp_webhook") || "");
   const [acctType, setAcctType]     = useState(() => localStorage.getItem("omniusd_acct_type") || "prop");
   const [ctType, setCtType]         = useState(() => localStorage.getItem("omniusd_ct_type") || "micro");
   const [defContracts, setDefContracts] = useState(() => parseInt(localStorage.getItem("omniusd_def_contracts") || "1"));
@@ -2709,46 +2908,38 @@ function BrokerSettings({ card, lbl }) {
   const [testMsg, setTestMsg]       = useState(null);
 
   function saveBroker() {
-    localStorage.setItem("omniusd_pc_webhook", webhookUrl);
-    localStorage.setItem("omniusd_pc_license", licenseId);
+    localStorage.setItem("omniusd_tp_webhook", webhookUrl);
     localStorage.setItem("omniusd_acct_type", acctType);
     localStorage.setItem("omniusd_ct_type", ctType);
     localStorage.setItem("omniusd_def_contracts", String(defContracts));
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setSaved(true); setTimeout(() => setSaved(false), 2000);
   }
 
   async function testConnection() {
     if (!webhookUrl) { setTestMsg({type:"error", text:"Enter a webhook URL first."}); return; }
     setTesting(true); setTestMsg(null);
     try {
-      await fetch(webhookUrl, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({test:true, source:"omniusd"}) });
-      setTestMsg({type:"success", text:"Webhook fired. Check PineConnector for a test ping."});
+      const res = await fetch(webhookUrl, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ticker:"TEST", action:"buy", quantity:1}) });
+      setTestMsg(res.ok ? {type:"success", text:"Webhook reached TradersPost. Check your TradersPost dashboard."} : {type:"error", text:"Webhook responded with an error. Check your URL."});
     } catch(e) { setTestMsg({type:"error", text:"Could not reach webhook URL. Check your connection."}); }
     setTesting(false);
   }
 
-  const connected = webhookUrl && licenseId;
+  const connected = !!webhookUrl;
   return (
     <div style={{display:"flex",flexDirection:"column",gap:16}}>
       <div style={card}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
-          <span style={lbl}>PINECONNECTOR</span>
+          <span style={lbl}>TRADERSPOST</span>
           {connected && <span style={{fontSize:9,fontWeight:900,padding:"3px 10px",borderRadius:3,background:"rgba(127,255,107,0.1)",color:"#7fff6b",border:"1px solid rgba(127,255,107,0.25)",fontFamily:"'Space Mono',monospace"}}>CONNECTED</span>}
         </div>
         <div style={{marginBottom:14}}>
           <div style={{fontSize:10,color:"#8878aa",fontFamily:"'Space Mono',monospace",marginBottom:6,letterSpacing:"0.1em"}}>WEBHOOK URL</div>
-          <input value={webhookUrl} onChange={e=>setWebhookUrl(e.target.value)} placeholder="https://pineconnector.net/webhook/..."
+          <input value={webhookUrl} onChange={e=>setWebhookUrl(e.target.value)} placeholder="https://webhooks.traderspost.io/trading/webhook/..."
             style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:6,padding:"9px 12px",fontSize:12,color:"#f0ecff",fontFamily:"'Space Mono',monospace",outline:"none"}}/>
-          <div style={{fontSize:10,color:"rgba(255,255,255,0.25)",marginTop:4,fontFamily:"'Space Mono',monospace"}}>Found in your PineConnector dashboard.</div>
+          <div style={{fontSize:10,color:"rgba(255,255,255,0.25)",marginTop:4,fontFamily:"'Space Mono',monospace"}}>Copy from TradersPost → Strategies → your strategy → Webhook URL.</div>
         </div>
-        <div style={{marginBottom:14}}>
-          <div style={{fontSize:10,color:"#8878aa",fontFamily:"'Space Mono',monospace",marginBottom:6,letterSpacing:"0.1em"}}>LICENSE ID</div>
-          <input value={licenseId} onChange={e=>setLicenseId(e.target.value)} placeholder="PC-XXXXXXXXXX"
-            style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:6,padding:"9px 12px",fontSize:12,color:"#f0ecff",fontFamily:"'Space Mono',monospace",outline:"none"}}/>
-        </div>
-        <button onClick={testConnection} disabled={testing}
-          style={{width:"100%",padding:"9px",borderRadius:7,border:"1px solid rgba(0,229,255,0.3)",background:"rgba(0,229,255,0.06)",color:"#00e5ff",fontSize:12,fontWeight:700,fontFamily:"'Space Mono',monospace",cursor:"pointer",marginBottom:8}}>
+        <button onClick={testConnection} disabled={testing} style={{width:"100%",padding:"9px",borderRadius:7,border:"1px solid rgba(0,229,255,0.3)",background:"rgba(0,229,255,0.06)",color:"#00e5ff",fontSize:12,fontWeight:700,fontFamily:"'Space Mono',monospace",cursor:"pointer",marginBottom:8}}>
           {testing ? "TESTING..." : "TEST CONNECTION →"}
         </button>
         {testMsg && <div style={{fontSize:11,fontFamily:"'Space Mono',monospace",color:testMsg.type==="success"?"#7fff6b":"#ff6b6b",padding:"6px 10px",borderRadius:6,background:testMsg.type==="success"?"rgba(127,255,107,0.06)":"rgba(255,107,107,0.06)"}}>{testMsg.text}</div>}
@@ -2757,29 +2948,19 @@ function BrokerSettings({ card, lbl }) {
         <span style={lbl}>ACCOUNT TYPE</span>
         <div style={{display:"flex",gap:8,marginBottom:4}}>
           {[{id:"prop",l:"Prop Firm"},{id:"live",l:"Live Account"}].map(o=>(
-            <button key={o.id} onClick={()=>setAcctType(o.id)}
-              style={{flex:1,padding:"9px",borderRadius:7,border:`1px solid ${acctType===o.id?(o.id==="prop"?"rgba(0,229,255,0.4)":"rgba(255,107,107,0.4)"):"rgba(255,255,255,0.1)"}`,background:acctType===o.id?(o.id==="prop"?"rgba(0,229,255,0.08)":"rgba(255,107,107,0.08)"):"none",color:acctType===o.id?(o.id==="prop"?"#00e5ff":"#ff6b6b"):"#8878aa",fontSize:12,fontWeight:700,fontFamily:"'Space Mono',monospace",cursor:"pointer"}}>
-              {o.l}
-            </button>
+            <button key={o.id} onClick={()=>setAcctType(o.id)} style={{flex:1,padding:"9px",borderRadius:7,border:`1px solid ${acctType===o.id?(o.id==="prop"?"rgba(0,229,255,0.4)":"rgba(255,107,107,0.4)"):"rgba(255,255,255,0.1)"}`,background:acctType===o.id?(o.id==="prop"?"rgba(0,229,255,0.08)":"rgba(255,107,107,0.08)"):"none",color:acctType===o.id?(o.id==="prop"?"#00e5ff":"#ff6b6b"):"#8878aa",fontSize:12,fontWeight:700,fontFamily:"'Space Mono',monospace",cursor:"pointer"}}>{o.l}</button>
           ))}
         </div>
-        <div style={{fontSize:10,color:"rgba(255,255,255,0.25)",fontFamily:"'Space Mono',monospace",lineHeight:1.6}}>
-          {acctType==="prop" ? "Prop firm disclaimer shown on order ticket." : "⚠ Live account — real capital disclaimer shown."}
-        </div>
+        <div style={{fontSize:10,color:"rgba(255,255,255,0.25)",fontFamily:"'Space Mono',monospace",lineHeight:1.6}}>{acctType==="prop"?"Prop firm disclaimer shown on order ticket.":"⚠ Live account — real capital disclaimer shown."}</div>
       </div>
       <div style={card}>
         <span style={lbl}>CONTRACT TYPE</span>
         <div style={{display:"flex",gap:8,marginBottom:4}}>
           {[{id:"micro",l:"Micro"},{id:"mini",l:"Mini"}].map(o=>(
-            <button key={o.id} onClick={()=>setCtType(o.id)}
-              style={{flex:1,padding:"9px",borderRadius:7,border:`1px solid ${ctType===o.id?"rgba(255,107,255,0.4)":"rgba(255,255,255,0.1)"}`,background:ctType===o.id?"rgba(255,107,255,0.08)":"none",color:ctType===o.id?"#ff6bff":"#8878aa",fontSize:12,fontWeight:700,fontFamily:"'Space Mono',monospace",cursor:"pointer"}}>
-              {o.l}
-            </button>
+            <button key={o.id} onClick={()=>setCtType(o.id)} style={{flex:1,padding:"9px",borderRadius:7,border:`1px solid ${ctType===o.id?"rgba(255,107,255,0.4)":"rgba(255,255,255,0.1)"}`,background:ctType===o.id?"rgba(255,107,255,0.08)":"none",color:ctType===o.id?"#ff6bff":"#8878aa",fontSize:12,fontWeight:700,fontFamily:"'Space Mono',monospace",cursor:"pointer"}}>{o.l}</button>
           ))}
         </div>
-        <div style={{fontSize:10,color:"rgba(255,255,255,0.25)",fontFamily:"'Space Mono',monospace",lineHeight:1.6}}>
-          {ctType==="micro" ? "MNQ · MYM · MES · MGC · MSI · M6E" : "NQ · YM · ES · GC · SI · 6E"}
-        </div>
+        <div style={{fontSize:10,color:"rgba(255,255,255,0.25)",fontFamily:"'Space Mono',monospace",lineHeight:1.6}}>{ctType==="micro"?"MNQ · MYM · MES · MGC · MSI · M6E":"NQ · YM · ES · GC · SI · 6E"}</div>
       </div>
       <div style={card}>
         <span style={lbl}>DEFAULT CONTRACTS</span>
@@ -2788,7 +2969,7 @@ function BrokerSettings({ card, lbl }) {
           <span style={{fontSize:18,fontWeight:700,fontFamily:"monospace",color:"#f0ecff",minWidth:24,textAlign:"center"}}>{defContracts}</span>
           <button onClick={()=>setDefContracts(c=>Math.min(20,c+1))} style={{width:32,height:32,borderRadius:6,border:"1px solid rgba(255,255,255,0.12)",background:"rgba(255,255,255,0.05)",color:"#f0ecff",fontSize:18,cursor:"pointer",fontFamily:"monospace",display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>
         </div>
-        <div style={{fontSize:10,color:"rgba(255,255,255,0.25)",fontFamily:"'Space Mono',monospace"}}>Pre-filled on the order ticket. You can always adjust before sending.</div>
+        <div style={{fontSize:10,color:"rgba(255,255,255,0.25)",fontFamily:"'Space Mono',monospace"}}>Pre-filled on the order ticket. Adjust before sending if needed.</div>
       </div>
       <div style={{padding:"12px 14px",borderRadius:8,background:"rgba(0,229,255,0.04)",border:"1px solid rgba(0,229,255,0.12)"}}>
         <div style={{fontSize:9,fontWeight:900,letterSpacing:"0.14em",color:"#00e5ff",marginBottom:8,fontFamily:"'Space Mono',monospace"}}>HOW IT WORKS</div>
@@ -2796,13 +2977,12 @@ function BrokerSettings({ card, lbl }) {
           1. Tier 2 confirms in OmniUSD<br/>
           2. Order ticket pops with your levels pre-filled<br/>
           3. Adjust contracts if needed<br/>
-          4. Tap SEND ORDER — webhook fires to PineConnector<br/>
-          5. PineConnector places limit in Tradovate via TradingView<br/>
+          4. Tap SEND ORDER → TradersPost → Tradovate (MFFU)<br/>
+          5. TradeCopia copies to all Apex accounts automatically<br/>
           6. Hands off. Let the trade work.
         </div>
       </div>
-      <button onClick={saveBroker}
-        style={{width:"100%",padding:"12px",borderRadius:10,border:"none",background:saved?"rgba(127,255,107,0.2)":"linear-gradient(135deg,#cc44ff,#00ccff)",color:saved?"#7fff6b":"#1e1a35",fontSize:13,fontWeight:900,letterSpacing:"0.12em",fontFamily:"inherit",cursor:"pointer"}}>
+      <button onClick={saveBroker} style={{width:"100%",padding:"12px",borderRadius:10,border:"none",background:saved?"rgba(127,255,107,0.2)":"linear-gradient(135deg,#cc44ff,#00ccff)",color:saved?"#7fff6b":"#1e1a35",fontSize:13,fontWeight:900,letterSpacing:"0.12em",fontFamily:"inherit",cursor:"pointer"}}>
         {saved ? "✓ SAVED" : "SAVE BROKER SETTINGS →"}
       </button>
     </div>
@@ -5502,6 +5682,8 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
   }));
   const PLAN_CHAT_LIMIT = 4;
   const [showChart, setShowChart] = useState(false);
+  const [showOrderTicket, setShowOrderTicket] = useState(false);
+  const [orderContracts, setOrderContracts] = useState(() => parseInt(localStorage.getItem("omniusd_def_contracts") || "1"));
   const [propFirmMode, setPropFirmMode] = useState(() => {
     try { return localStorage.getItem("omniusd_prop_firm_mode") === "true"; } catch { return false; }
   });
@@ -6089,7 +6271,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
         try {
           const sig = JSON.parse(signalMatch[1]);
           if (sig.tier1 === true && !tier1) { setTier1(true); setSessionState("BREAK_CONFIRMED"); }
-          if (sig.tier2 === true && !tier2) { setTier2(true); setSessionState("READY_FOR_LIMIT"); }
+          if (sig.tier2 === true && !tier2) { setTier2(true); setSessionState("READY_FOR_LIMIT"); setOrderContracts(parseInt(localStorage.getItem("omniusd_def_contracts")||"1")); setShowOrderTicket(true); }
           if (sig.invalidated === true) setSessionState("INVALIDATED");
           if (sig.retest === true) setSessionState("RETEST_FORMING");
         } catch(e) {}
@@ -7371,6 +7553,7 @@ Use ONLY these times. All earlier time references in this conversation are stale
       {/* ══ PHASE: LIVE SESSION ════════════════════════════════════════════════ */}
       {appPage === "dashboard" && phase === "live" && plan && (
         <>
+          {showOrderTicket && <OrderTicketModal plan={plan} contracts={orderContracts} setContracts={setOrderContracts} onClose={()=>setShowOrderTicket(false)}/>}
           {/* Progress strip — desktop only badge, mobile gets it in header already */}
           <div style={{ display: "flex", alignItems: "center", padding: "0 16px", height: 32, borderBottom: "1px solid rgba(255,255,255,0.07)", flexShrink: 0, overflowX: "auto" }}>
             {[
