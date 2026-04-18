@@ -3972,48 +3972,15 @@ function BulkUploadZone({ images, setImages, readSlotFile, dragOverSlot, setDrag
 // SESSION HISTORY PAGE
 // ═══════════════════════════════════════════════════════════════════════════
 function ChartSetupPage({ onClose }) {
-  const [expanded, setExpanded] = React.useState(null);
-
-  const TF = [
-    {
-      short: "D",   tf: "Daily",     lookback: "6 months",  color: "#ff6bff",
-      shows: "Full macro trend + major levels",
-      perfect: "Captures the complete trend cycle — every major high, low, and rejection is visible. Too little and you miss the macro trend. Too much and old levels confuse the read.",
-      tooLittle: "1 month — misses macro trend",
-      tooMuch: "1 year — old levels confuse analysis",
-    },
-    {
-      short: "4H",  tf: "4-Hour",    lookback: "4–6 weeks", color: "#00e5ff",
-      shows: "Intermediate structure + BRC phases",
-      perfect: "Shows the full correction phase — lower highs, consolidation zones, and the setup forming between Daily and 1H. Less than 4 weeks and the structure disappears.",
-      tooLittle: "1 week — misses intermediate structure",
-      tooMuch: "3 months — too many old levels",
-    },
-    {
-      short: "1H",  tf: "1-Hour",    lookback: "5–7 days",  color: "#7fff6b",
-      shows: "Entry structure + current BRC sequence",
-      perfect: "Shows active retest zones and the BRC sequence forming right now. This is where entry levels, stop zones, and the current phase are most readable.",
-      tooLittle: "1 day — misses entry structure",
-      tooMuch: "2 weeks — too much noise",
-    },
-    {
-      short: "30M", tf: "30-Minute", lookback: "3–5 days",  color: "#ffd166",
-      shows: "Trigger levels + Tier 1 / Tier 2 zones",
-      perfect: "Shows current consolidation, swing highs and lows, and the exact levels for Tier 1 and Tier 2 confirmation. This is your entry trigger timeframe.",
-      tooLittle: "1 day — misses consolidation zones",
-      tooMuch: "1 week — stale levels pollute the read",
-    },
-  ];
-
   return (
     <div style={{ flex:1, overflowY:"auto", padding:"28px 20px", animation:"fadein 0.3s ease both" }}>
       <div style={{ maxWidth:560, margin:"0 auto" }}>
 
         {/* Header */}
-        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:6 }}>
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:24 }}>
           <div>
             <div style={{ fontFamily:"'Space Mono',monospace", fontSize:11, color:"rgba(255,209,102,0.7)", letterSpacing:"0.18em", marginBottom:5 }}>CHART SETUP</div>
-            <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:20, fontWeight:800, color:"#f0ecff", margin:0 }}>How far back to set each chart.</h2>
+            <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:20, fontWeight:800, color:"#f0ecff", margin:0 }}>Get your charts ready.</h2>
           </div>
           <button onClick={onClose} style={{ fontFamily:"'Space Mono',monospace", fontSize:12, fontWeight:700, color:"#8878aa", background:"none", border:"1px solid rgba(255,255,255,0.08)", borderRadius:6, padding:"6px 12px", cursor:"pointer" }}>
             ← Back
@@ -4036,7 +4003,7 @@ function ChartSetupPage({ onClose }) {
         </div>
 
         {/* OmniLens indicator */}
-        <div style={{ padding:"12px 14px", background:"rgba(255,209,102,0.04)", border:"1px solid rgba(255,209,102,0.18)", borderLeft:"3px solid #ffd166", borderRadius:0, marginBottom:20 }}>
+        <div style={{ padding:"12px 14px", background:"rgba(255,209,102,0.04)", border:"1px solid rgba(255,209,102,0.18)", borderLeft:"3px solid #ffd166", borderRadius:0, marginBottom:24 }}>
           <div style={{ fontSize:9, fontWeight:900, letterSpacing:"0.14em", color:"#ffd166", fontFamily:"'Space Mono',monospace", marginBottom:6 }}>🔭 OMNI LENS — FREE TRADINGVIEW INDICATOR</div>
           <div style={{ fontSize:12, color:"rgba(255,255,255,0.62)", lineHeight:1.8, marginBottom:10 }}>
             We built a free indicator that automatically marks your chart lookback periods, labels market structure (HH/HL/LH/LL), and shows 30M candle body strength. Makes the screenshot process foolproof.
@@ -4045,77 +4012,6 @@ function ChartSetupPage({ onClose }) {
             style={{ display:"inline-block", fontSize:11, fontWeight:700, color:"#ffd166", fontFamily:"'Space Mono',monospace", textDecoration:"none", padding:"7px 14px", borderRadius:6, border:"1px solid rgba(255,209,102,0.3)", background:"rgba(255,209,102,0.06)", cursor:"pointer" }}>
             GET OMNI LENS ON TRADINGVIEW →
           </a>
-        </div>
-
-        {/* Warning */}
-        <div style={{ padding:"9px 13px", background:"rgba(255,107,107,0.06)", border:"1px solid rgba(255,107,107,0.18)", borderLeft:"3px solid #ff6b6b", borderRadius:0, marginBottom:20 }}>
-          <div style={{ fontSize:11, color:"rgba(255,255,255,0.62)", fontFamily:"'Space Mono',monospace", lineHeight:1.7 }}>
-            Wrong lookback = bad analysis. <strong style={{ color:"#ff6b6b" }}>These are requirements, not suggestions.</strong>
-          </div>
-        </div>
-
-        {/* ── QUICK REFERENCE TABLE — primary view ── */}
-        <div style={{ background:"rgba(255,209,102,0.03)", border:"1px solid rgba(255,209,102,0.15)", borderRadius:10, overflow:"hidden", marginBottom:16 }}>
-          <div style={{ padding:"10px 16px", borderBottom:"1px solid rgba(255,209,102,0.1)" }}>
-            <div style={{ fontFamily:"'Space Mono',monospace", fontSize:9, fontWeight:900, letterSpacing:"0.14em", color:"#ffd166" }}>QUICK REFERENCE</div>
-          </div>
-          {TF.map((r, i) => (
-            <div key={r.short} style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 16px", borderBottom: i < TF.length-1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
-              <div style={{ width:30, height:30, borderRadius:6, background:`${r.color}14`, border:`1px solid ${r.color}33`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                <span style={{ fontFamily:"'Space Mono',monospace", fontSize:10, fontWeight:900, color:r.color }}>{r.short}</span>
-              </div>
-              <span style={{ fontSize:12, color:"rgba(255,255,255,0.55)", flex:1 }}>{r.tf}</span>
-              <span style={{ fontSize:13, fontWeight:900, color:r.color, fontFamily:"monospace" }}>{r.lookback}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* ── ACCORDION — expandable detail ── */}
-        <div style={{ fontFamily:"'Space Mono',monospace", fontSize:9, fontWeight:900, letterSpacing:"0.14em", color:"rgba(255,255,255,0.3)", marginBottom:10 }}>
-          TAP ANY TIMEFRAME FOR DETAILS
-        </div>
-        <div style={{ display:"flex", flexDirection:"column", gap:6, marginBottom:20 }}>
-          {TF.map((r) => {
-            const isOpen = expanded === r.short;
-            return (
-              <div key={r.short} style={{ background:"rgba(255,255,255,0.03)", border:`1px solid ${isOpen ? r.color+"44" : "rgba(255,255,255,0.06)"}`, borderRadius:10, overflow:"hidden", transition:"border 0.2s" }}>
-                {/* Header */}
-                <button onClick={() => setExpanded(isOpen ? null : r.short)}
-                  style={{ width:"100%", display:"flex", alignItems:"center", gap:12, padding:"12px 14px", background:"none", border:"none", cursor:"pointer", fontFamily:"inherit", textAlign:"left" }}>
-                  <div style={{ width:28, height:28, borderRadius:6, background:`${r.color}14`, border:`1px solid ${r.color}33`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                    <span style={{ fontFamily:"'Space Mono',monospace", fontSize:10, fontWeight:900, color:r.color }}>{r.short}</span>
-                  </div>
-                  <div style={{ flex:1 }}>
-                    <div style={{ fontSize:13, fontWeight:700, color:"#f0ecff" }}>{r.tf}</div>
-                    <div style={{ fontSize:10, color:"rgba(255,255,255,0.4)", fontFamily:"'Space Mono',monospace" }}>{r.shows}</div>
-                  </div>
-                  <div style={{ textAlign:"right", flexShrink:0, marginRight:8 }}>
-                    <span style={{ fontSize:13, fontWeight:900, color:r.color, fontFamily:"monospace" }}>{r.lookback}</span>
-                  </div>
-                  <span style={{ color:"rgba(255,255,255,0.3)", fontSize:13, flexShrink:0, transform:isOpen?"rotate(180deg)":"none", transition:"transform 0.2s" }}>▾</span>
-                </button>
-
-                {/* Expanded detail */}
-                {isOpen && (
-                  <div style={{ padding:"0 14px 14px", animation:"fadein 0.2s ease both" }}>
-                    <div style={{ fontSize:12, color:"rgba(255,255,255,0.62)", lineHeight:1.8, marginBottom:10, paddingTop:4, borderTop:"1px solid rgba(255,255,255,0.05)" }}>
-                      {r.perfect}
-                    </div>
-                    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:6 }}>
-                      <div style={{ padding:"6px 10px", background:"rgba(255,107,107,0.05)", border:"1px solid rgba(255,107,107,0.15)", borderRadius:7 }}>
-                        <div style={{ fontSize:9, color:"#ff6b6b", fontFamily:"'Space Mono',monospace", fontWeight:700, marginBottom:3 }}>❌ TOO LITTLE</div>
-                        <div style={{ fontSize:11, color:"rgba(255,255,255,0.5)", lineHeight:1.5 }}>{r.tooLittle}</div>
-                      </div>
-                      <div style={{ padding:"6px 10px", background:"rgba(255,107,107,0.05)", border:"1px solid rgba(255,107,107,0.15)", borderRadius:7 }}>
-                        <div style={{ fontSize:9, color:"#ff6b6b", fontFamily:"'Space Mono',monospace", fontWeight:700, marginBottom:3 }}>❌ TOO MUCH</div>
-                        <div style={{ fontSize:11, color:"rgba(255,255,255,0.5)", lineHeight:1.5 }}>{r.tooMuch}</div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
         </div>
 
         {/* CTA */}
