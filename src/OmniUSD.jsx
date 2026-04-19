@@ -275,7 +275,7 @@ ACCEPTED ALIASES — these ticker labels are valid for each instrument:
 - EURUSD: EURUSD, EUR/USD, EURUSD=X, FXEURUSD
 - NAS100: NAS100, NASDAQ, NQ, NQ1!, NQM2026, NQM6, NQH2026, NQU2026, NQZ2026, US100, NDX, USTEC, USTECH
 - US30: US30, DOW, YM, YM1!, YMM2026, YMM6, YMH2026, YMU2026, YMZ2026, DJIA, DJ30, WALL ST
-- XAGUSD: XAGUSD, SILVER, SI, SI1!, MSI, XAGUSD=X, SILVER/USD
+- XAGUSD: XAGUSD, SILVER, SI, SI1!, SIL, XAGUSD=X, SILVER/USD
 - US500: US500, SPX, ES, ES1!, ESM2026, ESM6, ESH2026, ESU2026, ESZ2026, SP500, SPX500, S&P500
 
 - If the ticker on the charts matches ANY of the accepted aliases for ${instrument}, set instrument_valid=true.
@@ -2519,7 +2519,7 @@ async function fireTradersPost(plan, contracts, ctType) {
   const webhookUrl = localStorage.getItem("omniusd_tp_webhook");
   if (!webhookUrl) return { ok: false, error: "No webhook URL configured" };
   const FUTURES_MINI  = { NAS100:"NQ1!",  US30:"YM1!",  US500:"ES1!",  XAUUSD:"GC1!",  XAGUSD:"SI1!",  EURUSD:"6E1!"  };
-  const FUTURES_MICRO = { NAS100:"MNQ1!", US30:"MYM1!", US500:"MES1!", XAUUSD:"MGC1!", XAGUSD:"MSI1!", EURUSD:"M6E1!" };
+  const FUTURES_MICRO = { NAS100:"MNQ1!", US30:"MYM1!", US500:"MES1!", XAUUSD:"MGC1!", XAGUSD:"SIL1!", EURUSD:"M6E1!" };
   const ticker = (ctType==="mini" ? FUTURES_MINI : FUTURES_MICRO)[plan?.instrument] || plan?.instrument;
   const sp = v => { const m = String(v||"").match(/^([0-9,]+(?:\.[0-9]+)?)/); return m ? m[1].replace(/,/g,"") : v; };
   const payload = {
@@ -2551,10 +2551,10 @@ function OrderTicketModal({ plan, onClose, contracts, setContracts }) {
   const [sending, setSending] = useState(false);
   const [result,  setResult]  = useState(null);
 
-  const TICK_MINI  = { NAS100:20, US30:5, US500:50, XAUUSD:10, XAGUSD:50, EURUSD:12.5 };
-  const TICK_MICRO = { NAS100:2,  US30:0.5, US500:5, XAUUSD:0.1, XAGUSD:1, EURUSD:1.25 };
+  const TICK_MINI  = { NAS100:20, US30:5, US500:50, XAUUSD:10, XAGUSD:25, EURUSD:12.5 };
+  const TICK_MICRO = { NAS100:2,  US30:0.5, US500:5, XAUUSD:0.1, XAGUSD:5, EURUSD:1.25 };
   const LABEL_MINI  = { NAS100:"NQ",  US30:"YM",  US500:"ES",  XAUUSD:"GC",  XAGUSD:"SI",  EURUSD:"6E"  };
-  const LABEL_MICRO = { NAS100:"MNQ", US30:"MYM", US500:"MES", XAUUSD:"MGC", XAGUSD:"MSI", EURUSD:"M6E" };
+  const LABEL_MICRO = { NAS100:"MNQ", US30:"MYM", US500:"MES", XAUUSD:"MGC", XAGUSD:"SIL", EURUSD:"M6E" };
 
   const tickVal = (ctType==="mini" ? TICK_MINI  : TICK_MICRO)[plan?.instrument] || 2;
   const ticker  = (ctType==="mini" ? LABEL_MINI : LABEL_MICRO)[plan?.instrument] || plan?.instrument;
@@ -2975,7 +2975,7 @@ function BrokerSettings({ card, lbl }) {
             <button key={o.id} onClick={()=>setCtType(o.id)} style={{flex:1,padding:"9px",borderRadius:7,border:`1px solid ${ctType===o.id?"rgba(255,107,255,0.4)":"rgba(255,255,255,0.1)"}`,background:ctType===o.id?"rgba(255,107,255,0.08)":"none",color:ctType===o.id?"#ff6bff":"#8878aa",fontSize:12,fontWeight:700,fontFamily:"'Space Mono',monospace",cursor:"pointer"}}>{o.l}</button>
           ))}
         </div>
-        <div style={{fontSize:10,color:"rgba(255,255,255,0.25)",fontFamily:"'Space Mono',monospace",lineHeight:1.6}}>{ctType==="micro"?"MNQ · MYM · MES · MGC · MSI · M6E":"NQ · YM · ES · GC · SI · 6E"}</div>
+        <div style={{fontSize:10,color:"rgba(255,255,255,0.25)",fontFamily:"'Space Mono',monospace",lineHeight:1.6}}>{ctType==="micro"?"MNQ · MYM · MES · MGC · SIL · M6E":"NQ · YM · ES · GC · SI · 6E"}</div>
       </div>
       <div style={card}>
         <span style={lbl}>DEFAULT CONTRACTS</span>
