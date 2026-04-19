@@ -4023,7 +4023,7 @@ function ChartSetupPage({ onClose }) {
           <div style={{ fontSize:12, color:"rgba(255,255,255,0.62)", lineHeight:1.8, marginBottom:10 }}>
             We built a free indicator that automatically marks your chart lookback periods, labels market structure (HH/HL/LH/LL), and shows 30M candle body strength. Makes the screenshot process foolproof.
           </div>
-          <a href="https://www.tradingview.com/PLACEHOLDER_INDICATOR_LINK" target="_blank" rel="noopener noreferrer"
+          <a href="https://www.tradingview.com/script/WMVM782N-OmniLens-Market-Structure-Chart-Lookback-by-OmniUSD/" target="_blank" rel="noopener noreferrer"
             style={{ display:"inline-block", fontSize:11, fontWeight:700, color:"#ffd166", fontFamily:"'Space Mono',monospace", textDecoration:"none", padding:"7px 14px", borderRadius:6, border:"1px solid rgba(255,209,102,0.3)", background:"rgba(255,209,102,0.06)", cursor:"pointer" }}>
             GET OMNI LENS ON TRADINGVIEW →
           </a>
@@ -10863,7 +10863,7 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
             },
             {
               q:"How do I take the correct screenshot?",
-              a:"Watch the setup tutorial above, or follow these steps:\n\n1. Open TradingView and load your instrument\n2. Set each chart to the correct lookback (Daily=6mo, 4H=4-6wk, 1H=5-7d, 30M=3-5d)\n3. Make sure the instrument ticker AND timeframe label are both clearly visible on screen\n4. Take a full screenshot of each chart\n5. Upload all 5 in OmniUSD\n\nPro tip: Install the free OmniLens indicator on TradingView. It automatically marks your lookback periods, labels market structure (HH/HL/LH/LL), and shows 30M candle body strength — making the screenshot process foolproof. Get it at tradingview.com (search OmniLens by OmniUSD).",
+              a:"Watch the setup tutorial above, or follow these steps:\n\n1. Open TradingView and load your instrument\n2. Set each chart to the correct lookback (Daily=6mo, 4H=4-6wk, 1H=5-7d, 30M=3-5d)\n3. Make sure the instrument ticker AND timeframe label are both clearly visible on screen\n4. Take a full screenshot of each chart\n5. Upload all 5 in OmniUSD\n\nPro tip: Install the free OmniLens indicator on TradingView. It automatically marks your lookback periods, labels market structure (HH/HL/LH/LL), and shows 30M candle body strength — making the screenshot process foolproof. Get it here: https://www.tradingview.com/script/WMVM782N-OmniLens-Market-Structure-Chart-Lookback-by-OmniUSD/",
               highlight: true,
             },
             {
