@@ -277,6 +277,8 @@ ACCEPTED ALIASES — these ticker labels are valid for each instrument:
 - US30: US30, DOW, YM, YM1!, YMM2026, YMM6, YMH2026, YMU2026, YMZ2026, DJIA, DJ30, WALL ST
 - XAGUSD: XAGUSD, SILVER, SI, SI1!, SIL, XAGUSD=X, SILVER/USD
 - US500: US500, SPX, ES, ES1!, ESM2026, ESM6, ESH2026, ESU2026, ESZ2026, SP500, SPX500, S&P500
+- BTCUSD: BTCUSD, BTC, BITCOIN, MBT, MBT1!, BTCUSDT, BTC/USD, XBTUSD, BTCPERP
+- ETHUSD: ETHUSD, ETH, ETHER, MET, MET1!, ETHUSDT, ETH/USD, XETUSD, ETHPERP
 
 - If the ticker on the charts matches ANY of the accepted aliases for ${instrument}, set instrument_valid=true.
 - If the charts show a ticker that belongs to a DIFFERENT instrument entirely, set instrument_valid=false and instrument_detected= what you actually see. This is a HARD BLOCK — do NOT proceed with analysis.
@@ -408,7 +410,7 @@ function isDevMode() {
 const TIER_CONFIG = {
   starter: { label:"Starter", price:"$29/mo", priceId:"price_1TEyC2EOq82Vh8foSZIKCsG9", instruments:["XAUUSD","EURUSD"],         dailyCap:3,  color:"#ffd166" },
   pro:     { label:"Pro",     price:"$39/mo", priceId:"price_1TEyEmEOq82Vh8foLEEFkBbV", instruments:["XAUUSD","EURUSD","NAS100","US30"], dailyCap:5,  color:"#00e5ff" },
-  elite:   { label:"Elite",   price:"$59/mo", priceId:"price_1TEyHFEOq82Vh8fokJEvZNFn", instruments:["XAUUSD","EURUSD","NAS100","US30","XAGUSD","US500"], dailyCap:10, color:"#ff6bff" },
+  elite:   { label:"Elite",   price:"$59/mo", priceId:"price_1TEyHFEOq82Vh8fokJEvZNFn", instruments:["XAUUSD","EURUSD","NAS100","US30","XAGUSD","US500","BTCUSD","ETHUSD"], dailyCap:10, color:"#ff6bff" },
 };
 
 const CURRENT_TIER = isDevMode() ? "elite" : "starter";
@@ -2518,8 +2520,8 @@ Return ONLY this JSON — no markdown, no explanation, no preamble:
 async function fireTradersPost(plan, contracts, ctType) {
   const webhookUrl = localStorage.getItem("omniusd_tp_webhook");
   if (!webhookUrl) return { ok: false, error: "No webhook URL configured" };
-  const FUTURES_MINI  = { NAS100:"NQ1!",  US30:"YM1!",  US500:"ES1!",  XAUUSD:"GC1!",  XAGUSD:"SI1!",  EURUSD:"6E1!"  };
-  const FUTURES_MICRO = { NAS100:"MNQ1!", US30:"MYM1!", US500:"MES1!", XAUUSD:"MGC1!", XAGUSD:"SIL1!", EURUSD:"M6E1!" };
+  const FUTURES_MINI  = { NAS100:"NQ1!",  US30:"YM1!",  US500:"ES1!",  XAUUSD:"GC1!",  XAGUSD:"SI1!",  EURUSD:"6E1!",  BTCUSD:"MBT1!", ETHUSD:"MET1!" };
+  const FUTURES_MICRO = { NAS100:"MNQ1!", US30:"MYM1!", US500:"MES1!", XAUUSD:"MGC1!", XAGUSD:"SIL1!", EURUSD:"M6E1!", BTCUSD:"MBT1!", ETHUSD:"MET1!" };
   const ticker = (ctType==="mini" ? FUTURES_MINI : FUTURES_MICRO)[plan?.instrument] || plan?.instrument;
   const sp = v => { const m = String(v||"").match(/^([0-9,]+(?:\.[0-9]+)?)/); return m ? m[1].replace(/,/g,"") : v; };
   const payload = {
@@ -2551,26 +2553,44 @@ function OrderTicketModal({ plan, onClose, contracts, setContracts }) {
   const [sending, setSending] = useState(false);
   const [result,  setResult]  = useState(null);
 
-  const TICK_MINI  = { NAS100:20, US30:5, US500:50, XAUUSD:10, XAGUSD:25, EURUSD:12.5 };
-  const TICK_MICRO = { NAS100:2,  US30:0.5, US500:5, XAUUSD:0.1, XAGUSD:5, EURUSD:1.25 };
-  const LABEL_MINI  = { NAS100:"NQ",  US30:"YM",  US500:"ES",  XAUUSD:"GC",  XAGUSD:"SI",  EURUSD:"6E"  };
-  const LABEL_MICRO = { NAS100:"MNQ", US30:"MYM", US500:"MES", XAUUSD:"MGC", XAGUSD:"SIL", EURUSD:"M6E" };
+  // Tick values — pip-based for EURUSD, point-based for everything else
+  // EURUSD: M6E micro = $1.25/pip (0.0001), 6E mini = $12.50/pip
+  // All others: standard point values
+  const TICK_MINI  = { NAS100:20, US30:5, US500:50, XAUUSD:10, XAGUSD:25, EURUSD:12.5, BTCUSD:5, ETHUSD:0.1 };
+  const TICK_MICRO = { NAS100:2,  US30:0.5, US500:5, XAUUSD:0.1, XAGUSD:5, EURUSD:1.25, BTCUSD:5, ETHUSD:0.1 };
+  // Pip size — EURUSD uses 0.0001, all others use 1 (whole points)
+  const PIP_SIZE   = { NAS100:1, US30:1, US500:1, XAUUSD:1, XAGUSD:1, EURUSD:0.0001, BTCUSD:1, ETHUSD:1 };
+  const LABEL_MINI  = { NAS100:"NQ", US30:"YM", US500:"ES", XAUUSD:"GC", XAGUSD:"SI",  EURUSD:"6E",  BTCUSD:"MBT", ETHUSD:"MET" };
+  const LABEL_MICRO = { NAS100:"MNQ",US30:"MYM",US500:"MES",XAUUSD:"MGC",XAGUSD:"SIL",EURUSD:"M6E",BTCUSD:"MBT", ETHUSD:"MET" };
 
-  const tickVal = (ctType==="mini" ? TICK_MINI  : TICK_MICRO)[plan?.instrument] || 2;
-  const ticker  = (ctType==="mini" ? LABEL_MINI : LABEL_MICRO)[plan?.instrument] || plan?.instrument;
-  const ctLabel = ctType==="mini" ? "Mini" : "Micro";
+  const tickVal  = (ctType==="mini" ? TICK_MINI  : TICK_MICRO)[plan?.instrument] || 2;
+  const pipSize  = PIP_SIZE[plan?.instrument] || 1;
+  const ticker   = (ctType==="mini" ? LABEL_MINI : LABEL_MICRO)[plan?.instrument] || plan?.instrument;
+  const ctLabel  = ctType==="mini" ? "Mini" : "Micro";
+  const isEUR    = plan?.instrument === "EURUSD";
+  const unitLabel = isEUR ? "pips" : "pts";
 
   const sp = v => { const m = String(v||"").match(/^([0-9,]+(?:\.[0-9]+)?)/); return m ? parseFloat(m[1].replace(/,/g,"")) : 0; };
-  const entry   = sp(plan?.trigger_level);
-  const stop    = sp(plan?.stop_loss);
-  const tp1     = sp(plan?.tp1);
+
+  // Editable level state — pre-filled from plan
+  const [editEntry, setEditEntry] = useState(String(plan?.trigger_level || ""));
+  const [editStop,  setEditStop]  = useState(String(plan?.stop_loss     || ""));
+  const [editTp,    setEditTp]    = useState(String(plan?.tp1           || ""));
+
+  const entry   = sp(editEntry);
+  const stop    = sp(editStop);
+  const tp1     = sp(editTp);
   const isShort = plan?.bias === "SHORT";
-  const stopPts = Math.abs(isShort ? stop - entry : entry - stop);
-  const profPts = Math.abs(isShort ? entry - tp1  : tp1  - entry);
-  const loss    = stopPts * tickVal * contracts;
-  const profit  = profPts * tickVal * contracts;
-  const rr      = loss > 0 ? profit / loss : 0;
-  const fmt     = n => n.toLocaleString("en-US", { minimumFractionDigits:0, maximumFractionDigits:2 });
+
+  // Convert raw price diff to display units (pips for EURUSD, points for others)
+  const rawStop = Math.abs(isShort ? stop - entry : entry - stop);
+  const rawProf = Math.abs(isShort ? entry - tp1  : tp1  - entry);
+  const stopUnits = rawStop / pipSize;
+  const profUnits = rawProf / pipSize;
+  const loss   = stopUnits * tickVal * contracts;
+  const profit = profUnits * tickVal * contracts;
+  const rr     = loss > 0 ? profit / loss : 0;
+  const fmt    = n => n.toLocaleString("en-US", { minimumFractionDigits:0, maximumFractionDigits:2 });
 
   const grade  = plan?.grade || "—";
   const conf   = plan?.confidence_score;
@@ -2579,26 +2599,35 @@ function OrderTicketModal({ plan, onClose, contracts, setContracts }) {
     ? "⚠ You are trading real capital. AI analysis only — not financial advice. OmniUSD is not responsible for losses."
     : "AI analysis only — not financial advice. Verify this trade complies with your prop firm rules before sending.";
 
+  // Build modified plan with edited levels for webhook
+  const modifiedPlan = { ...plan, trigger_level: editEntry, stop_loss: editStop, tp1: editTp };
+
   async function handleSend() {
     setSending(true);
-    const res = await fireTradersPost(plan, contracts, ctType);
+    const res = await fireTradersPost(modifiedPlan, contracts, ctType);
     setSending(false);
     if (res.ok) { setResult("sent"); setTimeout(() => { onClose(); setResult(null); }, 2500); }
     else { setResult("error"); }
   }
 
   const M = { fontFamily:"'Space Mono',monospace" };
+  const inputStyle = (color) => ({
+    width:"100%", background:`${color}08`, border:`1px solid ${color}33`,
+    borderRadius:6, padding:"7px 9px", fontSize:12, fontWeight:700,
+    color:color, fontFamily:"monospace", outline:"none",
+  });
+
   return (
-    <div style={{ position:"fixed", inset:0, zIndex:500, display:"flex", alignItems:"center", justifyContent:"center", background:"rgba(10,8,28,0.9)", backdropFilter:"blur(4px)", padding:16 }}
+    <div style={{ position:"fixed", inset:0, zIndex:500, display:"flex", alignItems:"center", justifyContent:"center", background:"rgba(10,8,28,0.9)", backdropFilter:"blur(4px)", padding:16, overflowY:"auto" }}
       onClick={e => e.target===e.currentTarget && onClose()}>
-      <div style={{ width:"100%", maxWidth:440, background:"#16122e", border:"1px solid rgba(127,255,107,0.35)", borderRadius:12, overflow:"hidden" }}>
+      <div style={{ width:"100%", maxWidth:440, background:"#16122e", border:"1px solid rgba(127,255,107,0.35)", borderRadius:12, overflow:"hidden", margin:"auto" }}>
 
         {/* Header */}
         <div style={{ padding:"14px 18px", borderBottom:"1px solid rgba(255,255,255,0.07)", background:"rgba(127,255,107,0.04)" }}>
           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
             <div>
               <div style={{ fontSize:11, fontWeight:900, letterSpacing:"0.18em", color:"#7fff6b", ...M }}>ORDER TICKET</div>
-              <div style={{ fontSize:10, color:"rgba(255,255,255,0.3)", ...M, marginTop:2 }}>Review before sending</div>
+              <div style={{ fontSize:10, color:"rgba(255,255,255,0.3)", ...M, marginTop:2 }}>Adjust levels if needed — then send</div>
             </div>
             <div style={{ display:"flex", alignItems:"center", gap:5, fontSize:9, fontWeight:900, padding:"3px 10px", borderRadius:3, background:"rgba(127,255,107,0.12)", color:"#7fff6b", border:"1px solid rgba(127,255,107,0.3)", ...M }}>
               <span style={{ width:5, height:5, borderRadius:"50%", background:"#7fff6b", display:"inline-block", animation:"pulse 1.5s ease infinite" }}/>
@@ -2629,19 +2658,22 @@ function OrderTicketModal({ plan, onClose, contracts, setContracts }) {
             ))}
           </div>
 
-          {/* Levels */}
-          <div style={{ display:"flex", gap:10, marginBottom:14 }}>
-            {[
-              { l:"ENTRY",     v:plan?.trigger_level, c:"#f0ecff", bc:"rgba(255,255,255,0.08)" },
-              { l:"STOP LOSS", v:plan?.stop_loss,     c:"#ff6b6b", bc:"rgba(255,107,107,0.2)"  },
-              { l:"TP1",       v:plan?.tp1,           c:"#00e5ff", bc:"rgba(0,229,255,0.2)"    },
-            ].map((f,i)=>(
-              <div key={i} style={{ flex:1 }}>
-                <div style={{ fontSize:8, fontWeight:900, letterSpacing:"0.14em", color:"rgba(255,255,255,0.3)", ...M, marginBottom:4 }}>{f.l}</div>
-                <div style={{ fontSize:12, fontWeight:700, color:f.c, fontFamily:"monospace", background:`${f.c}08`, border:`1px solid ${f.bc}`, borderRadius:6, padding:"7px 9px" }}>{f.v||"—"}</div>
-              </div>
-            ))}
+          {/* Editable levels */}
+          <div style={{ display:"flex", gap:10, marginBottom:6 }}>
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:8, fontWeight:900, letterSpacing:"0.14em", color:"rgba(255,255,255,0.3)", ...M, marginBottom:4 }}>ENTRY</div>
+              <input value={editEntry} onChange={e=>setEditEntry(e.target.value)} style={inputStyle("#f0ecff")} inputMode="decimal"/>
+            </div>
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:8, fontWeight:900, letterSpacing:"0.14em", color:"rgba(255,107,107,0.5)", ...M, marginBottom:4 }}>STOP LOSS</div>
+              <input value={editStop} onChange={e=>setEditStop(e.target.value)} style={inputStyle("#ff6b6b")} inputMode="decimal"/>
+            </div>
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:8, fontWeight:900, letterSpacing:"0.14em", color:"rgba(0,229,255,0.5)", ...M, marginBottom:4 }}>TP1</div>
+              <input value={editTp} onChange={e=>setEditTp(e.target.value)} style={inputStyle("#00e5ff")} inputMode="decimal"/>
+            </div>
           </div>
+          <div style={{ fontSize:9, color:"rgba(255,255,255,0.2)", ...M, marginBottom:14 }}>Tap any field to adjust before sending.</div>
 
           <div style={{ height:1, background:"rgba(255,255,255,0.06)", margin:"14px 0" }}/>
 
@@ -2649,7 +2681,7 @@ function OrderTicketModal({ plan, onClose, contracts, setContracts }) {
           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
             <div>
               <div style={{ fontSize:9, fontWeight:900, letterSpacing:"0.14em", color:"rgba(255,255,255,0.4)", ...M }}>CONTRACTS</div>
-              <div style={{ fontSize:10, color:"rgba(255,255,255,0.25)", ...M, marginTop:2 }}>{ticker} {ctLabel} · ${tickVal}/point</div>
+              <div style={{ fontSize:10, color:"rgba(255,255,255,0.25)", ...M, marginTop:2 }}>{ticker} {ctLabel} · ${tickVal}/{isEUR?"pip":"point"}</div>
             </div>
             <div style={{ display:"flex", alignItems:"center", border:"1px solid rgba(255,255,255,0.12)", borderRadius:6, overflow:"hidden" }}>
               <button onClick={()=>setContracts(c=>Math.max(1,c-1))} style={{ width:32, height:32, border:"none", background:"rgba(255,255,255,0.05)", color:"#f0ecff", fontSize:18, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>−</button>
@@ -2662,12 +2694,12 @@ function OrderTicketModal({ plan, onClose, contracts, setContracts }) {
           <div style={{ display:"flex", gap:10, marginBottom:10 }}>
             <div style={{ flex:1, padding:"11px 13px", borderRadius:8, background:"rgba(255,107,107,0.05)", border:"1px solid rgba(255,107,107,0.2)" }}>
               <div style={{ fontSize:8, fontWeight:900, letterSpacing:"0.12em", color:"rgba(255,107,107,0.6)", ...M, marginBottom:5 }}>PROJECTED LOSS</div>
-              <div style={{ fontSize:9, color:"rgba(255,255,255,0.2)", ...M, marginBottom:3 }}>{fmt(stopPts)} pts × ${tickVal} × {contracts}</div>
+              <div style={{ fontSize:9, color:"rgba(255,255,255,0.2)", ...M, marginBottom:3 }}>{fmt(stopUnits)} {unitLabel} × ${tickVal} × {contracts}</div>
               <div style={{ fontSize:20, fontWeight:900, fontFamily:"monospace", color:"#ff6b6b" }}>−${fmt(loss)}</div>
             </div>
             <div style={{ flex:1, padding:"11px 13px", borderRadius:8, background:"rgba(127,255,107,0.05)", border:"1px solid rgba(127,255,107,0.2)" }}>
               <div style={{ fontSize:8, fontWeight:900, letterSpacing:"0.12em", color:"rgba(127,255,107,0.6)", ...M, marginBottom:5 }}>PROJECTED PROFIT</div>
-              <div style={{ fontSize:9, color:"rgba(255,255,255,0.2)", ...M, marginBottom:3 }}>{fmt(profPts)} pts × ${tickVal} × {contracts}</div>
+              <div style={{ fontSize:9, color:"rgba(255,255,255,0.2)", ...M, marginBottom:3 }}>{fmt(profUnits)} {unitLabel} × ${tickVal} × {contracts}</div>
               <div style={{ fontSize:20, fontWeight:900, fontFamily:"monospace", color:"#7fff6b" }}>+${fmt(profit)}</div>
             </div>
           </div>
@@ -3608,6 +3640,8 @@ const SESSION_INSTRUMENT_FIT = {
   US30:    { NY:"best", LONDON:"block", ASIAN:"block", LONDON_NY:"best" },
   XAGUSD:  { NY:"best", LONDON:"ok",    ASIAN:"ok",    LONDON_NY:"best" },
   US500:   { NY:"best", LONDON:"block", ASIAN:"block", LONDON_NY:"best" },
+  BTCUSD:  { NY:"best", LONDON:"ok",    ASIAN:"ok",    LONDON_NY:"best" },
+  ETHUSD:  { NY:"best", LONDON:"ok",    ASIAN:"ok",    LONDON_NY:"best" },
 };
 
 const SESSION_ADVISORIES = {
@@ -3626,6 +3660,14 @@ const SESSION_ADVISORIES = {
   US500: {
     LONDON: "US500 is a US equity index. The US market is CLOSED during London session. No valid BRC execution here — NY session only.",
     ASIAN:  "US500 is a US equity index. The US market is CLOSED during the Asian session. NY session only.",
+  },
+  BTCUSD: {
+    LONDON: "Bitcoin trades 24/7 but the NY session (8:30–10:30 AM CT) produces the cleanest BRC follow-through with highest volume. London setups are valid but NY is your primary window.",
+    ASIAN:  "Bitcoin trades 24/7 but Asian session moves are often manipulative and low-volume. BRC structure can look clean but follow-through is unreliable. NY session is strongly preferred.",
+  },
+  ETHUSD: {
+    LONDON: "Ether trades 24/7 but NY open produces the most reliable directional moves. London setups are valid with extra caution — structure can be noisier than Bitcoin.",
+    ASIAN:  "Ether in the Asian session is thin and prone to false breaks. BRC setups here carry higher risk of invalidation. Wait for NY session for cleaner execution.",
   },
 };
 
@@ -4047,7 +4089,7 @@ function TradeLoggerPage({ profile, onClose }) {
   const OWNER = OWNER_EMAILS[0];
   const isMobile = useWindowWidth() <= 768;
   const GRADES = ["A+","A","B","C","PASS"];
-  const INSTRUMENTS = ["XAUUSD","EURUSD","NAS100","US30","XAGUSD","US500"];
+  const INSTRUMENTS = ["XAUUSD","EURUSD","NAS100","US30","XAGUSD","US500","BTCUSD","ETHUSD"];
   const RESULTS = ["WIN","LOSS","BE","PASS","MISSED","CANCELLED","NO SETUP"];
 
   const empty = { instrument:"XAUUSD", grade:"A+", direction:"LONG", entry:"", stop:"", tp1:"", rr:"", result_usd:"", outcome:"WIN", note:"", trade_date: new Date().toISOString().slice(0,10) };
@@ -5907,6 +5949,8 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
         XAUUSD: { min: 1000,   max: 10000  },
         XAGUSD: { min: 10,     max: 200    },
         EURUSD: { min: 0.8,    max: 1.6    },
+        BTCUSD: { min: 10000,  max: 500000 },
+        ETHUSD: { min: 500,    max: 50000  },
       };
       const sanity = priceSanity[instrument];
       if (sanity && triggerNum && (triggerNum < sanity.min || triggerNum > sanity.max)) {
@@ -6681,13 +6725,14 @@ Use ONLY these times. All earlier time references in this conversation are stale
             {(() => {
               const userTier = profile?.tier || "starter";
               const tierCfg = TIER_CONFIG[userTier] || TIER_CONFIG.starter;
-              const allInstruments = ["XAUUSD","EURUSD","NAS100","US30","XAGUSD","US500"];
+              const allInstruments = ["XAUUSD","EURUSD","NAS100","US30","XAGUSD","US500","BTCUSD","ETHUSD"];
               const allowed = tierCfg.instruments;
               const allSessions = loadSessions();
 
               const propFirmTickers = {
                 XAUUSD: "MGC", EURUSD: "6E", NAS100: "NQ",
                 US30: "YM", XAGUSD: "SI", US500: "ES",
+                BTCUSD: "MBT", ETHUSD: "MET",
               };
 
               return (
@@ -8047,7 +8092,7 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
   const TV_SYMBOLS={
     XAUUSD:"OANDA:XAUUSD",NAS100:"CAPITALCOM:US100",
     US30:"CAPITALCOM:US30",EURUSD:"FX:EURUSD",
-    XAGUSD:"TVC:SILVER",US500:"OANDA:SPX500USD",
+    XAGUSD:"TVC:SILVER",US500:"OANDA:SPX500USD",BTCUSD:"BINANCE:BTCUSDT",ETHUSD:"BINANCE:ETHUSDT",
   };
   const tvSym=TV_SYMBOLS[instrument]||`OANDA:${instrument}`;
   const tvInterval=tradeState==="EXECUTABLE"?"15":"30"; // Phase 3 → 15M, else 30M
@@ -9990,7 +10035,7 @@ function PricingPage({onBack, onPaid}){
      features:["Full BRC 3-phase execution tracker","Session-aware guidance","AI session plans","Priority access to new features"],
      priceId:TIER_CONFIG.pro.priceId, popular:true, trial:true},
     {key:"elite",   label:"Elite",   price:"$59", period:"/month", color:"#ff6bff",
-     instruments:["XAUUSD","EURUSD","NAS100","US30","XAGUSD","US500"],
+     instruments:["XAUUSD","EURUSD","NAS100","US30","XAGUSD","US500","BTCUSD","ETHUSD"],
      features:["Full BRC 3-phase execution tracker","Session-aware guidance","AI session plans","Early access to all new features"],
      priceId:TIER_CONFIG.elite.priceId, popular:false, trial:false},
   ];
@@ -10872,7 +10917,7 @@ function LandingPage({onEnterApp, onLogin, onPrivacy, onTerms}){
             },
             {
               q:"What instruments are supported?",
-              a:"EURUSD and XAUUSD on Starter. Pro adds NAS100, US30. Elite unlocks all instruments including XAGUSD (Silver) and US500 (S&P 500). All instruments use the same BRC methodology.",
+              a:"EURUSD and XAUUSD on Starter. Pro adds NAS100, US30. Elite unlocks all instruments including XAGUSD (Silver), US500 (S&P 500), BTCUSD (Bitcoin), and ETHUSD (Ether). All instruments use the same BRC methodology.",
             },
             {
               q:"Do I need trading experience?",
