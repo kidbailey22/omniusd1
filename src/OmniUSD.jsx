@@ -561,6 +561,8 @@ class ErrorBoundary extends React.Component {
   }
   componentDidCatch(error, info) {
     console.error("OmniUSD crash:", error, info);
+    console.error("Error message:", error?.message);
+    console.error("Component stack:", info?.componentStack);
   }
   render() {
     if (!this.state.hasError) return this.props.children;
@@ -2157,9 +2159,9 @@ function getMarketStatus(instrument, session = "NY") {
   const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
   const day = now.getDay();
   const mins = now.getHours() * 60 + now.getMinutes();
-  const isBTC = instrument === "EURUSD";
+  const isCrypto = instrument === "BTCUSD" || instrument === "ETHUSD";
   const isXAU = instrument === "XAUUSD";
-  const londonEligible = isBTC || isXAU;
+  const londonEligible = isCrypto || isXAU;
 
   // ── WEEKEND ────────────────────────────────────────────────────────────
   if (day === 6) {
@@ -5829,55 +5831,43 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
       }
 
       // Secondary check — only block on a CONFIRMED instrument mismatch, never on uncertainty
-      if (parsed.instrument_valid === false) {
-        const detected = (parsed.instrument_detected || "").toUpperCase().trim();
-        const expected = (instrument || "").toUpperCase().trim();
-
-        // Alias map — same as prompt aliases, used to resolve futures tickers back to instrument
-        const ALIAS_MAP = {
-          // XAUUSD
-          XAUUSD:true, GOLD:true, XAU:true, "GOLD/USD":true,
-          GC:true, MGC:true, "MGC1!":true,
-          MGCM2026:true, MGCM6:true, MGCH2026:true, MGCU2026:true, MGCZ2026:true,
-          MGCM2025:true, MGCH2025:true, MGCU2025:true, MGCZ2025:true,
-          MGCM2027:true, MGCH2027:true,
-        };
-        const ALIAS_TO_INSTRUMENT = {
-          XAUUSD:"XAUUSD", GOLD:"XAUUSD", XAU:"XAUUSD", "GOLD/USD":"XAUUSD",
-          GC:"XAUUSD", MGC:"XAUUSD", "MGC1!":"XAUUSD",
-          MGCM2026:"XAUUSD", MGCM6:"XAUUSD", MGCH2026:"XAUUSD", MGCU2026:"XAUUSD", MGCZ2026:"XAUUSD",
-          MGCM2025:"XAUUSD", MGCH2025:"XAUUSD", MGCU2025:"XAUUSD", MGCZ2025:"XAUUSD",
-          EURUSD:"EURUSD", "EUR/USD":"EURUSD", "EURUSD=X":"EURUSD", FXEURUSD:"EURUSD",
-          "6E":"EURUSD", "6E1!":"EURUSD", M6E:"EURUSD", "M6E1!":"EURUSD",
-          NAS100:"NAS100", NASDAQ:"NAS100", NQ:"NAS100", "NQ1!":"NAS100", US100:"NAS100", NDX:"NAS100", USTEC:"NAS100", USTECH:"NAS100",
-          NQM2026:"NAS100", NQM6:"NAS100", NQH2026:"NAS100", NQU2026:"NAS100", NQZ2026:"NAS100",
-          MNQ:"NAS100", "MNQ1!":"NAS100",
-          US30:"US30", DOW:"US30", YM:"US30", "YM1!":"US30", DJIA:"US30", DJ30:"US30",
-          YMM2026:"US30", YMM6:"US30", YMH2026:"US30", YMU2026:"US30", YMZ2026:"US30",
-          MYM:"US30", "MYM1!":"US30",
-          XAGUSD:"XAGUSD", SILVER:"XAGUSD", SI:"XAGUSD", "SI1!":"XAGUSD", SIL:"XAGUSD", "XAGUSD=X":"XAGUSD", "SILVER/USD":"XAGUSD",
-          US500:"US500", SPX:"US500", ES:"US500", "ES1!":"US500", SP500:"US500", SPX500:"US500", "S&P500":"US500",
-          ESM2026:"US500", ESM6:"US500", ESH2026:"US500", ESU2026:"US500", ESZ2026:"US500",
-          MES:"US500", "MES1!":"US500",
-          BTCUSD:"BTCUSD", BTC:"BTCUSD", BITCOIN:"BTCUSD", MBT:"BTCUSD", "MBT1!":"BTCUSD", BTCUSDT:"BTCUSD", "BTC/USD":"BTCUSD",
-          ETHUSD:"ETHUSD", ETH:"ETHUSD", ETHER:"ETHUSD", MET:"ETHUSD", "MET1!":"ETHUSD", ETHUSDT:"ETHUSD", "ETH/USD":"ETHUSD",
-        };
-
-        // Resolve detected ticker to instrument via alias map
-        const resolvedDetected = ALIAS_TO_INSTRUMENT[detected] || detected;
-        const isConfirmedMismatch = detected && resolvedDetected !== expected && detected !== "UNKNOWN" && detected !== "UNREADABLE" && detected !== "NOT_VISIBLE";
-
-        if (isConfirmedMismatch) {
-          // Free retry — go back to upload, no cooldown hit
-          setUploadCounts(prev => ({ ...prev, [instrument]: Math.max(0, (prev[instrument] || 1) - 1) }));
-          setPlan(null);
-          setImages(Array(4).fill(null));
-          setPhase("upload");
-          alert(`Wrong charts — these show ${detected}, not ${expected}. Upload your ${expected} charts and try again.`);
-          return;
+      try {
+        if (parsed.instrument_valid === false) {
+          const detected = (parsed.instrument_detected || "").toUpperCase().trim();
+          const expected = (instrument || "").toUpperCase().trim();
+          const ALIAS_TO_INSTRUMENT = {
+            XAUUSD:"XAUUSD",GOLD:"XAUUSD",XAU:"XAUUSD","GOLD/USD":"XAUUSD",
+            GC:"XAUUSD",MGC:"XAUUSD","MGC1!":"XAUUSD",
+            MGCM2026:"XAUUSD",MGCM6:"XAUUSD",MGCH2026:"XAUUSD",MGCU2026:"XAUUSD",MGCZ2026:"XAUUSD",
+            MGCM2025:"XAUUSD",MGCH2025:"XAUUSD",MGCU2025:"XAUUSD",MGCZ2025:"XAUUSD",
+            MGCM2027:"XAUUSD",MGCH2027:"XAUUSD",
+            EURUSD:"EURUSD","EUR/USD":"EURUSD","EURUSD=X":"EURUSD",FXEURUSD:"EURUSD",
+            "6E":"EURUSD","6E1!":"EURUSD",M6E:"EURUSD","M6E1!":"EURUSD",
+            NAS100:"NAS100",NASDAQ:"NAS100",NQ:"NAS100","NQ1!":"NAS100",US100:"NAS100",NDX:"NAS100",USTEC:"NAS100",USTECH:"NAS100",
+            NQM2026:"NAS100",NQM6:"NAS100",NQH2026:"NAS100",NQU2026:"NAS100",NQZ2026:"NAS100",
+            MNQ:"NAS100","MNQ1!":"NAS100",
+            US30:"US30",DOW:"US30",YM:"US30","YM1!":"US30",DJIA:"US30",DJ30:"US30",
+            YMM2026:"US30",YMM6:"US30",YMH2026:"US30",YMU2026:"US30",YMZ2026:"US30",
+            MYM:"US30","MYM1!":"US30",
+            XAGUSD:"XAGUSD",SILVER:"XAGUSD",SI:"XAGUSD","SI1!":"XAGUSD",SIL:"XAGUSD","XAGUSD=X":"XAGUSD","SILVER/USD":"XAGUSD",
+            US500:"US500",SPX:"US500",ES:"US500","ES1!":"US500",SP500:"US500",SPX500:"US500","S&P500":"US500",
+            ESM2026:"US500",ESM6:"US500",ESH2026:"US500",ESU2026:"US500",ESZ2026:"US500",
+            MES:"US500","MES1!":"US500",
+            BTCUSD:"BTCUSD",BTC:"BTCUSD",BITCOIN:"BTCUSD",MBT:"BTCUSD","MBT1!":"BTCUSD",BTCUSDT:"BTCUSD","BTC/USD":"BTCUSD",
+            ETHUSD:"ETHUSD",ETH:"ETHUSD",ETHER:"ETHUSD",MET:"ETHUSD","MET1!":"ETHUSD",ETHUSDT:"ETHUSD","ETH/USD":"ETHUSD",
+          };
+          const resolvedDetected = ALIAS_TO_INSTRUMENT[detected] || detected;
+          const isConfirmedMismatch = detected && resolvedDetected !== expected && detected !== "UNKNOWN" && detected !== "UNREADABLE" && detected !== "NOT_VISIBLE";
+          if (isConfirmedMismatch) {
+            setUploadCounts(prev => ({ ...prev, [instrument]: Math.max(0, (prev[instrument] || 1) - 1) }));
+            setPlan(null);
+            setImages(Array(4).fill(null));
+            setPhase("upload");
+            alert(`Wrong charts — these show ${detected}, not ${expected}. Upload your ${expected} charts and try again.`);
+            return;
+          }
         }
-        // Any other instrument_valid=false (uncertainty, unreadable, known alias) → proceed anyway
-      }
+      } catch(aliasErr) { console.warn("Instrument alias check error:", aliasErr); }
 
       // ── WEEKEND HARD OVERRIDE ─────────────────────────────────────────────
       const _now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
@@ -5897,34 +5887,30 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
       }
 
       // ── ALIGNMENT GATE HARD ENFORCEMENT ──────────────────────────────────
-      // The AI sometimes assigns B/C grades even when timeframes conflict.
-      // We enforce the gate in code to guarantee correctness.
-      if (!isDevMode() && parsed.grade !== "PASS") {
-        const tf = parsed.timeframe_reads || {};
-        const dailyB = (tf.daily?.bias || "").toUpperCase();
-        const h4B    = (tf.h4?.bias    || "").toUpperCase();
-        const h1B    = (tf.h1?.bias    || "").toUpperCase();
-        const isValid = (b) => b === "BULLISH" || b === "BEARISH";
-        // Step 2: 4H must agree with Daily
-        if (isValid(dailyB) && isValid(h4B) && h4B !== dailyB) {
-          if (parsed.grade !== "SOFT PASS") {
+      try {
+        if (!isDevMode() && parsed.grade !== "PASS") {
+          const tf = parsed.timeframe_reads || {};
+          const dailyB = (tf.daily?.bias || "").toUpperCase();
+          const h4B    = (tf.h4?.bias    || "").toUpperCase();
+          const h1B    = (tf.h1?.bias    || "").toUpperCase();
+          const isValid = (b) => b === "BULLISH" || b === "BEARISH";
+          if (isValid(dailyB) && isValid(h4B) && h4B !== dailyB) {
+            if (parsed.grade !== "SOFT PASS") {
+              parsed.grade = "SOFT PASS";
+              parsed.pass_reason = `4H is ${h4B.toLowerCase()} while Daily is ${dailyB.toLowerCase()} — timeframe conflict. Watching only. Both scenarios tracked below.`;
+            }
+          } else if (isValid(dailyB) && isValid(h1B) && h1B !== dailyB) {
+            if (parsed.grade !== "SOFT PASS") {
+              parsed.grade = "SOFT PASS";
+              parsed.pass_reason = `1H is ${h1B.toLowerCase()} while Daily is ${dailyB.toLowerCase()} — alignment incomplete. Watching for 1H to flip before executing.`;
+            }
+          }
+          if ((parsed.bias || "").toUpperCase() === "NEUTRAL" && !["PASS","SOFT PASS"].includes(parsed.grade)) {
             parsed.grade = "SOFT PASS";
-            parsed.pass_reason = `4H is ${h4B.toLowerCase()} while Daily is ${dailyB.toLowerCase()} — timeframe conflict. Watching only. Both scenarios tracked below.`;
+            parsed.pass_reason = parsed.pass_reason || "Neutral bias — no directional conviction yet. Both scenarios tracked below.";
           }
         }
-        // Step 3: 1H must agree with Daily + 4H
-        else if (isValid(dailyB) && isValid(h1B) && h1B !== dailyB) {
-          if (parsed.grade !== "SOFT PASS") {
-            parsed.grade = "SOFT PASS";
-            parsed.pass_reason = `1H is ${h1B.toLowerCase()} while Daily is ${dailyB.toLowerCase()} — alignment incomplete. Watching for 1H to flip before executing.`;
-          }
-        }
-        // NEUTRAL bias should never have an executable grade
-        if ((parsed.bias || "").toUpperCase() === "NEUTRAL" && !["PASS","SOFT PASS"].includes(parsed.grade)) {
-          parsed.grade = "SOFT PASS";
-          parsed.pass_reason = parsed.pass_reason || "Neutral bias — no directional conviction yet. Both scenarios tracked below.";
-        }
-      }
+      } catch(gateErr) { console.warn("Alignment gate error:", gateErr); }
 
       // ── SESSION WINDOW GATE ────────────────────────────────────────────
       const _mktStatus = getMarketStatus(instrument, selectedSession);
