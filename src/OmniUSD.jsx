@@ -2429,9 +2429,11 @@ ALL of these must be true — no exceptions:
 ✅ R:R minimum 1.5:1
 ✅ Session window is currently OPEN
 
-🟡 SOFT PASS — 2/3 alignment OR pre-market uncertainty:
-Output TWO conditional trigger levels — one bullish, one bearish.
-For each: exact 30M close price, what trade activates, stop, TP1.
+🟡 SOFT PASS — 2/3 alignment OR pre-market uncertainty OR NEUTRAL bias:
+MANDATORY: Always populate BOTH soft_pass_scenarios.bull AND soft_pass_scenarios.bear — even if Daily is bullish. When 4H or 1H conflicts, BOTH directions are possible until structure resolves.
+For each scenario: exact 30M close price that activates it, brief trade plan, stop price, TP1.
+Example: Daily bull + 4H bear → bull scenario activates IF 4H flips and 30M closes above X. Bear scenario activates IF Daily breaks down and 30M closes below Y.
+NEVER leave bear.trigger or bull.trigger empty on a SOFT PASS. Both fields are required.
 Add: "Re-upload charts at next session open for execution grade."
 This is NOT executable. This is preparation only.
 
@@ -5859,6 +5861,36 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
       if (_conf > 0 && _conf <= 35 && parsed.grade !== "PASS" && parsed.grade !== "SOFT PASS" && !isDevMode()) {
         parsed.grade = "PASS";
         parsed.pass_reason = `Confidence too low (${_conf}%) — structure is unclear. No valid setup today. Come back when the AI reads the charts with higher conviction.`;
+      }
+
+      // ── ALIGNMENT GATE HARD ENFORCEMENT ──────────────────────────────────
+      // The AI sometimes assigns B/C grades even when timeframes conflict.
+      // We enforce the gate in code to guarantee correctness.
+      if (!isDevMode() && parsed.grade !== "PASS") {
+        const tf = parsed.timeframe_reads || {};
+        const dailyB = (tf.daily?.bias || "").toUpperCase();
+        const h4B    = (tf.h4?.bias    || "").toUpperCase();
+        const h1B    = (tf.h1?.bias    || "").toUpperCase();
+        const isValid = (b) => b === "BULLISH" || b === "BEARISH";
+        // Step 2: 4H must agree with Daily
+        if (isValid(dailyB) && isValid(h4B) && h4B !== dailyB) {
+          if (parsed.grade !== "SOFT PASS") {
+            parsed.grade = "SOFT PASS";
+            parsed.pass_reason = `4H is ${h4B.toLowerCase()} while Daily is ${dailyB.toLowerCase()} — timeframe conflict. Watching only. Both scenarios tracked below.`;
+          }
+        }
+        // Step 3: 1H must agree with Daily + 4H
+        else if (isValid(dailyB) && isValid(h1B) && h1B !== dailyB) {
+          if (parsed.grade !== "SOFT PASS") {
+            parsed.grade = "SOFT PASS";
+            parsed.pass_reason = `1H is ${h1B.toLowerCase()} while Daily is ${dailyB.toLowerCase()} — alignment incomplete. Watching for 1H to flip before executing.`;
+          }
+        }
+        // NEUTRAL bias should never have an executable grade
+        if ((parsed.bias || "").toUpperCase() === "NEUTRAL" && !["PASS","SOFT PASS"].includes(parsed.grade)) {
+          parsed.grade = "SOFT PASS";
+          parsed.pass_reason = parsed.pass_reason || "Neutral bias — no directional conviction yet. Both scenarios tracked below.";
+        }
       }
 
       // ── SESSION WINDOW GATE ────────────────────────────────────────────
