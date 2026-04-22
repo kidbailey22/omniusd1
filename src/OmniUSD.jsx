@@ -3754,7 +3754,7 @@ async function checkUsageLimits(userId, token, instrument, tier) {
         reason: `Daily limit reached`,
         detail: tier === "pro_trial"
           ? `You've used all ${cap} trial analyses for today. Come back tomorrow — you have ${TRIAL_TOTAL_CAP} total across your 3-day trial.`
-          : `Your ${tier.charAt(0).toUpperCase()+tier.slice(1)} plan includes ${cap} analyses per day. You've used all ${cap} today. Come back tomorrow or upgrade your plan.`,
+          : `Your ${(tier||"starter").charAt(0).toUpperCase()+(tier||"starter").slice(1)} plan includes ${cap} analyses per day. You've used all ${cap} today. Come back tomorrow or upgrade your plan.`,
         type: "cap",
       };
     }
@@ -5819,6 +5819,16 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
         }),
       });
 
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        const errMsg = errData?.error?.message || errData?.message || `Analysis failed (${res.status}). Please try again.`;
+        setPhase("upload");
+        setImages(Array(4).fill(null));
+        setUploadCounts(prev => ({ ...prev, [instrument]: Math.max(0, (prev[instrument] || 1) - 1) }));
+        alert(errMsg);
+        return;
+      }
+
       const data = await res.json();
       const text = data.content?.[0]?.text || "{}";
       const parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
@@ -7157,8 +7167,8 @@ Use ONLY these times. All earlier time references in this conversation are stale
                     ? `Structure aligned ${plan._potentialBias} — potential ${plan._potentialGrade} at session open`
                     : plan.grade === "PASS" ? "No active setup"
                     : plan.grade === "SOFT PASS" ? "Timeframe conflict — no clear setup today"
-                    : plan.grade === "A+" ? `${plan.bias.charAt(0)+plan.bias.slice(1).toLowerCase()} setup — ready to execute`
-                    : `${plan.bias.charAt(0)+plan.bias.slice(1).toLowerCase()} setup — not executable yet`}
+                    : plan.grade === "A+" ? `${(plan.bias||"Neutral") === "LONG" ? "Long" : (plan.bias||"Neutral") === "SHORT" ? "Short" : "Neutral"} setup — ready to execute`
+                    : `${(plan.bias||"Neutral") === "LONG" ? "Long" : (plan.bias||"Neutral") === "SHORT" ? "Short" : "Neutral"} setup — not executable yet`}
                 </div>
                 {/* Definition tag */}
                 {plan._preMarketScout && (
@@ -8225,8 +8235,8 @@ function SessionPlan({result,instrument,images,profile,onReset,onJournalEntry,se
               <span style={{fontSize:isSkip?13:18,fontWeight:isSkip?600:900,lineHeight:1.2,
                 color:isActive?"#7fff6b":isSkip?"var(--t-muted3)":"#ffd166"}}>
                 {isSkip?"No active setup — observe only"
-                 :isActive?`${bias.charAt(0)+bias.slice(1).toLowerCase()} setup`
-                 :`${grade}-grade ${bias.toLowerCase()} setup developing`}
+                 :isActive?`${bias==="LONG"?"Long":bias==="SHORT"?"Short":"Neutral"} setup`
+                 :`${grade}-grade ${(bias||"neutral").toLowerCase()} setup developing`}
               </span>
               {/* Bias pill — hide on PASS */}
               {!isSkip&&(
