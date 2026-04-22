@@ -5832,7 +5832,41 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
       if (parsed.instrument_valid === false) {
         const detected = (parsed.instrument_detected || "").toUpperCase().trim();
         const expected = (instrument || "").toUpperCase().trim();
-        const isConfirmedMismatch = detected && detected !== expected && detected !== "UNKNOWN" && detected !== "UNREADABLE" && detected !== "NOT_VISIBLE";
+
+        // Alias map — same as prompt aliases, used to resolve futures tickers back to instrument
+        const ALIAS_MAP = {
+          // XAUUSD
+          XAUUSD:true, GOLD:true, XAU:true, "GOLD/USD":true,
+          GC:true, MGC:true, "MGC1!":true,
+          MGCM2026:true, MGCM6:true, MGCH2026:true, MGCU2026:true, MGCZ2026:true,
+          MGCM2025:true, MGCH2025:true, MGCU2025:true, MGCZ2025:true,
+          MGCM2027:true, MGCH2027:true,
+        };
+        const ALIAS_TO_INSTRUMENT = {
+          XAUUSD:"XAUUSD", GOLD:"XAUUSD", XAU:"XAUUSD", "GOLD/USD":"XAUUSD",
+          GC:"XAUUSD", MGC:"XAUUSD", "MGC1!":"XAUUSD",
+          MGCM2026:"XAUUSD", MGCM6:"XAUUSD", MGCH2026:"XAUUSD", MGCU2026:"XAUUSD", MGCZ2026:"XAUUSD",
+          MGCM2025:"XAUUSD", MGCH2025:"XAUUSD", MGCU2025:"XAUUSD", MGCZ2025:"XAUUSD",
+          EURUSD:"EURUSD", "EUR/USD":"EURUSD", "EURUSD=X":"EURUSD", FXEURUSD:"EURUSD",
+          "6E":"EURUSD", "6E1!":"EURUSD", M6E:"EURUSD", "M6E1!":"EURUSD",
+          NAS100:"NAS100", NASDAQ:"NAS100", NQ:"NAS100", "NQ1!":"NAS100", US100:"NAS100", NDX:"NAS100", USTEC:"NAS100", USTECH:"NAS100",
+          NQM2026:"NAS100", NQM6:"NAS100", NQH2026:"NAS100", NQU2026:"NAS100", NQZ2026:"NAS100",
+          MNQ:"NAS100", "MNQ1!":"NAS100",
+          US30:"US30", DOW:"US30", YM:"US30", "YM1!":"US30", DJIA:"US30", DJ30:"US30",
+          YMM2026:"US30", YMM6:"US30", YMH2026:"US30", YMU2026:"US30", YMZ2026:"US30",
+          MYM:"US30", "MYM1!":"US30",
+          XAGUSD:"XAGUSD", SILVER:"XAGUSD", SI:"XAGUSD", "SI1!":"XAGUSD", SIL:"XAGUSD", "XAGUSD=X":"XAGUSD", "SILVER/USD":"XAGUSD",
+          US500:"US500", SPX:"US500", ES:"US500", "ES1!":"US500", SP500:"US500", SPX500:"US500", "S&P500":"US500",
+          ESM2026:"US500", ESM6:"US500", ESH2026:"US500", ESU2026:"US500", ESZ2026:"US500",
+          MES:"US500", "MES1!":"US500",
+          BTCUSD:"BTCUSD", BTC:"BTCUSD", BITCOIN:"BTCUSD", MBT:"BTCUSD", "MBT1!":"BTCUSD", BTCUSDT:"BTCUSD", "BTC/USD":"BTCUSD",
+          ETHUSD:"ETHUSD", ETH:"ETHUSD", ETHER:"ETHUSD", MET:"ETHUSD", "MET1!":"ETHUSD", ETHUSDT:"ETHUSD", "ETH/USD":"ETHUSD",
+        };
+
+        // Resolve detected ticker to instrument via alias map
+        const resolvedDetected = ALIAS_TO_INSTRUMENT[detected] || detected;
+        const isConfirmedMismatch = detected && resolvedDetected !== expected && detected !== "UNKNOWN" && detected !== "UNREADABLE" && detected !== "NOT_VISIBLE";
+
         if (isConfirmedMismatch) {
           // Free retry — go back to upload, no cooldown hit
           setUploadCounts(prev => ({ ...prev, [instrument]: Math.max(0, (prev[instrument] || 1) - 1) }));
@@ -5842,8 +5876,7 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
           alert(`Wrong charts — these show ${detected}, not ${expected}. Upload your ${expected} charts and try again.`);
           return;
         }
-        // Any other instrument_valid=false (uncertainty, unreadable) → proceed anyway
-        // The analysis prompt already instructs the AI to handle uncertain cases gracefully
+        // Any other instrument_valid=false (uncertainty, unreadable, known alias) → proceed anyway
       }
 
       // ── WEEKEND HARD OVERRIDE ─────────────────────────────────────────────
