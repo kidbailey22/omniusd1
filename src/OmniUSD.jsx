@@ -2458,7 +2458,6 @@ TP1: Next clean swing level in trend direction. Min 1.5:1 R:R.
 TP2: Next major structural level beyond TP1.
 Runner: Only if momentum clearly accelerating past TP2.
 
-what_still_needed: For ANY non-A+ grade, list 2-4 conditions a trader needs to see before executing. Write each condition as a plain sentence a beginner can act on. Use exact prices from the plan. Never use abbreviations like "TFs" or jargon like "BRC sequence confirmation". 
 Examples of GOOD conditions: "30M candle closes above 3,250", "Daily and 4H both showing bullish structure", "Price pulls back to 3,220 retest zone and holds", "NY session window is open — 8:30 to 10:30 AM CT"
 Examples of BAD conditions: "Daily timeframe alignment with lower TFs", "Clear BRC sequence confirmation", "Proper entry setup"
 If A+, return [].
@@ -2507,7 +2506,6 @@ Return ONLY this JSON — no markdown, no explanation, no preamble:
       "tp1": "exact TP1 for the short"
     }
   },
-  "what_still_needed": ["condition 1 with price", "condition 2", "condition 3"],
   "plain_english": {
     "structure": "what the market is doing in plain English",
     "brc_phase": "which phase and what it means",
@@ -5813,7 +5811,7 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
+          max_tokens: 2000,
           system: getAnalysisPrompt(instrument, selectedSession, isDevMode()),
           messages: [{ role: "user", content: [...imgBlocks, { type: "text", text: `Analyze these ${instrument} charts. Daily first, then 4H, 1H, 30M. Return only the JSON.` }] }],
         }),
