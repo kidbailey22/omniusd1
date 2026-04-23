@@ -7299,6 +7299,60 @@ Use ONLY these times. All earlier time references in this conversation are stale
 
                 {/* Full Analysis collapsible */}
                 <FullAnalysisPanel plan={plan} />
+
+                {/* ── ASK OMNI — available on SOFT PASS too ── */}
+                {(() => {
+                  const questionsUsed = planChatMessages.filter(m => m.role === "user").length;
+                  const questionsLeft = PLAN_CHAT_LIMIT - questionsUsed;
+                  const isExhausted = questionsLeft <= 0;
+                  return (
+                    <div style={{ marginTop:12, marginBottom:12 }}>
+                      <button onClick={() => setPlanChatOpen(o => !o)}
+                        style={{ width:"100%", padding:"11px 16px", borderRadius: planChatOpen ? "10px 10px 0 0" : 10, border:"1px solid rgba(204,68,255,0.25)", background:"rgba(204,68,255,0.05)", color:"#cc44ff", fontSize:13, fontWeight:700, letterSpacing:"0.08em", fontFamily:"inherit", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"space-between", transition:"all 0.2s" }}>
+                        <span>💬 Ask Omni about this plan</span>
+                        <span style={{ fontSize:11, color:"rgba(204,68,255,0.6)" }}>
+                          {isExhausted ? "0 questions left" : `${questionsLeft} question${questionsLeft !== 1 ? "s" : ""} left`} {planChatOpen ? "▴" : "▾"}
+                        </span>
+                      </button>
+                      {planChatOpen && (
+                        <div style={{ border:"1px solid rgba(204,68,255,0.2)", borderTop:"none", borderRadius:"0 0 10px 10px", background:"rgba(204,68,255,0.02)", padding:"12px 14px" }}>
+                          <div style={{ maxHeight:240, overflowY:"auto", marginBottom:10, display:"flex", flexDirection:"column", gap:8 }}>
+                            {planChatMessages.length === 0 && (
+                              <div style={{ fontSize:12, color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace", textAlign:"center", padding:"16px 0" }}>
+                                Ask anything about this setup.
+                              </div>
+                            )}
+                            {planChatMessages.map((m, i) => (
+                              <div key={i} style={{ display:"flex", justifyContent: m.role==="user" ? "flex-end" : "flex-start" }}>
+                                <div style={{ maxWidth:"85%", padding:"8px 12px", borderRadius:8, fontSize:12, lineHeight:1.6, background: m.role==="user" ? "rgba(204,68,255,0.15)" : "rgba(255,255,255,0.05)", color: m.role==="user" ? "#f0ecff" : "#ccc4e8", border: m.role==="user" ? "1px solid rgba(204,68,255,0.25)" : "1px solid rgba(255,255,255,0.07)" }}>
+                                  {m.content}
+                                </div>
+                              </div>
+                            ))}
+                            {planChatLoading && (
+                              <div style={{ fontSize:11, color:"rgba(204,68,255,0.5)", fontFamily:"'Space Mono',monospace" }}>Omni is thinking...</div>
+                            )}
+                          </div>
+                          {!isExhausted && (
+                            <div style={{ display:"flex", gap:8 }}>
+                              <input value={planChatInput} onChange={e => setPlanChatInput(e.target.value)}
+                                onKeyDown={e => e.key === "Enter" && !e.shiftKey && handlePlanChat()}
+                                placeholder="Ask about this plan..." disabled={planChatLoading}
+                                style={{ flex:1, background:"rgba(255,255,255,0.05)", border:"1px solid rgba(204,68,255,0.2)", borderRadius:7, padding:"8px 12px", fontSize:12, color:"#f0ecff", fontFamily:"inherit", outline:"none" }}/>
+                              <button onClick={handlePlanChat} disabled={planChatLoading || !planChatInput.trim()}
+                                style={{ padding:"8px 16px", borderRadius:7, border:"none", background:"rgba(204,68,255,0.2)", color:"#cc44ff", fontSize:12, fontWeight:700, fontFamily:"inherit", cursor:"pointer" }}>
+                                ASK
+                              </button>
+                            </div>
+                          )}
+                          {isExhausted && (
+                            <div style={{ fontSize:11, color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace", textAlign:"center" }}>Question limit reached for this plan.</div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </>
 
             ) : plan.grade !== "PASS" ? (
