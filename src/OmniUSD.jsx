@@ -280,11 +280,16 @@ ACCEPTED ALIASES — these ticker labels are valid for each instrument:
 - BTCUSD: BTCUSD, BTC, BITCOIN, MBT, MBT1!, BTCUSDT, BTC/USD, XBTUSD, BTCPERP
 - ETHUSD: ETHUSD, ETH, ETHER, MET, MET1!, ETHUSDT, ETH/USD, XETUSD, ETHPERP
 
-- If the ticker on the charts matches ANY of the accepted aliases for ${instrument}, set instrument_valid=true.
-- If the charts show a ticker that belongs to a DIFFERENT instrument entirely, set instrument_valid=false and instrument_detected= what you actually see. This is a HARD BLOCK — do NOT proceed with analysis.
-- Example: User selected XAUUSD but charts show XAGUSD or NAS100 → instrument_valid=false immediately.
+- If the ticker on the charts matches ANY of the accepted aliases for ${instrument}, set instrument_valid=true and proceed normally. Futures contract codes like MGCM2026, NQM2026, YMM2026, ESM2026 ARE valid — they are the same instrument with an expiry date appended. NEVER reject these.
+- MGCM2026, MGCM6, MGC, GC = XAUUSD. Always valid for XAUUSD analysis.
+- NQM2026, MNQ, NQ = NAS100. Always valid for NAS100 analysis.
+- YMM2026, MYM, YM = US30. Always valid for US30 analysis.
+- ESM2026, MES, ES = US500. Always valid for US500 analysis.
+- SIL, SI = XAGUSD. Always valid for XAGUSD analysis.
+- M6E, 6E = EURUSD. Always valid for EURUSD analysis.
+- MBT = BTCUSD. MET = ETHUSD.
+- Only set instrument_valid=false if the charts show a COMPLETELY DIFFERENT instrument — e.g. user selected XAUUSD but charts clearly show NAS100 or EURUSD.
 - If you cannot clearly identify the instrument on any chart, set instrument_valid=false with instrument_detected="unreadable".
-INSTRUMENT MISMATCH = hard block. Do NOT proceed with analysis if instrument_valid=false. Return the JSON with charts_valid=false and stop.
 
 STEP 2 — TIMEFRAME CHECK: Inspect EVERY image for timeframe indicators (chart title, interval selector, candle size, time axis). This check is MANDATORY and NON-NEGOTIABLE.
 - Slot 1 MUST be a Daily chart. If it shows 4H, 1H, 30M, or any other timeframe → charts_valid=false, stop immediately.
@@ -5887,7 +5892,7 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
         parsed.pass_reason = "Weekend — markets are thin and unreliable. No valid BRC execution window until Sunday Asian session or Monday NY session. Structure noted — come back when a proper session opens.";
       }
 
-      // ── CONFIDENCE GATE — force PASS if AI confidence is too low ──────────
+      // ── CONFIDENCE GATE — only code-level override we keep ───────────────
       const _conf = parseFloat(parsed.confidence_score || 0);
       if (_conf > 0 && _conf <= 35 && parsed.grade !== "PASS" && parsed.grade !== "SOFT PASS" && !isDevMode()) {
         parsed.grade = "PASS";
@@ -5901,13 +5906,16 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
           const dailyB = (tf.daily?.bias || "").toUpperCase();
           const h4B    = (tf.h4?.bias    || "").toUpperCase();
           const h1B    = (tf.h1?.bias    || "").toUpperCase();
+          const phase  = (parsed.brc_phase || "").toUpperCase();
           const isValid = (b) => b === "BULLISH" || b === "BEARISH";
+          const isRetest = phase === "RETEST_COOKING" || phase === "RETEST" || phase === "CONTINUATION";
+
           if (isValid(dailyB) && isValid(h4B) && h4B !== dailyB) {
             if (parsed.grade !== "SOFT PASS") {
               parsed.grade = "SOFT PASS";
               parsed.pass_reason = `4H is ${h4B.toLowerCase()} while Daily is ${dailyB.toLowerCase()} — timeframe conflict. Watching only. Both scenarios tracked below.`;
             }
-          } else if (isValid(dailyB) && isValid(h1B) && h1B !== dailyB) {
+          } else if (isValid(dailyB) && isValid(h1B) && h1B !== dailyB && !isRetest) {
             if (parsed.grade !== "SOFT PASS") {
               parsed.grade = "SOFT PASS";
               parsed.pass_reason = `1H is ${h1B.toLowerCase()} while Daily is ${dailyB.toLowerCase()} — alignment incomplete. Watching for 1H to flip before executing.`;
