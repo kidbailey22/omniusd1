@@ -7336,10 +7336,10 @@ Use ONLY these times. All earlier time references in this conversation are stale
                           {!isExhausted && (
                             <div style={{ display:"flex", gap:8 }}>
                               <input value={planChatInput} onChange={e => setPlanChatInput(e.target.value)}
-                                onKeyDown={e => e.key === "Enter" && !e.shiftKey && handlePlanChat()}
+                                onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendPlanChat()}
                                 placeholder="Ask about this plan..." disabled={planChatLoading}
                                 style={{ flex:1, background:"rgba(255,255,255,0.05)", border:"1px solid rgba(204,68,255,0.2)", borderRadius:7, padding:"8px 12px", fontSize:12, color:"#f0ecff", fontFamily:"inherit", outline:"none" }}/>
-                              <button onClick={handlePlanChat} disabled={planChatLoading || !planChatInput.trim()}
+                              <button onClick={sendPlanChat} disabled={planChatLoading || !planChatInput.trim()}
                                 style={{ padding:"8px 16px", borderRadius:7, border:"none", background:"rgba(204,68,255,0.2)", color:"#cc44ff", fontSize:12, fontWeight:700, fontFamily:"inherit", cursor:"pointer" }}>
                                 ASK
                               </button>
