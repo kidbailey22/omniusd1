@@ -2409,14 +2409,18 @@ BRC PHASE IDENTIFICATION
 ═══════════════════════════════════════
 
 PRE-BREAK: Price has not yet broken the key level. No entry. Set alert.
+Set tier1_confirmed=false, tier2_confirmed=false.
 
 RETEST_COOKING: Price broke the level AND is now pulling back to test it.
 Daily + 4H agree but 1H is temporarily counter-trend. This is healthy. WATCH.
+Set tier1_confirmed=true, tier2_confirmed=false.
 
 CONTINUATION: Price broke, retested, and a 30M candle closed back in the break direction.
 THIS is the A+ entry phase — but ONLY if 3/3 alignment confirmed above.
+Set tier1_confirmed=true, tier2_confirmed=true.
 
 EXPIRED: Price broke, ran the full target, no retest occurred. PASS — do not chase.
+Set tier1_confirmed=false, tier2_confirmed=false.
 
 ═══════════════════════════════════════
 3TF ANALYSIS PROTOCOL
@@ -2492,6 +2496,8 @@ Return ONLY this JSON — no markdown, no explanation, no preamble:
   "summary": "1-2 sentences max. Plain English. What the instrument is doing and what the trader should watch for. No jargon.",
   "market_structure": "HH/HL or LH/LL with key price levels",
   "brc_phase": "PRE-BREAK|RETEST_COOKING|CONTINUATION|EXPIRED",
+  "tier1_confirmed": true,
+  "tier2_confirmed": false,
   "trigger_level": "exact price only — no words, no description",
   "retest_zone": "price or zone only e.g. 2,650-2,680 — no words",
   "stop_loss": "exact price only — no words",
@@ -6039,7 +6045,35 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
       setPlanChatMessages([]);
       setPlanChatOpen(false);
       setCheckedItems({});
-      setPhase("plan");
+
+      // ── AUTO-ADVANCE SESSION STATE if Tier 1 or Tier 2 already confirmed ──
+      // When user uploads after 9AM and the break already happened on the chart,
+      // skip straight to the correct phase instead of starting from scratch.
+      const _phase = (parsed.brc_phase || "").toUpperCase();
+      const _t1 = parsed.tier1_confirmed === true || _phase === "RETEST_COOKING" || _phase === "CONTINUATION";
+      const _t2 = parsed.tier2_confirmed === true || _phase === "CONTINUATION";
+
+      if (_t2) {
+        // Tier 2 already confirmed — jump straight to READY_FOR_LIMIT
+        setTier1(true);
+        setTier2(true);
+        setSessionState("READY_FOR_LIMIT");
+        const _trigger = (() => { const m = String(parsed.trigger_level||"").match(/^([0-9,]+(?:\.[0-9]+)?)/); return m ? m[1].trim() : parsed.trigger_level; })();
+        setMessages([{ role:"assistant", content:`🚨 **TIER 2 ALREADY CONFIRMED**${profile?.preferredName ? ` — ${profile.preferredName}` : ""}\n\nBoth tiers fired on the chart before you uploaded. The retest held and the continuation candle closed.\n\nEntry: **${_trigger}** · Stop: **${parsed.stop_loss}** · TP1: **${parsed.tp1}**\n\nIf price is still at or near the trigger — your limit order is valid. Place it now.\nIf price has already run past TP1 — do not chase. This setup is complete.\n\nSession is live. Hands on deck.` }]);
+        setPhase("live");
+      } else if (_t1) {
+        // Tier 1 already confirmed — start live session at BREAK_CONFIRMED
+        setTier1(true);
+        setTier2(false);
+        setSessionState("BREAK_CONFIRMED");
+        const _trigger = (() => { const m = String(parsed.trigger_level||"").match(/^([0-9,]+(?:\.[0-9]+)?)/); return m ? m[1].trim() : parsed.trigger_level; })();
+        setMessages([{ role:"assistant", content:`⚡ **TIER 1 ALREADY CONFIRMED**${profile?.preferredName ? ` — ${profile.preferredName}` : ""}\n\nThe break happened before you uploaded. Price closed ${parsed.bias === "SHORT" ? "below" : "above"} **${_trigger}** on a previous 30M candle.\n\nNow watching for the **retest**. Price needs to pull back to **${_trigger}** and the next 30M close must confirm.\n\nSend me each 30M close price — I'll tell you when Tier 2 is confirmed and your limit is ready.` }]);
+        setPhase("live");
+      } else {
+        // Normal flow — go to plan page
+        setPhase("plan");
+      }
+
       // Auto-save every plan to session history (all grades)
       autoSavePlan({ ...parsed, instrument });
       // Log successful analysis
