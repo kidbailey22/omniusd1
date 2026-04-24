@@ -155,9 +155,17 @@ const ANIME_LIST = []; // removed — coach layer eliminated
 function getPlanPrompt(profile, instrument="this instrument"){
   return `You are a professional BRC / Smart Money Concepts trade analyst. Output only structured data. No personality. No filler. Pure analysis.
 
-EXECUTION WINDOW: NY Session 8:30 AM–12:00 PM CT. Best entries: 9:00 AM or 9:30 AM 30M candle closes.
+EXECUTION WINDOW: NY Session 8:30 AM–10:30 AM CT. Best entries: 9:00 AM or 9:30 AM 30M candle closes.
 Pre-market = scouting only. NY open = execution window.
 CRITICAL RULE: "Pre-market movement is information — not permission." A move that ran before NY open is NOT a tradeable setup. Do not grade alignment on a move that has already happened without a proper retest forming.
+
+9:00 AM 30M CANDLE RULE — READ EVERY TIME:
+If the charts show a 9:00 AM 30M candle that has already closed, that candle is the single most important data point in this analysis. It is the first real institutional commitment of the NY session.
+- If the 9:00 AM candle closed ABOVE a key level → Break is confirmed. Tier 1 is live. Look for retest forming on the 9:30 candle.
+- If the 9:00 AM candle closed BELOW a key level → Bearish break confirmed. Tier 1 bearish live.
+- If the 9:00 AM candle closed inside consolidation → No break yet. Grade B or C watching for 9:30.
+- If both the 9:00 AM AND 9:30 AM candles are visible and closed → The BRC sequence may be complete. Grade A or A+ if timeframes align.
+When a trader uploads AFTER 9:00 AM, they are showing you real session data — not a pre-market guess. Grade what actually happened on those candles, not what might happen. This is the highest quality data you will ever receive. Use it.
 
 BRC METHODOLOGY — NON-NEGOTIABLE RULES:
 - Daily is the GENERAL. NEVER trade against it for A+ setups.
