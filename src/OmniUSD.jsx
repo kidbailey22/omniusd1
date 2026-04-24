@@ -6745,33 +6745,33 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 // Before recommended window
                 dot = "#7fff6b";
                 label = `${w.label} — Upload window opens in ${fmtMins(minsUntil(w.recommend))}`;
-                sub = `Recommended: ${Math.floor(w.recommend/60)}:${String(w.recommend%60).padStart(2,"0")} ${nyOpen-w.recommend >= 60 ? "AM" : "AM"} CT · NY session at 8:30 AM CT`;
+                sub = `Best analysis after the 9:00 AM CT candle closes · NY session at 8:30 AM CT`;
               } else if (mins < w.latest) {
                 // Inside recommended window — perfect time
                 dot = "#7fff6b";
                 label = `${w.label} — Perfect upload time`;
-                sub = `NY session opens in ${fmtMins(minsUntil(nyOpen))} · Upload now for full analysis`;
+                sub = `NY session opens in ${fmtMins(minsUntil(nyOpen))} · Upload after the 9:00 AM close for best grade`;
               } else if (mins < nyOpen) {
                 // Past recommended, before NY open
                 dot = "#ffd166";
                 label = `${w.label} — Running behind optimal window`;
-                sub = `NY opens in ${fmtMins(minsUntil(nyOpen))} · Upload now`;
+                sub = `NY opens in ${fmtMins(minsUntil(nyOpen))} · Wait for the 9:00 AM candle close`;
                 warning = tier === "elite"
-                  ? `Uploading after 7:30 AM CT with 6 instruments leaves limited time. Prioritize your top 2–3 instruments first.`
+                  ? `Upload after the 9:00 AM candle closes for the most accurate grade. Pre-market uploads are scouting only.`
                   : tier === "pro"
-                  ? `Uploading after 7:45 AM CT leaves limited prep time. Focus on your highest priority instruments.`
-                  : `NY session opens in 30 minutes. Upload now for a complete plan.`;
+                  ? `Upload after the 9:00 AM candle closes for the most accurate grade. Pre-market uploads are scouting only.`
+                  : `Upload after the 9:00 AM candle closes for the most accurate grade. Pre-market uploads are scouting only.`;
               } else if (mins < nyCutoff) {
                 // NY session open
                 dot = "#00e5ff";
-                label = `NY SESSION OPEN — Limited analysis time`;
-                sub = `Window closes in ${fmtMins(minsUntil(nyCutoff))} · Upload immediately`;
-                warning = `NY session is already open. Upload and analyze your top instrument now — you have ${fmtMins(minsUntil(nyCutoff))} before cutoff.`;
+                label = `NY SESSION OPEN — Upload now`;
+                sub = `Window closes in ${fmtMins(minsUntil(nyCutoff))} · Upload after each 30M close for live grading`;
+                warning = `NY session is open. Upload your charts now — the 30M candle closes are your signal. You have ${fmtMins(minsUntil(nyCutoff))} before cutoff.`;
               } else {
                 // Closed
                 dot = "#ff6b6b";
                 label = `WINDOW CLOSED`;
-                sub = `Come back tomorrow at 7:00 AM CT`;
+                sub = `Come back tomorrow. Upload after the 9:00 AM CT candle closes for best results.`;
               }
 
               const borderColor = dot === "#7fff6b" ? "rgba(127,255,107,0.15)" : dot === "#ffd166" ? "rgba(255,209,102,0.2)" : dot === "#00e5ff" ? "rgba(0,229,255,0.2)" : "rgba(255,107,107,0.2)";
