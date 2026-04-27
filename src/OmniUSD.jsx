@@ -2422,6 +2422,12 @@ Set tier1_confirmed=true, tier2_confirmed=true.
 EXPIRED: Price broke, ran the full target, no retest occurred. PASS — do not chase.
 Set tier1_confirmed=false, tier2_confirmed=false.
 
+CRITICAL — NY SESSION RULE FOR tier1_confirmed AND tier2_confirmed:
+tier1_confirmed and tier2_confirmed may ONLY be set to true if the confirming 30M candle closed DURING the NY session window (8:30 AM – 10:30 AM CT).
+Pre-market candles (before 8:30 AM CT) DO NOT count as tier confirmations — even if the break visually occurred on the chart.
+If the break happened in pre-market or overnight and the NY session has not yet opened, set tier1_confirmed=false and tier2_confirmed=false. Treat the setup as PRE-BREAK.
+Pre-market movement is information — not permission. The 30M close that counts must happen inside the session window.
+
 ═══════════════════════════════════════
 3TF ANALYSIS PROTOCOL
 ═══════════════════════════════════════
