@@ -2423,10 +2423,16 @@ EXPIRED: Price broke, ran the full target, no retest occurred. PASS — do not c
 Set tier1_confirmed=false, tier2_confirmed=false.
 
 CRITICAL — NY SESSION RULE FOR tier1_confirmed AND tier2_confirmed:
-tier1_confirmed and tier2_confirmed may ONLY be set to true if the confirming 30M candle closed DURING the NY session window (8:30 AM – 10:30 AM CT).
-Pre-market candles (before 8:30 AM CT) DO NOT count as tier confirmations — even if the break visually occurred on the chart.
-If the break happened in pre-market or overnight and the NY session has not yet opened, set tier1_confirmed=false and tier2_confirmed=false. Treat the setup as PRE-BREAK.
-Pre-market movement is information — not permission. The 30M close that counts must happen inside the session window.
+Both the BREAK candle AND the confirming 30M candle must have closed DURING the NY session window (8:30 AM – 10:30 AM CT).
+
+If the break happened before 8:30 AM CT (pre-market or overnight), set tier1_confirmed=false and tier2_confirmed=false — regardless of what the 9:00 or 9:30 AM candles do afterward. A pre-market break followed by in-session continuation is NOT a valid BRC sequence. It is a PASS or PRE-BREAK.
+
+The full BRC sequence must begin and complete inside the session window:
+- Break candle: must close inside 8:30–10:30 AM CT
+- Retest + Tier 1: must close inside 8:30–10:30 AM CT
+- Continuation + Tier 2: must close inside 8:30–10:30 AM CT
+
+Pre-market movement is information — not permission. If the big move already happened before the session opened, the setup is EXPIRED or PRE-BREAK. Do not auto-confirm tiers on in-session candles that are simply continuing a pre-market trend.
 
 ═══════════════════════════════════════
 3TF ANALYSIS PROTOCOL
