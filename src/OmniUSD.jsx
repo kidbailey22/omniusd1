@@ -5892,6 +5892,13 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
             setPhase("upload");
             alert(`Wrong charts — these show ${detected}, not ${expected}. Upload your ${expected} charts and try again.`);
             return;
+          } else if (detected && resolvedDetected === expected) {
+            // Alias resolved correctly — AI wrongly flagged it. Override.
+            parsed.instrument_valid = true;
+            if (parsed.grade === "PASS" && parsed.pass_reason && parsed.pass_reason.toLowerCase().includes("instrument")) {
+              parsed.grade = "B";
+              parsed.pass_reason = "";
+            }
           }
         }
       } catch(aliasErr) { console.warn("Instrument alias check error:", aliasErr); }
