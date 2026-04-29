@@ -159,14 +159,6 @@ EXECUTION WINDOW: NY Session 8:30 AM–10:30 AM CT. Best entries: 9:00 AM or 9:3
 Pre-market = scouting only. NY open = execution window.
 CRITICAL RULE: "Pre-market movement is information — not permission." A move that ran before NY open is NOT a tradeable setup. Do not grade alignment on a move that has already happened without a proper retest forming.
 
-9:00 AM 30M CANDLE RULE — READ EVERY TIME:
-If the charts show a 9:00 AM 30M candle that has already closed, that candle is the single most important data point in this analysis. It is the first real institutional commitment of the NY session.
-- If the 9:00 AM candle closed ABOVE a key level → Break is confirmed. Tier 1 is live. Look for retest forming on the 9:30 candle.
-- If the 9:00 AM candle closed BELOW a key level → Bearish break confirmed. Tier 1 bearish live.
-- If the 9:00 AM candle closed inside consolidation → No break yet. Grade B or C watching for 9:30.
-- If both the 9:00 AM AND 9:30 AM candles are visible and closed → The BRC sequence may be complete. Grade A or A+ if timeframes align.
-When a trader uploads AFTER 9:00 AM, they are showing you real session data — not a pre-market guess. Grade what actually happened on those candles, not what might happen. This is the highest quality data you will ever receive. Use it.
-
 BRC METHODOLOGY — NON-NEGOTIABLE RULES:
 - Daily is the GENERAL. NEVER trade against it for A+ setups.
 - 4H confirms direction. D+4H agree = bias locked.
@@ -2409,18 +2401,14 @@ BRC PHASE IDENTIFICATION
 ═══════════════════════════════════════
 
 PRE-BREAK: Price has not yet broken the key level. No entry. Set alert.
-Set tier1_confirmed=false, tier2_confirmed=false.
 
 RETEST_COOKING: Price broke the level AND is now pulling back to test it.
 Daily + 4H agree but 1H is temporarily counter-trend. This is healthy. WATCH.
-Set tier1_confirmed=true, tier2_confirmed=false.
 
 CONTINUATION: Price broke, retested, and a 30M candle closed back in the break direction.
 THIS is the A+ entry phase — but ONLY if 3/3 alignment confirmed above.
-Set tier1_confirmed=true, tier2_confirmed=true.
 
 EXPIRED: Price broke, ran the full target, no retest occurred. PASS — do not chase.
-Set tier1_confirmed=false, tier2_confirmed=false.
 
 ═══════════════════════════════════════
 3TF ANALYSIS PROTOCOL
@@ -2496,8 +2484,6 @@ Return ONLY this JSON — no markdown, no explanation, no preamble:
   "summary": "1-2 sentences max. Plain English. What the instrument is doing and what the trader should watch for. No jargon.",
   "market_structure": "HH/HL or LH/LL with key price levels",
   "brc_phase": "PRE-BREAK|RETEST_COOKING|CONTINUATION|EXPIRED",
-  "tier1_confirmed": true,
-  "tier2_confirmed": false,
   "trigger_level": "exact price only — no words, no description",
   "retest_zone": "price or zone only e.g. 2,650-2,680 — no words",
   "stop_loss": "exact price only — no words",
@@ -5892,13 +5878,6 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
             setPhase("upload");
             alert(`Wrong charts — these show ${detected}, not ${expected}. Upload your ${expected} charts and try again.`);
             return;
-          } else if (detected && resolvedDetected === expected) {
-            // Alias resolved correctly — AI wrongly flagged it. Override.
-            parsed.instrument_valid = true;
-            if (parsed.grade === "PASS" && parsed.pass_reason && parsed.pass_reason.toLowerCase().includes("instrument")) {
-              parsed.grade = "B";
-              parsed.pass_reason = "";
-            }
           }
         }
       } catch(aliasErr) { console.warn("Instrument alias check error:", aliasErr); }
@@ -6052,35 +6031,7 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
       setPlanChatMessages([]);
       setPlanChatOpen(false);
       setCheckedItems({});
-
-      // ── AUTO-ADVANCE SESSION STATE if Tier 1 or Tier 2 already confirmed ──
-      // When user uploads after 9AM and the break already happened on the chart,
-      // skip straight to the correct phase instead of starting from scratch.
-      const _phase = (parsed.brc_phase || "").toUpperCase();
-      const _t1 = parsed.tier1_confirmed === true || _phase === "RETEST_COOKING" || _phase === "CONTINUATION";
-      const _t2 = parsed.tier2_confirmed === true || _phase === "CONTINUATION";
-
-      if (_t2) {
-        // Tier 2 already confirmed — jump straight to READY_FOR_LIMIT
-        setTier1(true);
-        setTier2(true);
-        setSessionState("READY_FOR_LIMIT");
-        const _trigger = (() => { const m = String(parsed.trigger_level||"").match(/^([0-9,]+(?:\.[0-9]+)?)/); return m ? m[1].trim() : parsed.trigger_level; })();
-        setMessages([{ role:"assistant", content:`🚨 **TIER 2 ALREADY CONFIRMED**${profile?.preferredName ? ` — ${profile.preferredName}` : ""}\n\nBoth tiers fired on the chart before you uploaded. The retest held and the continuation candle closed.\n\nEntry: **${_trigger}** · Stop: **${parsed.stop_loss}** · TP1: **${parsed.tp1}**\n\nIf price is still at or near the trigger — your limit order is valid. Place it now.\nIf price has already run past TP1 — do not chase. This setup is complete.\n\nSession is live. Hands on deck.` }]);
-        setPhase("live");
-      } else if (_t1) {
-        // Tier 1 already confirmed — start live session at BREAK_CONFIRMED
-        setTier1(true);
-        setTier2(false);
-        setSessionState("BREAK_CONFIRMED");
-        const _trigger = (() => { const m = String(parsed.trigger_level||"").match(/^([0-9,]+(?:\.[0-9]+)?)/); return m ? m[1].trim() : parsed.trigger_level; })();
-        setMessages([{ role:"assistant", content:`⚡ **TIER 1 ALREADY CONFIRMED**${profile?.preferredName ? ` — ${profile.preferredName}` : ""}\n\nThe break happened before you uploaded. Price closed ${parsed.bias === "SHORT" ? "below" : "above"} **${_trigger}** on a previous 30M candle.\n\nNow watching for the **retest**. Price needs to pull back to **${_trigger}** and the next 30M close must confirm.\n\nSend me each 30M close price — I'll tell you when Tier 2 is confirmed and your limit is ready.` }]);
-        setPhase("live");
-      } else {
-        // Normal flow — go to plan page
-        setPhase("plan");
-      }
-
+      setPhase("plan");
       // Auto-save every plan to session history (all grades)
       autoSavePlan({ ...parsed, instrument });
       // Log successful analysis
@@ -6786,33 +6737,33 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 // Before recommended window
                 dot = "#7fff6b";
                 label = `${w.label} — Upload window opens in ${fmtMins(minsUntil(w.recommend))}`;
-                sub = `Best analysis after the 9:00 AM CT candle closes · NY session at 8:30 AM CT`;
+                sub = `Recommended: ${Math.floor(w.recommend/60)}:${String(w.recommend%60).padStart(2,"0")} AM CT · NY session at 8:30 AM CT`;
               } else if (mins < w.latest) {
                 // Inside recommended window — perfect time
                 dot = "#7fff6b";
                 label = `${w.label} — Perfect upload time`;
-                sub = `NY session opens in ${fmtMins(minsUntil(nyOpen))} · Upload after the 9:00 AM close for best grade`;
+                sub = `NY session opens in ${fmtMins(minsUntil(nyOpen))} · Upload now for full analysis`;
               } else if (mins < nyOpen) {
                 // Past recommended, before NY open
                 dot = "#ffd166";
                 label = `${w.label} — Running behind optimal window`;
-                sub = `NY opens in ${fmtMins(minsUntil(nyOpen))} · Wait for the 9:00 AM candle close`;
+                sub = `NY opens in ${fmtMins(minsUntil(nyOpen))} · Upload now`;
                 warning = tier === "elite"
-                  ? `Upload after the 9:00 AM candle closes for the most accurate grade. Pre-market uploads are scouting only.`
+                  ? `Uploading after 7:30 AM CT with 6 instruments leaves limited time. Prioritize your top 2–3 instruments first.`
                   : tier === "pro"
-                  ? `Upload after the 9:00 AM candle closes for the most accurate grade. Pre-market uploads are scouting only.`
-                  : `Upload after the 9:00 AM candle closes for the most accurate grade. Pre-market uploads are scouting only.`;
+                  ? `Uploading after 7:45 AM CT leaves limited prep time. Focus on your highest priority instruments.`
+                  : `NY session opens in 30 minutes. Upload now for a complete plan.`;
               } else if (mins < nyCutoff) {
                 // NY session open
                 dot = "#00e5ff";
-                label = `NY SESSION OPEN — Upload now`;
-                sub = `Window closes in ${fmtMins(minsUntil(nyCutoff))} · Upload after each 30M close for live grading`;
-                warning = `NY session is open. Upload your charts now — the 30M candle closes are your signal. You have ${fmtMins(minsUntil(nyCutoff))} before cutoff.`;
+                label = `NY SESSION OPEN — Limited analysis time`;
+                sub = `Window closes in ${fmtMins(minsUntil(nyCutoff))} · Upload immediately`;
+                warning = `NY session is already open. Upload and analyze your top instrument now — you have ${fmtMins(minsUntil(nyCutoff))} before cutoff.`;
               } else {
                 // Closed
                 dot = "#ff6b6b";
                 label = `WINDOW CLOSED`;
-                sub = `Come back tomorrow. Upload after the 9:00 AM CT candle closes for best results.`;
+                sub = `Come back tomorrow at 7:00 AM CT`;
               }
 
               const borderColor = dot === "#7fff6b" ? "rgba(127,255,107,0.15)" : dot === "#ffd166" ? "rgba(255,209,102,0.2)" : dot === "#00e5ff" ? "rgba(0,229,255,0.2)" : "rgba(255,107,107,0.2)";
