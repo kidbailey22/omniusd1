@@ -7168,12 +7168,13 @@ Use ONLY these times. All earlier time references in this conversation are stale
               {/* Grade badge — A+ gets green glow, others get muted treatment */}
               <div>
                 <div style={{
-                  fontSize: plan.grade === "A+" ? 48 : 36,
+                  fontSize: plan.grade === "A+" ? 48 : plan.grade === "SOFT PASS" || plan.grade === "PASS" ? 18 : 36,
                   fontWeight: 900,
                   color: plan._scoutMode && plan._preMarketScout && !plan._misaligned ? "#00ccff" : gradeColor,
                   lineHeight: 1,
-                  letterSpacing: "-0.02em",
+                  letterSpacing: plan.grade === "SOFT PASS" || plan.grade === "PASS" ? "0.06em" : "-0.02em",
                   opacity: plan.grade === "A+" ? 1 : 0.75,
+                  fontFamily: plan.grade === "SOFT PASS" || plan.grade === "PASS" ? "'Space Mono',monospace" : "inherit",
                 }}>
                   {plan._scoutMode && plan._preMarketScout && !plan._misaligned ? "SCOUT" : plan.grade}
                 </div>
