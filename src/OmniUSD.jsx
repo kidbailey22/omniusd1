@@ -280,6 +280,14 @@ ACCEPTED ALIASES — these ticker labels are valid for each instrument:
 - BTCUSD: BTCUSD, BTC, BITCOIN, MBT, MBT1!, BTCUSDT, BTC/USD, XBTUSD, BTCPERP
 - ETHUSD: ETHUSD, ETH, ETHER, MET, MET1!, ETHUSDT, ETH/USD, XETUSD, ETHPERP
 
+CRITICAL — FUTURES CONTRACT VALIDITY. NEVER call a futures contract expired based on the date code alone:
+- MGCM2026, MGCQ2026, MGCZ2026 = current active Micro Gold contracts. NOT expired. NOT stale.
+- NQM2026, NQU2026, NQZ2026 = current active Micro NQ contracts. NOT expired.
+- YMM2026, ESM2026, MYSM2026 = current active contracts. NOT expired.
+- Any 2026 contract is CURRENT and valid for analysis.
+- Only flag a contract as expired if it shows a PAST year like 2024 or 2025.
+- If uncertain, set instrument_valid=true and analyze anyway. FAIL OPEN.
+
 - If the ticker on the charts matches ANY of the accepted aliases for ${instrument}, set instrument_valid=true and proceed normally. Futures contract codes like MGCM2026, NQM2026, YMM2026, ESM2026 ARE valid — they are the same instrument with an expiry date appended. NEVER reject these.
 - MGCM2026, MGCM6, MGC, GC = XAUUSD. Always valid for XAUUSD analysis.
 - NQM2026, MNQ, NQ = NAS100. Always valid for NAS100 analysis.
