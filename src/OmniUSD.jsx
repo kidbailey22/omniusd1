@@ -7240,40 +7240,79 @@ Use ONLY these times. All earlier time references in this conversation are stale
               const isBull = cot.signal === "STRONG LONG" || cot.signal === "NET LONG";
               const isStrong = cot.signal === "STRONG LONG" || cot.signal === "STRONG SHORT";
               const c = isBull ? (isStrong ? "#7fff6b" : "#00e5ff") : (isStrong ? "#ff6b6b" : "#ffd166");
-              const fmtNum = n => Math.abs(n).toLocaleString();
+
+              // Calculate percentages
+              const commTotal = cot.comm_long + cot.comm_short;
+              const specTotal = cot.spec_long + cot.spec_short;
+              const commLongPct  = commTotal > 0 ? Math.round((cot.comm_long  / commTotal) * 100) : 50;
+              const commShortPct = 100 - commLongPct;
+              const specLongPct  = specTotal > 0 ? Math.round((cot.spec_long  / specTotal) * 100) : 50;
+              const specShortPct = 100 - specLongPct;
+
               const changeLabel = cot.comm_change !== null
-                ? (cot.comm_change > 0 ? `▲ ${fmtNum(cot.comm_change)} this week` : `▼ ${fmtNum(cot.comm_change)} this week`)
+                ? (cot.comm_change > 0
+                  ? `▲ Commercials added ${Math.abs(cot.comm_change).toLocaleString()} longs this week`
+                  : `▼ Commercials added ${Math.abs(cot.comm_change).toLocaleString()} shorts this week`)
                 : null;
+
+              const Bar = ({ longPct, color }) => (
+                <div style={{ height:6, borderRadius:3, background:"rgba(255,255,255,0.08)", overflow:"hidden", margin:"4px 0" }}>
+                  <div style={{ height:"100%", width:`${longPct}%`, background:`linear-gradient(90deg, #7fff6b, #00e5ff)`, borderRadius:3 }}/>
+                </div>
+              );
+
               return (
-                <div style={{ padding: "12px 16px", background: `${c}08`, border: `1px solid ${c}25`, borderRadius: 10, marginBottom: 16 }}>
-                  <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
+                <div style={{ padding:"12px 16px", background:`${c}08`, border:`1px solid ${c}25`, borderRadius:10, marginBottom:16 }}>
+                  <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:10 }}>
                     <div style={{ fontSize:10, fontWeight:900, letterSpacing:"0.14em", color:c, fontFamily:"'Space Mono',monospace" }}>
                       📊 COT — INSTITUTIONAL POSITIONING
                     </div>
                     <div style={{ fontSize:9, color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace" }}>
-                      As of {cot.report_date}
+                      Week of {cot.report_date}
                     </div>
                   </div>
-                  <div style={{ display:"flex", gap:10, marginBottom:8 }}>
-                    <div style={{ flex:1, padding:"8px 10px", background:"rgba(255,255,255,0.03)", borderRadius:7 }}>
-                      <div style={{ fontSize:9, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace", marginBottom:3 }}>COMMERCIALS (SMART MONEY)</div>
-                      <div style={{ fontSize:13, fontWeight:700, color:c, fontFamily:"monospace" }}>
-                        {cot.comm_net > 0 ? "+" : ""}{cot.comm_net.toLocaleString()} net
-                      </div>
-                      {changeLabel && <div style={{ fontSize:9, color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace", marginTop:2 }}>{changeLabel}</div>}
+
+                  {/* Commercials */}
+                  <div style={{ marginBottom:10 }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:2 }}>
+                      <span style={{ fontSize:10, fontWeight:900, color:"rgba(255,255,255,0.5)", fontFamily:"'Space Mono',monospace" }}>COMMERCIALS — Smart Money</span>
+                      <span style={{ fontSize:10, fontWeight:900, color:c, fontFamily:"'Space Mono',monospace" }}>
+                        {commLongPct}% Long · {commShortPct}% Short
+                      </span>
                     </div>
-                    <div style={{ flex:1, padding:"8px 10px", background:"rgba(255,255,255,0.03)", borderRadius:7 }}>
-                      <div style={{ fontSize:9, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace", marginBottom:3 }}>LARGE SPECULATORS</div>
-                      <div style={{ fontSize:13, fontWeight:700, color:"rgba(255,255,255,0.5)", fontFamily:"monospace" }}>
-                        {cot.spec_net > 0 ? "+" : ""}{cot.spec_net.toLocaleString()} net
-                      </div>
+                    <Bar longPct={commLongPct} color={c} />
+                    <div style={{ display:"flex", justifyContent:"space-between" }}>
+                      <span style={{ fontSize:9, color:"#7fff6b", fontFamily:"'Space Mono',monospace" }}>▲ LONG {commLongPct}%</span>
+                      <span style={{ fontSize:9, color:"#ff6b6b", fontFamily:"'Space Mono',monospace" }}>SHORT {commShortPct}% ▼</span>
                     </div>
                   </div>
-                  <div style={{ fontSize:11, color:`${c}cc`, lineHeight:1.7, fontFamily:"'Space Mono',monospace" }}>
-                    {cot.advice}
+
+                  {/* Large Speculators */}
+                  <div style={{ marginBottom:10 }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:2 }}>
+                      <span style={{ fontSize:10, fontWeight:900, color:"rgba(255,255,255,0.5)", fontFamily:"'Space Mono',monospace" }}>LARGE SPECS — Hedge Funds</span>
+                      <span style={{ fontSize:10, fontWeight:900, color:"rgba(255,255,255,0.4)", fontFamily:"'Space Mono',monospace" }}>
+                        {specLongPct}% Long · {specShortPct}% Short
+                      </span>
+                    </div>
+                    <div style={{ height:6, borderRadius:3, background:"rgba(255,255,255,0.08)", overflow:"hidden", margin:"4px 0" }}>
+                      <div style={{ height:"100%", width:`${specLongPct}%`, background:"rgba(255,255,255,0.25)", borderRadius:3 }}/>
+                    </div>
+                    <div style={{ display:"flex", justifyContent:"space-between" }}>
+                      <span style={{ fontSize:9, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace" }}>▲ LONG {specLongPct}%</span>
+                      <span style={{ fontSize:9, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace" }}>SHORT {specShortPct}% ▼</span>
+                    </div>
                   </div>
+
+                  {/* Signal + advice */}
+                  <div style={{ padding:"7px 10px", background:"rgba(255,255,255,0.03)", borderRadius:7, marginBottom: cot.spec_warning ? 8 : 0 }}>
+                    <div style={{ fontSize:10, fontWeight:900, color:c, fontFamily:"'Space Mono',monospace", marginBottom:3 }}>{cot.signal}</div>
+                    <div style={{ fontSize:11, color:`${c}cc`, lineHeight:1.7, fontFamily:"'Space Mono',monospace" }}>{cot.advice}</div>
+                    {changeLabel && <div style={{ fontSize:9, color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace", marginTop:4 }}>{changeLabel}</div>}
+                  </div>
+
                   {cot.spec_warning && (
-                    <div style={{ marginTop:8, padding:"6px 10px", background:"rgba(255,107,107,0.06)", border:"1px solid rgba(255,107,107,0.2)", borderRadius:6, fontSize:10, color:"#ff9a9a", fontFamily:"'Space Mono',monospace", lineHeight:1.6 }}>
+                    <div style={{ padding:"6px 10px", background:"rgba(255,107,107,0.06)", border:"1px solid rgba(255,107,107,0.2)", borderRadius:6, fontSize:10, color:"#ff9a9a", fontFamily:"'Space Mono',monospace", lineHeight:1.6 }}>
                       ⚠ {cot.spec_warning}
                     </div>
                   )}
