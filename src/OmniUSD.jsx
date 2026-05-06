@@ -7313,6 +7313,30 @@ Use ONLY these times. All earlier time references in this conversation are stale
                     </div>
                   </div>
 
+                  {/* Small Traders (Retail) */}
+                  {cot.small_long !== undefined && (() => {
+                    const smallTotal = cot.small_long + cot.small_short;
+                    const smallLongPct  = smallTotal > 0 ? Math.round((cot.small_long  / smallTotal) * 100) : 50;
+                    const smallShortPct = 100 - smallLongPct;
+                    return (
+                      <div style={{ marginBottom:10 }}>
+                        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:2 }}>
+                          <span style={{ fontSize:10, fontWeight:900, color:"rgba(255,255,255,0.5)", fontFamily:"'Space Mono',monospace" }}>SMALL TRADERS — Retail</span>
+                          <span style={{ fontSize:10, fontWeight:900, color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace" }}>
+                            {smallLongPct}% Long · {smallShortPct}% Short
+                          </span>
+                        </div>
+                        <div style={{ height:6, borderRadius:3, background:"rgba(255,255,255,0.08)", overflow:"hidden", margin:"4px 0" }}>
+                          <div style={{ height:"100%", width:`${smallLongPct}%`, background:"rgba(255,255,255,0.12)", borderRadius:3 }}/>
+                        </div>
+                        <div style={{ display:"flex", justifyContent:"space-between" }}>
+                          <span style={{ fontSize:9, color:"rgba(255,255,255,0.25)", fontFamily:"'Space Mono',monospace" }}>▲ LONG {smallLongPct}%</span>
+                          <span style={{ fontSize:9, color:"rgba(255,255,255,0.25)", fontFamily:"'Space Mono',monospace" }}>SHORT {smallShortPct}% ▼</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
                   {/* Signal + advice */}
                   <div style={{ padding:"7px 10px", background:"rgba(255,255,255,0.03)", borderRadius:7, marginBottom: cot.spec_warning ? 8 : 0 }}>
                     <div style={{ fontSize:10, fontWeight:900, color:c, fontFamily:"'Space Mono',monospace", marginBottom:3 }}>{cot.signal}</div>
