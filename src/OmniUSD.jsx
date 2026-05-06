@@ -5627,6 +5627,7 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
   const [planChatInput, setPlanChatInput] = useState("");
   const [planChatLoading, setPlanChatLoading] = useState(false);
   const [planChatOpen, setPlanChatOpen] = useState(false);
+  const [cotData, setCotData] = useState({}); // keyed by instrument
   const [checkedByInstrument, setCheckedByInstrument] = useState({});
 
   // Derived per-instrument state
@@ -5811,6 +5812,19 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
       }
 
       // ── STEP 1: MAIN ANALYSIS ─────────────────────────────────────────────
+      // Fetch COT data before analysis so it can influence the grade
+      let cotContext = "";
+      try {
+        const cotRes = await fetch(`/api/cot?instrument=${instrument}`);
+        if (cotRes.ok) {
+          const cot = await cotRes.json();
+          if (cot && !cot.error) {
+            cotContext = `\n\nCOT INSTITUTIONAL POSITIONING (as of ${cot.report_date}):\nCommercials (Smart Money): ${cot.comm_net > 0 ? "NET LONG +" : "NET SHORT "}${cot.comm_net.toLocaleString()} contracts\nLarge Speculators: ${cot.spec_net > 0 ? "NET LONG +" : "NET SHORT "}${cot.spec_net.toLocaleString()} contracts\nSignal: ${cot.signal}\n${cot.advice}${cot.spec_warning ? "\nWARNING: " + cot.spec_warning : ""}\n\nUse this COT data to inform your confidence score and grade. If Commercials are strongly against the direction of your analysis, reduce confidence by 10-15%. If Commercials agree with your directional analysis, this adds conviction — you may increase confidence by 5-10%. Never let COT override a clear BRC setup but always factor it into confidence.`;
+            setCotData(prev => ({ ...prev, [instrument]: cot }));
+          }
+        }
+      } catch(e) { /* COT fetch failed silently — don't block analysis */ }
+
       const res = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -5818,7 +5832,7 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
           model: "claude-sonnet-4-20250514",
           max_tokens: 2000,
           system: getAnalysisPrompt(instrument, selectedSession, isDevMode()),
-          messages: [{ role: "user", content: [...imgBlocks, { type: "text", text: `Analyze these ${instrument} charts. Daily first, then 4H, 1H, 30M. Return only the JSON.` }] }],
+          messages: [{ role: "user", content: [...imgBlocks, { type: "text", text: `Analyze these ${instrument} charts. Daily first, then 4H, 1H, 30M. Return only the JSON.${cotContext}` }] }],
         }),
       });
 
@@ -7192,6 +7206,19 @@ Use ONLY these times. All earlier time references in this conversation are stale
                       POTENTIAL {plan._potentialGrade}
                     </span>
                   )}
+                  {/* COT Sentiment Badge */}
+                  {cotData[instrument] && (() => {
+                    const cot = cotData[instrument];
+                    const isBull = cot.signal === "STRONG LONG" || cot.signal === "NET LONG";
+                    const isStrong = cot.signal === "STRONG LONG" || cot.signal === "STRONG SHORT";
+                    const c = isBull ? (isStrong ? "#7fff6b" : "#00e5ff") : (isStrong ? "#ff6b6b" : "#ffd166");
+                    const icon = isBull ? "▲" : "▼";
+                    return (
+                      <span title={cot.advice} style={{ fontSize: 13, fontWeight: 700, padding: "2px 8px", background: `${c}14`, border: `1px solid ${c}44`, borderRadius: 4, color: c, cursor: "help" }}>
+                        📊 COT {icon} {isBull ? "LONGS" : "SHORTS"}{isStrong ? " (EXTREME)" : ""}
+                      </span>
+                    );
+                  })()}
                 </div>
               </div>
               </div>
@@ -7206,6 +7233,53 @@ Use ONLY these times. All earlier time references in this conversation are stale
             <div style={{ padding: "14px 16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10, marginBottom: 16, fontSize: 13, color: "#ccc4e8", lineHeight: 1.7 }}>
             {plan.summary}{plan.grade !== "A+" && plan.grade !== "PASS" && plan.grade !== "SOFT PASS" && plan.summary && !plan.summary.toLowerCase().includes("not executable") ? " This is not executable yet." : ""}
             </div>
+
+            {/* COT Detail Card */}
+            {cotData[instrument] && (() => {
+              const cot = cotData[instrument];
+              const isBull = cot.signal === "STRONG LONG" || cot.signal === "NET LONG";
+              const isStrong = cot.signal === "STRONG LONG" || cot.signal === "STRONG SHORT";
+              const c = isBull ? (isStrong ? "#7fff6b" : "#00e5ff") : (isStrong ? "#ff6b6b" : "#ffd166");
+              const fmtNum = n => Math.abs(n).toLocaleString();
+              const changeLabel = cot.comm_change !== null
+                ? (cot.comm_change > 0 ? `▲ ${fmtNum(cot.comm_change)} this week` : `▼ ${fmtNum(cot.comm_change)} this week`)
+                : null;
+              return (
+                <div style={{ padding: "12px 16px", background: `${c}08`, border: `1px solid ${c}25`, borderRadius: 10, marginBottom: 16 }}>
+                  <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
+                    <div style={{ fontSize:10, fontWeight:900, letterSpacing:"0.14em", color:c, fontFamily:"'Space Mono',monospace" }}>
+                      📊 COT — INSTITUTIONAL POSITIONING
+                    </div>
+                    <div style={{ fontSize:9, color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace" }}>
+                      As of {cot.report_date}
+                    </div>
+                  </div>
+                  <div style={{ display:"flex", gap:10, marginBottom:8 }}>
+                    <div style={{ flex:1, padding:"8px 10px", background:"rgba(255,255,255,0.03)", borderRadius:7 }}>
+                      <div style={{ fontSize:9, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace", marginBottom:3 }}>COMMERCIALS (SMART MONEY)</div>
+                      <div style={{ fontSize:13, fontWeight:700, color:c, fontFamily:"monospace" }}>
+                        {cot.comm_net > 0 ? "+" : ""}{cot.comm_net.toLocaleString()} net
+                      </div>
+                      {changeLabel && <div style={{ fontSize:9, color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace", marginTop:2 }}>{changeLabel}</div>}
+                    </div>
+                    <div style={{ flex:1, padding:"8px 10px", background:"rgba(255,255,255,0.03)", borderRadius:7 }}>
+                      <div style={{ fontSize:9, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace", marginBottom:3 }}>LARGE SPECULATORS</div>
+                      <div style={{ fontSize:13, fontWeight:700, color:"rgba(255,255,255,0.5)", fontFamily:"monospace" }}>
+                        {cot.spec_net > 0 ? "+" : ""}{cot.spec_net.toLocaleString()} net
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ fontSize:11, color:`${c}cc`, lineHeight:1.7, fontFamily:"'Space Mono',monospace" }}>
+                    {cot.advice}
+                  </div>
+                  {cot.spec_warning && (
+                    <div style={{ marginTop:8, padding:"6px 10px", background:"rgba(255,107,107,0.06)", border:"1px solid rgba(255,107,107,0.2)", borderRadius:6, fontSize:10, color:"#ff9a9a", fontFamily:"'Space Mono',monospace", lineHeight:1.6 }}>
+                      ⚠ {cot.spec_warning}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Session context note — always show on weekends */}
             {(()=>{
