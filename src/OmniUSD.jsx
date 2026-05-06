@@ -5636,6 +5636,7 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
   const [planChatLoading, setPlanChatLoading] = useState(false);
   const [planChatOpen, setPlanChatOpen] = useState(false);
   const [cotData, setCotData] = useState({}); // keyed by instrument
+  const [cotLoading, setCotLoading] = useState({}); // keyed by instrument
   const [checkedByInstrument, setCheckedByInstrument] = useState({});
 
   // Derived per-instrument state
@@ -5819,19 +5820,20 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
         setUploadCounts(prev => ({ ...prev, [instrument]: (prev[instrument] || 0) + 1 }));
       }
 
-      // ── STEP 1: MAIN ANALYSIS ─────────────────────────────────────────────
-      // Fetch COT data before analysis so it can influence the grade
+      // ── Fetch COT data before analysis ──────────────────────────────────
       let cotContext = "";
       try {
+        setCotLoading(prev => ({ ...prev, [instrument]: true }));
         const cotRes = await fetch(`/api/cot?instrument=${instrument}`);
         if (cotRes.ok) {
           const cot = await cotRes.json();
           if (cot && !cot.error) {
-            cotContext = `\n\nCOT INSTITUTIONAL POSITIONING (as of ${cot.report_date}):\nCommercials (Smart Money): ${cot.comm_net > 0 ? "NET LONG +" : "NET SHORT "}${cot.comm_net.toLocaleString()} contracts\nLarge Speculators: ${cot.spec_net > 0 ? "NET LONG +" : "NET SHORT "}${cot.spec_net.toLocaleString()} contracts\nSignal: ${cot.signal}\n${cot.advice}${cot.spec_warning ? "\nWARNING: " + cot.spec_warning : ""}\n\nUse this COT data to inform your confidence score and grade. If Commercials are strongly against the direction of your analysis, reduce confidence by 10-15%. If Commercials agree with your directional analysis, this adds conviction — you may increase confidence by 5-10%. Never let COT override a clear BRC setup but always factor it into confidence.`;
             setCotData(prev => ({ ...prev, [instrument]: cot }));
+            cotContext = `\n\nCOT INSTITUTIONAL POSITIONING (as of ${cot.report_date}):\nCommercials (Smart Money): ${cot.comm_net > 0 ? "NET LONG +" : "NET SHORT "}${cot.comm_net.toLocaleString()} contracts\nLarge Speculators: ${cot.spec_net > 0 ? "NET LONG +" : "NET SHORT "}${cot.spec_net.toLocaleString()} contracts\nSignal: ${cot.signal}\n${cot.advice}${cot.spec_warning ? "\nWARNING: " + cot.spec_warning : ""}\n\nUse this COT data to inform your confidence score and grade. If Commercials are strongly against the direction of your analysis, reduce confidence by 10-15%. If Commercials agree with your directional analysis, this adds conviction — you may increase confidence by 5-10%. Never let COT override a clear BRC setup but always factor it into confidence.`;
           }
         }
-      } catch(e) { /* COT fetch failed silently — don't block analysis */ }
+      } catch(e) { console.warn("COT fetch failed:", e.message); }
+      finally { setCotLoading(prev => ({ ...prev, [instrument]: false })); }
 
       const res = await fetch("/api/analyze", {
         method: "POST",
@@ -7243,7 +7245,12 @@ Use ONLY these times. All earlier time references in this conversation are stale
             {plan.summary}{plan.grade !== "A+" && plan.grade !== "PASS" && plan.grade !== "SOFT PASS" && plan.summary && !plan.summary.toLowerCase().includes("not executable") ? " This is not executable yet." : ""}
             </div>
 
-            {/* COT Detail Card */}
+            {/* COT Detail Card — shows when data loads */}
+            {cotLoading[instrument] && (
+              <div style={{ padding:"12px 16px", background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:10, marginBottom:16 }}>
+                <div style={{ fontSize:10, color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace" }}>📊 Loading COT data...</div>
+              </div>
+            )}
             {cotData[instrument] && (() => {
               const cot = cotData[instrument];
               const isBull = cot.signal === "STRONG LONG" || cot.signal === "NET LONG";
