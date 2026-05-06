@@ -12,6 +12,10 @@ const COT_CODES = {
 };
 
 export default async function handler(req, res) {
+  // Allow CORS from omniusd.pro
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET");
+
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
 
   const { instrument } = req.query;
@@ -30,12 +34,15 @@ export default async function handler(req, res) {
 
     const url = `https://publicreporting.cftc.gov/resource/jun7-fc8e.json?${params.toString()}`;
 
+    // 8 second timeout — CFTC API can be slow
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+
     const response = await fetch(url, {
-      headers: {
-        "Accept": "application/json",
-        "User-Agent": "OmniUSD/1.0",
-      },
+      signal: controller.signal,
+      headers: { "Accept": "application/json" },
     });
+    clearTimeout(timeout);
 
     if (!response.ok) {
       const body = await response.text();
@@ -43,20 +50,20 @@ export default async function handler(req, res) {
     }
 
     const data = await response.json();
-    if (!data || data.length === 0) throw new Error(`No COT data returned for ${code}`);
+    if (!data || data.length === 0) throw new Error(`No data for ${code}`);
 
     const latest = data[0];
     const prev   = data[1] || null;
 
-    const commLong  = parseInt(latest.comm_positions_long_all  || "0");
-    const commShort = parseInt(latest.comm_positions_short_all || "0");
-    const specLong  = parseInt(latest.noncomm_positions_long_all  || "0");
-    const specShort = parseInt(latest.noncomm_positions_short_all || "0");
-    const smallLong  = parseInt(latest.nonrept_positions_long_all  || "0");
-    const smallShort = parseInt(latest.nonrept_positions_short_all || "0");
-    const openInterest = parseInt(latest.open_interest_all || "1");
-    const commNet = commLong - commShort;
-    const specNet = specLong - specShort;
+    const commLong     = parseInt(latest.comm_positions_long_all      || "0");
+    const commShort    = parseInt(latest.comm_positions_short_all     || "0");
+    const specLong     = parseInt(latest.noncomm_positions_long_all   || "0");
+    const specShort    = parseInt(latest.noncomm_positions_short_all  || "0");
+    const smallLong    = parseInt(latest.nonrept_positions_long_all   || "0");
+    const smallShort   = parseInt(latest.nonrept_positions_short_all  || "0");
+    const openInterest = parseInt(latest.open_interest_all            || "1");
+    const commNet      = commLong - commShort;
+    const specNet      = specLong - specShort;
 
     let commChange = null;
     if (prev) {
@@ -99,7 +106,10 @@ export default async function handler(req, res) {
     });
 
   } catch (err) {
-    console.error(`COT fetch error for ${instrument}:`, err.message);
-    return res.status(500).json({ error: err.message });
+    const isTimeout = err.name === "AbortError";
+    console.error(`COT fetch error [${instrument}]:`, isTimeout ? "TIMEOUT" : err.message);
+    return res.status(500).json({ 
+      error: isTimeout ? "CFTC API timeout — try again" : err.message 
+    });
   }
 }
