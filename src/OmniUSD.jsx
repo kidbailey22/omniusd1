@@ -7453,6 +7453,101 @@ Use ONLY these times. All earlier time references in this conversation are stale
                 {/* Full Analysis collapsible */}
                 <FullAnalysisPanel plan={plan} />
 
+                {/* COT Positioning Card */}
+                {cotLoading[instrument] && (
+                  <div style={{ padding:"12px 16px", background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:10, marginTop:12 }}>
+                    <div style={{ fontSize:10, color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace" }}>📊 Loading COT data...</div>
+                  </div>
+                )}
+                {cotData[instrument] && (() => {
+                  const cot = cotData[instrument];
+                  const isBull = cot.signal === "STRONG LONG" || cot.signal === "NET LONG";
+                  const isStrong = cot.signal === "STRONG LONG" || cot.signal === "STRONG SHORT";
+                  const c = isBull ? (isStrong ? "#7fff6b" : "#00e5ff") : (isStrong ? "#ff6b6b" : "#ffd166");
+                  const commTotal = cot.comm_long + cot.comm_short;
+                  const specTotal = cot.spec_long + cot.spec_short;
+                  const commLongPct  = commTotal > 0 ? Math.round((cot.comm_long  / commTotal) * 100) : 50;
+                  const commShortPct = 100 - commLongPct;
+                  const specLongPct  = specTotal > 0 ? Math.round((cot.spec_long  / specTotal) * 100) : 50;
+                  const specShortPct = 100 - specLongPct;
+                  const smallTotal = (cot.small_long||0) + (cot.small_short||0);
+                  const smallLongPct  = smallTotal > 0 ? Math.round((cot.small_long  / smallTotal) * 100) : 50;
+                  const smallShortPct = 100 - smallLongPct;
+                  const changeLabel = cot.comm_change !== null
+                    ? (cot.comm_change > 0
+                      ? `▲ Commercials added ${Math.abs(cot.comm_change).toLocaleString()} longs this week`
+                      : `▼ Commercials added ${Math.abs(cot.comm_change).toLocaleString()} shorts this week`)
+                    : null;
+
+                  const PctBar = ({ longPct, opacity=0.25 }) => (
+                    <div style={{ height:6, borderRadius:3, background:"rgba(255,255,255,0.08)", overflow:"hidden", margin:"4px 0" }}>
+                      <div style={{ height:"100%", width:`${longPct}%`, background:`rgba(255,255,255,${opacity})`, borderRadius:3 }}/>
+                    </div>
+                  );
+
+                  return (
+                    <div style={{ padding:"12px 16px", background:`${c}08`, border:`1px solid ${c}25`, borderRadius:10, marginTop:12 }}>
+                      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:10 }}>
+                        <div style={{ fontSize:10, fontWeight:900, letterSpacing:"0.14em", color:c, fontFamily:"'Space Mono',monospace" }}>📊 COT — INSTITUTIONAL POSITIONING</div>
+                        <div style={{ fontSize:9, color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace" }}>Week of {cot.report_date}</div>
+                      </div>
+
+                      {/* Commercials */}
+                      <div style={{ marginBottom:10 }}>
+                        <div style={{ display:"flex", justifyContent:"space-between", marginBottom:2 }}>
+                          <span style={{ fontSize:10, fontWeight:900, color:"rgba(255,255,255,0.5)", fontFamily:"'Space Mono',monospace" }}>COMMERCIALS — Smart Money</span>
+                          <span style={{ fontSize:10, fontWeight:900, color:c, fontFamily:"'Space Mono',monospace" }}>{commLongPct}% L · {commShortPct}% S</span>
+                        </div>
+                        <PctBar longPct={commLongPct} opacity={0.5} />
+                        <div style={{ display:"flex", justifyContent:"space-between" }}>
+                          <span style={{ fontSize:9, color:"#7fff6b", fontFamily:"'Space Mono',monospace" }}>▲ {commLongPct}% Long</span>
+                          <span style={{ fontSize:9, color:"#ff6b6b", fontFamily:"'Space Mono',monospace" }}>{commShortPct}% Short ▼</span>
+                        </div>
+                      </div>
+
+                      {/* Large Specs */}
+                      <div style={{ marginBottom:10 }}>
+                        <div style={{ display:"flex", justifyContent:"space-between", marginBottom:2 }}>
+                          <span style={{ fontSize:10, fontWeight:900, color:"rgba(255,255,255,0.5)", fontFamily:"'Space Mono',monospace" }}>LARGE SPECS — Hedge Funds</span>
+                          <span style={{ fontSize:10, fontWeight:900, color:"rgba(255,255,255,0.4)", fontFamily:"'Space Mono',monospace" }}>{specLongPct}% L · {specShortPct}% S</span>
+                        </div>
+                        <PctBar longPct={specLongPct} opacity={0.25} />
+                        <div style={{ display:"flex", justifyContent:"space-between" }}>
+                          <span style={{ fontSize:9, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace" }}>▲ {specLongPct}% Long</span>
+                          <span style={{ fontSize:9, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace" }}>{specShortPct}% Short ▼</span>
+                        </div>
+                      </div>
+
+                      {/* Small Traders */}
+                      {smallTotal > 0 && (
+                        <div style={{ marginBottom:10 }}>
+                          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:2 }}>
+                            <span style={{ fontSize:10, fontWeight:900, color:"rgba(255,255,255,0.5)", fontFamily:"'Space Mono',monospace" }}>SMALL TRADERS — Retail</span>
+                            <span style={{ fontSize:10, fontWeight:900, color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace" }}>{smallLongPct}% L · {smallShortPct}% S</span>
+                          </div>
+                          <PctBar longPct={smallLongPct} opacity={0.12} />
+                          <div style={{ display:"flex", justifyContent:"space-between" }}>
+                            <span style={{ fontSize:9, color:"rgba(255,255,255,0.25)", fontFamily:"'Space Mono',monospace" }}>▲ {smallLongPct}% Long</span>
+                            <span style={{ fontSize:9, color:"rgba(255,255,255,0.25)", fontFamily:"'Space Mono',monospace" }}>{smallShortPct}% Short ▼</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Signal */}
+                      <div style={{ padding:"7px 10px", background:"rgba(255,255,255,0.03)", borderRadius:7, marginBottom: cot.spec_warning ? 8 : 0 }}>
+                        <div style={{ fontSize:10, fontWeight:900, color:c, fontFamily:"'Space Mono',monospace", marginBottom:3 }}>{cot.signal}</div>
+                        <div style={{ fontSize:11, color:`${c}cc`, lineHeight:1.7, fontFamily:"'Space Mono',monospace" }}>{cot.advice}</div>
+                        {changeLabel && <div style={{ fontSize:9, color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace", marginTop:4 }}>{changeLabel}</div>}
+                      </div>
+                      {cot.spec_warning && (
+                        <div style={{ padding:"6px 10px", background:"rgba(255,107,107,0.06)", border:"1px solid rgba(255,107,107,0.2)", borderRadius:6, fontSize:10, color:"#ff9a9a", fontFamily:"'Space Mono',monospace", lineHeight:1.6 }}>
+                          ⚠ {cot.spec_warning}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
                 {/* ── ASK OMNI — available on SOFT PASS too ── */}
                 {(() => {
                   const questionsUsed = planChatMessages.filter(m => m.role === "user").length;
@@ -7591,6 +7686,89 @@ Use ONLY these times. All earlier time references in this conversation are stale
 
                 {/* ── FULL ANALYSIS — collapsible — SECOND ── */}
                 <FullAnalysisPanel plan={plan} />
+
+                {/* COT Positioning Card */}
+                {cotLoading[instrument] && (
+                  <div style={{ padding:"12px 16px", background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:10, marginTop:12 }}>
+                    <div style={{ fontSize:10, color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace" }}>📊 Loading COT data...</div>
+                  </div>
+                )}
+                {cotData[instrument] && (() => {
+                  const cot = cotData[instrument];
+                  const isBull = cot.signal === "STRONG LONG" || cot.signal === "NET LONG";
+                  const isStrong = cot.signal === "STRONG LONG" || cot.signal === "STRONG SHORT";
+                  const c = isBull ? (isStrong ? "#7fff6b" : "#00e5ff") : (isStrong ? "#ff6b6b" : "#ffd166");
+                  const commTotal = cot.comm_long + cot.comm_short;
+                  const specTotal = cot.spec_long + cot.spec_short;
+                  const commLongPct  = commTotal > 0 ? Math.round((cot.comm_long  / commTotal) * 100) : 50;
+                  const commShortPct = 100 - commLongPct;
+                  const specLongPct  = specTotal > 0 ? Math.round((cot.spec_long  / specTotal) * 100) : 50;
+                  const specShortPct = 100 - specLongPct;
+                  const smallTotal = (cot.small_long||0) + (cot.small_short||0);
+                  const smallLongPct  = smallTotal > 0 ? Math.round((cot.small_long  / smallTotal) * 100) : 50;
+                  const smallShortPct = 100 - smallLongPct;
+                  const changeLabel = cot.comm_change !== null
+                    ? (cot.comm_change > 0
+                      ? `▲ Commercials added ${Math.abs(cot.comm_change).toLocaleString()} longs this week`
+                      : `▼ Commercials added ${Math.abs(cot.comm_change).toLocaleString()} shorts this week`)
+                    : null;
+                  const PctBar = ({ longPct, opacity=0.25 }) => (
+                    <div style={{ height:6, borderRadius:3, background:"rgba(255,255,255,0.08)", overflow:"hidden", margin:"4px 0" }}>
+                      <div style={{ height:"100%", width:`${longPct}%`, background:`rgba(255,255,255,${opacity})`, borderRadius:3 }}/>
+                    </div>
+                  );
+                  return (
+                    <div style={{ padding:"12px 16px", background:`${c}08`, border:`1px solid ${c}25`, borderRadius:10, marginTop:12 }}>
+                      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:10 }}>
+                        <div style={{ fontSize:10, fontWeight:900, letterSpacing:"0.14em", color:c, fontFamily:"'Space Mono',monospace" }}>📊 COT — INSTITUTIONAL POSITIONING</div>
+                        <div style={{ fontSize:9, color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace" }}>Week of {cot.report_date}</div>
+                      </div>
+                      <div style={{ marginBottom:10 }}>
+                        <div style={{ display:"flex", justifyContent:"space-between", marginBottom:2 }}>
+                          <span style={{ fontSize:10, fontWeight:900, color:"rgba(255,255,255,0.5)", fontFamily:"'Space Mono',monospace" }}>COMMERCIALS — Smart Money</span>
+                          <span style={{ fontSize:10, fontWeight:900, color:c, fontFamily:"'Space Mono',monospace" }}>{commLongPct}% L · {commShortPct}% S</span>
+                        </div>
+                        <PctBar longPct={commLongPct} opacity={0.5} />
+                        <div style={{ display:"flex", justifyContent:"space-between" }}>
+                          <span style={{ fontSize:9, color:"#7fff6b", fontFamily:"'Space Mono',monospace" }}>▲ {commLongPct}% Long</span>
+                          <span style={{ fontSize:9, color:"#ff6b6b", fontFamily:"'Space Mono',monospace" }}>{commShortPct}% Short ▼</span>
+                        </div>
+                      </div>
+                      <div style={{ marginBottom:10 }}>
+                        <div style={{ display:"flex", justifyContent:"space-between", marginBottom:2 }}>
+                          <span style={{ fontSize:10, fontWeight:900, color:"rgba(255,255,255,0.5)", fontFamily:"'Space Mono',monospace" }}>LARGE SPECS — Hedge Funds</span>
+                          <span style={{ fontSize:10, fontWeight:900, color:"rgba(255,255,255,0.4)", fontFamily:"'Space Mono',monospace" }}>{specLongPct}% L · {specShortPct}% S</span>
+                        </div>
+                        <PctBar longPct={specLongPct} opacity={0.25} />
+                        <div style={{ display:"flex", justifyContent:"space-between" }}>
+                          <span style={{ fontSize:9, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace" }}>▲ {specLongPct}% Long</span>
+                          <span style={{ fontSize:9, color:"rgba(255,255,255,0.35)", fontFamily:"'Space Mono',monospace" }}>{specShortPct}% Short ▼</span>
+                        </div>
+                      </div>
+                      {smallTotal > 0 && (
+                        <div style={{ marginBottom:10 }}>
+                          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:2 }}>
+                            <span style={{ fontSize:10, fontWeight:900, color:"rgba(255,255,255,0.5)", fontFamily:"'Space Mono',monospace" }}>SMALL TRADERS — Retail</span>
+                            <span style={{ fontSize:10, fontWeight:900, color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace" }}>{smallLongPct}% L · {smallShortPct}% S</span>
+                          </div>
+                          <PctBar longPct={smallLongPct} opacity={0.12} />
+                          <div style={{ display:"flex", justifyContent:"space-between" }}>
+                            <span style={{ fontSize:9, color:"rgba(255,255,255,0.25)", fontFamily:"'Space Mono',monospace" }}>▲ {smallLongPct}% Long</span>
+                            <span style={{ fontSize:9, color:"rgba(255,255,255,0.25)", fontFamily:"'Space Mono',monospace" }}>{smallShortPct}% Short ▼</span>
+                          </div>
+                        </div>
+                      )}
+                      <div style={{ padding:"7px 10px", background:"rgba(255,255,255,0.03)", borderRadius:7, marginBottom: cot.spec_warning ? 8 : 0 }}>
+                        <div style={{ fontSize:10, fontWeight:900, color:c, fontFamily:"'Space Mono',monospace", marginBottom:3 }}>{cot.signal}</div>
+                        <div style={{ fontSize:11, color:`${c}cc`, lineHeight:1.7, fontFamily:"'Space Mono',monospace" }}>{cot.advice}</div>
+                        {changeLabel && <div style={{ fontSize:9, color:"rgba(255,255,255,0.3)", fontFamily:"'Space Mono',monospace", marginTop:4 }}>{changeLabel}</div>}
+                      </div>
+                      {cot.spec_warning && (
+                        <div style={{ padding:"6px 10px", background:"rgba(255,107,107,0.06)", border:"1px solid rgba(255,107,107,0.2)", borderRadius:6, fontSize:10, color:"#ff9a9a", fontFamily:"'Space Mono',monospace", lineHeight:1.6 }}>⚠ {cot.spec_warning}</div>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 {/* START / RESUME LIVE SESSION */}
                 {messages.length > 0 ? (
