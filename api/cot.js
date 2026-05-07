@@ -1,4 +1,4 @@
-// /api/cot.js — CFTC COT data proxy
+// /api/cot.js — CFTC COT data proxy (CommonJS)
 
 const COT_MARKET_NAMES = {
   XAUUSD: "GOLD - COMMODITY EXCHANGE INC.",
@@ -57,15 +57,21 @@ function parseCOT(data) {
   return {
     report_date:  latest.report_date_as_yyyy_mm_dd || "N/A",
     market_name:  latest.market_and_exchange_names || "",
-    comm_long, comm_short, comm_net: commNet, comm_change: commChange,
-    spec_long, spec_short, spec_net: specNet,
-    small_long: smallLong, small_short: smallShort,
+    comm_long:    commLong,
+    comm_short:   commShort,
+    comm_net:     commNet,
+    comm_change:  commChange,
+    spec_long:    specLong,
+    spec_short:   specShort,
+    spec_net:     specNet,
+    small_long:   smallLong,
+    small_short:  smallShort,
     open_interest: openInterest,
     signal, advice, spec_warning,
   };
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
@@ -73,15 +79,15 @@ export default async function handler(req, res) {
   const { instrument } = req.query;
   const marketName = COT_MARKET_NAMES[instrument];
   if (!instrument || !marketName) {
-    return res.status(400).json({ error: `No COT data for ${instrument}` });
+    return res.status(400).json({ error: "No COT data for " + instrument });
   }
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 9000);
+  const timeoutId = setTimeout(function() { controller.abort(); }, 9000);
 
   try {
     const encodedName = encodeURIComponent(marketName);
-    const url = `https://publicreporting.cftc.gov/resource/jun7-fc8e.json?market_and_exchange_names=${encodedName}&%24order=report_date_as_yyyy_mm_dd%20DESC&%24limit=2`;
+    const url = "https://publicreporting.cftc.gov/resource/jun7-fc8e.json?market_and_exchange_names=" + encodedName + "&%24order=report_date_as_yyyy_mm_dd%20DESC&%24limit=2";
 
     const response = await fetch(url, {
       signal: controller.signal,
@@ -94,19 +100,18 @@ export default async function handler(req, res) {
     });
 
     clearTimeout(timeoutId);
-
-    if (!response.ok) throw new Error(`CFTC HTTP ${response.status}`);
+    if (!response.ok) throw new Error("CFTC HTTP " + response.status);
 
     const data = await response.json();
-    if (!data || data.length === 0) throw new Error(`No COT data found for ${instrument}`);
+    if (!data || data.length === 0) throw new Error("No COT data found for " + instrument);
 
     const result = parseCOT(data);
-    return res.status(200).json({ instrument, ...result });
+    return res.status(200).json(Object.assign({ instrument: instrument }, result));
 
   } catch (err) {
     clearTimeout(timeoutId);
     const msg = err.name === "AbortError" ? "CFTC API timeout" : err.message;
-    console.error(`COT [${instrument}]: ${msg}`);
+    console.error("COT [" + instrument + "]: " + msg);
     return res.status(500).json({ error: msg });
   }
-}
+};
