@@ -1,15 +1,4 @@
-// /api/cot.js — Fetches COT data from CFTC public API
-
-const COT_MARKET_NAMES = {
-  XAUUSD: "GOLD - COMMODITY EXCHANGE INC.",
-  XAGUSD: "SILVER - COMMODITY EXCHANGE INC.",
-  NAS100: "NASDAQ MINI - CHICAGO MERCANTILE EXCHANGE",
-  US500:  "E-MINI S&P 500 STOCK INDEX - CHICAGO MERCANTILE EXCHANGE",
-  US30:   "E-MINI DOW ($5) FUTURES - CHICAGO BOARD OF TRADE",
-  EURUSD: "EURO FX - CHICAGO MERCANTILE EXCHANGE",
-  BTCUSD: "BITCOIN - CHICAGO MERCANTILE EXCHANGE",
-  ETHUSD: "ETHER CASH SETTLED - CHICAGO MERCANTILE EXCHANGE",
-};
+// /api/cot.js — Proxies CFTC COT data with browser-like headers to bypass 403
 
 const COT_CODES = {
   XAUUSD: "088691",
@@ -22,37 +11,10 @@ const COT_CODES = {
   ETHUSD: "146021",
 };
 
-async function fetchCOT(instrument) {
-  const code = COT_CODES[instrument];
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 9000);
-
-  try {
-    // Primary: query by commodity code
-    const url = `https://publicreporting.cftc.gov/resource/jun7-fc8e.json?cftc_commodity_code=${code}&%24order=report_date_as_yyyy_mm_dd+DESC&%24limit=2`;
-    const res = await fetch(url, {
-      signal: controller.signal,
-      headers: { "Accept": "application/json", "X-App-Token": "omniusd" },
-    });
-    clearTimeout(timeout);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    if (data && data.length > 0) return data;
-
-    // Fallback: query by market name
-    const name = encodeURIComponent(COT_MARKET_NAMES[instrument] || "");
-    const url2 = `https://publicreporting.cftc.gov/resource/jun7-fc8e.json?market_and_exchange_names=${name}&%24order=report_date_as_yyyy_mm_dd+DESC&%24limit=2`;
-    const res2 = await fetch(url2, { headers: { "Accept": "application/json" } });
-    if (!res2.ok) throw new Error(`Fallback HTTP ${res2.status}`);
-    const data2 = await res2.json();
-    return data2;
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+  if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
 
   const { instrument } = req.query;
@@ -60,20 +22,49 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: `No COT data for ${instrument}` });
   }
 
+  const code = COT_CODES[instrument];
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 9000);
+
   try {
-    const data = await fetchCOT(instrument);
-    if (!data || data.length === 0) throw new Error(`No data returned for ${instrument}`);
+    // Use browser-like headers to avoid 403
+    const url = `https://publicreporting.cftc.gov/resource/jun7-fc8e.json?cftc_commodity_code=${code}&%24order=report_date_as_yyyy_mm_dd%20DESC&%24limit=2`;
+
+    const response = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Cache-Control": "no-cache",
+        "Referer": "https://publicreporting.cftc.gov/",
+        "Origin": "https://publicreporting.cftc.gov",
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "same-origin",
+      },
+    });
+    clearTimeout(timeout);
+
+    if (!response.ok) {
+      const body = await response.text().catch(() => "");
+      console.error(`CFTC returned ${response.status} for ${instrument}: ${body.slice(0,200)}`);
+      throw new Error(`CFTC API returned HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    if (!data || data.length === 0) throw new Error(`No data returned for ${code}`);
 
     const latest = data[0];
     const prev   = data[1] || null;
 
-    const commLong     = parseInt(latest.comm_positions_long_all      || latest.Comm_Positions_Long_All      || "0");
-    const commShort    = parseInt(latest.comm_positions_short_all     || latest.Comm_Positions_Short_All     || "0");
-    const specLong     = parseInt(latest.noncomm_positions_long_all   || latest.NonComm_Positions_Long_All   || "0");
-    const specShort    = parseInt(latest.noncomm_positions_short_all  || latest.NonComm_Positions_Short_All  || "0");
-    const smallLong    = parseInt(latest.nonrept_positions_long_all   || latest.NonRept_Positions_Long_All   || "0");
-    const smallShort   = parseInt(latest.nonrept_positions_short_all  || latest.NonRept_Positions_Short_All  || "0");
-    const openInterest = parseInt(latest.open_interest_all            || latest.Open_Interest_All            || "1");
+    const commLong     = parseInt(latest.comm_positions_long_all      || "0");
+    const commShort    = parseInt(latest.comm_positions_short_all     || "0");
+    const specLong     = parseInt(latest.noncomm_positions_long_all   || "0");
+    const specShort    = parseInt(latest.noncomm_positions_short_all  || "0");
+    const smallLong    = parseInt(latest.nonrept_positions_long_all   || "0");
+    const smallShort   = parseInt(latest.nonrept_positions_short_all  || "0");
+    const openInterest = parseInt(latest.open_interest_all            || "1");
     const commNet      = commLong - commShort;
     const specNet      = specLong - specShort;
 
@@ -107,17 +98,19 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       instrument,
-      report_date: latest.report_date_as_yyyy_mm_dd || latest.Report_Date_as_YYYY_MM_DD || "N/A",
-      market_name: latest.market_and_exchange_names || latest.Market_and_Exchange_Names || "",
-      comm_long: commLong, comm_short: commShort, comm_net: commNet, comm_change: commChange,
-      spec_long: specLong, spec_short: specShort, spec_net: specNet,
+      report_date: latest.report_date_as_yyyy_mm_dd || "N/A",
+      market_name: latest.market_and_exchange_names || "",
+      comm_long, comm_short, comm_net: commNet, comm_change: commChange,
+      spec_long, spec_short, spec_net: specNet,
       small_long: smallLong, small_short: smallShort,
       open_interest: openInterest,
       signal, advice, spec_warning,
     });
 
   } catch (err) {
-    console.error(`COT [${instrument}]: ${err.name === "AbortError" ? "TIMEOUT" : err.message}`);
-    return res.status(500).json({ error: err.name === "AbortError" ? "CFTC API timeout" : err.message });
+    clearTimeout(timeout);
+    const isTimeout = err.name === "AbortError";
+    console.error(`COT [${instrument}]: ${isTimeout ? "TIMEOUT" : err.message}`);
+    return res.status(500).json({ error: isTimeout ? "CFTC API timeout" : err.message });
   }
 }
