@@ -19,13 +19,6 @@ const BROWSER_HEADERS = {
   "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
 };
 
-async function tryFetch(url, signal) {
-  const res = await fetch(url, { signal, headers: BROWSER_HEADERS });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const data = await res.json();
-  return data;
-}
-
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   if (req.method === "OPTIONS") return res.status(200).end();
@@ -41,43 +34,41 @@ export default async function handler(req, res) {
   const timeout = setTimeout(() => controller.abort(), 9000);
 
   try {
-    // Query by market name — most reliable filter
     const encodedName = encodeURIComponent(marketName);
     const url = `https://publicreporting.cftc.gov/resource/jun7-fc8e.json?market_and_exchange_names=${encodedName}&%24order=report_date_as_yyyy_mm_dd%20DESC&%24limit=2`;
 
-    let data = await tryFetch(url, controller.signal);
-
-    // Fallback: try fuzzy search if exact match fails
-    if (!data || data.length === 0) {
-      const shortName = marketName.split(" - ")[0]; // e.g. "GOLD"
-      const url2 = `https://publicreporting.cftc.gov/resource/jun7-fc8e.json?%24where=market_and_exchange_names%20like%20%27${encodeURIComponent(shortName)}%25%27&%24order=report_date_as_yyyy_mm_dd%20DESC&%24limit=2`;
-      data = await tryFetch(url2, controller.signal);
-    }
-
+    const response = await fetch(url, { signal: controller.signal, headers: BROWSER_HEADERS });
     clearTimeout(timeout);
+
+    if (!response.ok) throw new Error(`CFTC HTTP ${response.status}`);
+
+    const data = await response.json();
     if (!data || data.length === 0) throw new Error(`No COT data found for ${instrument}`);
 
     const latest = data[0];
     const prev   = data[1] || null;
 
-    const commLong     = parseInt(latest.comm_positions_long_all      || "0");
-    const commShort    = parseInt(latest.comm_positions_short_all     || "0");
-    const specLong     = parseInt(latest.noncomm_positions_long_all   || "0");
-    const specShort    = parseInt(latest.noncomm_positions_short_all  || "0");
-    const smallLong    = parseInt(latest.nonrept_positions_long_all   || "0");
-    const smallShort   = parseInt(latest.nonrept_positions_short_all  || "0");
-    const openInterest = parseInt(latest.open_interest_all            || "1");
+    // Parse all fields at top level — no block scoping issues
+    const commLong     = parseInt(latest.comm_positions_long_all     || "0");
+    const commShort    = parseInt(latest.comm_positions_short_all    || "0");
+    const specLong     = parseInt(latest.noncomm_positions_long_all  || "0");
+    const specShort    = parseInt(latest.noncomm_positions_short_all || "0");
+    const smallLong    = parseInt(latest.nonrept_positions_long_all  || "0");
+    const smallShort   = parseInt(latest.nonrept_positions_short_all || "0");
+    const openInterest = parseInt(latest.open_interest_all           || "1");
     const commNet      = commLong - commShort;
     const specNet      = specLong - specShort;
 
     let commChange = null;
     if (prev) {
-      const pl = parseInt(prev.comm_positions_long_all  || "0");
-      const ps = parseInt(prev.comm_positions_short_all || "0");
-      commChange = commNet - (pl - ps);
+      const pL = parseInt(prev.comm_positions_long_all  || "0");
+      const pS = parseInt(prev.comm_positions_short_all || "0");
+      commChange = commNet - (pL - pS);
     }
 
-    const netPct = (Math.abs(commNet) / openInterest) * 100;
+    const netPct     = (Math.abs(commNet) / openInterest) * 100;
+    const specNetPct = (Math.abs(specNet) / openInterest) * 100;
+
     let signal, advice;
     if (commNet > 0) {
       signal = netPct > 20 ? "STRONG LONG" : "NET LONG";
@@ -91,7 +82,6 @@ export default async function handler(req, res) {
         : "Commercials net short — institutional hedging in place. Be cautious on longs.";
     }
 
-    const specNetPct = (Math.abs(specNet) / openInterest) * 100;
     let spec_warning = null;
     if (specNet > 0 && specNetPct > 25 && commNet < 0)
       spec_warning = "Large Speculators at extreme long while Commercials are short — classic reversal setup. High caution on longs.";
@@ -100,8 +90,8 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       instrument,
-      report_date: latest.report_date_as_yyyy_mm_dd || "N/A",
-      market_name: latest.market_and_exchange_names || marketName,
+      report_date:  latest.report_date_as_yyyy_mm_dd || "N/A",
+      market_name:  latest.market_and_exchange_names || marketName,
       comm_long, comm_short, comm_net: commNet, comm_change: commChange,
       spec_long, spec_short, spec_net: specNet,
       small_long: smallLong, small_short: smallShort,
