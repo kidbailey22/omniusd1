@@ -1,59 +1,61 @@
-// /api/cot.js — Proxies CFTC COT data with browser-like headers to bypass 403
+// /api/cot.js — CFTC COT data proxy
 
-const COT_CODES = {
-  XAUUSD: "088691",
-  XAGUSD: "084691",
-  NAS100: "209742",
-  US500:  "13874A",
-  US30:   "124603",
-  EURUSD: "099741",
-  BTCUSD: "133741",
-  ETHUSD: "146021",
+const COT_MARKET_NAMES = {
+  XAUUSD: "GOLD - COMMODITY EXCHANGE INC.",
+  XAGUSD: "SILVER - COMMODITY EXCHANGE INC.",
+  NAS100: "NASDAQ MINI - CHICAGO MERCANTILE EXCHANGE",
+  US500:  "E-MINI S&P 500 STOCK INDEX - CHICAGO MERCANTILE EXCHANGE",
+  US30:   "E-MINI DOW ($5) FUTURES - CHICAGO BOARD OF TRADE",
+  EURUSD: "EURO FX - CHICAGO MERCANTILE EXCHANGE",
+  BTCUSD: "BITCOIN - CHICAGO MERCANTILE EXCHANGE",
+  ETHUSD: "ETHER CASH SETTLED - CHICAGO MERCANTILE EXCHANGE",
 };
+
+const BROWSER_HEADERS = {
+  "Accept": "application/json, text/plain, */*",
+  "Accept-Language": "en-US,en;q=0.9",
+  "Referer": "https://publicreporting.cftc.gov/",
+  "Origin": "https://publicreporting.cftc.gov",
+  "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+};
+
+async function tryFetch(url, signal) {
+  const res = await fetch(url, { signal, headers: BROWSER_HEADERS });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  return data;
+}
 
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
 
   const { instrument } = req.query;
-  if (!instrument || !COT_CODES[instrument]) {
+  const marketName = COT_MARKET_NAMES[instrument];
+  if (!instrument || !marketName) {
     return res.status(400).json({ error: `No COT data for ${instrument}` });
   }
 
-  const code = COT_CODES[instrument];
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 9000);
 
   try {
-    // Use browser-like headers to avoid 403
-    const url = `https://publicreporting.cftc.gov/resource/jun7-fc8e.json?cftc_commodity_code=${code}&%24order=report_date_as_yyyy_mm_dd%20DESC&%24limit=2`;
+    // Query by market name — most reliable filter
+    const encodedName = encodeURIComponent(marketName);
+    const url = `https://publicreporting.cftc.gov/resource/jun7-fc8e.json?market_and_exchange_names=${encodedName}&%24order=report_date_as_yyyy_mm_dd%20DESC&%24limit=2`;
 
-    const response = await fetch(url, {
-      signal: controller.signal,
-      headers: {
-        "Accept": "application/json, text/plain, */*",
-        "Accept-Language": "en-US,en;q=0.9",
-        "Cache-Control": "no-cache",
-        "Referer": "https://publicreporting.cftc.gov/",
-        "Origin": "https://publicreporting.cftc.gov",
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-        "sec-fetch-dest": "empty",
-        "sec-fetch-mode": "cors",
-        "sec-fetch-site": "same-origin",
-      },
-    });
-    clearTimeout(timeout);
+    let data = await tryFetch(url, controller.signal);
 
-    if (!response.ok) {
-      const body = await response.text().catch(() => "");
-      console.error(`CFTC returned ${response.status} for ${instrument}: ${body.slice(0,200)}`);
-      throw new Error(`CFTC API returned HTTP ${response.status}`);
+    // Fallback: try fuzzy search if exact match fails
+    if (!data || data.length === 0) {
+      const shortName = marketName.split(" - ")[0]; // e.g. "GOLD"
+      const url2 = `https://publicreporting.cftc.gov/resource/jun7-fc8e.json?%24where=market_and_exchange_names%20like%20%27${encodeURIComponent(shortName)}%25%27&%24order=report_date_as_yyyy_mm_dd%20DESC&%24limit=2`;
+      data = await tryFetch(url2, controller.signal);
     }
 
-    const data = await response.json();
-    if (!data || data.length === 0) throw new Error(`No data returned for ${code}`);
+    clearTimeout(timeout);
+    if (!data || data.length === 0) throw new Error(`No COT data found for ${instrument}`);
 
     const latest = data[0];
     const prev   = data[1] || null;
@@ -99,7 +101,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       instrument,
       report_date: latest.report_date_as_yyyy_mm_dd || "N/A",
-      market_name: latest.market_and_exchange_names || "",
+      market_name: latest.market_and_exchange_names || marketName,
       comm_long, comm_short, comm_net: commNet, comm_change: commChange,
       spec_long, spec_short, spec_net: specNet,
       small_long: smallLong, small_short: smallShort,
@@ -109,8 +111,8 @@ export default async function handler(req, res) {
 
   } catch (err) {
     clearTimeout(timeout);
-    const isTimeout = err.name === "AbortError";
-    console.error(`COT [${instrument}]: ${isTimeout ? "TIMEOUT" : err.message}`);
-    return res.status(500).json({ error: isTimeout ? "CFTC API timeout" : err.message });
+    const msg = err.name === "AbortError" ? "CFTC API timeout" : err.message;
+    console.error(`COT [${instrument}]: ${msg}`);
+    return res.status(500).json({ error: msg });
   }
 }
