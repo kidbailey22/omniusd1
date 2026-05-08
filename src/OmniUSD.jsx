@@ -705,6 +705,11 @@ function OmniUSDApp(){
   },[]);
 
   async function loadProfile(userId, token){
+    // Hydrate COT data from localStorage on sign-in
+    try {
+      const saved = localStorage.getItem(`omniusd_cot_${userId}`);
+      if (saved) setCotData(JSON.parse(saved));
+    } catch(e) {}
     const tok=token||JSON.parse(localStorage.getItem("omniusd_session")||"{}")?.access_token||SUPABASE_KEY;
 
     // ── DEV BYPASS — check email from session FIRST, before any DB call ──
@@ -845,9 +850,11 @@ function OmniUSDApp(){
     } catch(e) {}
     localStorage.removeItem("omniusd_paid_tier");
     localStorage.removeItem("omniusd_session");
+    try { if (_uid && _uid !== "anon") localStorage.removeItem(`omniusd_cot_${_uid}`); } catch(e) {}
     await supabase.auth.signOut();
     setAuthUser(null);
     setProfile(null);
+    setCotData({});
     setView("landing");
   }
 
@@ -5828,7 +5835,14 @@ function UnifiedDashboard({profile, onJournalEntry, onOpenJournal, onSignOut}) {
         if (cotRes.ok) {
           const cot = await cotRes.json();
           if (cot && !cot.error) {
-            setCotData(prev => ({ ...prev, [instrument]: cot }));
+            setCotData(prev => {
+              const updated = { ...prev, [instrument]: cot };
+              try {
+                const uid = authUser?.id;
+                if (uid) localStorage.setItem(`omniusd_cot_${uid}`, JSON.stringify(updated));
+              } catch(e) {}
+              return updated;
+            });
             cotContext = `\n\nCOT INSTITUTIONAL POSITIONING (as of ${cot.report_date}):\nCommercials (Smart Money): ${cot.comm_net > 0 ? "NET LONG +" : "NET SHORT "}${cot.comm_net.toLocaleString()} contracts\nLarge Speculators: ${cot.spec_net > 0 ? "NET LONG +" : "NET SHORT "}${cot.spec_net.toLocaleString()} contracts\nSignal: ${cot.signal}\n${cot.advice}${cot.spec_warning ? "\nWARNING: " + cot.spec_warning : ""}\n\nUse this COT data to inform your confidence score and grade. If Commercials are strongly against the direction of your analysis, reduce confidence by 10-15%. If Commercials agree with your directional analysis, this adds conviction — you may increase confidence by 5-10%. Never let COT override a clear BRC setup but always factor it into confidence.`;
           }
         }
