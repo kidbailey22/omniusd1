@@ -424,7 +424,10 @@ After searching, return ONLY this JSON — no markdown, no backticks:
 
 
     const data = await response.json();
-    if (!data.ok || !data.result) throw new Error("Could not parse news response");
+    if (data.debug) {
+      throw new Error("DEBUG: " + JSON.stringify(data));
+    }
+    if (!data.ok || !data.result) throw new Error("Bad response: " + JSON.stringify(data).slice(0,200));
     const parsed = data.result;
     newsContext = JSON.stringify(parsed);
     renderNews(parsed);
