@@ -424,14 +424,8 @@ After searching, return ONLY this JSON — no markdown, no backticks:
 
 
     const data = await response.json();
-    const textBlock = data.content?.find(b => b.type === "text");
-    const raw   = textBlock?.text || "";
-    const clean = raw.replace(/```json|```/g, "").trim();
-
-    let parsed;
-    try { parsed = JSON.parse(clean); }
-    catch { throw new Error("Could not parse news response"); }
-
+    if (!data.ok || !data.result) throw new Error("Could not parse news response");
+    const parsed = data.result;
     newsContext = JSON.stringify(parsed);
     renderNews(parsed);
 
@@ -614,10 +608,8 @@ Determine the final trade decision using the Mode system.` }
 
 
     const data = await response.json();
-    const raw   = data.content?.find(b => b.type === "text")?.text || "";
-    const clean = raw.replace(/```json|```/g, "").trim();
-    const r     = JSON.parse(clean);
-    renderResult(r);
+    if (!data.ok || !data.result) throw new Error("Could not parse analysis response");
+    renderResult(data.result);
 
   } catch(e) {
     const eb = document.getElementById("analysis-err");
