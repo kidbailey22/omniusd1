@@ -3,132 +3,84 @@
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
 const MANTRA = `
-═══════════════════════════════════════════
-OMNIUSD x COT — TRADING MANTRA (LOCKED)
-═══════════════════════════════════════════
+OMNIUSD x COT TRADING MANTRA (LOCKED):
+MODE 1 — FOLLOW THE SIGNAL: Confidence 60%+ AND COT agrees with direction → Execute what OmniUSD says. Let it run. Full size.
+MODE 2A — FADE: Low confidence (25-35%) + COT NET SHORT + OmniUSD signal LONG → Fade it. Go SHORT. Smart money is already there.
+MODE 2B — FADE: Low confidence (25-35%) + COT NET LONG + OmniUSD signal SHORT → Fade it. Go LONG. Smart money is already there.
+MODE 2C — NO EDGE: Low confidence (25-35%) + COT NEUTRAL (50/50) → No trade. Pass entirely. No edge.
+PASS — overrides everything: HIGH NOISE news day, grade is PASS/SKIP, confidence below 25%, weekend/no session.
+COT RULE: COT always overrides news for directional bias. News is a PASS filter only.`;
 
-MODE 1 — FOLLOW THE SIGNAL
-Conditions: Confidence 60%+ AND COT agrees with direction
-Decision: Execute what OmniUSD says. Let it run.
-Sizing: Full size (unless news = CAUTION, then 50%)
-
-MODE 2 — FADE THE SIGNAL
-Three sub-cases:
-
-Case A:
-- Low confidence (25-35%)
-- COT Commercials/Asset Managers NET SHORT
-- OmniUSD signal is LONG
-Fade it. Go SHORT. Smart money is already there.
-
-Case B:
-- Low confidence (25-35%)
-- COT Commercials/Asset Managers NET LONG
-- OmniUSD signal is SHORT
-Fade it. Go LONG. Smart money is already there.
-
-Case C:
-- Low confidence (25-35%)
-- COT Commercials NEUTRAL (50/50)
-No trade. Pass entirely. No edge.
-
-PASS — Do not trade (overrides everything):
-- News creates HIGH NOISE condition (surprise Fed, Trump macro shock, major data)
-- Grade shown in screenshot is PASS or SKIP
-- Confidence below 25%
-- Weekend — no NY session
-
-COT RULE: COT always overrides news for directional bias.
-News is a PASS filter only — it cannot create a trade, only cancel one.
-═══════════════════════════════════════════`;
-
-const NEWS_SYSTEM = `You are OmniDecode, the macro intelligence layer for OmniUSD — a BRC trading system for the NY session (8:30–10:30 AM CT).
+const NEWS_SYSTEM = `You are OmniDecode, the macro intelligence layer for OmniUSD — a BRC trading system for the NY session (8:30-10:30 AM CT).
 
 ${MANTRA}
 
-The OmniUSD COT Mantra: Mode 1 = confidence 60%+ and COT agrees = execute. Mode 2 = low confidence 25-35% and COT contradicts = fade the signal. News is a PASS filter only — it cannot create trades, only cancel them.
+You have access to web search. Search for today's most important macro news for these instruments: XAUUSD, XAGUSD, EURUSD, NAS100, US30, US500.
 
-Search for today's macro news relevant to these 6 instruments: XAUUSD, XAGUSD, EURUSD, NAS100, US30, US500.
+Search for: Fed statements, Trump Truth Social posts about markets or tariffs, major economic data (CPI/NFP/PPI/GDP), significant geopolitical events.
 
-Search for: Fed statements, Trump Truth Social posts about markets/tariffs/dollar, major economic data releases (CPI/NFP/PPI/GDP), significant geopolitical or market-moving events.
+If today is Saturday or Sunday, set session_condition to PASS — markets are closed, no NY session.
 
-If it is a weekend, set session_condition to PASS and explain markets are closed.
+After searching, respond ONLY with this exact JSON structure. No markdown, no backticks, no extra text — just the raw JSON object:
+{"summary":"2-3 sentence macro picture","session_condition":"CLEAR or CAUTION or HIGH NOISE or PASS","session_reason":"one sentence why","news_items":[{"source":"Fed or Trump or Economic Data or Market News","headline":"sharp one-liner","impact":"Bullish or Bearish or Volatile or Neutral","instruments_affected":["XAUUSD"],"color":"green or red or amber or purple"}],"brc_filter":"TRADE NORMAL or SIZE DOWN or PASS ALL or PASS INDICES or PASS METALS","top_watch":"most important thing for next NY session"}`;
 
-After searching, return ONLY this JSON — no markdown, no backticks:
-{
-  "summary": "2-3 sentence overall macro picture for today",
-  "session_condition": "CLEAR | CAUTION | HIGH NOISE | PASS",
-  "session_reason": "One sentence why",
-  "news_items": [
-    { "source": "Fed | Trump | Economic Data | Market News", "headline": "sharp one-liner", "impact": "Bullish | Bearish | Volatile | Neutral", "instruments_affected": ["XAUUSD"], "color": "green | red | amber | purple" }
-  ],
-  "brc_filter": "TRADE NORMAL | SIZE DOWN | PASS ALL | PASS INDICES | PASS METALS",
-  "top_watch": "The single most important thing to watch entering the next NY session"
-}`;
-
-const ANALYSIS_SYSTEM = `You are OmniDecode — the combined intelligence layer for OmniUSD, a BRC (Break-Retest-Continuation) trading system for the NY session (8:30–10:30 AM CT).
-
-You will receive:
-1. An OmniUSD analysis screenshot — read the grade, confidence %, direction (LONG/SHORT), instrument, and any other visible data
-2. The current week's COT positioning for that instrument
-3. Today's macro news context
+const ANALYSIS_SYSTEM = `You are OmniDecode — the combined intelligence layer for OmniUSD, a BRC trading system for the NY session (8:30-10:30 AM CT).
 
 ${MANTRA}
 
-Read the screenshot carefully. Extract grade, direction, confidence %, instrument.
-Then apply the mantra above exactly. Do not deviate.
+You will receive an OmniUSD analysis screenshot plus COT data and news context.
+Read the screenshot: extract grade (A+/B+/B/C/PASS/SKIP), direction (LONG/SHORT), confidence %, and instrument.
+Apply the mantra exactly. Do not deviate.
 
-Respond ONLY with valid JSON, no markdown, no backticks:
-{
-  "instrument": "detected from screenshot",
-  "grade": "A+ | B+ | B | C | PASS | SKIP — exactly as shown",
-  "direction": "LONG | SHORT | N/A",
-  "confidence": "XX% — exactly as shown or estimated",
-  "decision": "EXECUTE | EXECUTE — SIZE DOWN | FADE — GO SHORT | FADE — GO LONG | PASS",
-  "mode": "Mode 1 | Mode 1 (Size Down) | Mode 2 — Fade Short | Mode 2 — Fade Long | Mode 2 — No Edge | Pass",
-  "sizing": "Full size | 50% size | 25% size | No trade",
-  "mantra_case": "Mode 1 | Mode 2A | Mode 2B | Mode 2C | Pass",
-  "layers": {
-    "cot": { "verdict": "Agrees | Contradicts | Neutral", "detail": "one line max 12 words", "color": "green | red | amber" },
-    "news": { "verdict": "Clear | Caution | High Noise | Pass", "detail": "one line max 12 words", "color": "green | amber | red" },
-    "grade": { "verdict": "Strong | Moderate | Weak | Pass", "detail": "one line max 12 words", "color": "green | amber | red | purple" }
-  },
-  "reasoning": "2-3 sentences applying the exact mantra to this setup. Reference the specific mode case.",
-  "key_warning": "One sentence — the most critical thing before entering or passing"
-}`;
+Respond ONLY with this exact JSON — no markdown, no backticks:
+{"instrument":"from screenshot","grade":"exactly as shown","direction":"LONG or SHORT or N/A","confidence":"XX%","decision":"EXECUTE or EXECUTE — SIZE DOWN or FADE — GO SHORT or FADE — GO LONG or PASS","mode":"Mode 1 or Mode 1 (Size Down) or Mode 2 — Fade Short or Mode 2 — Fade Long or Mode 2 — No Edge or Pass","sizing":"Full size or 50% size or 25% size or No trade","mantra_case":"Mode 1 or Mode 2A or Mode 2B or Mode 2C or Pass","layers":{"cot":{"verdict":"Agrees or Contradicts or Neutral","detail":"one line","color":"green or red or amber"},"news":{"verdict":"Clear or Caution or High Noise or Pass","detail":"one line","color":"green or amber or red"},"grade":{"verdict":"Strong or Moderate or Weak or Pass","detail":"one line","color":"green or amber or red or purple"}},"reasoning":"2-3 sentences applying the exact mantra. Reference the specific mode case.","key_warning":"one sentence — most critical thing before entering or passing"}`;
+
+function extractJSON(text) {
+  if (!text || !text.trim()) return null;
+  // Try direct parse first
+  try { return JSON.parse(text.trim()); } catch(e) {}
+  // Find first { to last }
+  const start = text.indexOf("{");
+  const end   = text.lastIndexOf("}");
+  if (start === -1 || end === -1) return null;
+  const slice = text.slice(start, end + 1);
+  try { return JSON.parse(slice); } catch(e) {}
+  // Clean and retry
+  try {
+    const cleaned = slice
+      .replace(/[\u0000-\u001F\u007F-\u009F]/g, " ")
+      .replace(/,\s*}/g, "}")
+      .replace(/,\s*]/g, "]");
+    return JSON.parse(cleaned);
+  } catch(e) { return null; }
+}
 
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
-
-  if (!ANTHROPIC_API_KEY) {
-    return res.status(500).json({ error: "ANTHROPIC_API_KEY not configured" });
-  }
+  if (!ANTHROPIC_API_KEY) return res.status(500).json({ error: "ANTHROPIC_API_KEY not configured" });
 
   const { mode, messages, date } = req.body;
-
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 25000);
+  const timeout = setTimeout(() => controller.abort(), 55000);
 
   try {
     let body;
 
     if (mode === "news") {
-      // News fetch — uses web search tool
       body = {
         model: "claude-sonnet-4-20250514",
-        max_tokens: 1500,
+        max_tokens: 2000,
         system: NEWS_SYSTEM,
         tools: [{ type: "web_search_20250305", name: "web_search" }],
         messages: [{
           role: "user",
-          content: `Search for and decode today's macro news (${date || "today"}) for OmniUSD. Check Fed statements, Trump Truth Social, economic data releases, and major market-moving events for XAUUSD, XAGUSD, EURUSD, NAS100, US30, US500.`
+          content: `Today is ${date || "today"}. Search for today's macro news relevant to OmniUSD instruments and return the JSON.`
         }]
       };
     } else if (mode === "analyze") {
-      // Screenshot analysis — uses vision
       body = {
         model: "claude-sonnet-4-20250514",
         max_tokens: 1000,
@@ -136,7 +88,7 @@ module.exports = async function handler(req, res) {
         messages: messages,
       };
     } else {
-      return res.status(400).json({ error: "Invalid mode. Use 'news' or 'analyze'." });
+      return res.status(400).json({ error: "Invalid mode" });
     }
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
@@ -155,56 +107,40 @@ module.exports = async function handler(req, res) {
 
     if (!response.ok) {
       const err = await response.text();
-      throw new Error("Anthropic API error: " + response.status + " — " + err);
+      throw new Error("Anthropic error " + response.status + ": " + err.slice(0, 200));
     }
 
     const data = await response.json();
 
-    // Log full response for debugging
-    console.log("Anthropic response stop_reason:", data.stop_reason);
-    console.log("Anthropic content blocks:", JSON.stringify((data.content||[]).map(b => ({ type: b.type, textLen: b.text?.length }))));
-
-    // Extract text from all content blocks (web search returns multiple blocks)
+    // Collect all text blocks — web search returns tool_use + tool_result + text
     const allText = (data.content || [])
       .filter(b => b.type === "text")
-      .map(b => b.text)
+      .map(b => b.text || "")
       .join("\n");
 
-    console.log("All text length:", allText.length);
-    console.log("All text preview:", allText.slice(0, 300));
+    console.log("stop_reason:", data.stop_reason);
+    console.log("content types:", (data.content||[]).map(b=>b.type).join(", "));
+    console.log("text preview:", allText.slice(0, 200));
 
-    if (!allText || allText.trim().length === 0) {
-      // No text block — return raw for debugging
-      return res.status(200).json({ ok: false, debug: true, content_types: (data.content||[]).map(b => b.type), stop_reason: data.stop_reason });
-    }
+    const parsed = extractJSON(allText);
 
-    // Aggressively extract JSON from the response
-    const jsonMatch = allText.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      return res.status(200).json({ ok: false, debug: true, raw_text: allText.slice(0, 500) });
-    }
-
-    let parsed;
-    try {
-      parsed = JSON.parse(jsonMatch[0]);
-    } catch(e) {
-      const cleaned = jsonMatch[0]
-        .replace(/[\u0000-\u001F\u007F-\u009F]/g, " ")
-        .replace(/,\s*}/g, "}")
-        .replace(/,\s*]/g, "]");
-      try {
-        parsed = JSON.parse(cleaned);
-      } catch(e2) {
-        return res.status(200).json({ ok: false, debug: true, parse_error: e2.message, raw_json: jsonMatch[0].slice(0, 500) });
-      }
+    if (!parsed) {
+      console.error("Failed to extract JSON. Full text:", allText.slice(0, 500));
+      return res.status(200).json({
+        ok: false,
+        debug: true,
+        stop_reason: data.stop_reason,
+        content_types: (data.content||[]).map(b=>b.type),
+        text_preview: allText.slice(0, 300)
+      });
     }
 
     return res.status(200).json({ ok: true, result: parsed });
 
   } catch (err) {
     clearTimeout(timeout);
-    const msg = err.name === "AbortError" ? "Request timed out" : err.message;
-    console.error("decode API error:", msg);
+    const msg = err.name === "AbortError" ? "Request timed out after 55s" : err.message;
+    console.error("decode error:", msg);
     return res.status(500).json({ error: msg });
   }
 };
