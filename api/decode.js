@@ -159,7 +159,31 @@ module.exports = async function handler(req, res) {
     }
 
     const data = await response.json();
-    return res.status(200).json(data);
+
+    // Extract text from all content blocks (web search returns multiple blocks)
+    const allText = (data.content || [])
+      .filter(b => b.type === "text")
+      .map(b => b.text)
+      .join("\n");
+
+    // Aggressively extract JSON from the response
+    const jsonMatch = allText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error("No JSON found in response");
+    }
+
+    let parsed;
+    try {
+      parsed = JSON.parse(jsonMatch[0]);
+    } catch(e) {
+      const cleaned = jsonMatch[0]
+        .replace(/[\u0000-\u001F\u007F-\u009F]/g, " ")
+        .replace(/,\s*}/g, "}")
+        .replace(/,\s*]/g, "]");
+      parsed = JSON.parse(cleaned);
+    }
+
+    return res.status(200).json({ ok: true, result: parsed });
 
   } catch (err) {
     clearTimeout(timeout);
