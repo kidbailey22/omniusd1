@@ -160,16 +160,28 @@ module.exports = async function handler(req, res) {
 
     const data = await response.json();
 
+    // Log full response for debugging
+    console.log("Anthropic response stop_reason:", data.stop_reason);
+    console.log("Anthropic content blocks:", JSON.stringify((data.content||[]).map(b => ({ type: b.type, textLen: b.text?.length }))));
+
     // Extract text from all content blocks (web search returns multiple blocks)
     const allText = (data.content || [])
       .filter(b => b.type === "text")
       .map(b => b.text)
       .join("\n");
 
+    console.log("All text length:", allText.length);
+    console.log("All text preview:", allText.slice(0, 300));
+
+    if (!allText || allText.trim().length === 0) {
+      // No text block — return raw for debugging
+      return res.status(200).json({ ok: false, debug: true, content_types: (data.content||[]).map(b => b.type), stop_reason: data.stop_reason });
+    }
+
     // Aggressively extract JSON from the response
     const jsonMatch = allText.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      throw new Error("No JSON found in response");
+      return res.status(200).json({ ok: false, debug: true, raw_text: allText.slice(0, 500) });
     }
 
     let parsed;
@@ -180,7 +192,11 @@ module.exports = async function handler(req, res) {
         .replace(/[\u0000-\u001F\u007F-\u009F]/g, " ")
         .replace(/,\s*}/g, "}")
         .replace(/,\s*]/g, "]");
-      parsed = JSON.parse(cleaned);
+      try {
+        parsed = JSON.parse(cleaned);
+      } catch(e2) {
+        return res.status(200).json({ ok: false, debug: true, parse_error: e2.message, raw_json: jsonMatch[0].slice(0, 500) });
+      }
     }
 
     return res.status(200).json({ ok: true, result: parsed });
