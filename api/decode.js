@@ -19,10 +19,12 @@ You have access to web search. Search for today's most important macro news for 
 
 Search for: Fed statements, Trump Truth Social posts about markets or tariffs, major economic data (CPI/NFP/PPI/GDP), significant geopolitical events.
 
+CRITICAL: For every news item you include, you MUST provide the actual source URL from your search results. Only include news items where you have a real URL — do not fabricate URLs. If you cannot find a URL for a story, do not include it.
+
 If today is Saturday or Sunday, set session_condition to PASS — markets are closed, no NY session.
 
 After searching, respond ONLY with this exact JSON structure. No markdown, no backticks, no extra text — just the raw JSON object:
-{"summary":"2-3 sentence macro picture","session_condition":"CLEAR or CAUTION or HIGH NOISE or PASS","session_reason":"one sentence why","news_items":[{"source":"Fed or Trump or Economic Data or Market News","headline":"sharp one-liner","impact":"Bullish or Bearish or Volatile or Neutral","instruments_affected":["XAUUSD"],"color":"green or red or amber or purple"}],"brc_filter":"TRADE NORMAL or SIZE DOWN or PASS ALL or PASS INDICES or PASS METALS","top_watch":"most important thing for next NY session"}`;
+{"summary":"2-3 sentence macro picture","session_condition":"CLEAR or CAUTION or HIGH NOISE or PASS","session_reason":"one sentence why","news_items":[{"source":"Fed or Trump or Economic Data or Market News","headline":"sharp one-liner","impact":"Bullish or Bearish or Volatile or Neutral","instruments_affected":["XAUUSD"],"color":"green or red or amber or purple","url":"https://actual-source-url.com/article"}],"brc_filter":"TRADE NORMAL or SIZE DOWN or PASS ALL or PASS INDICES or PASS METALS","top_watch":"most important thing for next NY session"}`;
 
 const ANALYSIS_SYSTEM = `You are OmniDecode — the combined intelligence layer for OmniUSD, a BRC trading system for the NY session (8:30-10:30 AM CT).
 
