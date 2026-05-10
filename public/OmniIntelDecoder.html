@@ -478,12 +478,18 @@ function renderNews(d) {
   if (d.news_items?.length) {
     d.news_items.forEach(item => {
       const ic = COLOR_MAP[item.color] || COLOR_MAP.purple;
-      html += `
+      const urlHtml = item.url
+        ? `<a href="${item.url}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:4px;color:var(--dim);font-size:9px;text-decoration:none;margin-left:8px;border:.5px solid var(--border);border-radius:4px;padding:1px 6px;transition:all .15s" onmouseover="this.style.color='var(--purple-lt)';this.style.borderColor='var(--purple)'" onmouseout="this.style.color='var(--dim)';this.style.borderColor='var(--border)'">↗ SOURCE</a>`
+        : `<span style="color:var(--dimmer);font-size:9px;margin-left:8px;font-style:italic">no source</span>`;
+      html += \`
         <div class="news-item">
-          <div class="news-source">${item.source} · ${(item.instruments_affected||[]).join(", ")}</div>
-          <div class="news-text">${item.headline}</div>
-          <span class="news-impact" style="background:${ic.bg};color:${ic.text};border:.5px solid ${ic.border}">${item.impact}</span>
-        </div>`;
+          <div class="news-source">\${item.source} · \${(item.instruments_affected||[]).join(", ")}</div>
+          <div class="news-text">\${item.headline}</div>
+          <div style="display:flex;align-items:center;margin-top:5px;flex-wrap:wrap;gap:4px">
+            <span class="news-impact" style="background:\${ic.bg};color:\${ic.text};border:.5px solid \${ic.border}">\${item.impact}</span>
+            \${urlHtml}
+          </div>
+        </div>\`;
     });
   }
 
