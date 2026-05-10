@@ -22,9 +22,9 @@ Run these EXACT searches in order:
 SEARCH 1: site:federalreserve.gov 2026 — Fed statements and FOMC decisions (official)
 SEARCH 2: site:bls.gov 2026 — latest CPI, NFP, PPI, jobs data (official)
 SEARCH 3: site:reuters.com OR site:apnews.com gold silver "Federal Reserve" 2026 — institutional market news
-SEARCH 4: site:kitco.com OR site:reuters.com gold price 2026 — gold and silver specific news
-SEARCH 5: site:reuters.com OR site:apnews.com OR site:bloomberg.com Trump tariffs OR trade OR Iran OR geopolitical 2026 — Trump posts and geopolitical events
-SEARCH 6: site:reuters.com OR site:apnews.com "S&P 500" OR Nasdaq OR "Dow Jones" 2026 — equity index news
+SEARCH 4: gold price silver 2026 site:kitco.com OR site:reuters.com OR site:bloomberg.com — gold and silver latest price and news
+SEARCH 5: Trump tariffs OR "Truth Social" OR Iran OR "Middle East" 2026 site:reuters.com OR site:apnews.com OR site:bloomberg.com — Trump and geopolitical news
+SEARCH 6: "S&P 500" OR Nasdaq OR "Dow Jones" market 2026 site:reuters.com OR site:apnews.com OR site:bloomberg.com — equity index moves
 
 NOTE: Truth Social cannot be searched directly. For Trump news use reuters.com and apnews.com which report on his posts in real time with full context and verification.
 
@@ -60,8 +60,17 @@ QUALITY OVER QUANTITY: It is better to return 2-3 verified recent items than 6 i
 
 If today is Saturday or Sunday, set session_condition to PASS — markets are closed, no NY session.
 
+INSTRUMENT TAGGING RULES — apply these exactly:
+- Fed decisions, CPI, NFP, GDP, tariffs → affects ALL 6: ["XAUUSD","XAGUSD","EURUSD","NAS100","US30","US500"]
+- Gold/Silver specific news → ["XAUUSD","XAGUSD"]
+- Oil/energy/geopolitical shock → ["XAUUSD","XAGUSD","NAS100","US30","US500"]
+- Dollar strength/weakness, forex → ["EURUSD","XAUUSD","XAGUSD"]
+- Equity specific (earnings, index moves) → ["NAS100","US30","US500"]
+- Trump tariffs on specific countries → ["EURUSD","NAS100","US30","US500"] if EU/Asia, add ["XAUUSD"] if safe haven bid
+Never tag only XAUUSD for macro events — that is almost always wrong.
+
 After searching, respond ONLY with this exact JSON structure. No markdown, no backticks, no extra text — just the raw JSON object:
-{"summary":"2-3 sentence macro picture","session_condition":"CLEAR or CAUTION or HIGH NOISE or PASS","session_reason":"one sentence why","news_items":[{"source":"Fed or Trump or Economic Data or Market News","headline":"sharp one-liner","impact":"Bullish or Bearish or Volatile or Neutral","instruments_affected":["XAUUSD"],"color":"green or red or amber or purple","url":"https://actual-trusted-source-url.com/article","date":"YYYY-MM-DD — actual article date"}],"brc_filter":"TRADE NORMAL or SIZE DOWN or PASS ALL or PASS INDICES or PASS METALS","top_watch":"most important thing for next NY session"}`;
+{"summary":"2-3 sentence macro picture","session_condition":"CLEAR or CAUTION or HIGH NOISE or PASS","session_reason":"one sentence why","news_items":[{"source":"Fed or Trump or Economic Data or Market News","headline":"sharp one-liner","impact":"Bullish or Bearish or Volatile or Neutral","instruments_affected":["XAUUSD","EURUSD","NAS100","US30","US500"],"color":"green or red or amber or purple","url":"https://actual-trusted-source-url.com/article","date":"YYYY-MM-DD"}],"brc_filter":"TRADE NORMAL or SIZE DOWN or PASS ALL or PASS INDICES or PASS METALS","top_watch":"most important thing for next NY session"}`;
 
 const ANALYSIS_SYSTEM = `You are OmniDecode — the combined intelligence layer for OmniUSD, a BRC trading system for the NY session (8:30-10:30 AM CT).
 
