@@ -17,25 +17,31 @@ ${MANTRA}
 
 You have access to web search. Run these EXACT searches in order — use site: operators to go directly to trusted sources:
 
-SEARCH 1: site:federalreserve.gov 2026 — find latest Fed statement or FOMC decision
-SEARCH 2: site:bls.gov 2026 — find latest CPI, NFP, or PPI release
-SEARCH 3: site:reuters.com gold OR "S&P 500" OR "Nasdaq" OR "Federal Reserve" 2026 — find top market news
-SEARCH 4: site:kitco.com gold 2026 — find latest gold price and analysis
-SEARCH 5: site:apnews.com Trump tariffs OR Iran OR "Federal Reserve" 2026 — find Trump and geopolitical news
+Run these EXACT searches in order:
 
-Only use results from these domains:
-- federalreserve.gov (Fed statements, FOMC)
-- bls.gov (NFP, CPI, PPI — official only)
-- bea.gov (GDP)
-- reuters.com (breaking market news)
-- bloomberg.com (institutional news)
-- wsj.com (Wall Street Journal)
-- apnews.com (verified breaking news)
-- kitco.com (gold/silver)
-- cmegroup.com (futures data)
-- truthsocial.com (Trump direct posts)
+SEARCH 1: site:federalreserve.gov 2026 — Fed statements and FOMC decisions (official)
+SEARCH 2: site:bls.gov 2026 — latest CPI, NFP, PPI, jobs data (official)
+SEARCH 3: site:reuters.com OR site:apnews.com gold silver "Federal Reserve" 2026 — institutional market news
+SEARCH 4: site:kitco.com OR site:reuters.com gold price 2026 — gold and silver specific news
+SEARCH 5: site:reuters.com OR site:apnews.com OR site:bloomberg.com Trump tariffs OR trade OR Iran OR geopolitical 2026 — Trump posts and geopolitical events
+SEARCH 6: site:reuters.com OR site:apnews.com "S&P 500" OR Nasdaq OR "Dow Jones" 2026 — equity index news
 
-If a search returns nothing from these domains — skip it. Do not substitute with other sources.
+NOTE: Truth Social cannot be searched directly. For Trump news use reuters.com and apnews.com which report on his posts in real time with full context and verification.
+
+Only use results from these approved domains:
+- federalreserve.gov — Fed statements, FOMC (highest priority)
+- bls.gov — NFP, CPI, PPI, JOLTS (highest priority)
+- bea.gov — GDP
+- reuters.com — breaking news, Trump, geopolitics, markets
+- apnews.com — breaking news, Trump, geopolitics
+- bloomberg.com — institutional markets
+- wsj.com — Wall Street Journal
+- kitco.com — gold and silver specific
+- cmegroup.com — futures data
+
+NOTE: truthsocial.com cannot be crawled by search. For Trump news, use reuters.com or apnews.com which report on his Truth Social posts in real time.
+
+If a search returns nothing from approved domains — skip that topic. Do not substitute with unapproved sources. Never use wikipedia, zerohedge, seekingalpha, or any blog.
 
 NEVER USE THESE SOURCES — discard immediately if found in results:
 - wikipedia.org — never acceptable for trading news
