@@ -11,6 +11,30 @@ MODE 2C — NO EDGE: Low confidence (25-35%) + COT NEUTRAL (50/50) → No trade.
 PASS — overrides everything: HIGH NOISE news day, grade is PASS/SKIP, confidence below 25%, weekend/no session.
 COT RULE: COT always overrides news for directional bias. News is a PASS filter only.`;
 
+// ── Trump Feed System Prompt ─────────────────────────────────────────────────
+const TRUMP_SYSTEM = `You are OmniDecode, the macro intelligence layer for OmniUSD — a BRC trading system for the NY session (8:30-10:30 AM CT).
+
+You will receive the raw HTML/text content of trumpstruth.org — a live archive of Donald Trump's Truth Social posts.
+
+YOUR JOB: Scan all posts and extract ONLY the ones that are market-relevant. Ignore political attacks, retweets of random users, entertainment, and personal posts.
+
+MARKET-RELEVANT posts include:
+- Tariffs (any country, any product)
+- Trade deals or negotiations
+- Federal Reserve / Jerome Powell / interest rates
+- Dollar strength/weakness
+- Stock market comments ("Market is doing great", "Stocks up")
+- Iran, Middle East, oil, Strait of Hormuz
+- China trade, Xi Jinping
+- EU trade, NATO
+- Sanctions, executive orders affecting markets
+- Any specific mention of Gold, crypto, or commodities
+
+For each market-relevant post extract the exact quote and timestamp.
+
+Respond ONLY with this exact JSON — no markdown, no backticks:
+{"posts":[{"time":"May 11, 2026 11:28 PM","text":"exact quote from the post — max 280 chars","topic":"Tariffs or Fed or Iran or Trade or Markets or Dollar or Geopolitics","instruments_affected":["XAUUSD","EURUSD","NAS100","US30","US500"],"impact":"Bullish or Bearish or Volatile or Neutral","color":"green or red or amber or purple","url":"https://truthsocial.com/@realDonaldTrump/[post-id]"}],"market_posts_found":0,"last_checked":"timestamp of most recent post seen","summary":"one sentence — overall market tone from Trump's recent posts or 'No market-relevant posts in recent feed'"}`;
+
 // ── Dashboard System Prompt ───────────────────────────────────────────────────
 const DASHBOARD_SYSTEM = `You are OmniDecode, the macro intelligence layer for OmniUSD — a BRC trading system for the NY session (8:30-10:30 AM CT).
 
@@ -149,6 +173,36 @@ module.exports = async function handler(req, res) {
         messages: [{
           role: "user",
           content: `Today is ${date || "today"}. Run the searches listed in your instructions to find today's macro news from trusted sources only. Discard any result older than 7 days or not from the approved domain list. Return the JSON.`
+        }]
+      };
+    } else if (mode === "trump") {
+      // Fetch trumpstruth.org directly and pass content to Claude
+      const trumpRes = await fetch("https://trumpstruth.org", {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+          "Accept": "text/html,application/xhtml+xml",
+        },
+        signal: controller.signal,
+      });
+      if (!trumpRes.ok) throw new Error("trumpstruth.org returned " + trumpRes.status);
+      const trumpHtml = await trumpRes.text();
+      // Extract text only — strip HTML tags
+      const trumpText = trumpHtml
+        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+        .replace(/<[^>]+>/g, " ")
+        .replace(/\s{2,}/g, " ")
+        .slice(0, 8000); // Keep first 8000 chars — plenty for recent posts
+
+      body = {
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1500,
+        system: TRUMP_SYSTEM,
+        messages: [{
+          role: "user",
+          content: `Here is the live content from trumpstruth.org (Trump's Truth Social archive). Extract all market-relevant posts:
+
+${trumpText}`
         }]
       };
     } else if (mode === "analyze") {
