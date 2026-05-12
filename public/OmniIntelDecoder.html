@@ -554,20 +554,27 @@ function renderDashboard(d) {
       </tbody>
     </table>`;
 
-  // Instrument outlook section
+  // Instrument outlook — collapsible dropdown
   if (d.instrument_outlook && d.instrument_outlook.length > 0) {
-    html += `<div class="lbl" style="margin-top:12px">WHAT THIS MEANS FOR YOUR TRADE</div>`;
-    html += `<div class="outlook-grid">`;
+    let outlookInner = "";
     d.instrument_outlook.forEach(o => {
       const verdictClass = o.verdict === "TRADE" ? "verdict-trade" : o.verdict === "CAUTION" ? "verdict-caution" : "verdict-avoid";
-      html += `
+      outlookInner += `
         <div class="outlook-card">
           <div class="outlook-inst">${o.instrument}</div>
           <div class="outlook-verdict ${verdictClass}">${o.verdict}</div>
           <div class="outlook-text">${o.plain_english}</div>
         </div>`;
     });
-    html += `</div>`;
+    html += `
+    <div style="margin-top:10px">
+      <button onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'grid':'none';this.textContent=this.textContent.includes('▼')?'▲ HIDE TRADE OUTLOOK':'▼ WHAT THIS MEANS FOR YOUR TRADE'"
+        style="background:none;border:none;color:var(--muted);font-size:10px;cursor:pointer;font-family:inherit;letter-spacing:.1em;padding:0;width:100%;text-align:left"
+      >▼ WHAT THIS MEANS FOR YOUR TRADE</button>
+      <div style="display:none;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px">
+        ${outlookInner}
+      </div>
+    </div>`;
   }
 
   const ds = document.getElementById("dashboard-status");
