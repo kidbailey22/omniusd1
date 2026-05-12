@@ -113,12 +113,13 @@ function parseTFF(data) {
   const prev   = data[1] || null;
 
   // Asset Managers — primary institutional signal
-  const commLong  = parseInt(latest.asset_mgr_positions_long_all  || 0);
-  const commShort = parseInt(latest.asset_mgr_positions_short_all || 0);
+  // Note: TFF API uses no _all suffix on asset_mgr and lev_money fields
+  const commLong  = parseInt(latest.asset_mgr_positions_long  || latest.asset_mgr_positions_long_all  || 0);
+  const commShort = parseInt(latest.asset_mgr_positions_short || latest.asset_mgr_positions_short_all || 0);
 
   // Leveraged Funds — hedge funds, used as secondary/warning signal
-  const specLong  = parseInt(latest.lev_money_positions_long_all  || 0);
-  const specShort = parseInt(latest.lev_money_positions_short_all || 0);
+  const specLong  = parseInt(latest.lev_money_positions_long  || latest.lev_money_positions_long_all  || 0);
+  const specShort = parseInt(latest.lev_money_positions_short || latest.lev_money_positions_short_all || 0);
 
   // Dealers — market makers (intentionally excluded from signal logic)
   const dealerLong  = parseInt(latest.dealer_positions_long_all   || 0);
@@ -130,8 +131,8 @@ function parseTFF(data) {
 
   let commChange = null;
   if (prev) {
-    const pL = parseInt(prev.asset_mgr_positions_long_all  || 0);
-    const pS = parseInt(prev.asset_mgr_positions_short_all || 0);
+    const pL = parseInt(prev.asset_mgr_positions_long  || prev.asset_mgr_positions_long_all  || 0);
+    const pS = parseInt(prev.asset_mgr_positions_short || prev.asset_mgr_positions_short_all || 0);
     commChange = commNet - (pL - pS);
   }
 
