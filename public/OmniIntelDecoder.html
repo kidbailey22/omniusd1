@@ -8,14 +8,14 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0f0d1e; --surface:#1a1630; --card:#1e1b33;
-  --border:#2d2850; --border2:#3d3560;
-  --purple:#7b5ea7; --purple-lt:#9b7ec8;
+  --bg:#1e1b33; --surface:#2a2650; --card:#302c58;
+  --border:#3d3a6e; --border2:#4e4a82;
+  --purple:#9b7ec8; --purple-lt:#b8a0e0;
   --cyan:#00e5ff; --magenta:#ff6bff;
   --green:#06d6a0; --red:#ef476f; --gold:#ffd166;
-  --text:#c8c0e0; --muted:#7b5ea7; --dim:#4a4270; --dimmer:#2d2850;
+  --text:#e8e4f8; --muted:#b8a0e0; --dim:#8880b8; --dimmer:#5a5690;
 }
-html,body{background:var(--bg);color:var(--text);font-family:'DM Mono','Courier New',monospace;min-height:100vh;padding:20px 16px 56px}
+html,body{background:#2a2650;color:var(--text);font-family:'DM Mono','Courier New',monospace;min-height:100vh;padding:20px 16px 56px}
 .wrap{max-width:720px;margin:0 auto}
 
 /* Header */
@@ -34,7 +34,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'DM Mono','Courier 
 .divider{height:.5px;background:var(--border);margin:18px 0}
 
 /* Panels */
-.panel{background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:18px;margin-bottom:12px}
+.panel{background:#302c58;border:.5px solid var(--border);border-radius:14px;padding:18px;margin-bottom:12px}
 .panel-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .panel-name{color:var(--cyan);font-size:11px;font-weight:500;letter-spacing:.1em}
 .step-badge{background:var(--dimmer);color:var(--purple-lt);font-size:9px;padding:3px 10px;border-radius:20px;border:.5px solid var(--border2)}
@@ -52,7 +52,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'DM Mono','Courier 
 
 /* Dashboard */
 .dash-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
-.dash-card{background:var(--bg);border:.5px solid var(--border);border-radius:10px;padding:11px 13px}
+.dash-card{background:#3a3670;border:.5px solid var(--border);border-radius:10px;padding:11px 13px}
 .dash-lbl{color:var(--dimmer);font-size:9px;letter-spacing:.12em;margin-bottom:4px}
 .dash-val{font-size:15px;font-weight:500;margin-bottom:2px}
 .dash-note{color:var(--dim);font-size:9px;line-height:1.5}
@@ -70,7 +70,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'DM Mono','Courier 
 .week-bias{background:var(--bg);border:.5px solid var(--border);border-left:2px solid var(--cyan);border-radius:0 10px 10px 0;padding:10px 14px;margin-bottom:10px}
 
 /* News fetch */
-.news-status{background:var(--bg);border:.5px solid var(--border);border-radius:10px;padding:14px;min-height:80px;font-size:11px;color:var(--dim);line-height:1.7;margin-bottom:12px}
+.news-status{background:#3a3670;border:.5px solid var(--border);border-radius:10px;padding:14px;min-height:80px;font-size:11px;color:var(--dim);line-height:1.7;margin-bottom:12px}
 .news-status.active{color:var(--text)}
 .news-item{margin-bottom:10px;padding-bottom:10px;border-bottom:.5px solid var(--border)}
 .news-item:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
@@ -109,7 +109,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'DM Mono','Courier 
 
 
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
-.info-card{background:var(--surface);border:.5px solid var(--border);border-radius:11px;padding:12px 14px}
+.info-card{background:#3a3670;border:.5px solid var(--border);border-radius:11px;padding:12px 14px}
 .info-lbl{color:var(--dimmer);font-size:9px;letter-spacing:.12em;margin-bottom:5px}
 .info-val{font-size:12px;font-weight:500}
 
