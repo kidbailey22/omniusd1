@@ -89,6 +89,16 @@ html,body{background:#2a2650;color:var(--text);font-family:'DM Mono','Courier Ne
 .trump-empty{color:var(--dim);font-size:11px;padding:14px 0;text-align:center}
 .trump-summary{color:var(--purple-lt);font-size:11px;line-height:1.6;padding:10px 14px;background:var(--bg);border:.5px solid var(--border);border-radius:10px;margin-bottom:10px}
 
+/* Instrument outlook */
+.outlook-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.outlook-card{background:#3a3670;border:.5px solid var(--border);border-radius:10px;padding:11px 13px}
+.outlook-inst{color:var(--cyan);font-size:11px;font-weight:500;margin-bottom:4px}
+.outlook-verdict{display:inline-block;font-size:9px;font-weight:700;padding:2px 9px;border-radius:20px;margin-bottom:6px}
+.verdict-trade{background:rgba(6,214,160,.2);color:var(--green)}
+.verdict-caution{background:rgba(255,209,102,.2);color:var(--gold)}
+.verdict-avoid{background:rgba(239,71,111,.2);color:var(--red)}
+.outlook-text{color:var(--text);font-size:10px;line-height:1.6}
+
 /* COT Report */
 .cot-report-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
 .cot-inst-card{background:#3a3670;border:.5px solid var(--border);border-radius:11px;padding:12px 14px;position:relative;overflow:hidden}
@@ -543,6 +553,22 @@ function renderDashboard(d) {
   html += `
       </tbody>
     </table>`;
+
+  // Instrument outlook section
+  if (d.instrument_outlook && d.instrument_outlook.length > 0) {
+    html += `<div class="lbl" style="margin-top:12px">WHAT THIS MEANS FOR YOUR TRADE</div>`;
+    html += `<div class="outlook-grid">`;
+    d.instrument_outlook.forEach(o => {
+      const verdictClass = o.verdict === "TRADE" ? "verdict-trade" : o.verdict === "CAUTION" ? "verdict-caution" : "verdict-avoid";
+      html += `
+        <div class="outlook-card">
+          <div class="outlook-inst">${o.instrument}</div>
+          <div class="outlook-verdict ${verdictClass}">${o.verdict}</div>
+          <div class="outlook-text">${o.plain_english}</div>
+        </div>`;
+    });
+    html += `</div>`;
+  }
 
   const ds = document.getElementById("dashboard-status");
   ds.innerHTML = html;
