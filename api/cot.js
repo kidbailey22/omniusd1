@@ -19,6 +19,14 @@ const TFF_MARKETS = {
   EURUSD: "EURO FX - CHICAGO MERCANTILE EXCHANGE",
 };
 
+// Fallback name variants in case primary doesn't match
+const TFF_FALLBACKS = {
+  EURUSD: ["EURO FX - CHICAGO MERCANTILE EXCHANGE.", "Euro FX - Chicago Mercantile Exchange"],
+  NAS100: ["NASDAQ-100 MINI - CHICAGO MERCANTILE EXCHANGE", "NASDAQ 100 MINI - CHICAGO MERCANTILE EXCHANGE"],
+  US500:  ["E-MINI S&P 500 - CHICAGO MERCANTILE EXCHANGE", "S&P 500 MINI - CHICAGO MERCANTILE EXCHANGE"],
+  US30:   ["DJIA x $5 FUTURES - CHICAGO BOARD OF TRADE", "E-MINI DOW ($5) FUTURES - CHICAGO BOARD OF TRADE"],
+};
+
 const CFTC_HEADERS = {
   "Accept":     "application/json",
   "Referer":    "https://publicreporting.cftc.gov/",
@@ -202,37 +210,52 @@ module.exports = async function handler(req, res) {
   const controller = new AbortController();
   const timeoutId = setTimeout(function() { controller.abort(); }, 9000);
 
+
   try {
-    const encodedName = encodeURIComponent(marketName);
-    const url = "https://publicreporting.cftc.gov/resource/" + datasetId + ".json"
-      + "?market_and_exchange_names=" + encodedName
-      + "&%24order=report_date_as_yyyy_mm_dd%20DESC&%24limit=2";
+    // Try primary name first, then fallbacks
+    const namesToTry = [marketName, ...(TFF_FALLBACKS[instrument] || [])];
+    let data = null;
 
-    const response = await fetch(url, { signal: controller.signal, headers: CFTC_HEADERS });
-    clearTimeout(timeoutId);
-
-    if (!response.ok) throw new Error("CFTC HTTP " + response.status);
-
-    const data = await response.json();
-
-    // If TFF returns empty, fall back to Legacy as safety net
-    if ((!data || data.length === 0) && isTFF) {
-      console.warn("COT TFF empty for " + instrument + " — falling back to Legacy");
-      const legacyUrl = "https://publicreporting.cftc.gov/resource/jun7-fc8e.json"
+    for (const name of namesToTry) {
+      const encodedName = encodeURIComponent(name);
+      const url = "https://publicreporting.cftc.gov/resource/" + datasetId + ".json"
         + "?market_and_exchange_names=" + encodedName
+        + "&%24order=report_date_as_yyyy_mm_dd%20DESC&%24limit=2";
+
+      console.log("COT [" + instrument + "] trying: " + name);
+      const response = await fetch(url, { signal: controller.signal, headers: CFTC_HEADERS });
+      clearTimeout(timeoutId);
+
+      if (!response.ok) { console.warn("HTTP " + response.status); continue; }
+      const rows = await response.json();
+      if (rows && rows.length > 0) {
+        data = rows;
+        console.log("COT [" + instrument + "] matched: " + name);
+        break;
+      }
+      console.warn("COT [" + instrument + "] empty for: " + name);
+    }
+
+    // TFF returned nothing — fall back to Legacy
+    if ((!data || data.length === 0) && isTFF) {
+      console.warn("COT TFF all names failed for " + instrument + " — falling back to Legacy");
+      const encodedFallback = encodeURIComponent(marketName);
+      const legacyUrl = "https://publicreporting.cftc.gov/resource/jun7-fc8e.json"
+        + "?market_and_exchange_names=" + encodedFallback
         + "&%24order=report_date_as_yyyy_mm_dd%20DESC&%24limit=2";
       const fallback = await fetch(legacyUrl, { headers: CFTC_HEADERS });
       if (!fallback.ok) throw new Error("CFTC fallback HTTP " + fallback.status);
       const fallbackData = await fallback.json();
       if (!fallbackData || fallbackData.length === 0) throw new Error("No COT data found for " + instrument);
       const result = parseLegacy(fallbackData);
-      return res.status(200).json(Object.assign({ instrument }, result));
+      return res.status(200).json(Object.assign({ instrument, _fallback: "legacy" }, result));
     }
 
     if (!data || data.length === 0) throw new Error("No COT data found for " + instrument);
 
     const result = parseFunc(data);
     return res.status(200).json(Object.assign({ instrument }, result));
+
 
   } catch (err) {
     clearTimeout(timeoutId);
