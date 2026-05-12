@@ -89,6 +89,28 @@ html,body{background:#2a2650;color:var(--text);font-family:'DM Mono','Courier Ne
 .trump-empty{color:var(--dim);font-size:11px;padding:14px 0;text-align:center}
 .trump-summary{color:var(--purple-lt);font-size:11px;line-height:1.6;padding:10px 14px;background:var(--bg);border:.5px solid var(--border);border-radius:10px;margin-bottom:10px}
 
+/* COT Report */
+.cot-report-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.cot-inst-card{background:#3a3670;border:.5px solid var(--border);border-radius:11px;padding:12px 14px;position:relative;overflow:hidden}
+.cot-inst-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.cot-card-green::before{background:var(--green)}
+.cot-card-red::before{background:var(--red)}
+.cot-card-amber::before{background:var(--gold)}
+.cot-card-purple::before{background:var(--purple)}
+.cot-inst-name{color:var(--cyan);font-size:12px;font-weight:500;margin-bottom:2px}
+.cot-inst-group{color:var(--dim);font-size:9px;margin-bottom:8px}
+.cot-bar-wrap{margin-bottom:6px}
+.cot-bar-track{height:6px;background:var(--border);border-radius:3px;overflow:hidden;display:flex}
+.cot-bar-long{background:var(--green);height:100%}
+.cot-bar-short{background:var(--red);height:100%}
+.cot-bar-labels{display:flex;justify-content:space-between;margin-top:3px}
+.cot-bar-lbl{font-size:9px;font-weight:500}
+.cot-signal-row{display:flex;align-items:center;justify-content:space-between;margin-top:7px;padding-top:7px;border-top:.5px solid var(--border)}
+.cot-signal-badge{font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px}
+.cot-net{font-size:9px;color:var(--dim)}
+.cot-change{font-size:9px;font-weight:500;margin-top:3px}
+.cot-report-date{color:var(--dim);font-size:9px;text-align:center;margin-top:4px}
+
 /* Upload zone */
 
 
@@ -180,6 +202,24 @@ html,body{background:#2a2650;color:var(--text);font-family:'DM Mono','Courier Ne
   <button class="btn btn-primary" id="dash-btn" onclick="fetchDashboard()">FETCH WEEKLY DASHBOARD ↗</button>
 </div>
 
+<!-- COT REPORT -->
+<div class="panel">
+  <div class="panel-title">
+    <span class="panel-name">📊 COT REPORT — Smart Money</span>
+    <span class="step-badge">CFTC Live</span>
+  </div>
+  <div class="lbl">Institutional positioning — all 6 instruments</div>
+  <div id="cot-report-status" style="color:var(--dim);font-size:11px;padding:10px 0">
+    Hit "Fetch COT Report" — pulls live CFTC data for all 6 OmniUSD instruments. Update every Friday after 3:30 PM CT.
+  </div>
+  <div class="loading-bar" id="cot-report-loading">
+    <div class="loading-lbl">FETCHING CFTC DATA</div>
+    <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+  </div>
+  <div class="err" id="cot-report-err"></div>
+  <button class="btn btn-primary" id="cot-report-btn" onclick="fetchCOTReport()">FETCH COT REPORT ↗</button>
+</div>
+
 <!-- TRUMP FEED -->
 <div class="panel">
   <div class="panel-title">
@@ -266,6 +306,132 @@ function updateClock() {
 updateClock(); setInterval(updateClock, 30000);
 
 
+
+// ── COT Report ────────────────────────────────────────────────────────────────
+const INSTRUMENTS = ["XAUUSD","XAGUSD","EURUSD","NAS100","US30","US500"];
+
+const COT_META = {
+  XAUUSD: { label:"Gold",      smartMoney:"Commercials" },
+  XAGUSD: { label:"Silver",    smartMoney:"Commercials" },
+  EURUSD: { label:"Euro/USD",  smartMoney:"Asset Managers" },
+  NAS100: { label:"Nasdaq",    smartMoney:"Asset Managers" },
+  US30:   { label:"Dow Jones", smartMoney:"Asset Managers" },
+  US500:  { label:"S&P 500",   smartMoney:"Asset Managers" },
+};
+
+const SIG_COLOR = {
+  "STRONG LONG":  "green",
+  "NET LONG":     "green",
+  "STRONG SHORT": "red",
+  "NET SHORT":    "red",
+  "NEUTRAL":      "amber",
+  "MIXED":        "amber",
+};
+
+async function fetchCOTReport() {
+  document.getElementById("cot-report-loading").classList.add("show");
+  document.getElementById("cot-report-status").style.display = "none";
+  document.getElementById("cot-report-btn").disabled = true;
+  document.getElementById("cot-report-err").classList.remove("show");
+
+  try {
+    // Fetch all 6 instruments in parallel
+    const results = await Promise.all(
+      INSTRUMENTS.map(inst =>
+        fetch(`/api/cot?instrument=${inst}`)
+          .then(r => r.json())
+          .then(d => ({ instrument: inst, ...d }))
+          .catch(e => ({ instrument: inst, error: e.message }))
+      )
+    );
+    renderCOTReport(results);
+  } catch(e) {
+    const eb = document.getElementById("cot-report-err");
+    eb.textContent = "COT fetch failed — " + e.message;
+    eb.classList.add("show");
+    document.getElementById("cot-report-status").style.display = "block";
+  } finally {
+    document.getElementById("cot-report-loading").classList.remove("show");
+    document.getElementById("cot-report-btn").disabled = false;
+    document.getElementById("cot-report-btn").textContent = "↺ REFRESH COT REPORT";
+  }
+}
+
+function renderCOTReport(results) {
+  const ic = COLOR_MAP;
+  let reportDate = "";
+  let html = '<div class="cot-report-grid">';
+
+  results.forEach(d => {
+    const inst    = d.instrument;
+    const meta    = COT_META[inst] || {};
+    const signal  = d.signal || "N/A";
+    const color   = SIG_COLOR[signal] || "purple";
+    const c       = ic[color] || ic.purple;
+    const longPct = d.comm_long  && d.comm_short ? Math.round(d.comm_long  / (d.comm_long + d.comm_short) * 100) : 50;
+    const shortPct= 100 - longPct;
+    const net     = d.comm_net !== undefined ? d.comm_net : null;
+    const netStr  = net !== null ? (net >= 0 ? `+${net.toLocaleString()}` : net.toLocaleString()) : "—";
+    const change  = d.comm_change !== null && d.comm_change !== undefined ? d.comm_change : null;
+    const changeStr = change !== null
+      ? (change >= 0 ? `▲ +${change.toLocaleString()} WoW` : `▼ ${change.toLocaleString()} WoW`)
+      : "";
+    const changeColor = change > 0 ? "var(--green)" : change < 0 ? "var(--red)" : "var(--dim)";
+
+    if (d.report_date && !reportDate) reportDate = d.report_date;
+
+    if (d.error) {
+      html += `
+        <div class="cot-inst-card cot-card-purple">
+          <div class="cot-inst-name">${inst}</div>
+          <div class="cot-inst-group">${meta.label || ""}</div>
+          <div style="color:var(--red);font-size:10px">Failed to load</div>
+        </div>`;
+      return;
+    }
+
+    html += `
+      <div class="cot-inst-card cot-card-${color}">
+        <div class="cot-inst-name">${inst}</div>
+        <div class="cot-inst-group">${meta.smartMoney} · ${meta.label}</div>
+        <div class="cot-bar-wrap">
+          <div class="cot-bar-track">
+            <div class="cot-bar-long"  style="width:${longPct}%"></div>
+            <div class="cot-bar-short" style="width:${shortPct}%"></div>
+          </div>
+          <div class="cot-bar-labels">
+            <span class="cot-bar-lbl" style="color:var(--green)">L ${longPct}%</span>
+            <span class="cot-bar-lbl" style="color:var(--red)">S ${shortPct}%</span>
+          </div>
+        </div>
+        <div class="cot-signal-row">
+          <span class="cot-signal-badge" style="background:${c.bg};color:${c.text};border:.5px solid ${c.border}">${signal}</span>
+          <span class="cot-net">Net: ${netStr}</span>
+        </div>
+        ${changeStr ? `<div class="cot-change" style="color:${changeColor}">${changeStr}</div>` : ""}
+      </div>`;
+  });
+
+  html += "</div>";
+
+  if (reportDate) {
+    html += `<div class="cot-report-date">CFTC data — Week of ${reportDate} · Source: cftc.gov</div>`;
+  }
+
+  // Spec warning summary if any
+  const warnings = results.filter(d => d.spec_warning);
+  if (warnings.length > 0) {
+    html += `<div style="margin-top:10px">`;
+    warnings.forEach(d => {
+      html += `<div style="background:rgba(255,209,102,.1);border:.5px solid rgba(255,209,102,.3);border-radius:8px;padding:8px 12px;margin-bottom:6px;color:var(--gold);font-size:10px;line-height:1.6">⚠ ${d.instrument}: ${d.spec_warning}</div>`;
+    });
+    html += `</div>`;
+  }
+
+  const cs = document.getElementById("cot-report-status");
+  cs.innerHTML = html;
+  cs.style.display = "block";
+}
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 async function fetchDashboard() {
