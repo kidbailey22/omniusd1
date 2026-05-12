@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OmniUSD — Mode Engine</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;500;600;700;800&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#0a0a0f;
+  --surface:#111118;
+  --card:#16161f;
+  --border:#1e1e2e;
+  --border2:#2a2a3e;
+  --purple:#8b5cf6;
+  --purple-lt:#a78bfa;
+  --cyan:#06b6d4;
+  --green:#10b981;
+  --red:#ef4444;
+  --gold:#f59e0b;
+  --text:#e2e8f0;
+  --muted:#94a3b8;
+  --dim:#475569;
+  --dimmer:#1e293b;
+}
+
+html,body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Space Mono', monospace;
+  min-height:100vh;
+  padding:24px 16px 60px;
+}
+
+/* Animated background grid */
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image:
+    linear-gradient(rgba(139,92,246,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(139,92,246,.03) 1px, transparent 1px);
+  background-size:40px 40px;
+  pointer-events:none;
+  z-index:0;
+}
+
+.wrap{max-width:680px;margin:0 auto;position:relative;z-index:1}
+
+/* Header */
+.header{margin-bottom:32px}
+.logo-row{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+.logo-hex{
+  width:38px;height:38px;
+  background:linear-gradient(135deg,var(--purple),var(--cyan));
+  clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;color:white;font-weight:700;
+}
+.logo-name{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:white;letter-spacing:-.02em}
+.logo-sub{font-size:10px;color:var(--dim);letter-spacing:.15em;margin-left:50px}
+.rule{height:1px;background:linear-gradient(90deg,var(--purple),var(--cyan),transparent);opacity:.3;margin-top:12px}
+
+/* Mode tabs */
+.input-tabs{display:flex;gap:8px;margin-bottom:20px}
+.tab-btn{
+  flex:1;padding:10px;background:var(--card);border:1px solid var(--border);
+  border-radius:8px;color:var(--dim);font-family:'Space Mono',monospace;
+  font-size:11px;cursor:pointer;transition:all .2s;letter-spacing:.08em;
+}
+.tab-btn.active{background:var(--dimmer);border-color:var(--purple);color:var(--purple-lt)}
+.tab-btn:hover:not(.active){border-color:var(--border2);color:var(--muted)}
+
+/* Panel */
+.panel{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:20px;margin-bottom:16px;
+}
+.panel-title{
+  font-family:'Syne',sans-serif;font-size:11px;font-weight:600;
+  color:var(--purple-lt);letter-spacing:.14em;text-transform:uppercase;margin-bottom:16px;
+  display:flex;align-items:center;gap:8px;
+}
+.panel-title::before{content:'';width:3px;height:14px;background:var(--purple);border-radius:2px}
+
+/* Form grid */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field.full{grid-column:1/-1}
+.field label{font-size:9px;color:var(--dim);letter-spacing:.12em;text-transform:uppercase}
+
+select,input[type=number],input[type=text]{
+  background:var(--bg);border:1px solid var(--border);border-radius:8px;
+  padding:10px 12px;color:var(--text);font-family:'Space Mono',monospace;
+  font-size:12px;outline:none;transition:border-color .2s;width:100%;
+  appearance:none;-webkit-appearance:none;
+}
+select:focus,input:focus{border-color:var(--purple)}
+select option{background:var(--bg)}
+
+/* Confidence slider */
+.slider-wrap{position:relative}
+.conf-slider{
+  -webkit-appearance:none;width:100%;height:4px;border-radius:2px;
+  background:var(--border2);outline:none;margin-top:8px;
+}
+.conf-slider::-webkit-slider-thumb{
+  -webkit-appearance:none;width:18px;height:18px;border-radius:50%;
+  background:var(--purple);cursor:pointer;border:2px solid var(--bg);
+  box-shadow:0 0 0 3px rgba(139,92,246,.2);
+}
+.conf-value{
+  position:absolute;right:0;top:0;font-size:13px;font-weight:700;
+  color:var(--purple-lt);
+}
+
+/* Upload zone */
+.upload-zone{
+  border:1px dashed var(--border2);border-radius:10px;padding:24px;
+  text-align:center;cursor:pointer;transition:all .2s;position:relative;
+  margin-bottom:12px;
+}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--purple);background:rgba(139,92,246,.04)}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-icon{font-size:24px;margin-bottom:8px}
+.upload-title{color:var(--muted);font-size:12px;margin-bottom:3px}
+.upload-sub{color:var(--dim);font-size:10px}
+.preview-img{width:100%;border-radius:8px;border:1px solid var(--border);margin-bottom:12px;display:none}
+
+/* COT quick select */
+.cot-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px}
+.cot-pill{
+  background:var(--bg);border:1px solid var(--border);border-radius:8px;
+  padding:8px 6px;text-align:center;cursor:pointer;transition:all .15s;
+}
+.cot-pill.selected{border-color:var(--purple);background:rgba(139,92,246,.1)}
+.cot-pill:hover:not(.selected){border-color:var(--border2)}
+.cot-inst{color:var(--cyan);font-size:10px;font-weight:700;margin-bottom:2px}
+.cot-sig{font-size:8px;font-weight:700;letter-spacing:.06em}
+.sig-sl{color:var(--red)} .sig-nl{color:#f87171}
+.sig-sl2{color:var(--green)} .sig-nl2{color:#6ee7b7}
+.sig-mix{color:var(--gold)}
+
+/* Buttons */
+.btn-analyze{
+  width:100%;background:linear-gradient(135deg,var(--purple),var(--cyan));
+  border:none;border-radius:10px;color:white;font-family:'Space Mono',monospace;
+  font-size:13px;font-weight:700;padding:14px;cursor:pointer;
+  letter-spacing:.06em;transition:all .2s;
+}
+.btn-analyze:hover{opacity:.9;transform:translateY(-1px)}
+.btn-analyze:disabled{background:var(--dimmer);color:var(--dim);cursor:default;transform:none}
+.btn-reset{
+  width:100%;background:none;border:1px solid var(--border);border-radius:10px;
+  color:var(--dim);font-family:'Space Mono',monospace;font-size:11px;
+  padding:10px;cursor:pointer;margin-top:8px;transition:all .2s;
+}
+.btn-reset:hover{border-color:var(--border2);color:var(--muted)}
+
+/* Loading */
+.loading{text-align:center;padding:32px;display:none}
+.loading.show{display:block}
+.loading-lbl{color:var(--purple-lt);font-size:10px;letter-spacing:.15em;margin-bottom:16px}
+.dots{display:flex;justify-content:center;gap:8px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--purple);animation:pulse 1.2s ease-in-out infinite}
+.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+@keyframes pulse{0%,100%{opacity:.2;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
+
+/* Error */
+.err{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:12px;color:var(--red);font-size:11px;margin-bottom:12px;display:none}
+.err.show{display:block}
+
+/* Result */
+.result{display:none;animation:slideUp .3s ease}
+.result.show{display:block}
+@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* Decision banner */
+.decision-banner{
+  border-radius:12px;padding:20px 22px;margin-bottom:14px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.decision-left{}
+.decision-mode{font-size:10px;letter-spacing:.14em;margin-bottom:5px;font-weight:700}
+.decision-title{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;line-height:1}
+.decision-sub{font-size:10px;margin-top:6px;opacity:.85;max-width:340px;line-height:1.6}
+.decision-badge{
+  font-family:'Syne',sans-serif;font-size:11px;font-weight:700;
+  padding:6px 14px;border-radius:20px;letter-spacing:.08em;white-space:nowrap;
+}
+
+/* Levels grid */
+.levels-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px}
+.level-card{
+  background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:12px 14px;position:relative;overflow:hidden;
+}
+.level-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.lc-entry::before{background:var(--cyan)}
+.lc-stop::before{background:var(--red)}
+.lc-tp1::before{background:var(--green)}
+.lc-tp2::before{background:var(--gold)}
+.lc-size::before{background:var(--purple)}
+.level-lbl{font-size:9px;color:var(--dim);letter-spacing:.12em;margin-bottom:5px}
+.level-val{font-family:'Syne',sans-serif;font-size:18px;font-weight:700}
+.level-note{font-size:9px;color:var(--dim);margin-top:3px;line-height:1.5}
+
+/* 3 layer check */
+.layers-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.layer-card{background:var(--card);border-radius:10px;padding:11px 12px;border:1px solid var(--border)}
+.layer-name{font-size:9px;color:var(--dim);letter-spacing:.12em;margin-bottom:5px}
+.layer-verdict{font-size:11px;font-weight:700;margin-bottom:4px}
+.layer-detail{font-size:9px;color:var(--muted);line-height:1.5}
+
+/* Reasoning */
+.reasoning{
+  background:var(--card);border:1px solid var(--border);
+  border-left:3px solid var(--purple);border-radius:0 10px 10px 0;
+  padding:14px 16px;margin-bottom:14px;
+}
+.reasoning-lbl{font-size:9px;color:var(--dim);letter-spacing:.12em;margin-bottom:6px}
+.reasoning-text{font-size:11px;color:var(--muted);line-height:1.8}
+
+/* Rule box */
+.rule-box{
+  background:rgba(139,92,246,.06);border:1px solid rgba(139,92,246,.2);
+  border-radius:10px;padding:12px 14px;margin-bottom:14px;
+}
+.rule-text{font-size:10px;color:var(--purple-lt);line-height:1.8}
+
+/* Sweep note */
+.sweep-note{
+  background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);
+  border-radius:10px;padding:12px 14px;margin-bottom:14px;
+}
+.sweep-text{font-size:10px;color:var(--gold);line-height:1.8}
+
+@media(max-width:480px){
+  .form-grid,.levels-grid,.layers-row,.cot-row{grid-template-columns:1fr 1fr}
+  .cot-row{grid-template-columns:repeat(3,1fr)}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- Header -->
+<div class="header">
+  <div class="logo-row">
+    <div class="logo-hex">⬡</div>
+    <div>
+      <div class="logo-name">OMNIUSD</div>
+    </div>
+  </div>
+  <div class="logo-sub">MODE ENGINE — ENTRY &amp; EXIT CALCULATOR</div>
+  <div class="rule"></div>
+</div>
+
+<!-- Input Mode Tabs -->
+<div class="input-tabs">
+  <button class="tab-btn active" id="tab-manual" onclick="switchTab('manual')">⌨ MANUAL INPUT</button>
+  <button class="tab-btn" id="tab-screenshot" onclick="switchTab('screenshot')">📷 SCREENSHOT</button>
+</div>
+
+<!-- MANUAL INPUT PANEL -->
+<div class="panel" id="manual-panel">
+  <div class="panel-title">Trade Parameters</div>
+
+  <div class="form-grid">
+    <div class="field">
+      <label>Instrument</label>
+      <select id="m-instrument">
+        <option value="">Select...</option>
+        <option>XAUUSD</option>
+        <option>XAGUSD</option>
+        <option>EURUSD</option>
+        <option>NAS100</option>
+        <option>US30</option>
+        <option>US500</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>OmniUSD Direction</label>
+      <select id="m-direction">
+        <option value="">Select...</option>
+        <option>LONG</option>
+        <option>SHORT</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>OmniUSD Grade</label>
+      <select id="m-grade">
+        <option value="">Select...</option>
+        <option>A+</option>
+        <option>A</option>
+        <option>B</option>
+        <option>C</option>
+        <option>PASS</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>News Condition</label>
+      <select id="m-news">
+        <option value="">Select...</option>
+        <option>CLEAR</option>
+        <option>CAUTION</option>
+        <option value="HIGH NOISE">HIGH NOISE</option>
+        <option>PASS</option>
+      </select>
+    </div>
+    <div class="field full">
+      <label>Confidence Score: <span id="conf-display" style="color:var(--purple-lt)">50%</span></label>
+      <div class="slider-wrap">
+        <input type="range" class="conf-slider" id="m-confidence" min="0" max="100" value="50"
+          oninput="document.getElementById('conf-display').textContent=this.value+'%'">
+      </div>
+    </div>
+    <div class="field">
+      <label>Entry Price</label>
+      <input type="number" id="m-entry" placeholder="e.g. 4693.2" step="0.1">
+    </div>
+    <div class="field">
+      <label>Current Price</label>
+      <input type="number" id="m-current" placeholder="e.g. 4680.0" step="0.1">
+    </div>
+  </div>
+
+  <!-- COT Quick Select -->
+  <div class="panel-title" style="margin-bottom:10px">COT Signal — Select Instrument</div>
+  <div class="cot-row" id="manual-cot-row">
+    <div class="cot-pill" onclick="selectCOT(this,'XAUUSD','STRONG SHORT','sl')" data-inst="XAUUSD" data-sig="STRONG SHORT">
+      <div class="cot-inst">XAUUSD</div>
+      <div class="cot-sig sig-sl">STRONG SHORT</div>
+    </div>
+    <div class="cot-pill" onclick="selectCOT(this,'XAGUSD','STRONG SHORT','sl')" data-inst="XAGUSD" data-sig="STRONG SHORT">
+      <div class="cot-inst">XAGUSD</div>
+      <div class="cot-sig sig-sl">STRONG SHORT</div>
+    </div>
+    <div class="cot-pill" onclick="selectCOT(this,'EURUSD','STRONG LONG','sl2')" data-inst="EURUSD" data-sig="STRONG LONG">
+      <div class="cot-inst">EURUSD</div>
+      <div class="cot-sig sig-sl2">STRONG LONG</div>
+    </div>
+    <div class="cot-pill" onclick="selectCOT(this,'NAS100','STRONG LONG','sl2')" data-inst="NAS100" data-sig="STRONG LONG">
+      <div class="cot-inst">NAS100</div>
+      <div class="cot-sig sig-sl2">STRONG LONG</div>
+    </div>
+    <div class="cot-pill" onclick="selectCOT(this,'US30','MIXED','mix')" data-inst="US30" data-sig="MIXED">
+      <div class="cot-inst">US30</div>
+      <div class="cot-sig sig-mix">MIXED</div>
+    </div>
+    <div class="cot-pill" onclick="selectCOT(this,'US500','STRONG LONG','sl2')" data-inst="US500" data-sig="STRONG LONG">
+      <div class="cot-inst">US500</div>
+      <div class="cot-sig sig-sl2">STRONG LONG</div>
+    </div>
+  </div>
+</div>
+
+<!-- SCREENSHOT PANEL -->
+<div class="panel" id="screenshot-panel" style="display:none">
+  <div class="panel-title">Upload OmniUSD Analysis</div>
+  <div class="upload-zone" id="upload-zone">
+    <input type="file" id="file-input" accept="image/*" onchange="handleFile(event)">
+    <div class="upload-icon" id="upload-icon">📷</div>
+    <div class="upload-title" id="upload-title">Drop screenshot or tap to upload</div>
+    <div class="upload-sub">OmniUSD grade card or analysis screen</div>
+  </div>
+  <img id="preview-img" class="preview-img" alt="Preview">
+
+  <!-- COT for screenshot mode -->
+  <div class="panel-title" style="margin-bottom:10px">COT Signal — Select Instrument</div>
+  <div class="cot-row" id="screenshot-cot-row">
+    <div class="cot-pill" onclick="selectCOT(this,'XAUUSD','STRONG SHORT','sl')" data-inst="XAUUSD" data-sig="STRONG SHORT">
+      <div class="cot-inst">XAUUSD</div>
+      <div class="cot-sig sig-sl">STRONG SHORT</div>
+    </div>
+    <div class="cot-pill" onclick="selectCOT(this,'XAGUSD','STRONG SHORT','sl')" data-inst="XAGUSD" data-sig="STRONG SHORT">
+      <div class="cot-inst">XAGUSD</div>
+      <div class="cot-sig sig-sl">STRONG SHORT</div>
+    </div>
+    <div class="cot-pill" onclick="selectCOT(this,'EURUSD','STRONG LONG','sl2')" data-inst="EURUSD" data-sig="STRONG LONG">
+      <div class="cot-inst">EURUSD</div>
+      <div class="cot-sig sig-sl2">STRONG LONG</div>
+    </div>
+    <div class="cot-pill" onclick="selectCOT(this,'NAS100','STRONG LONG','sl2')" data-inst="NAS100" data-sig="STRONG LONG">
+      <div class="cot-inst">NAS100</div>
+      <div class="cot-sig sig-sl2">STRONG LONG</div>
+    </div>
+    <div class="cot-pill" onclick="selectCOT(this,'US30','MIXED','mix')" data-inst="US30" data-sig="MIXED">
+      <div class="cot-inst">US30</div>
+      <div class="cot-sig sig-mix">MIXED</div>
+    </div>
+    <div class="cot-pill" onclick="selectCOT(this,'US500','STRONG LONG','sl2')" data-inst="US500" data-sig="STRONG LONG">
+      <div class="cot-inst">US500</div>
+      <div class="cot-sig sig-sl2">STRONG LONG</div>
+    </div>
+  </div>
+
+  <div class="field" style="margin-bottom:12px">
+    <label>News Condition</label>
+    <select id="s-news">
+      <option value="">Select...</option>
+      <option>CLEAR</option>
+      <option>CAUTION</option>
+      <option value="HIGH NOISE">HIGH NOISE</option>
+      <option>PASS</option>
+    </select>
+  </div>
+</div>
+
+<div class="err" id="err-box"></div>
+<button class="btn-analyze" id="analyze-btn" onclick="analyze()" disabled>CALCULATE MODE ↗</button>
+
+<!-- Loading -->
+<div class="loading" id="loading">
+  <div class="loading-lbl">CALCULATING</div>
+  <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+</div>
+
+<!-- Result -->
+<div class="result" id="result">
+
+  <div class="decision-banner" id="decision-banner">
+    <div class="decision-left">
+      <div class="decision-mode" id="res-mode"></div>
+      <div class="decision-title" id="res-decision"></div>
+      <div class="decision-sub" id="res-sub"></div>
+    </div>
+    <div class="decision-badge" id="res-badge"></div>
+  </div>
+
+  <!-- Key Levels -->
+  <div class="levels-grid" id="levels-grid"></div>
+
+  <!-- 3 Layer Check -->
+  <div class="layers-row" id="layers-row"></div>
+
+  <!-- Sweep Note -->
+  <div class="sweep-note" id="sweep-note" style="display:none">
+    <div class="sweep-text" id="sweep-text"></div>
+  </div>
+
+  <!-- Reasoning -->
+  <div class="reasoning">
+    <div class="reasoning-lbl">FULL REASONING</div>
+    <div class="reasoning-text" id="res-reasoning"></div>
+  </div>
+
+  <!-- Exit Rule -->
+  <div class="rule-box">
+    <div class="rule-text" id="res-rule"></div>
+  </div>
+
+  <button class="btn-reset" onclick="reset()">↺ NEW CALCULATION</button>
+</div>
+
+</div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────────────
+let activeTab = "manual";
+let selectedCOTInst = "";
+let selectedCOTSig  = "";
+let imageBase64 = "";
+let imageType   = "";
+
+// ── COT Data (May 5, 2026) ────────────────────────────────────────────────────
+const COT_DATA = {
+  XAUUSD: { signal:"STRONG SHORT", net:"-198,935", pct:"18% Long / 82% Short", group:"Commercials", note:"Commercials are hedgers — SHORT means they're insuring gold inventory, not predicting a crash. Track Large Specs for direction." },
+  XAGUSD: { signal:"STRONG SHORT", net:"-40,535",  pct:"28% Long / 72% Short", group:"Commercials", note:"Same as Gold — Commercials are hedging physical silver inventory." },
+  EURUSD: { signal:"STRONG LONG",  net:"+285,613", pct:"74% Long / 26% Short", group:"Asset Managers", note:"Asset Managers making directional bets — STRONG LONG is a real bullish signal." },
+  NAS100: { signal:"STRONG LONG",  net:"+85,132",  pct:"78% Long / 22% Short", group:"Asset Managers", note:"Institutions added +6,434 contracts this week. Bullish conviction increasing." },
+  US30:   { signal:"MIXED",        net:"+2,638",   pct:"55% Long / 45% Short", group:"Asset Managers", note:"Near neutral — no clear institutional directional edge." },
+  US500:  { signal:"STRONG LONG",  net:"+998,208", pct:"86% Long / 14% Short", group:"Asset Managers", note:"Strongest institutional long conviction of all 6 instruments." },
+};
+
+// ── Liquidity buffers per instrument ─────────────────────────────────────────
+const BUFFERS = {
+  XAUUSD:12, XAGUSD:12, NAS100:20, US30:15, US500:8, EURUSD:10
+};
+
+// ── System Prompt ─────────────────────────────────────────────────────────────
+const SYSTEM = `You are the OmniUSD Mode Engine — a precision trade decision calculator for a BRC (Break-Retest-Continuation) trading system focused on the NY session (8:30-10:30 AM CT).
+
+OMNIUSD x COT TRADING MANTRA (LOCKED):
+MODE 1: Confidence 60%+ AND COT agrees with direction → Execute. Full size.
+MODE 1 SIZE DOWN: Confidence 60%+ AND COT agrees BUT news = CAUTION → Execute. Half size.
+MODE 2A: Low confidence (25-35%) + COT contradicts + OmniUSD LONG → Fade it. Go SHORT.
+MODE 2B: Low confidence (25-35%) + COT contradicts + OmniUSD SHORT → Fade it. Go LONG.
+MODE 2C: Low confidence (25-35%) + COT NEUTRAL → No trade. No edge.
+PASS: HIGH NOISE news day OR grade PASS/SKIP OR confidence below 25%.
+
+LIQUIDITY SWEEP RULE:
+Institutions sweep obvious levels before reversing every single session (especially 8:30-9:00 AM CT).
+For Mode 2: entry is AFTER the sweep completes — wait for first 30M candle close back above (for long) or below (for short) the swept level.
+TP1 must have a liquidity buffer applied BEFORE the obvious level (not AT it):
+- XAUUSD/XAGUSD: 12 points buffer
+- NAS100: 20 points buffer  
+- US30: 15 points buffer
+- US500: 8 points buffer
+- EURUSD: 10 pips buffer
+
+EXIT RULE: Do NOT exit early. A reversal is ONLY confirmed when a 30M candle CLOSES back above entry (for shorts) or below entry (for longs). Green candles on a short are noise. Red candles on a long are noise.
+
+Given the trade parameters, calculate the exact mode and levels.
+If entry price is provided, calculate exact TP1, TP2, stop with buffer applied.
+If no entry price — give the entry trigger condition instead.
+
+Respond ONLY with valid JSON, no markdown, no backticks:
+{
+  "mode": "Mode 1 | Mode 1 (Size Down) | Mode 2A | Mode 2B | Mode 2C | PASS",
+  "decision": "EXECUTE LONG | EXECUTE SHORT | FADE — GO LONG | FADE — GO SHORT | PASS — NO TRADE",
+  "sizing": "Full size | Half size | Quarter size | No trade",
+  "entry_trigger": "exact 30M close condition — e.g. 30M close below 4693.2",
+  "entry_price": "price or N/A if not calculable",
+  "stop": "exact price with brief reason",
+  "tp1": "exact price with buffer applied",
+  "tp2": "exact price — the obvious level where sweep will occur",
+  "rr": "X:1",
+  "layers": {
+    "cot": {"verdict":"Agrees|Contradicts|Neutral","detail":"one line","color":"green|red|amber"},
+    "news": {"verdict":"Clear|Caution|High Noise|Pass","detail":"one line","color":"green|amber|red"},
+    "grade": {"verdict":"Strong|Moderate|Weak|Pass","detail":"one line","color":"green|amber|red|purple"}
+  },
+  "sweep_warning": "one sentence about the liquidity level to watch — where institutions will sweep before the real move. Or null if not applicable.",
+  "reasoning": "2-3 sentences applying the exact mantra. Be specific about prices and levels.",
+  "exit_rule": "The one rule for this specific trade — when to stay in and when to get out. Reference the entry price.",
+  "key_warning": "one sentence — most critical thing for this specific setup"
+}`;
+
+// ── Tab switching ─────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  activeTab = tab;
+  document.getElementById("tab-manual").classList.toggle("active", tab==="manual");
+  document.getElementById("tab-screenshot").classList.toggle("active", tab==="screenshot");
+  document.getElementById("manual-panel").style.display = tab==="manual" ? "block" : "none";
+  document.getElementById("screenshot-panel").style.display = tab==="screenshot" ? "block" : "none";
+  checkReady();
+}
+
+// ── COT selection ─────────────────────────────────────────────────────────────
+function selectCOT(el, inst, sig, cls) {
+  document.querySelectorAll(".cot-pill").forEach(p => p.classList.remove("selected"));
+  el.classList.add("selected");
+  selectedCOTInst = inst;
+  selectedCOTSig  = sig;
+  // Auto-select instrument in manual mode
+  const mInst = document.getElementById("m-instrument");
+  if (mInst && activeTab === "manual") mInst.value = inst;
+  checkReady();
+}
+
+// ── File upload ───────────────────────────────────────────────────────────────
+function handleFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  imageType = file.type || "image/png";
+  const reader = new FileReader();
+  reader.onload = () => {
+    imageBase64 = reader.result.split(",")[1];
+    const preview = document.getElementById("preview-img");
+    preview.src = reader.result;
+    preview.style.display = "block";
+    document.getElementById("upload-title").textContent = file.name;
+    document.getElementById("upload-icon").textContent = "✅";
+    checkReady();
+  };
+  reader.readAsDataURL(file);
+}
+
+const zone = document.getElementById("upload-zone");
+zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag"); });
+zone.addEventListener("dragleave", () => zone.classList.remove("drag"));
+zone.addEventListener("drop", e => {
+  e.preventDefault(); zone.classList.remove("drag");
+  const file = e.dataTransfer.files[0];
+  if (file) { document.getElementById("file-input").files = e.dataTransfer.files; handleFile({ target: { files: [file] } }); }
+});
+
+// ── Check ready ───────────────────────────────────────────────────────────────
+function checkReady() {
+  let ready = false;
+  if (activeTab === "manual") {
+    const inst = document.getElementById("m-instrument").value;
+    const dir  = document.getElementById("m-direction").value;
+    const news = document.getElementById("m-news").value;
+    ready = !!(inst && dir && news && selectedCOTInst);
+  } else {
+    const news = document.getElementById("s-news").value;
+    ready = !!(imageBase64 && selectedCOTInst && news);
+  }
+  document.getElementById("analyze-btn").disabled = !ready;
+}
+
+document.querySelectorAll("select, input").forEach(el => el.addEventListener("change", checkReady));
+
+// ── Analyze ───────────────────────────────────────────────────────────────────
+async function analyze() {
+  document.getElementById("loading").classList.add("show");
+  document.getElementById("analyze-btn").disabled = true;
+  document.getElementById("err-box").classList.remove("show");
+  document.getElementById("result").classList.remove("show");
+
+  const cot = COT_DATA[selectedCOTInst] || {};
+
+  try {
+    let userContent;
+
+    if (activeTab === "manual") {
+      const inst  = document.getElementById("m-instrument").value;
+      const dir   = document.getElementById("m-direction").value;
+      const grade = document.getElementById("m-grade").value;
+      const conf  = document.getElementById("m-confidence").value;
+      const news  = document.getElementById("m-news").value;
+      const entry = document.getElementById("m-entry").value;
+      const curr  = document.getElementById("m-current").value;
+      const buf   = BUFFERS[inst] || 12;
+
+      userContent = `Calculate the mode and exact levels for this trade:
+
+INSTRUMENT: ${inst}
+OMNIUSD DIRECTION: ${dir}
+OMNIUSD GRADE: ${grade}
+CONFIDENCE SCORE: ${conf}%
+NEWS CONDITION: ${news}
+ENTRY PRICE: ${entry || "not provided — give entry trigger condition"}
+CURRENT PRICE: ${curr || "not provided"}
+
+COT DATA (Week of May 5, 2026):
+- Instrument: ${selectedCOTInst}
+- Signal: ${cot.signal}
+- Net Position: ${cot.net}
+- Positioning: ${cot.pct}
+- Key Group: ${cot.group}
+- Note: ${cot.note}
+
+LIQUIDITY BUFFER FOR ${inst}: ${buf} points
+Apply this buffer to TP1 (subtract for SHORT, add for LONG).`;
+
+    } else {
+      const news = document.getElementById("s-news").value;
+      const buf  = BUFFERS[selectedCOTInst] || 12;
+
+      userContent = [
+        { type: "image", source: { type: "base64", media_type: imageType, data: imageBase64 } },
+        { type: "text", text: `Read this OmniUSD analysis screenshot carefully. Extract: grade, direction, confidence score, entry price, stop, TP1, instrument.
+
+Then calculate the correct mode and exact adjusted levels using:
+
+COT DATA (Week of May 5, 2026):
+- Instrument: ${selectedCOTInst}
+- Signal: ${cot.signal}
+- Net Position: ${cot.net}
+- Positioning: ${cot.pct}
+- Key Group: ${cot.group}
+- Note: ${cot.note}
+
+NEWS CONDITION: ${news}
+LIQUIDITY BUFFER: ${buf} points — apply to TP1` }
+      ];
+    }
+
+    const response = await fetch("/api/decode", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        mode: "analyze",
+        messages: [{ role: "user", content: userContent }],
+      }),
+    });
+
+    const data = await response.json();
+    if (!data.ok || !data.result) throw new Error(data.error || "Bad response");
+    renderResult(data.result);
+
+  } catch(e) {
+    const eb = document.getElementById("err-box");
+    eb.textContent = "Calculation failed — " + e.message;
+    eb.classList.add("show");
+  } finally {
+    document.getElementById("loading").classList.remove("show");
+    document.getElementById("analyze-btn").disabled = false;
+  }
+}
+
+// ── Render result ─────────────────────────────────────────────────────────────
+const DECISION_STYLES = {
+  "EXECUTE LONG":       { bg:"rgba(16,185,129,.1)",  border:"rgba(16,185,129,.4)",  modeC:"#10b981", titleC:"#10b981", badgeBg:"rgba(16,185,129,.2)", badgeC:"#10b981" },
+  "EXECUTE SHORT":      { bg:"rgba(239,68,68,.1)",   border:"rgba(239,68,68,.4)",   modeC:"#ef4444", titleC:"#ef4444", badgeBg:"rgba(239,68,68,.2)", badgeC:"#ef4444" },
+  "FADE — GO LONG":     { bg:"rgba(139,92,246,.1)",  border:"rgba(139,92,246,.4)",  modeC:"#a78bfa", titleC:"#a78bfa", badgeBg:"rgba(139,92,246,.2)", badgeC:"#a78bfa" },
+  "FADE — GO SHORT":    { bg:"rgba(139,92,246,.1)",  border:"rgba(139,92,246,.4)",  modeC:"#a78bfa", titleC:"#a78bfa", badgeBg:"rgba(139,92,246,.2)", badgeC:"#a78bfa" },
+  "PASS — NO TRADE":    { bg:"rgba(245,158,11,.08)", border:"rgba(245,158,11,.3)",  modeC:"#f59e0b", titleC:"#f59e0b", badgeBg:"rgba(245,158,11,.2)", badgeC:"#f59e0b" },
+};
+
+const LAYER_COLORS = {
+  green:  { bg:"rgba(16,185,129,.12)",  border:"rgba(16,185,129,.3)",  text:"#10b981" },
+  red:    { bg:"rgba(239,68,68,.12)",   border:"rgba(239,68,68,.3)",   text:"#ef4444" },
+  amber:  { bg:"rgba(245,158,11,.12)",  border:"rgba(245,158,11,.3)",  text:"#f59e0b" },
+  purple: { bg:"rgba(139,92,246,.12)",  border:"rgba(139,92,246,.3)",  text:"#a78bfa" },
+};
+
+function renderResult(r) {
+  const ds = DECISION_STYLES[r.decision] || DECISION_STYLES["PASS — NO TRADE"];
+
+  // Banner
+  const banner = document.getElementById("decision-banner");
+  banner.style.background = ds.bg;
+  banner.style.border = `1px solid ${ds.border}`;
+  document.getElementById("res-mode").textContent = r.mode;
+  document.getElementById("res-mode").style.color = ds.modeC;
+  document.getElementById("res-decision").textContent = r.decision;
+  document.getElementById("res-decision").style.color = ds.titleC;
+  document.getElementById("res-sub").textContent = r.key_warning || "";
+  document.getElementById("res-sub").style.color = ds.modeC + "cc";
+  const badge = document.getElementById("res-badge");
+  badge.textContent = r.sizing || "—";
+  badge.style.background = ds.badgeBg;
+  badge.style.color = ds.badgeC;
+
+  // Levels
+  const levelsGrid = document.getElementById("levels-grid");
+  const isPass = r.decision === "PASS — NO TRADE";
+  if (isPass) {
+    levelsGrid.innerHTML = `<div class="level-card lc-size" style="grid-column:1/-1;text-align:center">
+      <div class="level-lbl">SESSION STATUS</div>
+      <div class="level-val" style="color:var(--gold);font-size:15px">${r.reasoning || "No trade conditions met."}</div>
+    </div>`;
+  } else {
+    const levels = [
+      { cls:"lc-entry", lbl:"ENTRY TRIGGER",  val: r.entry_price !== "N/A" ? r.entry_price : "—",  note: r.entry_trigger },
+      { cls:"lc-stop",  lbl:"STOP LOSS",       val: r.stop?.split(" ")[0] || "—",                   note: r.stop },
+      { cls:"lc-tp1",   lbl:"TP1 (w/ buffer)", val: r.tp1 || "—",                                    note: "Exit BEFORE the sweep zone" },
+      { cls:"lc-tp2",   lbl:"TP2 (sweep zone)",val: r.tp2 || "—",                                    note: "Obvious level — runners only" },
+    ];
+    levelsGrid.innerHTML = levels.map(l => `
+      <div class="level-card ${l.cls}">
+        <div class="level-lbl">${l.lbl}</div>
+        <div class="level-val" style="font-size:${l.val.length > 8 ? '13px' : '18px'}">${l.val}</div>
+        ${l.note ? `<div class="level-note">${l.note}</div>` : ""}
+      </div>`).join("");
+  }
+
+  // Layers
+  const layersRow = document.getElementById("layers-row");
+  const layerDefs = [
+    { name:"COT",   data: r.layers?.cot },
+    { name:"NEWS",  data: r.layers?.news },
+    { name:"GRADE", data: r.layers?.grade },
+  ];
+  layersRow.innerHTML = layerDefs.map(l => {
+    const c = LAYER_COLORS[l.data?.color] || LAYER_COLORS.purple;
+    return `<div class="layer-card" style="border-color:${c.border}">
+      <div class="layer-name">${l.name}</div>
+      <div class="layer-verdict" style="color:${c.text}">${l.data?.verdict || "—"}</div>
+      <div class="layer-detail">${l.data?.detail || "—"}</div>
+    </div>`;
+  }).join("");
+
+  // Sweep note
+  const sn = document.getElementById("sweep-note");
+  const st = document.getElementById("sweep-text");
+  if (r.sweep_warning) {
+    st.textContent = "⚡ SWEEP WATCH: " + r.sweep_warning;
+    sn.style.display = "block";
+  } else {
+    sn.style.display = "none";
+  }
+
+  // Reasoning
+  document.getElementById("res-reasoning").textContent = r.reasoning || "—";
+
+  // Exit rule
+  document.getElementById("res-rule").innerHTML = `<strong style="color:var(--purple-lt)">EXIT RULE:</strong> ${r.exit_rule || "—"}`;
+
+  document.getElementById("result").classList.add("show");
+  document.getElementById("result").scrollIntoView({ behavior:"smooth", block:"start" });
+}
+
+// ── Reset ─────────────────────────────────────────────────────────────────────
+function reset() {
+  document.getElementById("result").classList.remove("show");
+  document.getElementById("err-box").classList.remove("show");
+  document.getElementById("preview-img").style.display = "none";
+  document.getElementById("upload-title").textContent = "Drop screenshot or tap to upload";
+  document.getElementById("upload-icon").textContent = "📷";
+  document.getElementById("file-input").value = "";
+  document.querySelectorAll(".cot-pill").forEach(p => p.classList.remove("selected"));
+  imageBase64 = ""; imageType = ""; selectedCOTInst = ""; selectedCOTSig = "";
+  document.getElementById("analyze-btn").disabled = true;
+  window.scrollTo({ top:0, behavior:"smooth" });
+}
+</script>
+</body>
+</html>
