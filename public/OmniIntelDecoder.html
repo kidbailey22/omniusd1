@@ -50,6 +50,25 @@ html,body{background:var(--bg);color:var(--text);font-family:'DM Mono','Courier 
 .btn-green:hover{opacity:.9}
 .btn-green:disabled{background:var(--dimmer);color:var(--dim);cursor:default}
 
+/* Dashboard */
+.dash-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.dash-card{background:var(--bg);border:.5px solid var(--border);border-radius:10px;padding:11px 13px}
+.dash-lbl{color:var(--dimmer);font-size:9px;letter-spacing:.12em;margin-bottom:4px}
+.dash-val{font-size:15px;font-weight:500;margin-bottom:2px}
+.dash-note{color:var(--dim);font-size:9px;line-height:1.5}
+.dash-dir-up{color:var(--green)} .dash-dir-down{color:var(--red)} .dash-dir-flat{color:var(--gold)}
+.cal-table{width:100%;border-collapse:collapse;font-size:10px;margin-bottom:8px}
+.cal-table th{color:var(--dimmer);font-size:9px;letter-spacing:.1em;padding:5px 8px;border-bottom:.5px solid var(--border);text-align:left;font-weight:500}
+.cal-table td{padding:6px 8px;border-bottom:.5px solid var(--border2);color:var(--text);vertical-align:middle}
+.cal-table tr:last-child td{border-bottom:none}
+.cal-impact{display:inline-block;font-size:9px;font-weight:600;padding:1px 7px;border-radius:20px}
+.cal-high{background:rgba(239,71,111,.15);color:var(--red)}
+.cal-medium{background:rgba(255,209,102,.15);color:var(--gold)}
+.cal-low{background:rgba(155,126,200,.15);color:var(--purple-lt)}
+.fedwatch-bar{display:flex;height:8px;border-radius:4px;overflow:hidden;margin:6px 0 4px}
+.fw-hold{background:var(--gold)} .fw-cut{background:var(--green)} .fw-hike{background:var(--red)}
+.week-bias{background:var(--bg);border:.5px solid var(--border);border-left:2px solid var(--cyan);border-radius:0 10px 10px 0;padding:10px 14px;margin-bottom:10px}
+
 /* News fetch */
 .news-status{background:var(--bg);border:.5px solid var(--border);border-radius:10px;padding:14px;min-height:80px;font-size:11px;color:var(--dim);line-height:1.7;margin-bottom:12px}
 .news-status.active{color:var(--text)}
@@ -149,6 +168,24 @@ html,body{background:var(--bg);color:var(--text);font-family:'DM Mono','Courier 
   </div>
 </div>
 <div class="rule"></div>
+
+<!-- DASHBOARD -->
+<div class="panel" id="dashboard-panel">
+  <div class="panel-title">
+    <span class="panel-name">WEEKLY MACRO DASHBOARD</span>
+    <span class="step-badge">Auto-fetch</span>
+  </div>
+  <div class="lbl">DXY · 10Y Yield · FedWatch · Economic Calendar</div>
+  <div id="dashboard-status" style="color:var(--dim);font-size:11px;padding:14px 0">
+    Hit "Fetch Dashboard" to load this week's macro environment — DXY, 10Y yield, FedWatch probabilities, and the full economic calendar.
+  </div>
+  <div class="loading-bar" id="dash-loading">
+    <div class="loading-lbl">FETCHING MACRO DASHBOARD</div>
+    <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+  </div>
+  <div class="err" id="dash-err"></div>
+  <button class="btn btn-primary" id="dash-btn" onclick="fetchDashboard()">FETCH WEEKLY DASHBOARD ↗</button>
+</div>
 
 <!-- STEP 1: News Intel -->
 <div class="panel">
@@ -381,6 +418,122 @@ zone.addEventListener("drop", e => {
   handleFile(fakeEvt);
 });
 
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+async function fetchDashboard() {
+  document.getElementById("dash-loading").classList.add("show");
+  document.getElementById("dashboard-status").style.display = "none";
+  document.getElementById("dash-btn").disabled = true;
+  document.getElementById("dash-err").classList.remove("show");
+
+  const today = new Date().toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric",timeZone:"America/Chicago"});
+
+  try {
+    const response = await fetch("/api/decode", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mode: "dashboard", date: today }),
+    });
+    const data = await response.json();
+    if (data.debug) throw new Error("DEBUG: " + JSON.stringify(data));
+    if (!data.ok || !data.result) throw new Error("Bad response: " + JSON.stringify(data).slice(0,200));
+    renderDashboard(data.result);
+  } catch(e) {
+    const eb = document.getElementById("dash-err");
+    eb.textContent = "Dashboard fetch failed — " + e.message;
+    eb.classList.add("show");
+    document.getElementById("dashboard-status").style.display = "block";
+  } finally {
+    document.getElementById("dash-loading").classList.remove("show");
+    document.getElementById("dash-btn").disabled = false;
+    document.getElementById("dash-btn").textContent = "↺ REFRESH DASHBOARD";
+  }
+}
+
+function renderDashboard(d) {
+  const dirIcon = { up:"↑", down:"↓", flat:"→" };
+  const dirClass = { up:"dash-dir-up", down:"dash-dir-down", flat:"dash-dir-flat" };
+
+  // DXY direction logic — down = good for Gold/EURUSD
+  const dxyDir = d.dxy?.direction || "flat";
+  const dxyGood = dxyDir === "down";
+
+  // 10Y direction logic — down = good for Gold/equities
+  const yldDir = d.yield_10y?.direction || "flat";
+  const yldGood = yldDir === "down";
+
+  // FedWatch
+  const holdPct  = parseFloat(d.fedwatch?.hold_pct  || 0);
+  const cutPct   = parseFloat(d.fedwatch?.cut_pct   || 0);
+  const hikePct  = parseFloat(d.fedwatch?.hike_pct  || 0);
+
+  let html = `
+    <!-- Metrics row -->
+    <div class="dash-grid">
+      <div class="dash-card">
+        <div class="dash-lbl">DXY — US DOLLAR INDEX</div>
+        <div class="dash-val ${dirClass[dxyDir]}">${d.dxy?.value || "—"} ${dirIcon[dxyDir] || "→"}</div>
+        <div class="dash-note">${d.dxy?.note || "—"}</div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-lbl">10Y TREASURY YIELD</div>
+        <div class="dash-val ${dirClass[yldDir]}">${d.yield_10y?.value || "—"} ${dirIcon[yldDir] || "→"}</div>
+        <div class="dash-note">${d.yield_10y?.note || "—"}</div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-lbl">FEDWATCH — ${d.fedwatch?.next_meeting || "next meeting"}</div>
+        <div class="fedwatch-bar">
+          <div class="fw-hold" style="width:${holdPct}%"></div>
+          <div class="fw-cut"  style="width:${cutPct}%"></div>
+          <div class="fw-hike" style="width:${hikePct}%"></div>
+        </div>
+        <div style="display:flex;gap:10px;font-size:9px">
+          <span style="color:var(--gold)">HOLD ${holdPct}%</span>
+          <span style="color:var(--green)">CUT ${cutPct}%</span>
+          <span style="color:var(--red)">HIKE ${hikePct}%</span>
+        </div>
+        <div class="dash-note" style="margin-top:3px">${d.fedwatch?.note || "—"}</div>
+      </div>
+    </div>
+
+    <!-- Week bias -->
+    <div class="week-bias">
+      <div style="color:var(--dimmer);font-size:9px;letter-spacing:.12em;margin-bottom:4px">WEEKLY BIAS</div>
+      <div style="color:var(--cyan);font-size:11px;line-height:1.6">${d.week_bias || "—"}</div>
+      ${d.key_risk ? `<div style="color:var(--gold);font-size:10px;margin-top:5px">⚠ KEY RISK: ${d.key_risk}</div>` : ""}
+    </div>
+
+    <!-- Economic Calendar -->
+    <div class="lbl">ECONOMIC CALENDAR — ${d.week_of || "this week"}</div>
+    <table class="cal-table">
+      <thead>
+        <tr>
+          <th>DAY</th><th>TIME CT</th><th>EVENT</th><th>IMPACT</th><th>FORECAST</th><th>INSTRUMENTS</th>
+        </tr>
+      </thead>
+      <tbody>`;
+
+  (d.calendar || []).forEach(ev => {
+    const impactClass = ev.impact === "HIGH" ? "cal-high" : ev.impact === "MEDIUM" ? "cal-medium" : "cal-low";
+    html += `
+        <tr>
+          <td style="color:var(--purple-lt);font-weight:500">${ev.day || "—"}</td>
+          <td style="color:var(--gold)">${ev.time_ct || "—"}</td>
+          <td style="color:var(--text)">${ev.event || "—"}</td>
+          <td><span class="cal-impact ${impactClass}">${ev.impact || "—"}</span></td>
+          <td style="color:var(--dim)">${ev.forecast || "—"}</td>
+          <td style="color:var(--cyan);font-size:9px">${(ev.instruments || []).join(", ")}</td>
+        </tr>`;
+  });
+
+  html += `
+      </tbody>
+    </table>`;
+
+  const ds = document.getElementById("dashboard-status");
+  ds.innerHTML = html;
+  ds.style.display = "block";
+}
+
 // ── Step 1: Fetch News ────────────────────────────────────────────────────────
 async function fetchNews() {
   document.getElementById("news-loading").classList.add("show");
@@ -478,9 +631,12 @@ function renderNews(d) {
   if (d.news_items?.length) {
     d.news_items.forEach(item => {
       const ic = COLOR_MAP[item.color] || COLOR_MAP.purple;
+      const dateHtml = item.date
+        ? `<span style="color:var(--dimmer);font-size:9px;margin-left:6px">${item.date}</span>`
+        : "";
       const urlHtml = item.url
-        ? `<a href="${item.url}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:4px;color:var(--dim);font-size:9px;text-decoration:none;margin-left:8px;border:.5px solid var(--border);border-radius:4px;padding:1px 6px;transition:all .15s" onmouseover="this.style.color='var(--purple-lt)';this.style.borderColor='var(--purple)'" onmouseout="this.style.color='var(--dim)';this.style.borderColor='var(--border)'">↗ SOURCE</a>`
-        : `<span style="color:var(--dimmer);font-size:9px;margin-left:8px;font-style:italic">no source</span>`;
+        ? `<a href="${item.url}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:4px;color:var(--dim);font-size:9px;text-decoration:none;margin-left:8px;border:.5px solid var(--border);border-radius:4px;padding:1px 6px;transition:all .15s" onmouseover="this.style.color='var(--purple-lt)';this.style.borderColor='var(--purple)'" onmouseout="this.style.color='var(--dim)';this.style.borderColor='var(--border)'">↗ SOURCE${item.date ? ' · ' + item.date : ''}</a>`
+        : `<span style="color:var(--red);font-size:9px;margin-left:8px;font-style:italic">⚠ no verified source</span>`;
       html += `
         <div class="news-item">
           <div class="news-source">${item.source} · ${(item.instruments_affected||[]).join(", ")}</div>
