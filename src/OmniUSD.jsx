@@ -364,7 +364,7 @@ CRITICAL LEVELS — all four must stay within the SAME operational framework (no
 CRITICAL RULE — every operational sentence must include exact price or zone.
 
 Respond ONLY with a JSON object, no markdown, no backticks:
-{"charts_valid":true,"instrument_valid":true,"instrument_detected":"string","chart_validation":{"daily":{"expected":"Daily","detected":"string","signals":[],"valid":true},"h4":{"expected":"4H","detected":"string","signals":[],"valid":true},"h1":{"expected":"1H","detected":"string","signals":[],"valid":true},"m30":{"expected":"30M","detected":"string","signals":[],"valid":true}},"primary_decision":{"bias":"SHORT|LONG|NEUTRAL","status":"VALID|WAITING|INVALIDATED","confidence":"HIGH|MEDIUM|LOW","confidence_reason":"string","grade":"A+|A|B|C|PASS"},"execution_plan":{"direction":"LONG|SHORT|NEUTRAL","break_trigger_level":"price only","retest_zone":"price or zone only","retest_confirmation_rule":"text rule only — no prices","session_restriction":"text only — when to trade","entry":"price or zone only","confirmation_trigger":"price only","stop_tight":"price only","stop_wide":"price only","tp1":"price only","tp2":"price only","runner":"price only","risk_reward":"string","size":"FULL SIZE|HALF SIZE|QUARTER SIZE"},"invalidation":"string","bias_levels":{"trigger_levels":"string","invalidation_levels":"string","acceleration_levels":"string"},"why":{"structure":"string","liquidity":"string","htf_alignment":"string","session_timing":"string","momentum":"string"},"icc_phase":"BREAK|RETEST|CONTINUATION|PRE-SETUP","alignment":"FULL ALIGN|COOKING|MISALIGNED|COUNTER-TREND ONLY","timeframe_reads":{"daily":{"bias":"BULLISH|BEARISH|NEUTRAL","structure":"string","key_level":"string"},"h4":{"bias":"BULLISH|BEARISH|NEUTRAL","structure":"string","key_level":"string"},"h1":{"bias":"BULLISH|BEARISH|NEUTRAL","structure":"string","key_level":"string"},"m30":{"bias":"BULLISH|BEARISH|NEUTRAL","structure":"string","key_level":"string"}},"secondary_plan":{"condition":"string","direction":"LONG|SHORT|NONE","entry":"price only","stop":"price only","tp1":"price only","tp2":"price only","runner":"price only","size":"FULL SIZE|HALF SIZE|QUARTER SIZE","warning":"string"},"critical_levels":{"long_trigger":"price only","short_trigger":"price only","major_support":"price only","major_resistance":"price only"},"trigger_conditions":{"long_trigger":"string","short_trigger":"string","risk_state":"string"},"plain_english":{"structure":"string","brc_phase":"string","key_levels":"string","trade_plan":"string","verdict":"string","psychological_rule":"Once entered, hands off. Trust the system. Pre-market movement is information — not permission."}}`;
+{"charts_valid":true,"instrument_valid":true,"instrument_detected":"string","chart_validation":{"daily":{"expected":"Daily","detected":"string","signals":[],"valid":true},"h4":{"expected":"4H","detected":"string","signals":[],"valid":true},"h1":{"expected":"1H","detected":"string","signals":[],"valid":true},"m30":{"expected":"30M","detected":"string","signals":[],"valid":true}},"primary_decision":{"bias":"SHORT|LONG|NEUTRAL","status":"VALID|WAITING|INVALIDATED","confidence":"HIGH|MEDIUM|LOW","confidence_reason":"string","grade":"A+|A|B|C|PASS"},"execution_plan":{"direction":"LONG|SHORT|NEUTRAL","break_trigger_level":"price only","retest_zone":"price or zone only","retest_confirmation_rule":"text rule only — no prices","session_restriction":"text only — when to trade","entry":"price or zone only","confirmation_trigger":"price only","stop_tight":"price only","stop_wide":"price only","tp1":"price only","tp2":"price only","runner":"price only","risk_reward":"string","size":"FULL SIZE|HALF SIZE|QUARTER SIZE"},"invalidation":"string","bias_levels":{"trigger_levels":"string","invalidation_levels":"string","acceleration_levels":"string"},"why":{"structure":"string","liquidity":"string","htf_alignment":"string","session_timing":"string","momentum":"string"},"icc_phase":"BREAK|RETEST|CONTINUATION|PRE-SETUP","alignment":"FULL ALIGN|COOKING|MISALIGNED|COUNTER-TREND ONLY","timeframe_reads":{"daily":{"bias":"BULLISH|BEARISH|NEUTRAL","structure":"string","key_level":"string"},"h4":{"bias":"BULLISH|BEARISH|NEUTRAL","structure":"string","key_level":"string"},"h1":{"bias":"BULLISH|BEARISH|NEUTRAL","structure":"string","key_level":"string"},"m30":{"bias":"BULLISH|BEARISH|NEUTRAL","structure":"string","key_level":"string"}},"secondary_plan":{"condition":"string","direction":"LONG|SHORT|NONE","entry":"price only","stop":"price only","tp1":"price only","tp2":"price only","runner":"price only","size":"FULL SIZE|HALF SIZE|QUARTER SIZE","warning":"string"},"critical_levels":{"long_trigger":"price only","short_trigger":"price only","major_support":"price only","major_resistance":"price only"},"trigger_conditions":{"long_trigger":"string","short_trigger":"string","risk_state":"string"},"plain_english":{"structure":"string","brc_phase":"string","key_levels":"string","trade_plan":"string","verdict":"string","psychological_rule":"Once entered, hands off. TP1 is set BEFORE the sweep zone — trust it. Green candles on a short are noise until a 30M candle CLOSES back above your entry. Do not exit early. Do not move TP1 down. Sit on your hands until TP1 or Stop is hit."}}`;
 }
 
 
@@ -2475,7 +2475,19 @@ SHORT: TP1 < entry. TP2 < TP1. Runner < TP2. Recalculate if any fail.
 LONG: TP1 > entry. TP2 > TP1. Runner > TP2. Recalculate if any fail.
 
 TP1: Next clean swing level in trend direction. Min 1.5:1 R:R.
-TP2: Next major structural level beyond TP1.
+CRITICAL — LIQUIDITY BUFFER RULE: Institutions sweep obvious levels before reversing. Retail TPs cluster at obvious swing levels — which is exactly where institutions hunt. To protect the trader, TP1 MUST be placed BEFORE the obvious level, not AT it.
+
+Apply this buffer to TP1 (subtract for SHORT, add for LONG):
+- XAUUSD / XAGUSD: 12 points buffer
+- NAS100: 20 points buffer
+- US30: 15 points buffer
+- US500: 8 points buffer
+- EURUSD: 10 pips buffer
+
+Example SHORT XAUUSD: next swing low at 4,655 → TP1 = 4,655 + 12 = 4,667 (exit BEFORE the sweep zone)
+Example LONG NAS100: next swing high at 19,200 → TP1 = 19,200 - 20 = 19,180 (exit BEFORE the sweep zone)
+
+TP2: The actual obvious swing level (where the sweep will happen). Only for runners.
 Runner: Only if momentum clearly accelerating past TP2.
 
 Examples of GOOD conditions: "30M candle closes above 3,250", "Daily and 4H both showing bullish structure", "Price pulls back to 3,220 retest zone and holds", "NY session window is open — 8:30 to 10:30 AM CT"
@@ -2502,8 +2514,8 @@ Return ONLY this JSON — no markdown, no explanation, no preamble:
   "trigger_level": "exact price only — no words, no description",
   "retest_zone": "price or zone only e.g. 2,650-2,680 — no words",
   "stop_loss": "exact price only — no words",
-  "tp1": "exact price only — REQUIRED. First structural target beyond trigger.",
-  "tp2": "exact price only — REQUIRED. Look for the next swing high (if SHORT) or swing low (if LONG) beyond TP1 on the 1H or 4H chart. Always populate. If unclear use 1.5x the TP1 distance from entry.",
+  "tp1": "exact price only — REQUIRED. First structural target WITH liquidity buffer applied (12pts buffer for XAUUSD/XAGUSD, 20pts NAS100, 15pts US30, 8pts US500, 10pips EURUSD). Place BEFORE the obvious swing level to exit ahead of the institutional sweep.",
+  "tp2": "exact price only — REQUIRED. The actual obvious swing level (where the institutional sweep will occur). This is the full measured move target — only for runners. Always populate.",
   "runner": "exact price only — REQUIRED. Look for the major HTF level beyond TP2. If unclear use 2x the TP1 distance from entry. Never leave blank — always calculate a number.",
   "alert_levels": ["price 1", "price 2"],
   "key_levels": ["support: price — one plain sentence explaining what happens if price holds here", "resistance: price — one plain sentence explaining what happens if price fails here", "invalidation: price — one plain sentence explaining why this level cancels the plan"],
