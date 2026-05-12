@@ -9,6 +9,7 @@
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/decoder", "destination": "/OmniIntelDecoder.html" },
+    { "source": "/mode-engine", "destination": "/OmniModeEngine.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
