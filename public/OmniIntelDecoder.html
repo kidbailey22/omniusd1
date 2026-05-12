@@ -90,21 +90,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'DM Mono','Courier 
 .trump-summary{color:var(--purple-lt);font-size:11px;line-height:1.6;padding:10px 14px;background:var(--bg);border:.5px solid var(--border);border-radius:10px;margin-bottom:10px}
 
 /* Upload zone */
-.upload-zone{border:1px dashed var(--border2);border-radius:12px;padding:28px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:12px;position:relative}
-.upload-zone:hover,.upload-zone.drag{border-color:var(--purple);background:rgba(123,94,167,.05)}
-.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-.upload-icon{font-size:28px;margin-bottom:8px;color:var(--border2)}
-.upload-title{color:var(--purple-lt);font-size:12px;margin-bottom:4px}
-.upload-sub{color:var(--dim);font-size:10px}
-.preview-img{width:100%;border-radius:10px;border:.5px solid var(--border);margin-bottom:12px;display:none}
 
-/* COT quick select */
-.cot-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px}
-.cot-btn{background:var(--bg);border:.5px solid var(--border);border-radius:8px;padding:8px 6px;text-align:center;cursor:pointer;transition:all .15s}
-.cot-btn:hover{border-color:var(--purple)}
-.cot-btn.selected{border-color:var(--purple);background:rgba(123,94,167,.15)}
-.cot-inst{color:var(--cyan);font-size:10px;font-weight:500;margin-bottom:3px}
-.cot-signal{font-size:9px;font-weight:600}
 
 /* Loading dots */
 .loading-bar{text-align:center;padding:20px;display:none}
@@ -117,14 +103,10 @@ html,body{background:var(--bg);color:var(--text);font-family:'DM Mono','Courier 
 @keyframes pulse{0%,100%{opacity:.2;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
 
 /* Result cards */
-.result-section{display:none;animation:fadeIn .3s ease}
-.result-section.show{display:block}
+
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
-.decision-box{border-radius:14px;padding:20px;margin-bottom:12px;text-align:center}
-.decision-mode{font-size:11px;letter-spacing:.14em;margin-bottom:6px}
-.decision-title{font-size:22px;font-weight:500;margin-bottom:6px}
-.decision-sub{font-size:11px;line-height:1.6}
+
 
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
 .info-card{background:var(--surface);border:.5px solid var(--border);border-radius:11px;padding:12px 14px}
@@ -234,116 +216,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'DM Mono','Courier 
   <button class="btn btn-primary" id="fetch-btn" onclick="fetchNews()">FETCH TODAY'S NEWS ↗</button>
 </div>
 
-<!-- STEP 2: OmniUSD Screenshot -->
-<div class="panel">
-  <div class="panel-title">
-    <span class="panel-name">STEP 2 — OmniUSD Screenshot</span>
-    <span class="step-badge">Upload</span>
-  </div>
-  <div class="lbl">Upload your OmniUSD analysis screenshot</div>
 
-  <div class="upload-zone" id="upload-zone">
-    <input type="file" id="file-input" accept="image/*" onchange="handleFile(event)">
-    <div class="upload-icon" id="upload-icon">📷</div>
-    <div class="upload-title" id="upload-title">Drop screenshot or tap to upload</div>
-    <div class="upload-sub" id="upload-sub">OmniUSD analysis, grade card, or session results</div>
-  </div>
-  <img id="preview-img" class="preview-img" alt="OmniUSD screenshot preview">
-
-  <!-- COT Quick Reference -->
-  <div class="lbl" style="margin-top:4px">This week's COT — select your instrument</div>
-  <div class="cot-grid" id="cot-grid">
-    <div class="cot-btn" onclick="selectCOT('XAUUSD','STRONG SHORT','red')" id="cot-XAUUSD">
-      <div class="cot-inst">XAUUSD</div>
-      <div class="cot-signal c-red">STRONG SHORT</div>
-    </div>
-    <div class="cot-btn" onclick="selectCOT('XAGUSD','STRONG SHORT','red')" id="cot-XAGUSD">
-      <div class="cot-inst">XAGUSD</div>
-      <div class="cot-signal c-red">STRONG SHORT</div>
-    </div>
-    <div class="cot-btn" onclick="selectCOT('EURUSD','STRONG LONG','green')" id="cot-EURUSD">
-      <div class="cot-inst">EURUSD</div>
-      <div class="cot-signal c-green">STRONG LONG</div>
-    </div>
-    <div class="cot-btn" onclick="selectCOT('NAS100','MIXED','amber')" id="cot-NAS100">
-      <div class="cot-inst">NAS100</div>
-      <div class="cot-signal c-amber">MIXED</div>
-    </div>
-    <div class="cot-btn" onclick="selectCOT('US30','MIXED','amber')" id="cot-US30">
-      <div class="cot-inst">US30</div>
-      <div class="cot-signal c-amber">MIXED</div>
-    </div>
-    <div class="cot-btn" onclick="selectCOT('US500','STRONG LONG','green')" id="cot-US500">
-      <div class="cot-inst">US500</div>
-      <div class="cot-signal c-green">STRONG LONG</div>
-    </div>
-  </div>
-
-  <div class="err" id="analysis-err"></div>
-  <div class="loading-bar" id="analysis-loading">
-    <div class="loading-lbl">READING YOUR ANALYSIS</div>
-    <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
-  </div>
-  <button class="btn btn-green" id="analyze-btn" onclick="analyzeScreenshot()" disabled>ANALYZE SCREENSHOT + NEWS ↗</button>
-</div>
-
-<!-- RESULT -->
-<div class="result-section" id="result-section">
-
-  <!-- Decision -->
-  <div class="decision-box" id="decision-box">
-    <div class="decision-mode" id="decision-mode"></div>
-    <div class="decision-title" id="decision-title"></div>
-    <div class="decision-sub" id="decision-sub"></div>
-  </div>
-
-  <!-- Grade + Direction row -->
-  <div class="two-col">
-    <div class="info-card">
-      <div class="info-lbl">OMNIUSD GRADE</div>
-      <div class="info-val" id="res-grade"></div>
-    </div>
-    <div class="info-card">
-      <div class="info-lbl">DIRECTION READ</div>
-      <div class="info-val" id="res-direction"></div>
-    </div>
-  </div>
-
-  <div class="two-col">
-    <div class="info-card">
-      <div class="info-lbl">CONFIDENCE</div>
-      <div class="info-val" id="res-confidence"></div>
-    </div>
-    <div class="info-card">
-      <div class="info-lbl">INSTRUMENT</div>
-      <div class="info-val c-cyan" id="res-instrument"></div>
-    </div>
-  </div>
-
-  <!-- 3-layer verdict -->
-  <div class="lbl">3-LAYER CHECK</div>
-  <div class="inst-grid" id="layer-grid"></div>
-
-  <!-- Reasoning -->
-  <div class="reasoning-box">
-    <div class="info-lbl" style="margin-bottom:6px">FULL REASONING</div>
-    <div class="reasoning-text" id="res-reasoning"></div>
-  </div>
-
-  <!-- Size recommendation -->
-  <div class="info-card" style="margin-bottom:10px">
-    <div class="info-lbl">POSITION SIZING</div>
-    <div class="info-val" id="res-sizing"></div>
-  </div>
-
-  <div class="reminder">
-    <div class="reminder-text">
-      ⬡ COT overrides news for directional bias. This decoder surfaces the full picture — the final trigger is always a confirmed 30M close at your level. No close, no trade.
-    </div>
-  </div>
-
-  <button class="btn btn-secondary" style="width:100%;margin-bottom:8px" onclick="reset()">↺ DECODE ANOTHER</button>
-</div>
 
 <!-- Footer -->
 <div class="footer">
@@ -356,19 +229,8 @@ html,body{background:var(--bg);color:var(--text);font-family:'DM Mono','Courier 
 <script>
 // ── State ─────────────────────────────────────────────────────────────────────
 let newsContext = "";
-let imageBase64 = "";
-let imageType   = "";
-let selectedCOT = { instrument: "", signal: "", color: "" };
 
-// ── COT Data (May 5 2026) ────────────────────────────────────────────────────
-const COT_DATA = {
-  XAUUSD: { signal:"STRONG SHORT", net:"-198,935", pct:"18% Long / 82% Short", group:"Commercials", color:"red" },
-  XAGUSD: { signal:"STRONG SHORT", net:"-40,535",  pct:"28% Long / 72% Short", group:"Commercials", color:"red" },
-  EURUSD: { signal:"STRONG LONG",  net:"+285,613", pct:"74% Long / 26% Short", group:"Asset Managers", color:"green" },
-  NAS100: { signal:"MIXED",        net:"+78,698",  pct:"76% Long / 24% Short (AM) vs Hedge Funds short", group:"Asset Managers", color:"amber" },
-  US30:   { signal:"MIXED",        net:"+2,638",   pct:"55% Long / 45% Short (AM near neutral)", group:"Asset Managers", color:"amber" },
-  US500:  { signal:"STRONG LONG",  net:"+998,208", pct:"86% Long / 14% Short", group:"Asset Managers", color:"green" },
-};
+
 
 const COLOR_MAP = {
   green:  { bg:"rgba(6,214,160,.15)",   border:"rgba(6,214,160,.35)",   text:"#06d6a0" },
@@ -403,49 +265,7 @@ function updateClock() {
 }
 updateClock(); setInterval(updateClock, 30000);
 
-// ── COT Selection ─────────────────────────────────────────────────────────────
-function selectCOT(inst, signal, color) {
-  document.querySelectorAll(".cot-btn").forEach(b => b.classList.remove("selected"));
-  document.getElementById("cot-" + inst).classList.add("selected");
-  selectedCOT = { instrument: inst, signal, color };
-  checkAnalyzeReady();
-}
 
-function checkAnalyzeReady() {
-  const ready = imageBase64 && selectedCOT.instrument;
-  document.getElementById("analyze-btn").disabled = !ready;
-}
-
-// ── File Upload ───────────────────────────────────────────────────────────────
-function handleFile(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  imageType = file.type || "image/png";
-  const reader = new FileReader();
-  reader.onload = () => {
-    imageBase64 = reader.result.split(",")[1];
-    const preview = document.getElementById("preview-img");
-    preview.src = reader.result;
-    preview.style.display = "block";
-    document.getElementById("upload-title").textContent = file.name;
-    document.getElementById("upload-sub").textContent   = "Screenshot loaded — select instrument COT below";
-    document.getElementById("upload-icon").textContent  = "✅";
-    checkAnalyzeReady();
-  };
-  reader.readAsDataURL(file);
-}
-
-// Drag and drop
-const zone = document.getElementById("upload-zone");
-zone.addEventListener("dragover",  e => { e.preventDefault(); zone.classList.add("drag"); });
-zone.addEventListener("dragleave", () => zone.classList.remove("drag"));
-zone.addEventListener("drop", e => {
-  e.preventDefault(); zone.classList.remove("drag");
-  const file = e.dataTransfer.files[0];
-  if (!file) return;
-  const fakeEvt = { target: { files: [file] } };
-  handleFile(fakeEvt);
-});
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 async function fetchDashboard() {
@@ -761,199 +581,6 @@ function renderNews(d) {
   ns.style.display = "block";
 }
 
-// ── Step 2: Analyze Screenshot ────────────────────────────────────────────────
-async function analyzeScreenshot() {
-  if (!imageBase64 || !selectedCOT.instrument) return;
-
-  document.getElementById("analysis-loading").classList.add("show");
-  document.getElementById("analyze-btn").disabled = true;
-  document.getElementById("analysis-err").classList.remove("show");
-  document.getElementById("result-section").classList.remove("show");
-
-  const cot = COT_DATA[selectedCOT.instrument];
-  const today = new Date().toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric",year:"numeric",timeZone:"America/Chicago"});
-
-  const SYSTEM = `You are OmniDecode — the combined intelligence layer for OmniUSD, a BRC (Break-Retest-Continuation) trading system for the NY session (8:30–10:30 AM CT).
-
-You will receive:
-1. An OmniUSD analysis screenshot — read the grade, confidence %, direction (LONG/SHORT), instrument, and any other visible data
-2. The current week's COT positioning for that instrument
-3. Today's macro news context
-
-═══════════════════════════════════════════
-OMNIUSD x COT — TRADING MANTRA (LOCKED)
-═══════════════════════════════════════════
-
-MODE 1 — FOLLOW THE SIGNAL
-Conditions: Confidence 60%+ AND COT agrees with direction
-Decision: Execute what OmniUSD says. Let it run.
-Sizing: Full size (unless news = CAUTION, then 50%)
-
-MODE 2 — FADE THE SIGNAL
-Three sub-cases:
-
-Case A:
-- Low confidence (25-35%)
-- COT Commercials/Asset Managers NET SHORT
-- OmniUSD signal is LONG
-Fade it. Go SHORT. Smart money is already there.
-
-Case B:
-- Low confidence (25-35%)
-- COT Commercials/Asset Managers NET LONG
-- OmniUSD signal is SHORT
-Fade it. Go LONG. Smart money is already there.
-
-Case C:
-- Low confidence (25-35%)
-- COT Commercials NEUTRAL (50/50)
-No trade. Pass entirely. No edge.
-
-PASS — Do not trade (overrides everything):
-- News creates HIGH NOISE condition (surprise Fed, Trump macro shock, major data)
-- Grade shown in screenshot is PASS or SKIP
-- Confidence below 25%
-- Session is outside NY window
-
-COT RULE: COT always overrides news for directional bias. News is a PASS filter only — it cannot create a trade, only cancel one.
-
-═══════════════════════════════════════════
-
-Read the screenshot carefully. Extract grade, direction, confidence %, instrument.
-Then apply the mantra above exactly. Do not deviate.
-
-Respond ONLY with valid JSON, no markdown, no backticks:
-{
-  "instrument": "detected from screenshot",
-  "grade": "A+ | B+ | B | C | PASS | SKIP — exactly as shown",
-  "direction": "LONG | SHORT | N/A",
-  "confidence": "XX% — exactly as shown or estimated",
-  "decision": "EXECUTE | EXECUTE — SIZE DOWN | FADE — GO SHORT | FADE — GO LONG | PASS",
-  "mode": "Mode 1 | Mode 1 (Size Down) | Mode 2 — Fade Short | Mode 2 — Fade Long | Mode 2 — No Edge | Pass",
-  "sizing": "Full size | 50% size | 25% size | No trade",
-  "mantra_case": "Mode 1 | Mode 2A | Mode 2B | Mode 2C | Pass",
-  "layers": {
-    "cot": { "verdict": "Agrees | Contradicts | Neutral", "detail": "one line max 12 words", "color": "green | red | amber" },
-    "news": { "verdict": "Clear | Caution | High Noise | Pass", "detail": "one line max 12 words", "color": "green | amber | red" },
-    "grade": { "verdict": "Strong | Moderate | Weak | Pass", "detail": "one line max 12 words", "color": "green | amber | red | purple" }
-  },
-  "reasoning": "2-3 sentences applying the exact mantra to this setup. Reference the specific mode case.",
-  "key_warning": "One sentence — the most critical thing before entering or passing"
-}`;
-
-  const userContent = [
-    { type: "image", source: { type: "base64", media_type: imageType, data: imageBase64 } },
-    { type: "text", text: `Analyze this OmniUSD screenshot for ${selectedCOT.instrument}.
-
-COT DATA (Week of May 5, 2026):
-- Instrument: ${selectedCOT.instrument}
-- Signal: ${cot.signal}
-- Net Position: ${cot.net}
-- Positioning: ${cot.pct}
-- Key Group: ${cot.group}
-
-TODAY'S NEWS CONTEXT (${today}):
-${newsContext || "No news context fetched — base decision on COT and grade only."}
-
-Determine the final trade decision using the Mode system.` }
-  ];
-
-  try {
-    const response = await fetch("/api/decode", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        mode: "analyze",
-        messages: [{ role: "user", content: userContent }],
-      }),
-    });
-
-
-
-    const data = await response.json();
-    if (!data.ok || !data.result) throw new Error("Could not parse analysis response");
-    renderResult(data.result);
-
-  } catch(e) {
-    const eb = document.getElementById("analysis-err");
-    eb.textContent = "Analysis failed — " + (e.message || "unknown error") + ". Try again.";
-    eb.classList.add("show");
-  } finally {
-    document.getElementById("analysis-loading").classList.remove("show");
-    document.getElementById("analyze-btn").disabled = false;
-  }
-}
-
-function renderResult(r) {
-  // Decision box
-  const ds = DECISION_STYLES[r.decision] || DECISION_STYLES["PASS"];
-  const db = document.getElementById("decision-box");
-  db.style.background = ds.bg;
-  db.style.border = ds.border;
-  const mantraLabel = MANTRA_LABELS[r.mantra_case] || r.mode;
-  document.getElementById("decision-mode").textContent = mantraLabel;
-  document.getElementById("decision-mode").style.color = ds.modeColor;
-  document.getElementById("decision-title").textContent = r.decision;
-  document.getElementById("decision-title").style.color = ds.titleColor;
-  document.getElementById("decision-sub").textContent = r.key_warning;
-  document.getElementById("decision-sub").style.color = ds.modeColor + "cc";
-
-  // Info cards
-  const gradeColor = r.grade?.startsWith("A") ? "#06d6a0" : r.grade?.startsWith("B") ? "#ffd166" : "#ef476f";
-  const dirColor   = r.direction === "LONG" ? "#06d6a0" : r.direction === "SHORT" ? "#ef476f" : "#9b7ec8";
-  document.getElementById("res-grade").textContent      = r.grade;
-  document.getElementById("res-grade").style.color      = gradeColor;
-  document.getElementById("res-direction").textContent  = r.direction;
-  document.getElementById("res-direction").style.color  = dirColor;
-  document.getElementById("res-confidence").textContent = r.confidence;
-  document.getElementById("res-instrument").textContent = r.instrument;
-
-  // 3-layer grid
-  const layers = [
-    { name: "COT",   data: r.layers?.cot },
-    { name: "NEWS",  data: r.layers?.news },
-    { name: "GRADE", data: r.layers?.grade },
-  ];
-  const lg = document.getElementById("layer-grid");
-  lg.innerHTML = "";
-  layers.forEach(l => {
-    if (!l.data) return;
-    const ic = COLOR_MAP[l.data.color] || COLOR_MAP.purple;
-    const card = document.createElement("div");
-    card.className = "inst-card";
-    card.style.borderColor = ic.border;
-    card.innerHTML = `
-      <div class="inst-name">${l.name}</div>
-      <div class="inst-verdict" style="background:${ic.bg};color:${ic.text}">${l.data.verdict}</div>
-      <div class="inst-why">${l.data.detail}</div>`;
-    lg.appendChild(card);
-  });
-
-  // Reasoning
-  document.getElementById("res-reasoning").textContent = r.reasoning;
-
-  // Sizing
-  const sizColor = r.sizing === "Full size" ? "#06d6a0" : r.sizing === "No trade" ? "#ef476f" : "#ffd166";
-  document.getElementById("res-sizing").textContent   = r.sizing;
-  document.getElementById("res-sizing").style.color   = sizColor;
-
-  document.getElementById("result-section").classList.add("show");
-  document.getElementById("result-section").scrollIntoView({ behavior: "smooth", block: "start" });
-}
-
-function reset() {
-  document.getElementById("result-section").classList.remove("show");
-  document.getElementById("preview-img").style.display = "none";
-  document.getElementById("preview-img").src = "";
-  document.getElementById("upload-title").textContent = "Drop screenshot or tap to upload";
-  document.getElementById("upload-sub").textContent   = "OmniUSD analysis, grade card, or session results";
-  document.getElementById("upload-icon").textContent  = "📷";
-  document.getElementById("file-input").value = "";
-  imageBase64 = ""; imageType = ""; selectedCOT = { instrument:"", signal:"", color:"" };
-  document.querySelectorAll(".cot-btn").forEach(b => b.classList.remove("selected"));
-  document.getElementById("analyze-btn").disabled = true;
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
 </script>
 </body>
 </html>
