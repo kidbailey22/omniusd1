@@ -78,6 +78,17 @@ html,body{background:var(--bg);color:var(--text);font-family:'DM Mono','Courier 
 .news-text{color:var(--text);font-size:11px;line-height:1.6}
 .news-impact{display:inline-block;font-size:9px;font-weight:600;padding:2px 8px;border-radius:20px;margin-top:4px}
 
+/* Trump feed */
+.trump-post{background:var(--bg);border:.5px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px}
+.trump-post:last-child{margin-bottom:0}
+.trump-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.trump-time{color:var(--dimmer);font-size:9px}
+.trump-topic{font-size:9px;font-weight:600;padding:2px 8px;border-radius:20px}
+.trump-text{color:var(--text);font-size:11.5px;line-height:1.7;margin-bottom:7px;font-style:italic}
+.trump-footer{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.trump-empty{color:var(--dim);font-size:11px;padding:14px 0;text-align:center}
+.trump-summary{color:var(--purple-lt);font-size:11px;line-height:1.6;padding:10px 14px;background:var(--bg);border:.5px solid var(--border);border-radius:10px;margin-bottom:10px}
+
 /* Upload zone */
 .upload-zone{border:1px dashed var(--border2);border-radius:12px;padding:28px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:12px;position:relative}
 .upload-zone:hover,.upload-zone.drag{border-color:var(--purple);background:rgba(123,94,167,.05)}
@@ -185,6 +196,24 @@ html,body{background:var(--bg);color:var(--text);font-family:'DM Mono','Courier 
   </div>
   <div class="err" id="dash-err"></div>
   <button class="btn btn-primary" id="dash-btn" onclick="fetchDashboard()">FETCH WEEKLY DASHBOARD ↗</button>
+</div>
+
+<!-- TRUMP FEED -->
+<div class="panel">
+  <div class="panel-title">
+    <span class="panel-name">⚡ TRUMP — TRUTH SOCIAL</span>
+    <span class="step-badge">Direct feed</span>
+  </div>
+  <div class="lbl">Latest market-relevant posts from @realDonaldTrump</div>
+  <div id="trump-status" style="color:var(--dim);font-size:11px;padding:10px 0">
+    Hit "Fetch Trump Posts" — reads his live Truth Social feed and extracts only market-moving posts.
+  </div>
+  <div class="loading-bar" id="trump-loading">
+    <div class="loading-lbl">READING TRUTH SOCIAL FEED</div>
+    <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+  </div>
+  <div class="err" id="trump-err"></div>
+  <button class="btn btn-primary" id="trump-btn" onclick="fetchTrump()">FETCH TRUMP POSTS ↗</button>
 </div>
 
 <!-- STEP 1: News Intel -->
@@ -532,6 +561,75 @@ function renderDashboard(d) {
   const ds = document.getElementById("dashboard-status");
   ds.innerHTML = html;
   ds.style.display = "block";
+}
+
+// ── Trump Feed ────────────────────────────────────────────────────────────────
+async function fetchTrump() {
+  document.getElementById("trump-loading").classList.add("show");
+  document.getElementById("trump-status").style.display = "none";
+  document.getElementById("trump-btn").disabled = true;
+  document.getElementById("trump-err").classList.remove("show");
+
+  try {
+    const response = await fetch("/api/decode", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mode: "trump" }),
+    });
+    const data = await response.json();
+    if (data.debug) throw new Error("DEBUG: " + JSON.stringify(data));
+    if (!data.ok || !data.result) throw new Error("Bad response: " + JSON.stringify(data).slice(0,200));
+    renderTrump(data.result);
+  } catch(e) {
+    const eb = document.getElementById("trump-err");
+    eb.textContent = "Trump feed failed — " + e.message;
+    eb.classList.add("show");
+    document.getElementById("trump-status").style.display = "block";
+  } finally {
+    document.getElementById("trump-loading").classList.remove("show");
+    document.getElementById("trump-btn").disabled = false;
+    document.getElementById("trump-btn").textContent = "↺ REFRESH TRUMP POSTS";
+  }
+}
+
+function renderTrump(d) {
+  const ic = COLOR_MAP;
+  let html = "";
+
+  // Summary
+  if (d.summary) {
+    html += `<div class="trump-summary">⚡ ${d.summary}</div>`;
+  }
+
+  if (!d.posts || d.posts.length === 0) {
+    html += `<div class="trump-empty">No market-relevant posts found in current feed.</div>`;
+  } else {
+    d.posts.forEach(p => {
+      const c = ic[p.color] || ic.purple;
+      const instruments = (p.instruments_affected || []).join(", ");
+      html += `
+        <div class="trump-post" style="border-color:${c.border}">
+          <div class="trump-meta">
+            <span class="trump-time">${p.time || ""}</span>
+            <span class="trump-topic" style="background:${c.bg};color:${c.text}">${p.topic || ""}</span>
+          </div>
+          <div class="trump-text">"${p.text || ""}"</div>
+          <div class="trump-footer">
+            <span class="news-impact" style="background:${c.bg};color:${c.text};border:.5px solid ${c.border}">${p.impact || ""}</span>
+            ${instruments ? `<span style="color:var(--cyan);font-size:9px">${instruments}</span>` : ""}
+            ${p.url ? `<a href="${p.url}" target="_blank" rel="noopener noreferrer" style="color:var(--dim);font-size:9px;text-decoration:none;border:.5px solid var(--border);border-radius:4px;padding:1px 6px" onmouseover="this.style.color='var(--purple-lt)'" onmouseout="this.style.color='var(--dim)'">↗ ORIGINAL POST</a>` : ""}
+          </div>
+        </div>`;
+    });
+  }
+
+  if (d.last_checked) {
+    html += `<div style="color:var(--dimmer);font-size:9px;margin-top:8px;text-align:right">Last post seen: ${d.last_checked}</div>`;
+  }
+
+  const ts = document.getElementById("trump-status");
+  ts.innerHTML = html;
+  ts.style.display = "block";
 }
 
 // ── Step 1: Fetch News ────────────────────────────────────────────────────────
