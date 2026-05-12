@@ -36,30 +36,17 @@ Respond ONLY with this exact JSON — no markdown, no backticks:
 {"posts":[{"time":"May 11, 2026 11:28 PM","text":"exact quote from the post — max 280 chars","topic":"Tariffs or Fed or Iran or Trade or Markets or Dollar or Geopolitics","instruments_affected":["XAUUSD","EURUSD","NAS100","US30","US500"],"impact":"Bullish or Bearish or Volatile or Neutral","color":"green or red or amber or purple","url":"https://truthsocial.com/@realDonaldTrump/[post-id]"}],"market_posts_found":0,"last_checked":"timestamp of most recent post seen","summary":"one sentence — overall market tone from Trump's recent posts or 'No market-relevant posts in recent feed'"}`;
 
 // ── Dashboard System Prompt ───────────────────────────────────────────────────
-const DASHBOARD_SYSTEM = `You are OmniDecode, the macro intelligence layer for OmniUSD — a BRC trading system for the NY session (8:30-10:30 AM CT).
+const DASHBOARD_SYSTEM = `You are OmniDecode for OmniUSD, a BRC trading system (NY session 8:30-10:30 AM CT).
 
-You have access to web search. Fetch the following data points for this week. Run these searches:
+Search for: DXY price, 10Y treasury yield, Fed rate probabilities, this week's economic calendar.
 
-SEARCH 1: site:cmegroup.com fedwatch OR "fed funds" 2026 — get current Fed rate cut/hold probabilities
-SEARCH 2: DXY dollar index price 2026 site:reuters.com OR site:bloomberg.com OR site:marketwatch.com
-SEARCH 3: 10 year treasury yield 2026 site:reuters.com OR site:bloomberg.com OR site:marketwatch.com
-SEARCH 4: site:investing.com economic calendar OR site:forexfactory.com calendar 2026 — get this week's high impact events
-SEARCH 5: site:reuters.com OR site:bloomberg.com gold price silver price this week 2026
+Run 3 searches only:
+1. DXY dollar index current price site:marketwatch.com OR site:reuters.com
+2. 10 year treasury yield current site:marketwatch.com OR site:reuters.com
+3. economic calendar week site:forexfactory.com OR site:investing.com
 
-Only use approved sources: cmegroup.com, reuters.com, bloomberg.com, marketwatch.com, wsj.com, investing.com, forexfactory.com, federalreserve.gov, bls.gov.
-
-After searching respond ONLY with this exact JSON — no markdown, no backticks:
-{
-  "week_of": "May 12-16, 2026",
-  "dxy": { "value": "101.2", "direction": "up or down or flat", "note": "one line impact on instruments" },
-  "yield_10y": { "value": "4.31%", "direction": "up or down or flat", "note": "one line impact on gold/equities" },
-  "fedwatch": { "next_meeting": "June 17-18", "hold_pct": "92", "cut_pct": "8", "hike_pct": "0", "note": "one line" },
-  "calendar": [
-    { "day": "Mon | Tue | Wed | Thu | Fri", "date": "May 12", "time_ct": "7:30 AM", "event": "CPI April", "impact": "HIGH | MEDIUM | LOW", "forecast": "3.1% YoY", "instruments": ["XAUUSD","EURUSD","NAS100","US30","US500"], "color": "red or amber or green" }
-  ],
-  "week_bias": "Bullish or Bearish or Mixed or Neutral — one sentence overall weekly macro bias",
-  "key_risk": "single most important risk event this week"
-}`;
+Return ONLY this JSON, no markdown, no backticks:
+{"week_of":"May 12-16 2026","dxy":{"value":"101.2","direction":"up or down or flat","note":"one line"},"yield_10y":{"value":"4.31%","direction":"up or down or flat","note":"one line"},"fedwatch":{"next_meeting":"June 17-18","hold_pct":"90","cut_pct":"10","hike_pct":"0","note":"one line"},"calendar":[{"day":"Tue","date":"May 12","time_ct":"7:30 AM","event":"CPI April","impact":"HIGH","forecast":"3.1%","instruments":["XAUUSD","EURUSD","NAS100","US30","US500"],"color":"red"}],"week_bias":"one sentence","key_risk":"one sentence"}`;
 
 // ── News System Prompt ────────────────────────────────────────────────────────
 const NEWS_SYSTEM = `You are OmniDecode, the macro intelligence layer for OmniUSD — a BRC trading system for the NY session (8:30-10:30 AM CT).
@@ -156,12 +143,12 @@ module.exports = async function handler(req, res) {
     if (mode === "dashboard") {
       body = {
         model: "claude-sonnet-4-20250514",
-        max_tokens: 2000,
+        max_tokens: 1000,
         system: DASHBOARD_SYSTEM,
         tools: [{ type: "web_search_20250305", name: "web_search" }],
         messages: [{
           role: "user",
-          content: `Today is ${date || "today"}. Fetch this week's macro dashboard data — DXY, 10Y yield, FedWatch probabilities, and the weekly economic calendar with all high/medium impact events. Return only the JSON.`
+          content: `Today is ${date || "today"}. Search for DXY, 10Y yield, and this week's economic calendar. Return JSON only.`
         }]
       };
     } else if (mode === "news") {
