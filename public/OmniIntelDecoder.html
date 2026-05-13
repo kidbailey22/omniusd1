@@ -79,6 +79,13 @@ html,body{background:#2a2650;color:var(--text);font-family:'DM Mono','Courier Ne
 .news-impact{display:inline-block;font-size:9px;font-weight:600;padding:2px 8px;border-radius:20px;margin-top:4px}
 
 /* Trump feed */
+.trump-slot{background:var(--bg);border:.5px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px}
+.trump-input{
+  width:100%;background:transparent;border:none;outline:none;
+  color:var(--text);font-family:'DM Mono',monospace;font-size:12px;
+  line-height:1.7;resize:none;min-height:72px;
+}
+.trump-input::placeholder{color:var(--dimmer)}
 .trump-post{background:var(--bg);border:.5px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px}
 .trump-post:last-child{margin-bottom:0}
 .trump-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
@@ -234,18 +241,32 @@ html,body{background:#2a2650;color:var(--text);font-family:'DM Mono','Courier Ne
 <div class="panel">
   <div class="panel-title">
     <span class="panel-name">⚡ TRUMP — TRUTH SOCIAL</span>
-    <span class="step-badge">Direct feed</span>
+    <span class="step-badge">Manual input</span>
   </div>
-  <div class="lbl">Latest market-relevant posts from @realDonaldTrump</div>
-  <div id="trump-status" style="color:var(--dim);font-size:11px;padding:10px 0">
-    Hit "Fetch Trump Posts" — reads his live Truth Social feed and extracts only market-moving posts.
+  <div class="lbl">Paste his posts below — up to 5 slots</div>
+
+  <div id="trump-slots">
+    <div class="trump-slot" id="slot-0">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+        <span style="color:var(--dimmer);font-size:9px;letter-spacing:.1em">POST 1</span>
+        <span style="color:var(--dimmer);font-size:9px" id="slot-0-count">0 chars</span>
+      </div>
+      <textarea class="trump-input" id="trump-post-0" placeholder="Paste Trump Truth Social post here..." oninput="updateCount(0)"></textarea>
+    </div>
   </div>
+
+  <div style="display:flex;gap:8px;margin-top:10px;margin-bottom:12px">
+    <button class="btn btn-secondary" style="font-size:10px;padding:7px 14px" onclick="addSlot()" id="add-slot-btn">+ ADD POST</button>
+    <button class="btn btn-secondary" style="font-size:10px;padding:7px 14px" onclick="clearSlots()">CLR ALL</button>
+  </div>
+
   <div class="loading-bar" id="trump-loading">
-    <div class="loading-lbl">READING TRUTH SOCIAL FEED</div>
+    <div class="loading-lbl">DECODING TRUMP POSTS</div>
     <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
   </div>
   <div class="err" id="trump-err"></div>
-  <button class="btn btn-primary" id="trump-btn" onclick="fetchTrump()">FETCH TRUMP POSTS ↗</button>
+  <div id="trump-status" style="display:none"></div>
+  <button class="btn btn-primary" id="trump-btn" onclick="fetchTrump()">DECODE TRUMP POSTS ↗</button>
 </div>
 
 <!-- STEP 1: News Intel -->
@@ -583,17 +604,85 @@ function renderDashboard(d) {
 }
 
 // ── Trump Feed ────────────────────────────────────────────────────────────────
-async function fetchTrump() {
-  document.getElementById("trump-loading").classList.add("show");
+let trumpSlotCount = 1;
+
+function updateCount(i) {
+  const ta  = document.getElementById(`trump-post-${i}`);
+  const cnt = document.getElementById(`slot-${i}-count`);
+  if (ta && cnt) cnt.textContent = ta.value.length + " chars";
+}
+
+function addSlot() {
+  if (trumpSlotCount >= 5) {
+    document.getElementById("add-slot-btn").textContent = "Max 5 posts";
+    document.getElementById("add-slot-btn").disabled = true;
+    return;
+  }
+  const i = trumpSlotCount;
+  const slots = document.getElementById("trump-slots");
+  const div = document.createElement("div");
+  div.className = "trump-slot";
+  div.id = `slot-${i}`;
+  div.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+      <span style="color:var(--dimmer);font-size:9px;letter-spacing:.1em">POST ${i+1}</span>
+      <span style="color:var(--dimmer);font-size:9px" id="slot-${i}-count">0 chars</span>
+    </div>
+    <textarea class="trump-input" id="trump-post-${i}" placeholder="Paste Trump Truth Social post here..." oninput="updateCount(${i})"></textarea>`;
+  slots.appendChild(div);
+  trumpSlotCount++;
+  if (trumpSlotCount >= 5) {
+    document.getElementById("add-slot-btn").textContent = "Max 5 posts";
+    document.getElementById("add-slot-btn").disabled = true;
+  }
+}
+
+function clearSlots() {
+  for (let i = 0; i < trumpSlotCount; i++) {
+    const ta = document.getElementById(`trump-post-${i}`);
+    if (ta) ta.value = "";
+    const cnt = document.getElementById(`slot-${i}-count`);
+    if (cnt) cnt.textContent = "0 chars";
+  }
+  // Remove extra slots
+  const slots = document.getElementById("trump-slots");
+  while (slots.children.length > 1) slots.removeChild(slots.lastChild);
+  trumpSlotCount = 1;
+  document.getElementById("add-slot-btn").textContent = "+ ADD POST";
+  document.getElementById("add-slot-btn").disabled = false;
   document.getElementById("trump-status").style.display = "none";
+}
+
+async function fetchTrump() {
+  // Collect all pasted posts
+  const posts = [];
+  for (let i = 0; i < trumpSlotCount; i++) {
+    const val = document.getElementById(`trump-post-${i}`)?.value?.trim();
+    if (val) posts.push(`POST ${i+1}: ${val}`);
+  }
+
+  if (posts.length === 0) {
+    const eb = document.getElementById("trump-err");
+    eb.textContent = "Paste at least one Trump post before decoding.";
+    eb.classList.add("show");
+    return;
+  }
+
+  document.getElementById("trump-loading").classList.add("show");
   document.getElementById("trump-btn").disabled = true;
   document.getElementById("trump-err").classList.remove("show");
+  document.getElementById("trump-status").style.display = "none";
+
+  const combinedPosts = posts.join("\n\n");
 
   try {
     const response = await fetch("/api/decode", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mode: "trump" }),
+      body: JSON.stringify({
+        mode: "trump",
+        posts: combinedPosts,
+      }),
     });
     const data = await response.json();
     if (data.debug) throw new Error("DEBUG: " + JSON.stringify(data));
@@ -601,13 +690,12 @@ async function fetchTrump() {
     renderTrump(data.result);
   } catch(e) {
     const eb = document.getElementById("trump-err");
-    eb.textContent = "Trump feed failed — " + e.message;
+    eb.textContent = "Decode failed — " + e.message;
     eb.classList.add("show");
-    document.getElementById("trump-status").style.display = "block";
   } finally {
     document.getElementById("trump-loading").classList.remove("show");
     document.getElementById("trump-btn").disabled = false;
-    document.getElementById("trump-btn").textContent = "↺ REFRESH TRUMP POSTS";
+    document.getElementById("trump-btn").textContent = "↺ DECODE AGAIN";
   }
 }
 
@@ -615,13 +703,12 @@ function renderTrump(d) {
   const ic = COLOR_MAP;
   let html = "";
 
-  // Summary
   if (d.summary) {
     html += `<div class="trump-summary">⚡ ${d.summary}</div>`;
   }
 
   if (!d.posts || d.posts.length === 0) {
-    html += `<div class="trump-empty">No market-relevant posts found in current feed.</div>`;
+    html += `<div class="trump-empty">No market-relevant content found in these posts.</div>`;
   } else {
     d.posts.forEach(p => {
       const c = ic[p.color] || ic.purple;
@@ -629,21 +716,16 @@ function renderTrump(d) {
       html += `
         <div class="trump-post" style="border-color:${c.border}">
           <div class="trump-meta">
-            <span class="trump-time">${p.time || ""}</span>
             <span class="trump-topic" style="background:${c.bg};color:${c.text}">${p.topic || ""}</span>
+            <span class="trump-time">${p.time || ""}</span>
           </div>
           <div class="trump-text">"${p.text || ""}"</div>
           <div class="trump-footer">
             <span class="news-impact" style="background:${c.bg};color:${c.text};border:.5px solid ${c.border}">${p.impact || ""}</span>
             ${instruments ? `<span style="color:var(--cyan);font-size:9px">${instruments}</span>` : ""}
-            ${p.url ? `<a href="${p.url}" target="_blank" rel="noopener noreferrer" style="color:var(--dim);font-size:9px;text-decoration:none;border:.5px solid var(--border);border-radius:4px;padding:1px 6px" onmouseover="this.style.color='var(--purple-lt)'" onmouseout="this.style.color='var(--dim)'">↗ ORIGINAL POST</a>` : ""}
           </div>
         </div>`;
     });
-  }
-
-  if (d.last_checked) {
-    html += `<div style="color:var(--dimmer);font-size:9px;margin-top:8px;text-align:right">Last post seen: ${d.last_checked}</div>`;
   }
 
   const ts = document.getElementById("trump-status");
