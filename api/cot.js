@@ -35,69 +35,88 @@ const CFTC_HEADERS = {
 };
 
 // ── Legacy parser (Commodities / Crypto) ─────────────────────────────────────
-// Smart money = Commercials (producers, miners, hedgers)
+// For Gold/Silver: Large Speculators = directional signal (hedge funds making bets)
+//                  Commercials = hedgers protecting physical inventory (NOT directional)
+// For Crypto: Large Speculators also used as primary signal
 function parseLegacy(data) {
   const latest = data[0];
   const prev   = data[1] || null;
 
+  // Commercials — hedgers (miners, producers, dealers protecting inventory)
   const commLong     = parseInt(latest.comm_positions_long_all     || 0);
   const commShort    = parseInt(latest.comm_positions_short_all    || 0);
+
+  // Large Speculators — hedge funds, managed money (DIRECTIONAL bets)
   const specLong     = parseInt(latest.noncomm_positions_long_all  || 0);
   const specShort    = parseInt(latest.noncomm_positions_short_all || 0);
+
   const smallLong    = parseInt(latest.nonrept_positions_long_all  || 0);
   const smallShort   = parseInt(latest.nonrept_positions_short_all || 0);
   const openInterest = parseInt(latest.open_interest_all           || 1);
   const commNet      = commLong - commShort;
   const specNet      = specLong - specShort;
 
+  // PRIMARY SIGNAL = Large Speculators (not Commercials)
+  // Their WoW change is more important than absolute level
+  let specChange = null;
   let commChange = null;
   if (prev) {
-    const pL = parseInt(prev.comm_positions_long_all  || 0);
-    const pS = parseInt(prev.comm_positions_short_all || 0);
-    commChange = commNet - (pL - pS);
+    const pSpecL = parseInt(prev.noncomm_positions_long_all  || 0);
+    const pSpecS = parseInt(prev.noncomm_positions_short_all || 0);
+    specChange = specNet - (pSpecL - pSpecS);
+    const pCommL = parseInt(prev.comm_positions_long_all  || 0);
+    const pCommS = parseInt(prev.comm_positions_short_all || 0);
+    commChange = commNet - (pCommL - pCommS);
   }
 
-  const netPct     = (Math.abs(commNet) / openInterest) * 100;
   const specNetPct = (Math.abs(specNet) / openInterest) * 100;
 
-  // Neutral zone — within 2% of 50/50 → avoid false signal
-  const commLongPct = commLong / (commLong + commShort + 1) * 100;
-  const isNeutral   = commLongPct >= 48 && commLongPct <= 52;
+  // Signal based on Large Speculators
+  const specLongPct = specLong / (specLong + specShort + 1) * 100;
+  const isNeutral   = specLongPct >= 48 && specLongPct <= 52;
 
   let signal, advice;
   if (isNeutral) {
     signal = "NEUTRAL";
-    advice = "Commercials are near 50/50 — no clear institutional bias. No COT edge this week.";
-  } else if (commNet > 0) {
-    signal = netPct > 20 ? "STRONG LONG" : "NET LONG";
-    advice = netPct > 20
-      ? "Commercials heavily net long — institutional accumulation. Longs have strong tailwind."
-      : "Commercials net long — moderate institutional support for longs.";
+    advice = "Large Speculators near 50/50 — no clear directional bias from hedge funds. No COT edge.";
+  } else if (specNet > 0) {
+    signal = specNetPct > 20 ? "STRONG LONG" : "NET LONG";
+    advice = specNetPct > 20
+      ? "Hedge funds heavily net long — strong speculative demand. Longs have momentum tailwind."
+      : "Hedge funds net long — moderate speculative support for longs.";
   } else {
-    signal = netPct > 20 ? "STRONG SHORT" : "NET SHORT";
-    advice = netPct > 20
-      ? "Commercials heavily net short — smart money is hedging upside. Size down on longs, shorts have tailwind."
-      : "Commercials net short — institutional hedging in place. Be cautious on longs.";
+    signal = specNetPct > 20 ? "STRONG SHORT" : "NET SHORT";
+    advice = specNetPct > 20
+      ? "Hedge funds heavily net short — speculative selling pressure. Longs face headwind."
+      : "Hedge funds net short — moderate speculative pressure against longs.";
   }
 
+  // Extreme positioning warning — when specs are stretched, reversal risk rises
   let spec_warning = null;
-  if (specNet > 0 && specNetPct > 25 && commNet < 0)
-    spec_warning = "Large Speculators at extreme long while Commercials are short — classic reversal setup. High caution on longs.";
-  else if (specNet < 0 && specNetPct > 25 && commNet > 0)
-    spec_warning = "Large Speculators at extreme short while Commercials are long — potential bottom. Shorts may be crowded.";
+  if (specNetPct > 35 && specNet > 0)
+    spec_warning = "Large Speculators at EXTREME LONG — crowded trade. Reversal risk elevated. Institutions will sweep below the LL to flush these longs before next leg.";
+  else if (specNetPct > 35 && specNet < 0)
+    spec_warning = "Large Speculators at EXTREME SHORT — crowded trade. Squeeze risk elevated. Watch for sweep above HH to flush shorts before next leg down.";
+
+  // Commercial context note (always included for transparency)
+  const commNote = commNet < 0
+    ? `Commercials NET SHORT ${commNet.toLocaleString()} — hedging physical inventory (not directional)`
+    : `Commercials NET LONG ${commNet.toLocaleString()} — reducing hedge exposure`;
 
   return {
     report_date:   latest.report_date_as_yyyy_mm_dd || "N/A",
     market_name:   latest.market_and_exchange_names || "",
     data_type:     "legacy",
-    smart_money:   "Commercials",
+    smart_money:   "Large Speculators",
     comm_long:     commLong,
     comm_short:    commShort,
     comm_net:      commNet,
     comm_change:   commChange,
+    comm_note:     commNote,
     spec_long:     specLong,
     spec_short:    specShort,
     spec_net:      specNet,
+    spec_change:   specChange,
     small_long:    smallLong,
     small_short:   smallShort,
     open_interest: openInterest,
