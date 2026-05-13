@@ -117,6 +117,31 @@ select option{background:var(--bg)}
   color:var(--purple-lt);
 }
 
+/* Timeframe upload grid */
+.tf-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.tf-slot{border:1px dashed var(--border2);border-radius:10px;padding:16px 12px;text-align:center;cursor:pointer;transition:all .2s;position:relative;background:var(--bg)}
+.tf-slot:hover,.tf-slot.drag{border-color:var(--purple);background:rgba(139,92,246,.04)}
+.tf-slot.loaded{border-color:var(--green);border-style:solid;background:rgba(16,185,129,.04)}
+.tf-slot input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.tf-label{font-size:10px;font-weight:700;letter-spacing:.1em;margin-bottom:4px}
+.tf-req{color:var(--red)} .tf-opt{color:var(--dim)}
+.tf-status{font-size:9px;color:var(--muted);margin-top:3px}
+.tf-preview{width:100%;border-radius:6px;margin-top:6px;display:none;border:.5px solid var(--border)}
+
+/* Session history */
+.history-section{margin-bottom:16px}
+.history-item{
+  background:var(--card);border:1px solid var(--border);border-radius:8px;
+  padding:10px 14px;margin-bottom:6px;display:flex;align-items:center;
+  justify-content:space-between;cursor:pointer;transition:all .15s;
+}
+.history-item:hover{border-color:var(--border2);background:var(--card)}
+.history-left{display:flex;align-items:center;gap:10px}
+.history-inst{color:var(--cyan);font-size:11px;font-weight:700}
+.history-mode{font-size:9px;padding:2px 8px;border-radius:20px}
+.history-detail{color:var(--muted);font-size:9px;margin-top:2px}
+.history-view{color:var(--purple-lt);font-size:9px;font-weight:600;padding:4px 10px;border:1px solid var(--border2);border-radius:6px}
+
 /* Upload zone */
 .upload-zone{
   border:1px dashed var(--border2);border-radius:10px;padding:24px;
@@ -381,14 +406,34 @@ select option{background:var(--bg)}
 
 <!-- SCREENSHOT PANEL -->
 <div class="panel" id="screenshot-panel" style="display:none">
-  <div class="panel-title">Upload OmniUSD Analysis</div>
-  <div class="upload-zone" id="upload-zone">
-    <input type="file" id="file-input" accept="image/*" onchange="handleFile(event)">
-    <div class="upload-icon" id="upload-icon">📷</div>
-    <div class="upload-title" id="upload-title">Drop screenshot or tap to upload</div>
-    <div class="upload-sub">OmniUSD grade card or analysis screen</div>
+  <div class="panel-title">Upload Chart Screenshots <span style="color:var(--dim);font-weight:400;font-size:9px">(more timeframes = better institutional read)</span></div>
+  <div class="tf-grid">
+    <div class="tf-slot" id="tf-daily">
+      <input type="file" accept="image/*" onchange="handleTF(event,'daily')">
+      <div class="tf-label tf-opt">📅 DAILY</div>
+      <div class="tf-status" id="tf-daily-status">Optional — destination + major OBs</div>
+      <img class="tf-preview" id="tf-daily-preview" alt="Daily">
+    </div>
+    <div class="tf-slot" id="tf-4h">
+      <input type="file" accept="image/*" onchange="handleTF(event,'4h')">
+      <div class="tf-label tf-opt">⏱ 4H</div>
+      <div class="tf-status" id="tf-4h-status">Optional — accumulation phase</div>
+      <img class="tf-preview" id="tf-4h-preview" alt="4H">
+    </div>
+    <div class="tf-slot" id="tf-1h">
+      <input type="file" accept="image/*" onchange="handleTF(event,'1h')">
+      <div class="tf-label tf-opt">🕐 1H</div>
+      <div class="tf-status" id="tf-1h-status">Optional — sweep in progress?</div>
+      <img class="tf-preview" id="tf-1h-preview" alt="1H">
+    </div>
+    <div class="tf-slot" id="tf-30m">
+      <input type="file" accept="image/*" onchange="handleTF(event,'30m')">
+      <div class="tf-label tf-req">⚡ 30M *</div>
+      <div class="tf-status" id="tf-30m-status">Required — entry + order block</div>
+      <img class="tf-preview" id="tf-30m-preview" alt="30M">
+    </div>
   </div>
-  <img id="preview-img" class="preview-img" alt="Preview">
+  <div style="color:var(--dim);font-size:9px;margin-bottom:12px">* 30M required. Others optional but improve accuracy.</div>
 
   <!-- COT for screenshot mode -->
   <div class="panel-title" style="margin-bottom:10px">COT Signal — Select Instrument</div>
@@ -429,6 +474,12 @@ select option{background:var(--bg)}
       <option>PASS</option>
     </select>
   </div>
+</div>
+
+<!-- Session History -->
+<div class="history-section" id="history-section" style="display:none">
+  <div class="section-lbl" style="margin-bottom:8px;font-size:9px;color:var(--muted);letter-spacing:.12em">SESSION HISTORY</div>
+  <div id="history-list"></div>
 </div>
 
 <div class="err" id="err-box"></div>
@@ -513,6 +564,13 @@ let selectedCOTInst = "";
 let selectedCOTSig  = "";
 let imageBase64 = "";
 let imageType   = "";
+
+// Timeframe images
+const TF_IMAGES = { daily: null, "4h": null, "1h": null, "30m": null };
+
+// Session history
+let sessionHistory = [];
+let currentResult  = null;
 
 // ── COT Data (May 5, 2026) ────────────────────────────────────────────────────
 const COT_DATA = {
@@ -648,32 +706,24 @@ function selectCOT(el, inst, sig, cls) {
   checkReady();
 }
 
-// ── File upload ───────────────────────────────────────────────────────────────
-function handleFile(e) {
+// ── Timeframe upload ─────────────────────────────────────────────────────────
+function handleTF(e, tf) {
   const file = e.target.files[0];
   if (!file) return;
-  imageType = file.type || "image/png";
   const reader = new FileReader();
   reader.onload = () => {
-    imageBase64 = reader.result.split(",")[1];
-    const preview = document.getElementById("preview-img");
+    const data = reader.result.split(",")[1];
+    const type = file.type || "image/png";
+    TF_IMAGES[tf] = { data, type };
+    const preview = document.getElementById(`tf-${tf}-preview`);
     preview.src = reader.result;
     preview.style.display = "block";
-    document.getElementById("upload-title").textContent = file.name;
-    document.getElementById("upload-icon").textContent = "✅";
+    document.getElementById(`tf-${tf}-status`).textContent = "✅ " + file.name.slice(0,20);
+    document.getElementById(`tf-${tf}`).classList.add("loaded");
     checkReady();
   };
   reader.readAsDataURL(file);
 }
-
-const zone = document.getElementById("upload-zone");
-zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag"); });
-zone.addEventListener("dragleave", () => zone.classList.remove("drag"));
-zone.addEventListener("drop", e => {
-  e.preventDefault(); zone.classList.remove("drag");
-  const file = e.dataTransfer.files[0];
-  if (file) { document.getElementById("file-input").files = e.dataTransfer.files; handleFile({ target: { files: [file] } }); }
-});
 
 // ── Check ready ───────────────────────────────────────────────────────────────
 function checkReady() {
@@ -685,7 +735,7 @@ function checkReady() {
     ready = !!(inst && dir && news && selectedCOTInst);
   } else {
     const news = document.getElementById("s-news").value;
-    ready = !!(imageBase64 && selectedCOTInst && news);
+    ready = !!(TF_IMAGES["30m"] && selectedCOTInst && news);
   }
   document.getElementById("analyze-btn").disabled = !ready;
 }
@@ -725,19 +775,8 @@ async function analyze() {
       if (hl) structureLines.push(`Last HL (Higher Low):  ${hl}`);
       if (ll) structureLines.push(`Last LL (Lower Low):   ${ll}`);
       const structureBlock = structureLines.length > 0
-        ? `
-MARKET STRUCTURE LEVELS:
-${structureLines.join("
-")}
-
-USE THESE LEVELS TO:
-- Set stop exactly above HH (for SHORT) or below LL (for LONG)
-- Identify sweep zone: LL is where institutions will hunt stops on a SHORT
-- Calculate TP1 = sweep zone level + liquidity buffer (SHORT) or - buffer (LONG)
-- Calculate TP2 = next structural level beyond TP1
-- R:R = (entry - TP1) / (stop - entry) for SHORT`
-        : "
-No structure levels provided — estimate based on entry price.";
+        ? "\nMARKET STRUCTURE LEVELS:\n" + structureLines.join("\n") + "\n\nUSE THESE LEVELS TO:\n- Stop: above HH (SHORT) or below LL (LONG)\n- Sweep zone: LL=hunt target on SHORT, HH=hunt target on LONG\n- TP1 = sweep zone + buffer (SHORT) or - buffer (LONG)\n- TP2 = actual sweep zone level (runners only)\n- Order block: last opposing candle body before major move"
+        : "\nNo structure levels provided — estimate from entry price.";
 
       userContent = `Calculate the mode and exact levels for this trade:
 
@@ -764,12 +803,27 @@ Apply this buffer to TP1 (subtract for SHORT, add for LONG).`;
     } else {
       const news = document.getElementById("s-news").value;
       const buf  = BUFFERS[selectedCOTInst] || 12;
+      const tfLabels = { daily:"DAILY", "4h":"4H", "1h":"1H", "30m":"30M" };
+      const tfOrder  = ["daily","4h","1h","30m"];
+      const provided = tfOrder.filter(tf => TF_IMAGES[tf]);
 
-      userContent = [
-        { type: "image", source: { type: "base64", media_type: imageType, data: imageBase64 } },
-        { type: "text", text: `Read this OmniUSD analysis screenshot carefully. Extract: grade, direction, confidence score, entry price, stop, TP1, instrument.
+      userContent = [];
 
-Then calculate the correct mode and exact adjusted levels using:
+      // Add each timeframe image with label
+      provided.forEach(tf => {
+        userContent.push({ type:"image", source:{ type:"base64", media_type:TF_IMAGES[tf].type, data:TF_IMAGES[tf].data } });
+        userContent.push({ type:"text", text:`The above image is the ${tfLabels[tf]} chart.` });
+      });
+
+      userContent.push({ type:"text", text:`You have been provided ${provided.length} chart timeframe(s): ${provided.map(tf=>tfLabels[tf]).join(", ")}.
+${provided.length < 4 ? "Missing timeframes: " + tfOrder.filter(tf=>!TF_IMAGES[tf]).map(tf=>tfLabels[tf]).join(", ") + " — infer what you can from available charts." : "Full 4-timeframe read available."}
+
+Read ALL provided charts as an institution would. Identify:
+- The institutional destination (where are we taking price?)
+- The liquidity pools to collect (where are the retail stops?)
+- The order block zones (where did we build our position?)
+- The sweep in progress or completed
+- Both trade opportunities
 
 COT DATA (Week of May 5, 2026):
 - Instrument: ${selectedCOTInst}
@@ -780,8 +834,7 @@ COT DATA (Week of May 5, 2026):
 - Note: ${cot.note}
 
 NEWS CONDITION: ${news}
-LIQUIDITY BUFFER: ${buf} points — apply to TP1` }
-      ];
+LIQUIDITY BUFFER FOR ${selectedCOTInst}: ${buf} points` });
     }
 
     const response = await fetch("/api/decode", {
@@ -927,6 +980,65 @@ function renderResult(r) {
 
   document.getElementById("result").classList.add("show");
   document.getElementById("result").scrollIntoView({ behavior:"smooth", block:"start" });
+
+  // Save to history
+  currentResult = r;
+  saveHistory(r);
+}
+
+// ── Session History ───────────────────────────────────────────────────────────
+function saveHistory(r) {
+  const entry = {
+    id: Date.now(),
+    instrument: r.instrument || selectedCOTInst || "—",
+    mode: r.mode || "—",
+    phase: r.phase || "—",
+    destination: r.real_destination?.price || "—",
+    hunt: r.liquidity_hunt?.price || "—",
+    result: r,
+  };
+  // Remove duplicate instrument
+  sessionHistory = sessionHistory.filter(h => h.instrument !== entry.instrument);
+  sessionHistory.unshift(entry);
+  if (sessionHistory.length > 6) sessionHistory.pop();
+  renderHistory();
+}
+
+function renderHistory() {
+  if (sessionHistory.length === 0) return;
+  const section = document.getElementById("history-section");
+  const list    = document.getElementById("history-list");
+  section.style.display = "block";
+
+  const PHASE_COLORS = {
+    Accumulation:"rgba(16,185,129,.2)", Distribution:"rgba(239,68,68,.2)",
+    Reloading:"rgba(245,158,11,.2)",    Sweeping:"rgba(139,92,246,.2)",
+  };
+  const PHASE_TEXT = {
+    Accumulation:"#10b981", Distribution:"#ef4444",
+    Reloading:"#f59e0b",    Sweeping:"#a78bfa",
+  };
+
+  list.innerHTML = sessionHistory.map(h => `
+    <div class="history-item" onclick="viewHistory(${h.id})">
+      <div class="history-left">
+        <span class="history-inst">${h.instrument}</span>
+        <span class="history-mode" style="background:${PHASE_COLORS[h.phase]||'rgba(100,100,100,.2)'};color:${PHASE_TEXT[h.phase]||'#9ca3af'}">${h.phase}</span>
+        <div>
+          <div class="history-detail">Dest: ${h.destination} · Hunt: ${h.hunt}</div>
+          <div class="history-detail">${h.mode}</div>
+        </div>
+      </div>
+      <span class="history-view">VIEW</span>
+    </div>`).join("");
+}
+
+function viewHistory(id) {
+  const entry = sessionHistory.find(h => h.id === id);
+  if (!entry) return;
+  renderResult(entry.result);
+  window.scrollTo({ top:0, behavior:"smooth" });
+  setTimeout(() => document.getElementById("result").scrollIntoView({ behavior:"smooth", block:"start" }), 100);
 }
 
 // ── Reset ─────────────────────────────────────────────────────────────────────
@@ -943,6 +1055,19 @@ function reset() {
   ["m-hh","m-lh","m-hl","m-ll","m-entry","m-current"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = "";
+  });
+  // Clear TF images
+  ["daily","4h","1h","30m"].forEach(tf => {
+    TF_IMAGES[tf] = null;
+    const preview = document.getElementById(`tf-${tf}-preview`);
+    const slot    = document.getElementById(`tf-${tf}`);
+    const status  = document.getElementById(`tf-${tf}-status`);
+    if (preview) { preview.style.display="none"; preview.src=""; }
+    if (slot) slot.classList.remove("loaded");
+    if (status) {
+      const defaults = { daily:"Optional — destination + major OBs", "4h":"Optional — accumulation phase", "1h":"Optional — sweep in progress?", "30m":"Required — entry + order block" };
+      status.textContent = defaults[tf];
+    }
   });
   window.scrollTo({ top:0, behavior:"smooth" });
 }
