@@ -394,20 +394,27 @@ function renderCOTReport(results) {
   let html = '<div class="cot-report-grid">';
 
   results.forEach(d => {
-    const inst    = d.instrument;
-    const meta    = COT_META[inst] || {};
-    const signal  = d.signal || "N/A";
-    const color   = SIG_COLOR[signal] || "purple";
-    const c       = ic[color] || ic.purple;
-    const longPct = d.comm_long  && d.comm_short ? Math.round(d.comm_long  / (d.comm_long + d.comm_short) * 100) : 50;
-    const shortPct= 100 - longPct;
-    const net     = d.comm_net !== undefined ? d.comm_net : null;
-    const netStr  = net !== null ? (net >= 0 ? `+${net.toLocaleString()}` : net.toLocaleString()) : "—";
-    const change  = d.comm_change !== null && d.comm_change !== undefined ? d.comm_change : null;
-    const changeStr = change !== null
-      ? (change >= 0 ? `▲ +${change.toLocaleString()} WoW` : `▼ ${change.toLocaleString()} WoW`)
+    const inst       = d.instrument;
+    const meta       = COT_META[inst] || {};
+    const signal     = d.signal || "N/A";
+    const color      = SIG_COLOR[signal] || "purple";
+    const c          = ic[color] || ic.purple;
+    const smartMoney = d.smart_money || "Commercials";
+
+    // Use the correct group's data for the bar — Large Specs for Gold/Silver, Commercials/AM for rest
+    const isLargeSpec = smartMoney === "Large Speculators";
+    const displayLong  = isLargeSpec ? (d.spec_long  || 0) : (d.comm_long  || 0);
+    const displayShort = isLargeSpec ? (d.spec_short || 0) : (d.comm_short || 0);
+    const displayNet   = isLargeSpec ? (d.spec_net   !== undefined ? d.spec_net  : null) : (d.comm_net !== undefined ? d.comm_net : null);
+    const displayChange= isLargeSpec ? (d.spec_change !== undefined ? d.spec_change : null) : (d.comm_change !== undefined ? d.comm_change : null);
+
+    const longPct  = displayLong && displayShort ? Math.round(displayLong / (displayLong + displayShort) * 100) : 50;
+    const shortPct = 100 - longPct;
+    const netStr   = displayNet !== null ? (displayNet >= 0 ? `+${displayNet.toLocaleString()}` : displayNet.toLocaleString()) : "—";
+    const changeStr = displayChange !== null
+      ? (displayChange >= 0 ? `▲ +${displayChange.toLocaleString()} WoW` : `▼ ${displayChange.toLocaleString()} WoW`)
       : "";
-    const changeColor = change > 0 ? "var(--green)" : change < 0 ? "var(--red)" : "var(--dim)";
+    const changeColor = displayChange > 0 ? "var(--green)" : displayChange < 0 ? "var(--red)" : "var(--dim)";
 
     if (d.report_date && !reportDate) reportDate = d.report_date;
 
@@ -424,7 +431,8 @@ function renderCOTReport(results) {
     html += `
       <div class="cot-inst-card cot-card-${color}">
         <div class="cot-inst-name">${inst}</div>
-        <div class="cot-inst-group">${meta.smartMoney} · ${meta.label}</div>
+        <div class="cot-inst-group">${smartMoney} · ${meta.label}</div>
+        ${isLargeSpec && d.comm_note ? `<div style="color:var(--dimmer);font-size:8px;margin-top:2px;font-style:italic">${d.comm_note}</div>` : ""}
         <div class="cot-bar-wrap">
           <div class="cot-bar-track">
             <div class="cot-bar-long"  style="width:${longPct}%"></div>
