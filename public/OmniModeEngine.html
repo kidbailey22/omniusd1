@@ -327,10 +327,9 @@ select option{background:var(--bg)}
       </select>
     </div>
     <div class="field">
-      <label>News Condition</label>
+      <label>News Condition <span style="color:var(--dim);font-weight:400;font-size:9px">(optional — from decoder)</span></label>
       <select id="m-news">
-        <option value="">Select...</option>
-        <option>CLEAR</option>
+        <option value="CLEAR" selected>CLEAR (default)</option>
         <option>CAUTION</option>
         <option value="HIGH NOISE">HIGH NOISE</option>
         <option>PASS</option>
@@ -377,13 +376,13 @@ select option{background:var(--bg)}
   <!-- COT Quick Select -->
   <div class="panel-title" style="margin-bottom:10px">COT Signal — Select Instrument</div>
   <div class="cot-row" id="manual-cot-row">
-    <div class="cot-pill" onclick="selectCOT(this,'XAUUSD','STRONG SHORT','sl')" data-inst="XAUUSD" data-sig="STRONG SHORT">
+    <div class="cot-pill" onclick="selectCOT(this,'XAUUSD','NET LONG','sl2')" data-inst="XAUUSD" data-sig="NET LONG">
       <div class="cot-inst">XAUUSD</div>
-      <div class="cot-sig sig-sl">STRONG SHORT</div>
+      <div class="cot-sig sig-sl2">L.SPEC LONG</div>
     </div>
-    <div class="cot-pill" onclick="selectCOT(this,'XAGUSD','STRONG SHORT','sl')" data-inst="XAGUSD" data-sig="STRONG SHORT">
+    <div class="cot-pill" onclick="selectCOT(this,'XAGUSD','NET LONG','sl2')" data-inst="XAGUSD" data-sig="NET LONG">
       <div class="cot-inst">XAGUSD</div>
-      <div class="cot-sig sig-sl">STRONG SHORT</div>
+      <div class="cot-sig sig-sl2">L.SPEC LONG</div>
     </div>
     <div class="cot-pill" onclick="selectCOT(this,'EURUSD','STRONG LONG','sl2')" data-inst="EURUSD" data-sig="STRONG LONG">
       <div class="cot-inst">EURUSD</div>
@@ -438,13 +437,13 @@ select option{background:var(--bg)}
   <!-- COT for screenshot mode -->
   <div class="panel-title" style="margin-bottom:10px">COT Signal — Select Instrument</div>
   <div class="cot-row" id="screenshot-cot-row">
-    <div class="cot-pill" onclick="selectCOT(this,'XAUUSD','STRONG SHORT','sl')" data-inst="XAUUSD" data-sig="STRONG SHORT">
+    <div class="cot-pill" onclick="selectCOT(this,'XAUUSD','NET LONG','sl2')" data-inst="XAUUSD" data-sig="NET LONG">
       <div class="cot-inst">XAUUSD</div>
-      <div class="cot-sig sig-sl">STRONG SHORT</div>
+      <div class="cot-sig sig-sl2">L.SPEC LONG</div>
     </div>
-    <div class="cot-pill" onclick="selectCOT(this,'XAGUSD','STRONG SHORT','sl')" data-inst="XAGUSD" data-sig="STRONG SHORT">
+    <div class="cot-pill" onclick="selectCOT(this,'XAGUSD','NET LONG','sl2')" data-inst="XAGUSD" data-sig="NET LONG">
       <div class="cot-inst">XAGUSD</div>
-      <div class="cot-sig sig-sl">STRONG SHORT</div>
+      <div class="cot-sig sig-sl2">L.SPEC LONG</div>
     </div>
     <div class="cot-pill" onclick="selectCOT(this,'EURUSD','STRONG LONG','sl2')" data-inst="EURUSD" data-sig="STRONG LONG">
       <div class="cot-inst">EURUSD</div>
@@ -465,10 +464,9 @@ select option{background:var(--bg)}
   </div>
 
   <div class="field" style="margin-bottom:12px">
-    <label>News Condition</label>
+    <label>News Condition <span style="color:var(--dim);font-weight:400;font-size:9px">(optional — from decoder)</span></label>
     <select id="s-news">
-      <option value="">Select...</option>
-      <option>CLEAR</option>
+      <option value="CLEAR" selected>CLEAR (default)</option>
       <option>CAUTION</option>
       <option value="HIGH NOISE">HIGH NOISE</option>
       <option>PASS</option>
@@ -574,12 +572,38 @@ let currentResult  = null;
 
 // ── COT Data (May 5, 2026) ────────────────────────────────────────────────────
 const COT_DATA = {
-  XAUUSD: { signal:"STRONG SHORT", net:"-198,935", pct:"18% Long / 82% Short", group:"Commercials", note:"Commercials are hedgers — SHORT means they're insuring gold inventory, not predicting a crash. Track Large Specs for direction." },
-  XAGUSD: { signal:"STRONG SHORT", net:"-40,535",  pct:"28% Long / 72% Short", group:"Commercials", note:"Same as Gold — Commercials are hedging physical silver inventory." },
-  EURUSD: { signal:"STRONG LONG",  net:"+285,613", pct:"74% Long / 26% Short", group:"Asset Managers", note:"Asset Managers making directional bets — STRONG LONG is a real bullish signal." },
-  NAS100: { signal:"STRONG LONG",  net:"+85,132",  pct:"78% Long / 22% Short", group:"Asset Managers", note:"Institutions added +6,434 contracts this week. Bullish conviction increasing." },
-  US30:   { signal:"MIXED",        net:"+2,638",   pct:"55% Long / 45% Short", group:"Asset Managers", note:"Near neutral — no clear institutional directional edge." },
-  US500:  { signal:"STRONG LONG",  net:"+998,208", pct:"86% Long / 14% Short", group:"Asset Managers", note:"Strongest institutional long conviction of all 6 instruments." },
+  XAUUSD: {
+    signal:"NET LONG", net:"+163,571", pct:"76% Long / 24% Short",
+    group:"Large Speculators",
+    note:"Large Speculators (hedge funds) are the DIRECTIONAL signal for Gold — they make bets, not hedges. NET LONG = bullish momentum. Commercials are NET SHORT -198,935 but that is hedging physical inventory — NOT a directional signal.",
+    comm_note:"Commercials NET SHORT -198,935 — hedging gold inventory (ignore for direction)"
+  },
+  XAGUSD: {
+    signal:"NET LONG", net:"+24,141", pct:"78% Long / 22% Short",
+    group:"Large Speculators",
+    note:"Same as Gold — Large Speculators are the directional signal. NET LONG = bullish momentum from hedge funds. Commercials SHORT means miners are hedging — not a bearish signal.",
+    comm_note:"Commercials NET SHORT -40,535 — hedging silver inventory (ignore for direction)"
+  },
+  EURUSD: {
+    signal:"STRONG LONG", net:"+285,613", pct:"74% Long / 26% Short",
+    group:"Asset Managers",
+    note:"Asset Managers making directional bets — STRONG LONG is a real bullish signal."
+  },
+  NAS100: {
+    signal:"STRONG LONG", net:"+85,132", pct:"78% Long / 22% Short",
+    group:"Asset Managers",
+    note:"Institutions added +6,434 contracts this week. Bullish conviction increasing."
+  },
+  US30: {
+    signal:"MIXED", net:"+2,638", pct:"55% Long / 45% Short",
+    group:"Asset Managers",
+    note:"Near neutral — no clear institutional directional edge."
+  },
+  US500: {
+    signal:"STRONG LONG", net:"+998,208", pct:"86% Long / 14% Short",
+    group:"Asset Managers",
+    note:"Strongest institutional long conviction of all 6 instruments."
+  },
 };
 
 // ── Liquidity buffers per instrument ─────────────────────────────────────────
@@ -731,11 +755,9 @@ function checkReady() {
   if (activeTab === "manual") {
     const inst = document.getElementById("m-instrument").value;
     const dir  = document.getElementById("m-direction").value;
-    const news = document.getElementById("m-news").value;
-    ready = !!(inst && dir && news && selectedCOTInst);
+    ready = !!(inst && dir && selectedCOTInst);
   } else {
-    const news = document.getElementById("s-news").value;
-    ready = !!(TF_IMAGES["30m"] && selectedCOTInst && news);
+    ready = !!(TF_IMAGES["30m"] && selectedCOTInst);
   }
   document.getElementById("analyze-btn").disabled = !ready;
 }
