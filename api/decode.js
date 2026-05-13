@@ -50,7 +50,7 @@ For calendar: list only HIGH and MEDIUM impact US events this week with CT times
 If you cannot find DXY or yield from search — use your knowledge of recent values as a best estimate and mark as "est."
 
 Return ONLY this JSON, no markdown, no backticks:
-{"week_of":"May 12-16 2026","dxy":{"value":"101.5","direction":"up or down or flat","note":"one line on dollar impact"},"yield_10y":{"value":"4.31%","direction":"up or down or flat","note":"one line on yield impact"},"fedwatch":{"next_meeting":"June 17-18","hold_pct":"90","cut_pct":"10","hike_pct":"0","note":"one line"},"calendar":[{"day":"Tue","date":"May 12","time_ct":"7:30 AM","event":"CPI April","impact":"HIGH","forecast":"3.1%","instruments":["XAUUSD","EURUSD","NAS100","US30","US500"],"color":"red"}],"week_bias":"one sentence","key_risk":"one sentence","instrument_outlook":[{"instrument":"XAUUSD","verdict":"TRADE or CAUTION or AVOID","plain_english":"1-2 sentences in plain language — what does all of this mean for trading Gold this week? No jargon."},{"instrument":"XAGUSD","verdict":"TRADE or CAUTION or AVOID","plain_english":"plain language summary"},{"instrument":"EURUSD","verdict":"TRADE or CAUTION or AVOID","plain_english":"plain language summary"},{"instrument":"NAS100","verdict":"TRADE or CAUTION or AVOID","plain_english":"plain language summary"},{"instrument":"US30","verdict":"TRADE or CAUTION or AVOID","plain_english":"plain language summary"},{"instrument":"US500","verdict":"TRADE or CAUTION or AVOID","plain_english":"plain language summary"}]}`;
+{"week_of":"May 12-16 2026","dxy":{"value":"101.5","direction":"up or down or flat","note":"one line on dollar impact"},"yield_10y":{"value":"4.31%","direction":"up or down or flat","note":"one line on yield impact"},"fedwatch":{"next_meeting":"June 17-18","hold_pct":"90","cut_pct":"10","hike_pct":"0","note":"one line"},"calendar":[{"day":"Tue","date":"May 12","time_ct":"7:30 AM","event":"CPI April","impact":"HIGH","forecast":"3.1%","instruments":["XAUUSD","EURUSD","NAS100","US30","US500"],"color":"red"}],"week_bias":"one sentence","key_risk":"one sentence","instrument_outlook":[{"instrument":"XAUUSD","verdict":"TRADE or CAUTION or AVOID","direction":"LONG or SHORT or NEUTRAL","plain_english":"max 20 words — must state LONG or SHORT bias explicitly"},{"instrument":"XAGUSD","verdict":"TRADE or CAUTION or AVOID","direction":"LONG or SHORT or NEUTRAL","plain_english":"max 20 words — must state LONG or SHORT"},{"instrument":"EURUSD","verdict":"TRADE or CAUTION or AVOID","direction":"LONG or SHORT or NEUTRAL","plain_english":"max 20 words — must state LONG or SHORT"},{"instrument":"NAS100","verdict":"TRADE or CAUTION or AVOID","direction":"LONG or SHORT or NEUTRAL","plain_english":"max 20 words — must state LONG or SHORT"},{"instrument":"US30","verdict":"TRADE or CAUTION or AVOID","direction":"LONG or SHORT or NEUTRAL","plain_english":"max 20 words — must state LONG or SHORT"},{"instrument":"US500","verdict":"TRADE or CAUTION or AVOID","direction":"LONG or SHORT or NEUTRAL","plain_english":"max 20 words — must state LONG or SHORT"}]}`;
 
 // ── News System Prompt ────────────────────────────────────────────────────────
 const NEWS_SYSTEM = `You are OmniDecode, the macro intelligence layer for OmniUSD — a BRC trading system for the NY session (8:30-10:30 AM CT).
@@ -147,7 +147,7 @@ module.exports = async function handler(req, res) {
     if (mode === "dashboard") {
       body = {
         model: "claude-sonnet-4-20250514",
-        max_tokens: 1000,
+        max_tokens: 1800,
         system: DASHBOARD_SYSTEM,
         tools: [{ type: "web_search_20250305", name: "web_search" }],
         messages: [{
@@ -195,6 +195,15 @@ module.exports = async function handler(req, res) {
 
 ${trumpText}`
         }]
+      };
+    } else if (mode === "omniintel") {
+      // OmniIntel — Opus 4, full institutional thinking
+      const systemPrompt = req.body.system_override || ANALYSIS_SYSTEM;
+      body = {
+        model: "claude-opus-4-5",
+        max_tokens: 2000,
+        system: systemPrompt,
+        messages: messages,
       };
     } else if (mode === "analyze") {
       body = {
