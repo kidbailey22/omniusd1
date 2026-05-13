@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OmniUSD — Mode Engine</title>
+<title>OmniIntel — Institutional Edge</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;500;600;700;800&display=swap');
 
@@ -252,10 +252,10 @@ select option{background:var(--bg)}
   <div class="logo-row">
     <div class="logo-hex">⬡</div>
     <div>
-      <div class="logo-name">OMNIUSD</div>
+      <div class="logo-name">OmniIntel</div>
     </div>
   </div>
-  <div class="logo-sub">MODE ENGINE — ENTRY &amp; EXIT CALCULATOR</div>
+  <div class="logo-sub">INSTITUTIONAL EDGE — THINK LIKE THE CARTEL</div>
   <div class="rule"></div>
 </div>
 
@@ -325,6 +325,27 @@ select option{background:var(--bg)}
     <div class="field">
       <label>Current Price</label>
       <input type="number" id="m-current" placeholder="e.g. 4680.0" step="0.1">
+    </div>
+  </div>
+
+  <div style="height:.5px;background:var(--border);margin:4px 0 14px"></div>
+  <div class="panel-title" style="margin-bottom:10px;font-size:10px">Market Structure Levels <span style="color:var(--dim);font-weight:400;font-size:9px">(optional — improves accuracy)</span></div>
+  <div class="form-grid">
+    <div class="field">
+      <label>Last HH (Higher High)</label>
+      <input type="number" id="m-hh" placeholder="e.g. 29295.75" step="0.01">
+    </div>
+    <div class="field">
+      <label>Last LH (Lower High)</label>
+      <input type="number" id="m-lh" placeholder="e.g. 28900.00" step="0.01">
+    </div>
+    <div class="field">
+      <label>Last HL (Higher Low)</label>
+      <input type="number" id="m-hl" placeholder="e.g. 28850.00" step="0.01">
+    </div>
+    <div class="field">
+      <label>Last LL (Lower Low)</label>
+      <input type="number" id="m-ll" placeholder="e.g. 28741.25" step="0.01">
     </div>
   </div>
 
@@ -411,17 +432,18 @@ select option{background:var(--bg)}
 </div>
 
 <div class="err" id="err-box"></div>
-<button class="btn-analyze" id="analyze-btn" onclick="analyze()" disabled>CALCULATE MODE ↗</button>
+<button class="btn-analyze" id="analyze-btn" onclick="analyze()" disabled>READ INSTITUTIONAL FOOTPRINT ↗</button>
 
 <!-- Loading -->
 <div class="loading" id="loading">
-  <div class="loading-lbl">CALCULATING</div>
+  <div class="loading-lbl">READING INSTITUTIONAL FOOTPRINT</div>
   <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
 </div>
 
 <!-- Result -->
 <div class="result" id="result">
 
+  <!-- Phase + Mode banner -->
   <div class="decision-banner" id="decision-banner">
     <div class="decision-left">
       <div class="decision-mode" id="res-mode"></div>
@@ -431,29 +453,55 @@ select option{background:var(--bg)}
     <div class="decision-badge" id="res-badge"></div>
   </div>
 
-  <!-- Key Levels -->
-  <div class="levels-grid" id="levels-grid"></div>
-
-  <!-- 3 Layer Check -->
-  <div class="layers-row" id="layers-row"></div>
-
-  <!-- Sweep Note -->
-  <div class="sweep-note" id="sweep-note" style="display:none">
-    <div class="sweep-text" id="sweep-text"></div>
+  <!-- Institutional Read -->
+  <div class="reasoning" id="inst-read-box">
+    <div class="reasoning-lbl">INSTITUTIONAL READ</div>
+    <div class="reasoning-text" id="res-inst-read"></div>
   </div>
 
-  <!-- Reasoning -->
-  <div class="reasoning">
-    <div class="reasoning-lbl">FULL REASONING</div>
-    <div class="reasoning-text" id="res-reasoning"></div>
+  <!-- Real Destination + Liquidity Hunt -->
+  <div class="levels-grid" id="dest-grid"></div>
+
+  <!-- Order Block -->
+  <div class="sweep-note" id="ob-box" style="display:none">
+    <div class="sweep-text" id="ob-text"></div>
   </div>
 
-  <!-- Exit Rule -->
+  <!-- TRADE 1 -->
+  <div id="trade1-section">
+    <div class="reasoning-lbl" style="margin-bottom:10px">⬇ TRADE 1 — WITH THE HUNT</div>
+    <div class="levels-grid" id="trade1-grid"></div>
+    <div class="rule-box" id="trade1-bias-box">
+      <div class="rule-text" id="trade1-bias"></div>
+    </div>
+  </div>
+
+  <!-- TRADE 2 -->
+  <div id="trade2-section">
+    <div class="reasoning-lbl" style="margin-bottom:10px">⬆ TRADE 2 — WITH INSTITUTIONS</div>
+    <div class="levels-grid" id="trade2-grid"></div>
+    <div class="rule-box" id="trade2-bias-box">
+      <div class="rule-text" id="trade2-bias"></div>
+    </div>
+  </div>
+
+  <!-- COT Context -->
+  <div class="reasoning" id="cot-context-box">
+    <div class="reasoning-lbl">COT CONTEXT</div>
+    <div class="reasoning-text" id="res-cot-context"></div>
+  </div>
+
+  <!-- Invalidation -->
+  <div class="sweep-note" id="inval-box">
+    <div class="sweep-text" id="inval-text"></div>
+  </div>
+
+  <!-- Key Warning -->
   <div class="rule-box">
     <div class="rule-text" id="res-rule"></div>
   </div>
 
-  <button class="btn-reset" onclick="reset()">↺ NEW CALCULATION</button>
+  <button class="btn-reset" onclick="reset()">↺ NEW ANALYSIS</button>
 </div>
 
 </div>
@@ -482,52 +530,100 @@ const BUFFERS = {
 };
 
 // ── System Prompt ─────────────────────────────────────────────────────────────
-const SYSTEM = `You are the OmniUSD Mode Engine — a precision trade decision calculator for a BRC (Break-Retest-Continuation) trading system focused on the NY session (8:30-10:30 AM CT).
+const SYSTEM = `You are the OmniIntel engine. You do not analyze markets from the outside. You ARE the trading desk.
 
-OMNIUSD x COT TRADING MANTRA (LOCKED):
-MODE 1: Confidence 60%+ AND COT agrees with direction → Execute. Full size.
-MODE 1 SIZE DOWN: Confidence 60%+ AND COT agrees BUT news = CAUTION → Execute. Half size.
-MODE 2A: Low confidence (25-35%) + COT contradicts + OmniUSD LONG → Fade it. Go SHORT.
-MODE 2B: Low confidence (25-35%) + COT contradicts + OmniUSD SHORT → Fade it. Go LONG.
-MODE 2C: Low confidence (25-35%) + COT NEUTRAL → No trade. No edge.
-PASS: HIGH NOISE news day OR grade PASS/SKIP OR confidence below 25%.
+You have capital to move. You have a position to build. You need liquidity. You think, act, and reason like the institutions documented in the 2015 DOJ case — JPMorgan, Citigroup, Barclays, RBS — who pled guilty to coordinating currency market moves through private chat rooms called "The Cartel", "The Mafia", and "The Bandits Club". Their behavior is your behavioral model.
 
-LIQUIDITY SWEEP RULE:
-Institutions sweep obvious levels before reversing every single session (especially 8:30-9:00 AM CT).
-For Mode 2: entry is AFTER the sweep completes — wait for first 30M candle close back above (for long) or below (for short) the swept level.
-TP1 must have a liquidity buffer applied BEFORE the obvious level (not AT it):
-- XAUUSD/XAGUSD: 12 points buffer
-- NAS100: 20 points buffer  
-- US30: 15 points buffer
-- US500: 8 points buffer
-- EURUSD: 10 pips buffer
+YOUR CORE QUESTION IS NEVER "where is price going?"
+YOUR CORE QUESTION IS: "Where do WE need price to go, and what do we need to collect before we can get there?"
 
-EXIT RULE: Do NOT exit early. A reversal is ONLY confirmed when a 30M candle CLOSES back above entry (for shorts) or below entry (for longs). Green candles on a short are noise. Red candles on a long are noise.
+═══════════════════════════════════════════
+INSTITUTIONAL MECHANICS (ABSOLUTE RULES)
+═══════════════════════════════════════════
 
-Given the trade parameters, calculate the exact mode and levels.
-If entry price is provided, calculate exact TP1, TP2, stop with buffer applied.
-If no entry price — give the entry trigger condition instead.
+1. LIQUIDITY ENGINEERING
+Before any major move, institutions need orders on the other side. They manufacture a sweep of the obvious level (LL for shorts, HH for longs) to trigger retail stop losses and breakout orders. That flood of triggered orders is their fill. Every session. Every day. Especially 8:30-9:00 AM CT.
+
+2. ORDER BLOCKS
+The last opposing candle before a major impulsive move is the order block — where the institution built its position. Rules:
+- Bearish OB: last BULLISH candle before a major drop. Body only (open to close). Not the wick.
+- Bullish OB: last BEARISH candle before a major rally. Body only.
+- Must be UNMITIGATED (price hasn't returned and passed through it yet)
+- Higher timeframe OB > lower timeframe OB
+- Price ALWAYS returns to reload before the next leg. That return is not a pullback — it's a reload.
+
+3. THE TWO TRADES
+Every institutional setup has two trades available:
+TRADE 1 — WITH THE HUNT: Enter in the direction of the engineered sweep. Exit BEFORE institutions collect (with liquidity buffer). You're riding their engineering move.
+TRADE 2 — WITH INSTITUTIONS: Enter AFTER the sweep completes — on the first 30M candle close back above (long) or below (short) the swept level. You're now moving WITH them toward the real destination.
+
+4. LIQUIDITY BUFFERS (exit before they sweep it)
+XAUUSD/XAGUSD: 12 points | NAS100: 20 points | US30: 15 points | US500: 8 points | EURUSD: 10 pips
+
+5. COT = REAL DESTINATION
+- Asset Managers (Indices/Forex): These are directional bets. Where they're positioned = where institutions are taking price.
+- Commercials (Gold/Silver): These are hedges, NOT directional. Track Large Spec positioning changes for Gold direction.
+- COT STRONG LONG on NAS100 = real destination is UP. The sweep goes DOWN to collect, then UP is the real move.
+- COT STRONG SHORT on an index = real destination is DOWN. Sweep goes UP first, then DOWN.
+
+6. OmniUSD MODE RULES (LOCKED)
+MODE 1: Confidence 60%+ AND COT agrees → Execute Trade 1. Full size.
+MODE 2A: Low confidence 25-35% + COT contradicts + OmniUSD LONG → This is the setup. Trade 1 = SHORT to sweep. Trade 2 = LONG after sweep.
+MODE 2B: Low confidence 25-35% + COT contradicts + OmniUSD SHORT → Trade 1 = LONG to sweep. Trade 2 = SHORT after sweep.
+MODE 2C: COT NEUTRAL → No edge. Pass.
+PASS: HIGH NOISE news day OR confidence below 25% OR grade PASS/SKIP.
+
+7. EXIT RULE (IRONCLAD)
+A reversal is ONLY confirmed when a 30M candle CLOSES back above entry (for shorts) or below entry (for longs). Everything else is noise. Do not exit early.
+
+═══════════════════════════════════════════
+OUTPUT FORMAT
+═══════════════════════════════════════════
 
 Respond ONLY with valid JSON, no markdown, no backticks:
 {
-  "mode": "Mode 1 | Mode 1 (Size Down) | Mode 2A | Mode 2B | Mode 2C | PASS",
-  "decision": "EXECUTE LONG | EXECUTE SHORT | FADE — GO LONG | FADE — GO SHORT | PASS — NO TRADE",
-  "sizing": "Full size | Half size | Quarter size | No trade",
-  "entry_trigger": "exact 30M close condition — e.g. 30M close below 4693.2",
-  "entry_price": "price or N/A if not calculable",
-  "stop": "exact price with brief reason",
-  "tp1": "exact price with buffer applied",
-  "tp2": "exact price — the obvious level where sweep will occur",
-  "rr": "X:1",
-  "layers": {
-    "cot": {"verdict":"Agrees|Contradicts|Neutral","detail":"one line","color":"green|red|amber"},
-    "news": {"verdict":"Clear|Caution|High Noise|Pass","detail":"one line","color":"green|amber|red"},
-    "grade": {"verdict":"Strong|Moderate|Weak|Pass","detail":"one line","color":"green|amber|red|purple"}
+  "instrument": "XAUUSD",
+  "mode": "Mode 1 | Mode 2A | Mode 2B | Mode 2C | PASS",
+  "phase": "Accumulation | Distribution | Reloading | Sweeping | No Setup",
+  "institutional_read": "2-3 sentences thinking FROM the institution. What do you need? Where is the liquidity? What is your real destination? Use 'we' perspective.",
+  "real_destination": {"price": "exact price", "reason": "why we need price here — COT direction, order block, structural target"},
+  "liquidity_hunt": {"price": "exact price", "type": "LL sweep | HH sweep | Both", "orders_sitting_here": "what retail orders are clustered here — stops, breakouts"},
+  "order_block": {"zone_high": "price", "zone_low": "price", "type": "Bearish OB | Bullish OB", "timeframe": "30M | 1H | 4H | Daily", "status": "Fresh | Partially mitigated | Mitigated", "significance": "one line why this level matters"},
+  "trade_1": {
+    "label": "WITH THE HUNT",
+    "direction": "LONG | SHORT",
+    "institutional_bias": "one sentence — what engineering move are we riding?",
+    "entry_trigger": "exact 30M close condition",
+    "entry_price": "exact price or estimated range",
+    "stop": "exact price",
+    "stop_reason": "why this level — what breaks the thesis if hit",
+    "tp1": "exact price with buffer applied",
+    "tp1_reason": "exit before sweep zone — specific price logic",
+    "tp2": "exact price",
+    "tp2_reason": "sweep zone — runners only",
+    "rr": "X:1",
+    "sizing": "Full size | Half size | No trade",
+    "entry_window": "best time window CT"
   },
-  "sweep_warning": "one sentence about the liquidity level to watch — where institutions will sweep before the real move. Or null if not applicable.",
-  "reasoning": "2-3 sentences applying the exact mantra. Be specific about prices and levels.",
-  "exit_rule": "The one rule for this specific trade — when to stay in and when to get out. Reference the entry price.",
-  "key_warning": "one sentence — most critical thing for this specific setup"
+  "trade_2": {
+    "label": "WITH INSTITUTIONS",
+    "direction": "LONG | SHORT",
+    "institutional_bias": "one sentence — we have collected the liquidity, now executing the real move",
+    "entry_trigger": "first 30M close back above/below swept level",
+    "entry_price": "exact price or estimated range",
+    "stop": "exact price",
+    "stop_reason": "below sweep low / above sweep high — if we break back through, thesis wrong",
+    "tp1": "exact price",
+    "tp1_reason": "order block reload zone or first structural target",
+    "tp2": "exact price",
+    "tp2_reason": "real institutional destination",
+    "rr": "X:1",
+    "sizing": "Full size | Half size",
+    "entry_window": "9:00-9:30 AM CT — after sweep completes"
+  },
+  "cot_context": "How COT positioning confirms the institutional read. Is the real destination confirmed by smart money? What does the WoW change tell us?",
+  "invalidation": "What would make this entire read wrong — what price action breaks the institutional thesis completely?",
+  "key_warning": "One sentence — most critical thing before executing either trade"
 }`;
 
 // ── Tab switching ─────────────────────────────────────────────────────────────
@@ -618,6 +714,31 @@ async function analyze() {
       const curr  = document.getElementById("m-current").value;
       const buf   = BUFFERS[inst] || 12;
 
+      const hh = document.getElementById("m-hh").value;
+      const lh = document.getElementById("m-lh").value;
+      const hl = document.getElementById("m-hl").value;
+      const ll = document.getElementById("m-ll").value;
+
+      const structureLines = [];
+      if (hh) structureLines.push(`Last HH (Higher High): ${hh}`);
+      if (lh) structureLines.push(`Last LH (Lower High):  ${lh}`);
+      if (hl) structureLines.push(`Last HL (Higher Low):  ${hl}`);
+      if (ll) structureLines.push(`Last LL (Lower Low):   ${ll}`);
+      const structureBlock = structureLines.length > 0
+        ? `
+MARKET STRUCTURE LEVELS:
+${structureLines.join("
+")}
+
+USE THESE LEVELS TO:
+- Set stop exactly above HH (for SHORT) or below LL (for LONG)
+- Identify sweep zone: LL is where institutions will hunt stops on a SHORT
+- Calculate TP1 = sweep zone level + liquidity buffer (SHORT) or - buffer (LONG)
+- Calculate TP2 = next structural level beyond TP1
+- R:R = (entry - TP1) / (stop - entry) for SHORT`
+        : "
+No structure levels provided — estimate based on entry price.";
+
       userContent = `Calculate the mode and exact levels for this trade:
 
 INSTRUMENT: ${inst}
@@ -627,6 +748,7 @@ CONFIDENCE SCORE: ${conf}%
 NEWS CONDITION: ${news}
 ENTRY PRICE: ${entry || "not provided — give entry trigger condition"}
 CURRENT PRICE: ${curr || "not provided"}
+${structureBlock}
 
 COT DATA (Week of May 5, 2026):
 - Instrument: ${selectedCOTInst}
@@ -666,7 +788,8 @@ LIQUIDITY BUFFER: ${buf} points — apply to TP1` }
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        mode: "analyze",
+        mode: "omniintel",
+        system_override: SYSTEM,
         messages: [{ role: "user", content: userContent }],
       }),
     });
@@ -686,93 +809,121 @@ LIQUIDITY BUFFER: ${buf} points — apply to TP1` }
 }
 
 // ── Render result ─────────────────────────────────────────────────────────────
-const DECISION_STYLES = {
-  "EXECUTE LONG":       { bg:"rgba(16,185,129,.1)",  border:"rgba(16,185,129,.4)",  modeC:"#10b981", titleC:"#10b981", badgeBg:"rgba(16,185,129,.2)", badgeC:"#10b981" },
-  "EXECUTE SHORT":      { bg:"rgba(239,68,68,.1)",   border:"rgba(239,68,68,.4)",   modeC:"#ef4444", titleC:"#ef4444", badgeBg:"rgba(239,68,68,.2)", badgeC:"#ef4444" },
-  "FADE — GO LONG":     { bg:"rgba(139,92,246,.1)",  border:"rgba(139,92,246,.4)",  modeC:"#a78bfa", titleC:"#a78bfa", badgeBg:"rgba(139,92,246,.2)", badgeC:"#a78bfa" },
-  "FADE — GO SHORT":    { bg:"rgba(139,92,246,.1)",  border:"rgba(139,92,246,.4)",  modeC:"#a78bfa", titleC:"#a78bfa", badgeBg:"rgba(139,92,246,.2)", badgeC:"#a78bfa" },
-  "PASS — NO TRADE":    { bg:"rgba(245,158,11,.08)", border:"rgba(245,158,11,.3)",  modeC:"#f59e0b", titleC:"#f59e0b", badgeBg:"rgba(245,158,11,.2)", badgeC:"#f59e0b" },
+const PHASE_STYLES = {
+  "Accumulation": { bg:"rgba(16,185,129,.1)",  border:"rgba(16,185,129,.4)",  modeC:"#10b981", titleC:"#10b981", badgeBg:"rgba(16,185,129,.2)", badgeC:"#10b981" },
+  "Distribution":  { bg:"rgba(239,68,68,.1)",   border:"rgba(239,68,68,.4)",   modeC:"#ef4444", titleC:"#ef4444", badgeBg:"rgba(239,68,68,.2)", badgeC:"#ef4444" },
+  "Reloading":     { bg:"rgba(245,158,11,.1)",  border:"rgba(245,158,11,.4)",  modeC:"#f59e0b", titleC:"#f59e0b", badgeBg:"rgba(245,158,11,.2)", badgeC:"#f59e0b" },
+  "Sweeping":      { bg:"rgba(139,92,246,.1)",  border:"rgba(139,92,246,.4)",  modeC:"#a78bfa", titleC:"#a78bfa", badgeBg:"rgba(139,92,246,.2)", badgeC:"#a78bfa" },
+  "No Setup":      { bg:"rgba(245,158,11,.08)", border:"rgba(245,158,11,.3)",  modeC:"#f59e0b", titleC:"#f59e0b", badgeBg:"rgba(245,158,11,.2)", badgeC:"#f59e0b" },
 };
 
-const LAYER_COLORS = {
-  green:  { bg:"rgba(16,185,129,.12)",  border:"rgba(16,185,129,.3)",  text:"#10b981" },
-  red:    { bg:"rgba(239,68,68,.12)",   border:"rgba(239,68,68,.3)",   text:"#ef4444" },
-  amber:  { bg:"rgba(245,158,11,.12)",  border:"rgba(245,158,11,.3)",  text:"#f59e0b" },
-  purple: { bg:"rgba(139,92,246,.12)",  border:"rgba(139,92,246,.3)",  text:"#a78bfa" },
-};
+function levelCard(cls, lbl, val, note, valColor) {
+  const small = String(val).length > 9;
+  return `<div class="level-card ${cls}">
+    <div class="level-lbl">${lbl}</div>
+    <div class="level-val" style="font-size:${small?'13px':'18px'};${valColor?'color:'+valColor:''}">${val || "—"}</div>
+    ${note ? `<div class="level-note">${note}</div>` : ""}
+  </div>`;
+}
+
+function renderTrade(trade, containerId, biasId, dirColor) {
+  if (!trade) return;
+  const grid = document.getElementById(containerId);
+  grid.innerHTML = [
+    levelCard("lc-entry", "ENTRY TRIGGER",    trade.entry_price || "—", trade.entry_trigger, dirColor),
+    levelCard("lc-stop",  "STOP LOSS",        trade.stop?.split(" ")[0] || "—", trade.stop_reason, "var(--red)"),
+    levelCard("lc-tp1",   "TP1 — EXIT HERE",  trade.tp1 || "—", trade.tp1_reason, "var(--green)"),
+    levelCard("lc-tp2",   "TP2 — RUNNERS",    trade.tp2 || "—", trade.tp2_reason, null),
+  ].join("") + `<div class="level-card lc-size">
+    <div class="level-lbl">R:R</div>
+    <div class="level-val" style="font-size:18px">${trade.rr || "—"}</div>
+    <div class="level-note">${trade.entry_window || ""}</div>
+  </div>
+  <div class="level-card lc-size">
+    <div class="level-lbl">SIZE</div>
+    <div class="level-val" style="font-size:13px;color:var(--gold)">${trade.sizing || "—"}</div>
+  </div>`;
+
+  document.getElementById(biasId).innerHTML =
+    `<strong style="color:${dirColor}">INSTITUTIONAL BIAS:</strong> ${trade.institutional_bias || "—"}`;
+}
 
 function renderResult(r) {
-  const ds = DECISION_STYLES[r.decision] || DECISION_STYLES["PASS — NO TRADE"];
+  const isPass = r.phase === "No Setup" || r.mode === "PASS";
+  const ps = PHASE_STYLES[r.phase] || PHASE_STYLES["No Setup"];
 
   // Banner
   const banner = document.getElementById("decision-banner");
-  banner.style.background = ds.bg;
-  banner.style.border = `1px solid ${ds.border}`;
-  document.getElementById("res-mode").textContent = r.mode;
-  document.getElementById("res-mode").style.color = ds.modeC;
-  document.getElementById("res-decision").textContent = r.decision;
-  document.getElementById("res-decision").style.color = ds.titleC;
+  banner.style.background = ps.bg;
+  banner.style.border = `1px solid ${ps.border}`;
+  document.getElementById("res-mode").textContent = r.mode + (r.phase ? " — " + r.phase.toUpperCase() : "");
+  document.getElementById("res-mode").style.color = ps.modeC;
+  document.getElementById("res-decision").textContent = r.instrument || "—";
+  document.getElementById("res-decision").style.color = "var(--cyan)";
   document.getElementById("res-sub").textContent = r.key_warning || "";
-  document.getElementById("res-sub").style.color = ds.modeC + "cc";
+  document.getElementById("res-sub").style.color = ps.modeC + "cc";
   const badge = document.getElementById("res-badge");
-  badge.textContent = r.sizing || "—";
-  badge.style.background = ds.badgeBg;
-  badge.style.color = ds.badgeC;
+  badge.textContent = r.phase || "—";
+  badge.style.background = ps.badgeBg;
+  badge.style.color = ps.badgeC;
 
-  // Levels
-  const levelsGrid = document.getElementById("levels-grid");
-  const isPass = r.decision === "PASS — NO TRADE";
+  // Institutional read
+  document.getElementById("res-inst-read").textContent = r.institutional_read || "—";
+
+  // Real destination + Liquidity hunt
+  const destGrid = document.getElementById("dest-grid");
   if (isPass) {
-    levelsGrid.innerHTML = `<div class="level-card lc-size" style="grid-column:1/-1;text-align:center">
-      <div class="level-lbl">SESSION STATUS</div>
-      <div class="level-val" style="color:var(--gold);font-size:15px">${r.reasoning || "No trade conditions met."}</div>
+    destGrid.innerHTML = `<div class="level-card lc-size" style="grid-column:1/-1;text-align:center">
+      <div class="level-lbl">NO SETUP</div>
+      <div class="level-val" style="color:var(--gold);font-size:13px">${r.institutional_read || "No institutional setup detected."}</div>
     </div>`;
   } else {
-    const levels = [
-      { cls:"lc-entry", lbl:"ENTRY TRIGGER",  val: r.entry_price !== "N/A" ? r.entry_price : "—",  note: r.entry_trigger },
-      { cls:"lc-stop",  lbl:"STOP LOSS",       val: r.stop?.split(" ")[0] || "—",                   note: r.stop },
-      { cls:"lc-tp1",   lbl:"TP1 (w/ buffer)", val: r.tp1 || "—",                                    note: "Exit BEFORE the sweep zone" },
-      { cls:"lc-tp2",   lbl:"TP2 (sweep zone)",val: r.tp2 || "—",                                    note: "Obvious level — runners only" },
-    ];
-    levelsGrid.innerHTML = levels.map(l => `
-      <div class="level-card ${l.cls}">
-        <div class="level-lbl">${l.lbl}</div>
-        <div class="level-val" style="font-size:${l.val.length > 8 ? '13px' : '18px'}">${l.val}</div>
-        ${l.note ? `<div class="level-note">${l.note}</div>` : ""}
-      </div>`).join("");
+    destGrid.innerHTML =
+      levelCard("lc-tp2", "REAL DESTINATION", r.real_destination?.price || "—", r.real_destination?.reason, "var(--green)") +
+      levelCard("lc-entry", "LIQUIDITY HUNT", r.liquidity_hunt?.price || "—", r.liquidity_hunt?.orders_sitting_here, "var(--red)");
   }
 
-  // Layers
-  const layersRow = document.getElementById("layers-row");
-  const layerDefs = [
-    { name:"COT",   data: r.layers?.cot },
-    { name:"NEWS",  data: r.layers?.news },
-    { name:"GRADE", data: r.layers?.grade },
-  ];
-  layersRow.innerHTML = layerDefs.map(l => {
-    const c = LAYER_COLORS[l.data?.color] || LAYER_COLORS.purple;
-    return `<div class="layer-card" style="border-color:${c.border}">
-      <div class="layer-name">${l.name}</div>
-      <div class="layer-verdict" style="color:${c.text}">${l.data?.verdict || "—"}</div>
-      <div class="layer-detail">${l.data?.detail || "—"}</div>
-    </div>`;
-  }).join("");
-
-  // Sweep note
-  const sn = document.getElementById("sweep-note");
-  const st = document.getElementById("sweep-text");
-  if (r.sweep_warning) {
-    st.textContent = "⚡ SWEEP WATCH: " + r.sweep_warning;
-    sn.style.display = "block";
+  // Order block
+  const ob = r.order_block;
+  const obBox = document.getElementById("ob-box");
+  if (ob && ob.zone_high) {
+    document.getElementById("ob-text").innerHTML =
+      `<strong style="color:var(--gold)">ORDER BLOCK (${ob.type} — ${ob.timeframe} — ${ob.status}):</strong> ` +
+      `Zone ${ob.zone_low} – ${ob.zone_high} · ${ob.significance}`;
+    obBox.style.display = "block";
   } else {
-    sn.style.display = "none";
+    obBox.style.display = "none";
   }
 
-  // Reasoning
-  document.getElementById("res-reasoning").textContent = r.reasoning || "—";
+  // Trades
+  if (!isPass) {
+    const t1Dir = r.trade_1?.direction === "LONG" ? "var(--green)" : "var(--red)";
+    const t2Dir = r.trade_2?.direction === "LONG" ? "var(--green)" : "var(--red)";
+    document.getElementById("trade1-section").querySelector(".reasoning-lbl").style.color = t1Dir;
+    document.getElementById("trade2-section").querySelector(".reasoning-lbl").style.color = t2Dir;
+    renderTrade(r.trade_1, "trade1-grid", "trade1-bias", t1Dir);
+    renderTrade(r.trade_2, "trade2-grid", "trade2-bias", t2Dir);
+    document.getElementById("trade1-section").style.display = "block";
+    document.getElementById("trade2-section").style.display = "block";
+  } else {
+    document.getElementById("trade1-section").style.display = "none";
+    document.getElementById("trade2-section").style.display = "none";
+  }
 
-  // Exit rule
-  document.getElementById("res-rule").innerHTML = `<strong style="color:var(--purple-lt)">EXIT RULE:</strong> ${r.exit_rule || "—"}`;
+  // COT context
+  document.getElementById("res-cot-context").textContent = r.cot_context || "—";
+
+  // Invalidation
+  const invalBox = document.getElementById("inval-box");
+  if (r.invalidation) {
+    document.getElementById("inval-text").innerHTML =
+      `<strong style="color:var(--red)">INVALIDATION:</strong> ${r.invalidation}`;
+    invalBox.style.display = "block";
+  }
+
+  // Key warning
+  document.getElementById("res-rule").innerHTML =
+    `<strong style="color:var(--purple-lt)">KEY WARNING:</strong> ${r.key_warning || "—"}`;
 
   document.getElementById("result").classList.add("show");
   document.getElementById("result").scrollIntoView({ behavior:"smooth", block:"start" });
@@ -789,6 +940,10 @@ function reset() {
   document.querySelectorAll(".cot-pill").forEach(p => p.classList.remove("selected"));
   imageBase64 = ""; imageType = ""; selectedCOTInst = ""; selectedCOTSig = "";
   document.getElementById("analyze-btn").disabled = true;
+  ["m-hh","m-lh","m-hl","m-ll","m-entry","m-current"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
   window.scrollTo({ top:0, behavior:"smooth" });
 }
 </script>
