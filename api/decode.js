@@ -167,33 +167,20 @@ module.exports = async function handler(req, res) {
         }]
       };
     } else if (mode === "trump") {
-      // Fetch trumpstruth.org directly and pass content to Claude
-      const trumpRes = await fetch("https://trumpstruth.org", {
-        headers: {
-          "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-          "Accept": "text/html,application/xhtml+xml",
-        },
-        signal: controller.signal,
-      });
-      if (!trumpRes.ok) throw new Error("trumpstruth.org returned " + trumpRes.status);
-      const trumpHtml = await trumpRes.text();
-      // Extract text only — strip HTML tags
-      const trumpText = trumpHtml
-        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
-        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
-        .replace(/<[^>]+>/g, " ")
-        .replace(/\s{2,}/g, " ")
-        .slice(0, 8000); // Keep first 8000 chars — plenty for recent posts
-
+      // Manual paste mode — user provides posts directly
+      const pastedPosts = req.body.posts || "";
+      if (!pastedPosts.trim()) {
+        return res.status(400).json({ error: "No posts provided" });
+      }
       body = {
         model: "claude-sonnet-4-20250514",
         max_tokens: 1500,
         system: TRUMP_SYSTEM,
         messages: [{
           role: "user",
-          content: `Here is the live content from trumpstruth.org (Trump's Truth Social archive). Extract all market-relevant posts:
+          content: `Here are Trump's Truth Social posts pasted by the user. Analyze each one and extract only the market-relevant content:
 
-${trumpText}`
+${pastedPosts}`
         }]
       };
     } else if (mode === "omniintel") {
