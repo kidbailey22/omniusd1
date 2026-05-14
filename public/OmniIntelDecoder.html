@@ -539,7 +539,6 @@ SCORER_INSTRUMENTS.forEach(i => { scorerRR[i] = 2; scorerNews[i] = 2; });
 
 async function runScorer() {
   document.getElementById("scorer-err").classList.remove("show");
-  // Fetch COT for all 6 in parallel
   const btn = document.querySelector("#scorer-panel .btn-primary");
   btn.disabled = true;
   btn.textContent = "FETCHING COT...";
@@ -550,16 +549,34 @@ async function runScorer() {
         fetch(`/api/cot?instrument=${inst}`)
           .then(r => r.json())
           .then(d => {
-            // Legacy (Gold/Silver): spec_net = Large Specs (directional)
-            // TFF (indices/forex): comm_net = Asset Managers (directional)
-            const isLegacy = ["XAUUSD","XAGUSD","BTCUSD","ETHUSD"].includes(inst);
-            const net = isLegacy ? (d.spec_net ?? 0) : (d.comm_net ?? 0);
-            return { inst, signal: d.signal || "NEUTRAL", net };
+            // Use smart_money field to determine which net is the directional signal
+            // "Large Speculators" (Legacy/Gold/Silver) → spec_net
+            // "Asset Managers" (TFF/Indices/Forex) → comm_net
+            const smartNet = d.smart_money === "Large Speculators"
+              ? (d.spec_net ?? 0)
+              : (d.comm_net ?? 0);
+
+            const smartLong  = d.smart_money === "Large Speculators" ? d.spec_long  : d.comm_long;
+            const smartShort = d.smart_money === "Large Speculators" ? d.spec_short : d.comm_short;
+            const pct = smartLong && smartShort
+              ? Math.round(smartLong / (smartLong + smartShort) * 100)
+              : 50;
+
+            return {
+              inst,
+              signal:     d.signal     || "NEUTRAL",
+              smart_money: d.smart_money || "Unknown",
+              net:        smartNet,
+              pct_long:   pct,
+              pct_short:  100 - pct,
+              report_date: d.report_date || "—",
+              spec_warning: d.spec_warning || null,
+            };
           })
-          .catch(() => ({ inst, signal: "NEUTRAL", net: 0 }))
+          .catch(e => ({ inst, signal:"NEUTRAL", smart_money:"Unknown", net:0, pct_long:50, pct_short:50, report_date:"—", spec_warning:null }))
       )
     );
-    results.forEach(r => { scorerCOT[r.inst] = { signal: r.signal, net: r.net }; });
+    results.forEach(r => { scorerCOT[r.inst] = r; });
     renderScorer();
   } catch(e) {
     const eb = document.getElementById("scorer-err");
@@ -583,47 +600,67 @@ function totalScore(inst) {
 }
 
 function renderScorer() {
-  // Sort by COT score descending, tiebreaker = absolute net position size
   const scores = SCORER_INSTRUMENTS
-    .map(i => ({ inst: i, score: cotScore(i), cot: scorerCOT[i] }))
-    .sort((a, b) => {
+    .map(i => ({ inst:i, score:cotScore(i), cot:scorerCOT[i] }))
+    .sort((a,b) => {
       if (b.score !== a.score) return b.score - a.score;
-      const netA = Math.abs(a.cot?.net || 0);
-      const netB = Math.abs(b.cot?.net || 0);
-      return netB - netA;
+      return Math.abs(b.cot?.net||0) - Math.abs(a.cot?.net||0);
     });
 
   const max  = scores[0].score;
   const rows = document.getElementById("scorer-rows");
   rows.innerHTML = "";
 
-  const SCORE_LABELS = { 3:"STRONG", 2:"MODERATE", 1:"WEAK" };
-  const SCORE_COLORS = { 3:"var(--green)", 2:"var(--gold)", 1:"var(--red)" };
+  const SIG_COLOR = {
+    "STRONG LONG":"var(--green)","NET LONG":"var(--green)",
+    "STRONG SHORT":"var(--red)","NET SHORT":"var(--red)",
+    "NEUTRAL":"var(--gold)","MIXED":"var(--gold)"
+  };
 
-  scores.forEach(({ inst, score, cot }) => {
-    const isWinner = score === max;
-    const signal   = cot ? cot.signal : "Fetching...";
-    const net      = cot ? (cot.net >= 0 ? "+" + cot.net.toLocaleString() : cot.net.toLocaleString()) : "—";
-    const group    = ["XAUUSD","XAGUSD"].includes(inst) ? "Large Specs" : "Asset Mgrs";
+  scores.forEach(({ inst, score, cot }, idx) => {
+    const isWinner  = score === max && idx === 0;
+    const signal    = cot?.signal    || "—";
+    const group     = cot?.smart_money || "—";
+    const net       = cot?.net !== undefined
+      ? (cot.net >= 0 ? "+" + cot.net.toLocaleString() : cot.net.toLocaleString())
+      : "—";
+    const pctL      = cot?.pct_long  || 50;
+    const pctS      = cot?.pct_short || 50;
+    const sigColor  = SIG_COLOR[signal] || "var(--muted)";
+    const scoreColor= score===3?"var(--green)":score===2?"var(--gold)":"var(--red)";
+    const date      = cot?.report_date ? cot.report_date.slice(0,10) : "";
 
     const row = document.createElement("div");
-    row.style.cssText = `display:grid;grid-template-columns:90px 1fr 80px 80px;gap:8px;align-items:center;padding:${isWinner?'6px 8px':'3px 0'};margin-bottom:6px;${isWinner?'background:rgba(0,229,255,.06);border:.5px solid rgba(0,229,255,.25);border-radius:8px':''}`;
+    row.style.cssText = `padding:10px 10px;margin-bottom:6px;border-radius:10px;border:.5px solid ${isWinner?'rgba(0,229,255,.35)':'var(--border)'};background:${isWinner?'rgba(0,229,255,.05)':'var(--bg)'}`;
 
     row.innerHTML = `
-      <div>
-        <div style="font-size:11px;font-weight:500;color:${isWinner?'var(--cyan)':'var(--text)'}">${inst}</div>
-        <div style="font-size:9px;color:var(--dim)">${SCORER_LABELS[inst]}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:12px;font-weight:500;color:${isWinner?'var(--cyan)':'var(--text)'}">${inst}</span>
+          <span style="font-size:9px;color:var(--dim)">${SCORER_LABELS[inst]}</span>
+          ${isWinner?'<span style="font-size:9px;background:rgba(0,229,255,.15);color:var(--cyan);padding:1px 8px;border-radius:20px">THIS WEEK</span>':''}
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:10px;font-weight:500;color:${sigColor}">${signal}</span>
+          <span style="font-size:13px;font-weight:500;color:${scoreColor}">${score}/3</span>
+        </div>
       </div>
-      <div>
-        <div style="font-size:10px;color:${SCORE_COLORS[score]};font-weight:500">${signal}</div>
-        <div style="font-size:9px;color:var(--dim)">${group}</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <div style="flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden;display:flex">
+          <div style="width:${pctL}%;background:var(--green)"></div>
+          <div style="width:${pctS}%;background:var(--red)"></div>
+        </div>
+        <span style="font-size:9px;color:var(--green);min-width:28px">L ${pctL}%</span>
+        <span style="font-size:9px;color:var(--red);min-width:28px">S ${pctS}%</span>
       </div>
-      <div style="font-size:10px;color:var(--muted);text-align:center">${net}</div>
-      <div style="font-size:${isWinner?'16':'13'}px;font-weight:500;text-align:center;color:${SCORE_COLORS[score]}">${score}/3</div>`;
+      <div style="display:flex;justify-content:space-between">
+        <span style="font-size:9px;color:var(--dim)">${group} · Net: <span style="color:${cot?.net>0?'var(--green)':'var(--red)'}">${net}</span></span>
+        <span style="font-size:9px;color:var(--dimmer)">${date}</span>
+      </div>
+      ${cot?.spec_warning?`<div style="font-size:9px;color:var(--gold);margin-top:5px;padding:4px 8px;background:rgba(255,209,102,.08);border-radius:6px">⚠ ${cot.spec_warning}</div>`:''}`;
     rows.appendChild(row);
   });
 
-  // Winner
   const winner = scores[0];
   const now = new Date().toLocaleString("en-US",{
     weekday:"long",month:"long",day:"numeric",
