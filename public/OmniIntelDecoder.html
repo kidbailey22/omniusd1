@@ -50,6 +50,21 @@ html,body{background:#2a2650;color:var(--text);font-family:'DM Mono','Courier Ne
 .btn-green:hover{opacity:.9}
 .btn-green:disabled{background:var(--dimmer);color:var(--dim);cursor:default}
 
+/* Weekly scorer */
+.scorer-grid{display:grid;grid-template-columns:90px 1fr 1fr 1fr 50px;gap:8px;align-items:center;margin-bottom:8px}
+.scorer-hdr{font-size:9px;color:var(--dimmer);letter-spacing:.1em;font-weight:500}
+.scorer-inst{font-size:11px;font-weight:500;color:var(--cyan)}
+.scorer-cot{font-size:9px;color:var(--muted)}
+.scorer-sel{width:100%;background:var(--bg);border:.5px solid var(--border);border-radius:6px;padding:5px 6px;color:var(--text);font-family:'DM Mono',monospace;font-size:10px;outline:none}
+.scorer-total{font-size:13px;font-weight:500;text-align:center;color:var(--muted)}
+.scorer-winner{background:rgba(0,229,255,.06);border:.5px solid rgba(0,229,255,.25);border-radius:8px;padding:3px 6px}
+.scorer-winner .scorer-inst{color:var(--cyan)}
+.scorer-winner .scorer-total{color:var(--cyan);font-size:15px}
+.commit-box{background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.3);border-radius:10px;padding:14px 16px;margin-top:12px}
+.commit-inst{font-size:20px;font-weight:500;color:var(--cyan);margin-bottom:4px}
+.commit-rule{font-size:10px;color:var(--red);font-weight:500;margin-bottom:4px}
+.commit-time{font-size:9px;color:var(--dimmer)}
+
 /* Dashboard */
 .dash-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
 .dash-card{background:#3a3670;border:.5px solid var(--border);border-radius:10px;padding:11px 13px}
@@ -200,6 +215,40 @@ html,body{background:#2a2650;color:var(--text);font-family:'DM Mono','Courier Ne
   </div>
 </div>
 <div class="rule"></div>
+
+<!-- WEEKLY SCORER -->
+<div class="panel" id="scorer-panel">
+  <div class="panel-title">
+    <span class="panel-name">WEEKLY INSTRUMENT SELECTOR</span>
+    <span class="step-badge">Sunday 3 PM CT</span>
+  </div>
+  <div class="lbl">Score all 6 instruments — commit to one for the week</div>
+
+  <!-- Scorer grid -->
+  <div class="scorer-grid" style="margin-bottom:10px">
+    <div class="scorer-hdr"></div>
+    <div class="scorer-hdr">COT (auto)</div>
+    <div class="scorer-hdr">R:R room</div>
+    <div class="scorer-hdr">News align</div>
+    <div class="scorer-hdr">Score</div>
+  </div>
+  <div id="scorer-rows"></div>
+
+  <div class="err" id="scorer-err"></div>
+
+  <!-- Commitment box -->
+  <div class="commit-box" id="commit-box" style="display:none">
+    <div class="lbl" style="margin-bottom:6px">THIS WEEK — COMMITTED INSTRUMENT</div>
+    <div class="commit-inst" id="commit-inst"></div>
+    <div class="commit-rule">Do not trade any other instrument this week.</div>
+    <div class="commit-time" id="commit-time"></div>
+  </div>
+
+  <div style="display:flex;gap:8px;margin-top:12px">
+    <button class="btn btn-primary" style="flex:1" onclick="runScorer()">FETCH COT + SCORE ALL ↗</button>
+    <button class="btn btn-secondary" style="font-size:10px;padding:8px 14px" onclick="resetScorer()">RESET</button>
+  </div>
+</div>
 
 <!-- DASHBOARD -->
 <div class="panel" id="dashboard-panel">
@@ -470,6 +519,122 @@ function renderCOTReport(results) {
   const cs = document.getElementById("cot-report-status");
   cs.innerHTML = html;
   cs.style.display = "block";
+}
+
+// ── Weekly Scorer ────────────────────────────────────────────────────────────
+const SCORER_INSTRUMENTS = ["XAUUSD","XAGUSD","EURUSD","NAS100","US30","US500"];
+const SCORER_LABELS = {
+  XAUUSD:"Gold", XAGUSD:"Silver", EURUSD:"Euro/USD",
+  NAS100:"Nasdaq", US30:"Dow Jones", US500:"S&P 500"
+};
+const SCORE_OPTS = [
+  {label:"3 — Strong",   val:3},
+  {label:"2 — Moderate", val:2},
+  {label:"1 — Weak",     val:1},
+];
+
+let scorerCOT  = {};  // fetched COT signals
+let scorerRR   = {};  // user-rated R:R
+let scorerNews = {};  // user-rated news
+SCORER_INSTRUMENTS.forEach(i => { scorerRR[i] = 2; scorerNews[i] = 2; });
+
+async function runScorer() {
+  document.getElementById("scorer-err").classList.remove("show");
+  // Fetch COT for all 6 in parallel
+  const btn = document.querySelector("#scorer-panel .btn-primary");
+  btn.disabled = true;
+  btn.textContent = "FETCHING COT...";
+
+  try {
+    const results = await Promise.all(
+      SCORER_INSTRUMENTS.map(inst =>
+        fetch(`/api/cot?instrument=${inst}`)
+          .then(r => r.json())
+          .then(d => ({ inst, signal: d.signal || "NEUTRAL", net: d.spec_net ?? d.comm_net ?? 0 }))
+          .catch(() => ({ inst, signal: "NEUTRAL", net: 0 }))
+      )
+    );
+    results.forEach(r => { scorerCOT[r.inst] = { signal: r.signal, net: r.net }; });
+    renderScorer();
+  } catch(e) {
+    const eb = document.getElementById("scorer-err");
+    eb.textContent = "COT fetch failed — " + e.message;
+    eb.classList.add("show");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "↺ REFRESH COT + RESCORE";
+  }
+}
+
+function cotScore(inst) {
+  const sig = scorerCOT[inst]?.signal || "";
+  if (sig.includes("STRONG")) return 3;
+  if (sig.includes("NET LONG") || sig.includes("NET SHORT")) return 2;
+  return 1;
+}
+
+function totalScore(inst) {
+  return cotScore(inst) + (scorerRR[inst] || 2) + (scorerNews[inst] || 2);
+}
+
+function renderScorer() {
+  const scores = SCORER_INSTRUMENTS.map(i => ({ inst: i, total: totalScore(i) }));
+  const max    = Math.max(...scores.map(s => s.total));
+  const rows   = document.getElementById("scorer-rows");
+  rows.innerHTML = "";
+
+  scores.forEach(({ inst, total }) => {
+    const isWinner = total === max;
+    const cot = scorerCOT[inst];
+    const cotSig = cot ? cot.signal : "—";
+    const cs = cotScore(inst);
+
+    const row = document.createElement("div");
+    row.className = "scorer-grid" + (isWinner ? " scorer-winner" : "");
+
+    row.innerHTML = `
+      <div>
+        <div class="scorer-inst">${inst}</div>
+        <div class="scorer-cot">${SCORER_LABELS[inst]}</div>
+      </div>
+      <div>
+        <div class="scorer-cot" style="font-size:9px">${cotSig}</div>
+        <div class="scorer-cot">(${cs}/3)</div>
+      </div>
+      <select class="scorer-sel" onchange="updateScorer('${inst}','rr',this.value)">
+        ${SCORE_OPTS.map(o => `<option value="${o.val}" ${scorerRR[inst]==o.val?'selected':''}>${o.label}</option>`).join('')}
+      </select>
+      <select class="scorer-sel" onchange="updateScorer('${inst}','news',this.value)">
+        ${SCORE_OPTS.map(o => `<option value="${o.val}" ${scorerNews[inst]==o.val?'selected':''}>${o.label}</option>`).join('')}
+      </select>
+      <div class="scorer-total">${total}/9</div>`;
+    rows.appendChild(row);
+  });
+
+  // Show commitment box
+  const winner = scores.find(s => s.total === max);
+  const now    = new Date().toLocaleString("en-US", {
+    weekday:"long", month:"long", day:"numeric",
+    hour:"2-digit", minute:"2-digit", timeZone:"America/Chicago"
+  }) + " CT";
+
+  document.getElementById("commit-inst").textContent = winner.inst + " — " + SCORER_LABELS[winner.inst];
+  document.getElementById("commit-time").textContent = "Committed: " + now;
+  document.getElementById("commit-box").style.display = "block";
+}
+
+function updateScorer(inst, field, val) {
+  if (field === "rr")   scorerRR[inst]   = parseInt(val);
+  if (field === "news") scorerNews[inst] = parseInt(val);
+  if (Object.keys(scorerCOT).length > 0) renderScorer();
+}
+
+function resetScorer() {
+  scorerCOT = {};
+  SCORER_INSTRUMENTS.forEach(i => { scorerRR[i] = 2; scorerNews[i] = 2; });
+  document.getElementById("scorer-rows").innerHTML = "";
+  document.getElementById("commit-box").style.display = "none";
+  document.querySelector("#scorer-panel .btn-primary").textContent = "FETCH COT + SCORE ALL ↗";
 }
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
