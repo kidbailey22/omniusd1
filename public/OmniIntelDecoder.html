@@ -549,7 +549,13 @@ async function runScorer() {
       SCORER_INSTRUMENTS.map(inst =>
         fetch(`/api/cot?instrument=${inst}`)
           .then(r => r.json())
-          .then(d => ({ inst, signal: d.signal || "NEUTRAL", net: d.spec_net ?? d.comm_net ?? 0 }))
+          .then(d => {
+            // Legacy (Gold/Silver): spec_net = Large Specs (directional)
+            // TFF (indices/forex): comm_net = Asset Managers (directional)
+            const isLegacy = ["XAUUSD","XAGUSD","BTCUSD","ETHUSD"].includes(inst);
+            const net = isLegacy ? (d.spec_net ?? 0) : (d.comm_net ?? 0);
+            return { inst, signal: d.signal || "NEUTRAL", net };
+          })
           .catch(() => ({ inst, signal: "NEUTRAL", net: 0 }))
       )
     );
@@ -577,10 +583,15 @@ function totalScore(inst) {
 }
 
 function renderScorer() {
-  // Sort by COT score descending
+  // Sort by COT score descending, tiebreaker = absolute net position size
   const scores = SCORER_INSTRUMENTS
     .map(i => ({ inst: i, score: cotScore(i), cot: scorerCOT[i] }))
-    .sort((a, b) => b.score - a.score);
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      const netA = Math.abs(a.cot?.net || 0);
+      const netB = Math.abs(b.cot?.net || 0);
+      return netB - netA;
+    });
 
   const max  = scores[0].score;
   const rows = document.getElementById("scorer-rows");
