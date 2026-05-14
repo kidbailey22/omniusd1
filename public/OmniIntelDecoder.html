@@ -225,11 +225,10 @@ html,body{background:#2a2650;color:var(--text);font-family:'DM Mono','Courier Ne
   <div class="lbl">Score all 6 instruments — commit to one for the week</div>
 
   <!-- Scorer grid -->
-  <div class="scorer-grid" style="margin-bottom:10px">
+  <div style="display:grid;grid-template-columns:90px 1fr 80px 80px;gap:8px;margin-bottom:10px;align-items:center">
     <div class="scorer-hdr"></div>
-    <div class="scorer-hdr">COT (auto)</div>
-    <div class="scorer-hdr">R:R room</div>
-    <div class="scorer-hdr">News align</div>
+    <div class="scorer-hdr">Smart money signal</div>
+    <div class="scorer-hdr">Net position</div>
     <div class="scorer-hdr">Score</div>
   </div>
   <div id="scorer-rows"></div>
@@ -578,60 +577,54 @@ function totalScore(inst) {
 }
 
 function renderScorer() {
-  const scores = SCORER_INSTRUMENTS.map(i => ({ inst: i, total: totalScore(i) }));
-  const max    = Math.max(...scores.map(s => s.total));
-  const rows   = document.getElementById("scorer-rows");
+  // Sort by COT score descending
+  const scores = SCORER_INSTRUMENTS
+    .map(i => ({ inst: i, score: cotScore(i), cot: scorerCOT[i] }))
+    .sort((a, b) => b.score - a.score);
+
+  const max  = scores[0].score;
+  const rows = document.getElementById("scorer-rows");
   rows.innerHTML = "";
 
-  scores.forEach(({ inst, total }) => {
-    const isWinner = total === max;
-    const cot = scorerCOT[inst];
-    const cotSig = cot ? cot.signal : "—";
-    const cs = cotScore(inst);
+  const SCORE_LABELS = { 3:"STRONG", 2:"MODERATE", 1:"WEAK" };
+  const SCORE_COLORS = { 3:"var(--green)", 2:"var(--gold)", 1:"var(--red)" };
+
+  scores.forEach(({ inst, score, cot }) => {
+    const isWinner = score === max;
+    const signal   = cot ? cot.signal : "Fetching...";
+    const net      = cot ? (cot.net >= 0 ? "+" + cot.net.toLocaleString() : cot.net.toLocaleString()) : "—";
+    const group    = ["XAUUSD","XAGUSD"].includes(inst) ? "Large Specs" : "Asset Mgrs";
 
     const row = document.createElement("div");
-    row.className = "scorer-grid" + (isWinner ? " scorer-winner" : "");
+    row.style.cssText = `display:grid;grid-template-columns:90px 1fr 80px 80px;gap:8px;align-items:center;padding:${isWinner?'6px 8px':'3px 0'};margin-bottom:6px;${isWinner?'background:rgba(0,229,255,.06);border:.5px solid rgba(0,229,255,.25);border-radius:8px':''}`;
 
     row.innerHTML = `
       <div>
-        <div class="scorer-inst">${inst}</div>
-        <div class="scorer-cot">${SCORER_LABELS[inst]}</div>
+        <div style="font-size:11px;font-weight:500;color:${isWinner?'var(--cyan)':'var(--text)'}">${inst}</div>
+        <div style="font-size:9px;color:var(--dim)">${SCORER_LABELS[inst]}</div>
       </div>
       <div>
-        <div class="scorer-cot" style="font-size:9px">${cotSig}</div>
-        <div class="scorer-cot">(${cs}/3)</div>
+        <div style="font-size:10px;color:${SCORE_COLORS[score]};font-weight:500">${signal}</div>
+        <div style="font-size:9px;color:var(--dim)">${group}</div>
       </div>
-      <select class="scorer-sel" onchange="updateScorer('${inst}','rr',this.value)">
-        ${SCORE_OPTS.map(o => `<option value="${o.val}" ${scorerRR[inst]==o.val?'selected':''}>${o.label}</option>`).join('')}
-      </select>
-      <select class="scorer-sel" onchange="updateScorer('${inst}','news',this.value)">
-        ${SCORE_OPTS.map(o => `<option value="${o.val}" ${scorerNews[inst]==o.val?'selected':''}>${o.label}</option>`).join('')}
-      </select>
-      <div class="scorer-total">${total}/9</div>`;
+      <div style="font-size:10px;color:var(--muted);text-align:center">${net}</div>
+      <div style="font-size:${isWinner?'16':'13'}px;font-weight:500;text-align:center;color:${SCORE_COLORS[score]}">${score}/3</div>`;
     rows.appendChild(row);
   });
 
-  // Show commitment box
-  const winner = scores.find(s => s.total === max);
-  const now    = new Date().toLocaleString("en-US", {
-    weekday:"long", month:"long", day:"numeric",
-    hour:"2-digit", minute:"2-digit", timeZone:"America/Chicago"
+  // Winner
+  const winner = scores[0];
+  const now = new Date().toLocaleString("en-US",{
+    weekday:"long",month:"long",day:"numeric",
+    hour:"2-digit",minute:"2-digit",timeZone:"America/Chicago"
   }) + " CT";
-
   document.getElementById("commit-inst").textContent = winner.inst + " — " + SCORER_LABELS[winner.inst];
   document.getElementById("commit-time").textContent = "Committed: " + now;
   document.getElementById("commit-box").style.display = "block";
 }
 
-function updateScorer(inst, field, val) {
-  if (field === "rr")   scorerRR[inst]   = parseInt(val);
-  if (field === "news") scorerNews[inst] = parseInt(val);
-  if (Object.keys(scorerCOT).length > 0) renderScorer();
-}
-
 function resetScorer() {
   scorerCOT = {};
-  SCORER_INSTRUMENTS.forEach(i => { scorerRR[i] = 2; scorerNews[i] = 2; });
   document.getElementById("scorer-rows").innerHTML = "";
   document.getElementById("commit-box").style.display = "none";
   document.querySelector("#scorer-panel .btn-primary").textContent = "FETCH COT + SCORE ALL ↗";
