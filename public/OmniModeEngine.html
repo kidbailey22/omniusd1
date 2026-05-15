@@ -123,6 +123,9 @@ select option{background:var(--bg)}
 .tf-slot:hover,.tf-slot.drag{border-color:var(--purple);background:rgba(139,92,246,.04)}
 .tf-slot.loaded{border-color:var(--green);border-style:solid;background:rgba(16,185,129,.04)}
 .tf-slot input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.tf-delete{position:absolute;top:6px;right:6px;background:rgba(239,71,111,.2);border:none;border-radius:4px;color:var(--red);font-size:10px;padding:2px 6px;cursor:pointer;z-index:10;display:none;font-family:inherit}
+.tf-slot.loaded .tf-delete{display:block}
+.tf-slot.loaded input{display:none}
 .tf-label{font-size:10px;font-weight:700;letter-spacing:.1em;margin-bottom:4px}
 .tf-req{color:var(--red)} .tf-opt{color:var(--dim)}
 .tf-status{font-size:9px;color:var(--muted);margin-top:3px}
@@ -406,26 +409,44 @@ select option{background:var(--bg)}
 <!-- SCREENSHOT PANEL -->
 <div class="panel" id="screenshot-panel" style="display:none">
   <div class="panel-title">Upload Chart Screenshots <span style="color:var(--dim);font-weight:400;font-size:9px">(more timeframes = better institutional read)</span></div>
+  <!-- Upload all at once -->
+  <div style="margin-bottom:12px">
+    <label style="display:block;background:var(--dimmer);border:1px dashed var(--border2);border-radius:10px;padding:12px;text-align:center;cursor:pointer;transition:all .2s"
+      id="upload-all-label"
+      onmouseover="this.style.borderColor='var(--purple)'"
+      onmouseout="this.style.borderColor='var(--border2)'">
+      <input type="file" accept="image/*" multiple style="display:none" onchange="handleAllTF(event)">
+      <div style="color:var(--muted);font-size:11px;margin-bottom:3px">📁 Upload all charts at once</div>
+      <div style="color:var(--dim);font-size:9px">Select 1-4 images — system auto-assigns by order (Daily → 4H → 1H → 30M)</div>
+    </label>
+  </div>
+
+  <div style="color:var(--dim);font-size:9px;margin-bottom:8px">Or upload individually per timeframe:</div>
+
   <div class="tf-grid">
     <div class="tf-slot" id="tf-daily">
+      <button class="tf-delete" onclick="clearTF(event,'daily')">✕</button>
       <input type="file" accept="image/*" onchange="handleTF(event,'daily')">
       <div class="tf-label tf-opt">📅 DAILY</div>
       <div class="tf-status" id="tf-daily-status">Optional — destination + major OBs</div>
       <img class="tf-preview" id="tf-daily-preview" alt="Daily">
     </div>
     <div class="tf-slot" id="tf-4h">
+      <button class="tf-delete" onclick="clearTF(event,'4h')">✕</button>
       <input type="file" accept="image/*" onchange="handleTF(event,'4h')">
       <div class="tf-label tf-opt">⏱ 4H</div>
       <div class="tf-status" id="tf-4h-status">Optional — accumulation phase</div>
       <img class="tf-preview" id="tf-4h-preview" alt="4H">
     </div>
     <div class="tf-slot" id="tf-1h">
+      <button class="tf-delete" onclick="clearTF(event,'1h')">✕</button>
       <input type="file" accept="image/*" onchange="handleTF(event,'1h')">
       <div class="tf-label tf-opt">🕐 1H</div>
       <div class="tf-status" id="tf-1h-status">Optional — sweep in progress?</div>
       <img class="tf-preview" id="tf-1h-preview" alt="1H">
     </div>
     <div class="tf-slot" id="tf-30m">
+      <button class="tf-delete" onclick="clearTF(event,'30m')">✕</button>
       <input type="file" accept="image/*" onchange="handleTF(event,'30m')">
       <div class="tf-label tf-req">⚡ 30M *</div>
       <div class="tf-status" id="tf-30m-status">Required — entry + order block</div>
@@ -731,22 +752,62 @@ function selectCOT(el, inst, sig, cls) {
 }
 
 // ── Timeframe upload ─────────────────────────────────────────────────────────
+const TF_ORDER = ["daily","4h","1h","30m"];
+
+function loadTFFile(file, tf) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      TF_IMAGES[tf] = { data: reader.result.split(",")[1], type: file.type || "image/png" };
+      const preview = document.getElementById(`tf-${tf}-preview`);
+      const slot    = document.getElementById(`tf-${tf}`);
+      const status  = document.getElementById(`tf-${tf}-status`);
+      if (preview) { preview.src = reader.result; preview.style.display = "block"; }
+      if (slot)    slot.classList.add("loaded");
+      if (status)  status.textContent = "✅ " + file.name.slice(0,22);
+      resolve();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 function handleTF(e, tf) {
   const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    const data = reader.result.split(",")[1];
-    const type = file.type || "image/png";
-    TF_IMAGES[tf] = { data, type };
-    const preview = document.getElementById(`tf-${tf}-preview`);
-    preview.src = reader.result;
-    preview.style.display = "block";
-    document.getElementById(`tf-${tf}-status`).textContent = "✅ " + file.name.slice(0,20);
-    document.getElementById(`tf-${tf}`).classList.add("loaded");
-    checkReady();
+  if (file) loadTFFile(file, tf).then(checkReady);
+}
+
+// Upload all at once — assign by order: Daily → 4H → 1H → 30M
+async function handleAllTF(e) {
+  const files = Array.from(e.target.files).slice(0, 4);
+  if (files.length === 0) return;
+  // If 1 file — assign to 30M. 2 files — 1H + 30M. 3 — 4H+1H+30M. 4 — all.
+  const startIdx = TF_ORDER.length - files.length;
+  for (let i = 0; i < files.length; i++) {
+    await loadTFFile(files[i], TF_ORDER[startIdx + i]);
+  }
+  checkReady();
+}
+
+// Delete individual TF screenshot
+function clearTF(e, tf) {
+  e.stopPropagation();
+  e.preventDefault();
+  TF_IMAGES[tf] = null;
+  const preview = document.getElementById(`tf-${tf}-preview`);
+  const slot    = document.getElementById(`tf-${tf}`);
+  const status  = document.getElementById(`tf-${tf}-status`);
+  const input   = slot?.querySelector("input");
+  if (preview) { preview.style.display = "none"; preview.src = ""; }
+  if (slot)    slot.classList.remove("loaded");
+  if (input)   { input.style.display = ""; input.value = ""; }
+  const defaults = {
+    daily:"Optional — destination + major OBs",
+    "4h":"Optional — accumulation phase",
+    "1h":"Optional — sweep in progress?",
+    "30m":"Required — entry + order block"
   };
-  reader.readAsDataURL(file);
+  if (status) status.textContent = defaults[tf];
+  checkReady();
 }
 
 // ── Check ready ───────────────────────────────────────────────────────────────
