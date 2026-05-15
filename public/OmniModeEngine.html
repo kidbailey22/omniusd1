@@ -120,12 +120,12 @@ select option{background:var(--bg)}
 /* Timeframe upload grid */
 .tf-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
 .tf-slot{border:1px dashed var(--border2);border-radius:10px;padding:16px 12px;text-align:center;cursor:pointer;transition:all .2s;position:relative;background:var(--bg)}
-.tf-slot:hover,.tf-slot.drag{border-color:var(--purple);background:rgba(139,92,246,.04)}
+.tf-slot:hover,.tf-slot.drag{border-color:var(--purple);background:rgba(139,92,246,.08);border-style:solid}
 .tf-slot.loaded{border-color:var(--green);border-style:solid;background:rgba(16,185,129,.04)}
-.tf-slot input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-.tf-delete{position:absolute;top:6px;right:6px;background:rgba(239,71,111,.2);border:none;border-radius:4px;color:var(--red);font-size:10px;padding:2px 6px;cursor:pointer;z-index:10;display:none;font-family:inherit}
+.tf-slot input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;z-index:1}
+.tf-delete{position:absolute;top:6px;right:6px;background:rgba(239,71,111,.3);border:1px solid rgba(239,71,111,.5);border-radius:6px;color:var(--red);font-size:11px;font-weight:700;padding:3px 8px;cursor:pointer;z-index:20;display:none;font-family:inherit;line-height:1}
 .tf-slot.loaded .tf-delete{display:block}
-.tf-slot.loaded input{display:none}
+.tf-slot.loaded input{pointer-events:none;opacity:0}
 .tf-label{font-size:10px;font-weight:700;letter-spacing:.1em;margin-bottom:4px}
 .tf-req{color:var(--red)} .tf-opt{color:var(--dim)}
 .tf-status{font-size:9px;color:var(--muted);margin-top:3px}
@@ -754,6 +754,42 @@ function selectCOT(el, inst, sig, cls) {
 // ── Timeframe upload ─────────────────────────────────────────────────────────
 const TF_ORDER = ["daily","4h","1h","30m"];
 
+// Wire up drag and drop on all TF slots after DOM loads
+document.addEventListener("DOMContentLoaded", () => {
+  TF_ORDER.forEach(tf => {
+    const slot = document.getElementById(`tf-${tf}`);
+    if (!slot) return;
+    slot.addEventListener("dragover",  e => { e.preventDefault(); slot.classList.add("drag"); });
+    slot.addEventListener("dragleave", e => { if (!slot.contains(e.relatedTarget)) slot.classList.remove("drag"); });
+    slot.addEventListener("drop", e => {
+      e.preventDefault();
+      slot.classList.remove("drag");
+      const file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith("image/")) {
+        loadTFFile(file, tf).then(checkReady);
+      }
+    });
+  });
+
+  // Drag and drop on upload-all zone
+  const allLabel = document.getElementById("upload-all-label");
+  if (allLabel) {
+    allLabel.addEventListener("dragover",  e => { e.preventDefault(); allLabel.style.borderColor="var(--purple)"; });
+    allLabel.addEventListener("dragleave", () => { allLabel.style.borderColor="var(--border2)"; });
+    allLabel.addEventListener("drop", async e => {
+      e.preventDefault();
+      allLabel.style.borderColor="var(--border2)";
+      const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith("image/")).slice(0,4);
+      if (!files.length) return;
+      const startIdx = TF_ORDER.length - files.length;
+      for (let i = 0; i < files.length; i++) {
+        await loadTFFile(files[i], TF_ORDER[startIdx + i]);
+      }
+      checkReady();
+    });
+  }
+});
+
 function loadTFFile(file, tf) {
   return new Promise(resolve => {
     const reader = new FileReader();
@@ -793,13 +829,16 @@ function clearTF(e, tf) {
   e.stopPropagation();
   e.preventDefault();
   TF_IMAGES[tf] = null;
-  const preview = document.getElementById(`tf-${tf}-preview`);
   const slot    = document.getElementById(`tf-${tf}`);
+  const preview = document.getElementById(`tf-${tf}-preview`);
   const status  = document.getElementById(`tf-${tf}-status`);
   const input   = slot?.querySelector("input");
+
   if (preview) { preview.style.display = "none"; preview.src = ""; }
   if (slot)    slot.classList.remove("loaded");
-  if (input)   { input.style.display = ""; input.value = ""; }
+  // Re-enable input — remove pointer-events:none
+  if (input)   { input.style.pointerEvents = ""; input.value = ""; }
+
   const defaults = {
     daily:"Optional — destination + major OBs",
     "4h":"Optional — accumulation phase",
