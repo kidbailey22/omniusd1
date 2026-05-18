@@ -589,6 +589,7 @@ select option{background:var(--bg)}
   <div id="history-list"></div>
 </div>
 
+<div id="ready-instruments" style="display:none;margin-bottom:8px"></div>
 <div class="err" id="err-box"></div>
 <button class="btn-analyze" id="analyze-btn" onclick="analyze()" disabled>READ INSTITUTIONAL FOOTPRINT ↗</button>
 
@@ -1023,10 +1024,32 @@ function checkReady() {
     const inst = document.getElementById("m-instrument").value;
     const dir  = document.getElementById("m-direction").value;
     ready = !!(inst && dir && selectedCOTInst);
+    const ri = document.getElementById("ready-instruments");
+    if (ri) ri.style.display = "none";
   } else {
-    // At least one instrument needs a 30M loaded
-    const anyLoaded = Object.entries(INST_IMAGES).some(([inst, tfs]) => tfs["30m"] !== null);
-    ready = anyLoaded;
+    const loaded = Object.entries(INST_IMAGES)
+      .filter(([inst, tfs]) => tfs["30m"] !== null)
+      .map(([inst]) => inst);
+    ready = loaded.length > 0;
+
+    // Show which instruments will be analyzed
+    const ri = document.getElementById("ready-instruments");
+    if (ri) {
+      if (loaded.length > 0) {
+        ri.style.display = "block";
+        ri.innerHTML = `<div style="font-size:9px;color:var(--dim);margin-bottom:4px">WILL ANALYZE:</div>` +
+          loaded.map(inst => {
+            const cot = COT_DATA[inst] || {};
+            return `<span style="display:inline-block;margin-right:6px;margin-bottom:4px;
+              padding:3px 10px;border-radius:20px;font-size:10px;font-weight:500;
+              background:rgba(0,229,255,.1);border:.5px solid rgba(0,229,255,.3);color:var(--cyan)">
+              ${inst} <span style="color:var(--dim);font-size:9px">· ${cot.signal||"—"}</span>
+            </span>`;
+          }).join("");
+      } else {
+        ri.style.display = "none";
+      }
+    }
   }
   document.getElementById("analyze-btn").disabled = !ready;
 }
@@ -1107,6 +1130,7 @@ Apply this buffer to TP1 (subtract for SHORT, add for LONG).`;
       userContent = [];
 
       loadedInsts.forEach(inst => {
+        // COT always comes from the instrument being analyzed — not the selected pill
         const instCOT  = COT_DATA[inst] || {};
         const buf      = BUFFERS[inst]  || 12;
         const tfs      = INST_IMAGES[inst];
