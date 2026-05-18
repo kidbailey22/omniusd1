@@ -139,7 +139,7 @@ module.exports = async function handler(req, res) {
 
   const { mode, messages, date } = req.body;
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 58000);
+  const timeout = setTimeout(() => controller.abort(), 115000);
 
   try {
     let body;
@@ -188,7 +188,7 @@ ${pastedPosts}`
       const systemPrompt = req.body.system_override || ANALYSIS_SYSTEM;
       body = {
         model: "claude-opus-4-5",
-        max_tokens: 1500,
+        max_tokens: 4000,
         system: systemPrompt,
         messages: messages,
       };
@@ -248,7 +248,7 @@ ${pastedPosts}`
 
   } catch (err) {
     clearTimeout(timeout);
-    const msg = err.name === "AbortError" ? "Request timed out after 58s — try with fewer images" 
+    const msg = err.name === "AbortError" ? "Request timed out — Opus 4 needs more time with multiple images. Try again." 
               : err.message || String(err);
     console.error("decode error:", mode, msg);
     return res.status(200).json({ ok: false, error: msg });
