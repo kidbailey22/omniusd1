@@ -1168,13 +1168,16 @@ Format:
     });
 
     const data = await response.json();
-    if (!data.ok || !data.result) throw new Error(data.error || "Bad response");
+    console.log("OmniIntel response:", JSON.stringify(data).slice(0, 300));
+
+    if (data.debug) throw new Error("DEBUG: " + JSON.stringify(data));
+    if (!data.ok || !data.result) {
+      throw new Error(data.error || "Server returned: " + JSON.stringify(data).slice(0, 150));
+    }
 
     if (activeTab === "screenshot" && data.result.analyses) {
-      // Multi-instrument mode
       renderMultiResult(data.result);
     } else {
-      // Single instrument mode
       renderResult(data.result);
     }
 
