@@ -248,8 +248,9 @@ ${pastedPosts}`
 
   } catch (err) {
     clearTimeout(timeout);
-    const msg = err.name === "AbortError" ? "Request timed out after 55s" : err.message;
-    console.error("decode error:", msg);
-    return res.status(500).json({ error: msg });
+    const msg = err.name === "AbortError" ? "Request timed out after 58s — try with fewer images" 
+              : err.message || String(err);
+    console.error("decode error:", mode, msg);
+    return res.status(200).json({ ok: false, error: msg });
   }
 };
