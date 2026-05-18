@@ -1,12 +1,15 @@
 {
   "functions": {
     "api/*.js": {
-      "maxDuration": 60
+      "maxDuration": 120
     }
   },
-  "api": {
-    "bodyParser": {
-      "sizeLimit": "10mb"
-    }
-  }
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/decoder", "destination": "/OmniIntelDecoder.html" },
+    { "source": "/mode-engine", "destination": "/OmniModeEngine.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
