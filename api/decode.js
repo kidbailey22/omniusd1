@@ -139,7 +139,7 @@ module.exports = async function handler(req, res) {
 
   const { mode, messages, date } = req.body;
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 55000);
+  const timeout = setTimeout(() => controller.abort(), 58000);
 
   try {
     let body;
@@ -188,7 +188,7 @@ ${pastedPosts}`
       const systemPrompt = req.body.system_override || ANALYSIS_SYSTEM;
       body = {
         model: "claude-opus-4-5",
-        max_tokens: 2000,
+        max_tokens: 1500,
         system: systemPrompt,
         messages: messages,
       };
