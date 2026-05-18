@@ -803,7 +803,7 @@ Respond ONLY with valid JSON, no markdown, no backticks:
 {
   "instrument": "XAUUSD",
   "mode": "Mode 1 | Mode 2A | Mode 2B | Mode 2C | PASS",
-  "phase": "Accumulation | Distribution | Reloading | Sweeping | No Setup",
+  "phase": "Accumulation | Impulse Trap | Expansion | Exhaustion | Mitigation | No Setup",
   "institutional_read": "2-3 sentences thinking FROM the institution. What do you need? Where is the liquidity? What is your real destination? Use 'we' perspective.",
   "real_destination": {"price": "exact price", "reason": "why we need price here — COT direction, order block, structural target"},
   "liquidity_hunt": {"price": "exact price", "type": "LL sweep | HH sweep | Both", "orders_sitting_here": "what retail orders are clustered here — stops, breakouts"},
@@ -1190,11 +1190,12 @@ Format:
 
 // ── Render result ─────────────────────────────────────────────────────────────
 const PHASE_STYLES = {
-  "Accumulation": { bg:"rgba(16,185,129,.1)",  border:"rgba(16,185,129,.4)",  modeC:"#10b981", titleC:"#10b981", badgeBg:"rgba(16,185,129,.2)", badgeC:"#10b981" },
-  "Distribution":  { bg:"rgba(239,68,68,.1)",   border:"rgba(239,68,68,.4)",   modeC:"#ef4444", titleC:"#ef4444", badgeBg:"rgba(239,68,68,.2)", badgeC:"#ef4444" },
-  "Reloading":     { bg:"rgba(245,158,11,.1)",  border:"rgba(245,158,11,.4)",  modeC:"#f59e0b", titleC:"#f59e0b", badgeBg:"rgba(245,158,11,.2)", badgeC:"#f59e0b" },
-  "Sweeping":      { bg:"rgba(139,92,246,.1)",  border:"rgba(139,92,246,.4)",  modeC:"#a78bfa", titleC:"#a78bfa", badgeBg:"rgba(139,92,246,.2)", badgeC:"#a78bfa" },
-  "No Setup":      { bg:"rgba(245,158,11,.08)", border:"rgba(245,158,11,.3)",  modeC:"#f59e0b", titleC:"#f59e0b", badgeBg:"rgba(245,158,11,.2)", badgeC:"#f59e0b" },
+  "Accumulation":  { bg:"rgba(6,214,160,.1)",   border:"rgba(6,214,160,.4)",   modeC:"#06d6a0", titleC:"#06d6a0", badgeBg:"rgba(6,214,160,.2)",  badgeC:"#06d6a0" },
+  "Impulse Trap":  { bg:"rgba(139,92,246,.1)",  border:"rgba(139,92,246,.4)",  modeC:"#a78bfa", titleC:"#a78bfa", badgeBg:"rgba(139,92,246,.2)", badgeC:"#a78bfa" },
+  "Expansion":     { bg:"rgba(0,229,255,.1)",   border:"rgba(0,229,255,.4)",   modeC:"#00e5ff", titleC:"#00e5ff", badgeBg:"rgba(0,229,255,.2)",  badgeC:"#00e5ff" },
+  "Exhaustion":    { bg:"rgba(245,158,11,.1)",  border:"rgba(245,158,11,.4)",  modeC:"#f59e0b", titleC:"#f59e0b", badgeBg:"rgba(245,158,11,.2)", badgeC:"#f59e0b" },
+  "Mitigation":    { bg:"rgba(255,209,102,.1)", border:"rgba(255,209,102,.4)", modeC:"#ffd166", titleC:"#ffd166", badgeBg:"rgba(255,209,102,.2)",badgeC:"#ffd166" },
+  "No Setup":      { bg:"rgba(239,71,111,.08)", border:"rgba(239,71,111,.3)",  modeC:"#ef476f", titleC:"#ef476f", badgeBg:"rgba(239,71,111,.2)", badgeC:"#ef476f" },
 };
 
 function levelCard(cls, lbl, val, note, valColor) {
@@ -1229,7 +1230,7 @@ function renderTrade(trade, containerId, biasId, dirColor) {
 }
 
 function renderResult(r) {
-  const isPass = r.phase === "No Setup" || r.mode === "PASS";
+  const isPass = r.phase === "No Setup" || r.mode === "PASS" || !r.phase;
   const ps = PHASE_STYLES[r.phase] || PHASE_STYLES["No Setup"];
 
   // Banner
@@ -1338,12 +1339,12 @@ function renderHistory() {
   section.style.display = "block";
 
   const PHASE_COLORS = {
-    Accumulation:"rgba(16,185,129,.2)", Distribution:"rgba(239,68,68,.2)",
-    Reloading:"rgba(245,158,11,.2)",    Sweeping:"rgba(139,92,246,.2)",
+    Accumulation:"rgba(6,214,160,.2)",  "Impulse Trap":"rgba(139,92,246,.2)",
+    Expansion:"rgba(0,229,255,.2)",     Exhaustion:"rgba(245,158,11,.2)",
   };
   const PHASE_TEXT = {
-    Accumulation:"#10b981", Distribution:"#ef4444",
-    Reloading:"#f59e0b",    Sweeping:"#a78bfa",
+    Accumulation:"#06d6a0", "Impulse Trap":"#a78bfa",
+    Expansion:"#00e5ff",    Exhaustion:"#f59e0b",
   };
 
   list.innerHTML = sessionHistory.map(h => `
@@ -1425,7 +1426,7 @@ function renderMultiResult(data) {
     section.appendChild(tempDiv);
 
     // Mini summary card
-    const isPass = r.phase === "No Setup" || r.mode === "PASS";
+    const isPass = r.phase === "No Setup" || r.mode === "PASS" || !r.phase;
     const ps = PHASE_STYLES[r.phase] || PHASE_STYLES["No Setup"];
     tempDiv.innerHTML = `
       <div style="background:${ps.bg};border:1px solid ${ps.border};border-radius:10px;padding:12px 14px;margin-bottom:8px">
