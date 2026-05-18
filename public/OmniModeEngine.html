@@ -1172,7 +1172,10 @@ Format:
 
     if (data.debug) throw new Error("DEBUG: " + JSON.stringify(data));
     if (!data.ok || !data.result) {
-      throw new Error(data.error || "Server returned: " + JSON.stringify(data).slice(0, 150));
+      const errMsg = typeof data.error === "string" ? data.error 
+                   : typeof data.error === "object" ? JSON.stringify(data.error)
+                   : JSON.stringify(data).slice(0, 200);
+      throw new Error(errMsg);
     }
 
     if (activeTab === "screenshot" && data.result.analyses) {
