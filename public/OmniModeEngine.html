@@ -117,6 +117,43 @@ select option{background:var(--bg)}
   color:var(--purple-lt);
 }
 
+/* Instrument tabs */
+.inst-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.inst-tab{
+  padding:6px 12px;background:var(--bg);border:.5px solid var(--border);
+  border-radius:20px;font-size:10px;cursor:pointer;transition:all .15s;
+  color:var(--dim);font-family:inherit;position:relative;
+}
+.inst-tab:hover{border-color:var(--border2);color:var(--muted)}
+.inst-tab.active{background:rgba(155,126,200,.15);border-color:var(--purple);color:var(--purple-lt)}
+.inst-tab.loaded{border-color:var(--green)}
+.inst-tab.loaded.active{background:rgba(6,214,160,.1);border-color:var(--green);color:var(--green)}
+.inst-tab .tab-dot{width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;margin-left:4px;vertical-align:middle}
+.inst-panel{display:none}
+.inst-panel.active{display:block}
+
+/* Session ranking */
+.rank-section{margin-top:16px}
+.rank-banner{
+  background:linear-gradient(135deg,rgba(0,229,255,.1),rgba(155,126,200,.1));
+  border:1px solid rgba(0,229,255,.3);border-radius:12px;
+  padding:14px 16px;margin-bottom:10px;text-align:center;
+}
+.rank-title{font-size:11px;letter-spacing:.14em;color:var(--cyan);margin-bottom:4px}
+.rank-winner{font-size:18px;font-weight:500;color:var(--text)}
+.rank-row{
+  background:var(--bg);border:.5px solid var(--border);border-radius:10px;
+  padding:10px 14px;margin-bottom:6px;display:flex;align-items:center;
+  justify-content:space-between;
+}
+.rank-row.rank-1{border-color:var(--cyan);background:rgba(0,229,255,.04)}
+.rank-num{font-size:13px;font-weight:500;color:var(--dim);min-width:24px}
+.rank-1 .rank-num{color:var(--cyan)}
+.rank-inst{font-size:12px;font-weight:500;color:var(--text);min-width:70px}
+.rank-phase{font-size:10px;color:var(--purple-lt);min-width:90px}
+.rank-rr{font-size:11px;font-weight:500;color:var(--green)}
+.rank-verdict{font-size:9px;color:var(--muted);text-align:right;max-width:160px}
+
 /* Timeframe upload grid */
 .tf-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
 .tf-slot{border:1px dashed var(--border2);border-radius:10px;padding:16px 12px;text-align:center;cursor:pointer;transition:all .2s;position:relative;background:var(--bg)}
@@ -408,81 +445,132 @@ select option{background:var(--bg)}
 
 <!-- SCREENSHOT PANEL -->
 <div class="panel" id="screenshot-panel" style="display:none">
-  <div class="panel-title">Upload Chart Screenshots <span style="color:var(--dim);font-weight:400;font-size:9px">(more timeframes = better institutional read)</span></div>
-  <!-- Upload all at once -->
-  <div style="margin-bottom:12px">
-    <label style="display:block;background:var(--dimmer);border:1px dashed var(--border2);border-radius:10px;padding:12px;text-align:center;cursor:pointer;transition:all .2s"
-      id="upload-all-label"
-      onmouseover="this.style.borderColor='var(--purple)'"
-      onmouseout="this.style.borderColor='var(--border2)'">
-      <input type="file" accept="image/*" multiple style="display:none" onchange="handleAllTF(event)">
-      <div style="color:var(--muted);font-size:11px;margin-bottom:3px">📁 Upload all charts at once</div>
-      <div style="color:var(--dim);font-size:9px">Select 1-4 images — system auto-assigns by order (Daily → 4H → 1H → 30M)</div>
-    </label>
+  <div class="panel-title">Multi-Instrument Analysis <span style="color:var(--dim);font-weight:400;font-size:9px">Upload 1H + 30M per instrument</span></div>
+
+  <!-- Instrument selector tabs -->
+  <div class="lbl" style="margin-bottom:8px">Select instruments to analyze</div>
+  <div class="inst-tabs" id="inst-tabs">
+    <button class="inst-tab active" data-inst="US500"  onclick="switchInst('US500')">US500</button>
+    <button class="inst-tab"        data-inst="EURUSD" onclick="switchInst('EURUSD')">EURUSD</button>
+    <button class="inst-tab"        data-inst="XAUUSD" onclick="switchInst('XAUUSD')">XAUUSD</button>
+    <button class="inst-tab"        data-inst="NAS100" onclick="switchInst('NAS100')">NAS100</button>
+    <button class="inst-tab"        data-inst="XAGUSD" onclick="switchInst('XAGUSD')">XAGUSD</button>
+    <button class="inst-tab"        data-inst="US30"   onclick="switchInst('US30')">US30</button>
   </div>
 
-  <div style="color:var(--dim);font-size:9px;margin-bottom:8px">Or upload individually per timeframe:</div>
-
-  <div class="tf-grid">
-    <div class="tf-slot" id="tf-daily">
-      <button class="tf-delete" onclick="clearTF(event,'daily')">✕</button>
-      <input type="file" accept="image/*" onchange="handleTF(event,'daily')">
-      <div class="tf-label tf-opt">📅 DAILY</div>
-      <div class="tf-status" id="tf-daily-status">Optional — destination + major OBs</div>
-      <img class="tf-preview" id="tf-daily-preview" alt="Daily">
+  <!-- Per-instrument upload panels -->
+  <div id="inst-panels">
+    <div class="inst-panel active" id="inst-panel-US500">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+        <div class="tf-slot" id="ss-US500-1h">
+          <button class="tf-delete" onclick="clearInstTF(event,'US500','1h')">✕</button>
+          <input type="file" accept="image/*" onchange="handleInstTF(event,'US500','1h')">
+          <div class="tf-label tf-opt">🕐 1H</div>
+          <div class="tf-status" id="ss-US500-1h-status">Optional — confirms phase</div>
+          <img class="tf-preview" id="ss-US500-1h-preview" alt="1H">
+        </div>
+        <div class="tf-slot" id="ss-US500-30m">
+          <button class="tf-delete" onclick="clearInstTF(event,'US500','30m')">✕</button>
+          <input type="file" accept="image/*" onchange="handleInstTF(event,'US500','30m')">
+          <div class="tf-label tf-req">⚡ 30M *</div>
+          <div class="tf-status" id="ss-US500-30m-status">Required — entry + order block</div>
+          <img class="tf-preview" id="ss-US500-30m-preview" alt="30M">
+        </div>
+      </div>
     </div>
-    <div class="tf-slot" id="tf-4h">
-      <button class="tf-delete" onclick="clearTF(event,'4h')">✕</button>
-      <input type="file" accept="image/*" onchange="handleTF(event,'4h')">
-      <div class="tf-label tf-opt">⏱ 4H</div>
-      <div class="tf-status" id="tf-4h-status">Optional — accumulation phase</div>
-      <img class="tf-preview" id="tf-4h-preview" alt="4H">
+    <div class="inst-panel" id="inst-panel-EURUSD">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+        <div class="tf-slot" id="ss-EURUSD-1h">
+          <button class="tf-delete" onclick="clearInstTF(event,'EURUSD','1h')">✕</button>
+          <input type="file" accept="image/*" onchange="handleInstTF(event,'EURUSD','1h')">
+          <div class="tf-label tf-opt">🕐 1H</div>
+          <div class="tf-status" id="ss-EURUSD-1h-status">Optional — confirms phase</div>
+          <img class="tf-preview" id="ss-EURUSD-1h-preview" alt="1H">
+        </div>
+        <div class="tf-slot" id="ss-EURUSD-30m">
+          <button class="tf-delete" onclick="clearInstTF(event,'EURUSD','30m')">✕</button>
+          <input type="file" accept="image/*" onchange="handleInstTF(event,'EURUSD','30m')">
+          <div class="tf-label tf-req">⚡ 30M *</div>
+          <div class="tf-status" id="ss-EURUSD-30m-status">Required — entry + order block</div>
+          <img class="tf-preview" id="ss-EURUSD-30m-preview" alt="30M">
+        </div>
+      </div>
     </div>
-    <div class="tf-slot" id="tf-1h">
-      <button class="tf-delete" onclick="clearTF(event,'1h')">✕</button>
-      <input type="file" accept="image/*" onchange="handleTF(event,'1h')">
-      <div class="tf-label tf-opt">🕐 1H</div>
-      <div class="tf-status" id="tf-1h-status">Optional — sweep in progress?</div>
-      <img class="tf-preview" id="tf-1h-preview" alt="1H">
+    <div class="inst-panel" id="inst-panel-XAUUSD">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+        <div class="tf-slot" id="ss-XAUUSD-1h">
+          <button class="tf-delete" onclick="clearInstTF(event,'XAUUSD','1h')">✕</button>
+          <input type="file" accept="image/*" onchange="handleInstTF(event,'XAUUSD','1h')">
+          <div class="tf-label tf-opt">🕐 1H</div>
+          <div class="tf-status" id="ss-XAUUSD-1h-status">Optional — confirms phase</div>
+          <img class="tf-preview" id="ss-XAUUSD-1h-preview" alt="1H">
+        </div>
+        <div class="tf-slot" id="ss-XAUUSD-30m">
+          <button class="tf-delete" onclick="clearInstTF(event,'XAUUSD','30m')">✕</button>
+          <input type="file" accept="image/*" onchange="handleInstTF(event,'XAUUSD','30m')">
+          <div class="tf-label tf-req">⚡ 30M *</div>
+          <div class="tf-status" id="ss-XAUUSD-30m-status">Required — entry + order block</div>
+          <img class="tf-preview" id="ss-XAUUSD-30m-preview" alt="30M">
+        </div>
+      </div>
     </div>
-    <div class="tf-slot" id="tf-30m">
-      <button class="tf-delete" onclick="clearTF(event,'30m')">✕</button>
-      <input type="file" accept="image/*" onchange="handleTF(event,'30m')">
-      <div class="tf-label tf-req">⚡ 30M *</div>
-      <div class="tf-status" id="tf-30m-status">Required — entry + order block</div>
-      <img class="tf-preview" id="tf-30m-preview" alt="30M">
+    <div class="inst-panel" id="inst-panel-NAS100">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+        <div class="tf-slot" id="ss-NAS100-1h">
+          <button class="tf-delete" onclick="clearInstTF(event,'NAS100','1h')">✕</button>
+          <input type="file" accept="image/*" onchange="handleInstTF(event,'NAS100','1h')">
+          <div class="tf-label tf-opt">🕐 1H</div>
+          <div class="tf-status" id="ss-NAS100-1h-status">Optional — confirms phase</div>
+          <img class="tf-preview" id="ss-NAS100-1h-preview" alt="1H">
+        </div>
+        <div class="tf-slot" id="ss-NAS100-30m">
+          <button class="tf-delete" onclick="clearInstTF(event,'NAS100','30m')">✕</button>
+          <input type="file" accept="image/*" onchange="handleInstTF(event,'NAS100','30m')">
+          <div class="tf-label tf-req">⚡ 30M *</div>
+          <div class="tf-status" id="ss-NAS100-30m-status">Required — entry + order block</div>
+          <img class="tf-preview" id="ss-NAS100-30m-preview" alt="30M">
+        </div>
+      </div>
+    </div>
+    <div class="inst-panel" id="inst-panel-XAGUSD">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+        <div class="tf-slot" id="ss-XAGUSD-1h">
+          <button class="tf-delete" onclick="clearInstTF(event,'XAGUSD','1h')">✕</button>
+          <input type="file" accept="image/*" onchange="handleInstTF(event,'XAGUSD','1h')">
+          <div class="tf-label tf-opt">🕐 1H</div>
+          <div class="tf-status" id="ss-XAGUSD-1h-status">Optional — confirms phase</div>
+          <img class="tf-preview" id="ss-XAGUSD-1h-preview" alt="1H">
+        </div>
+        <div class="tf-slot" id="ss-XAGUSD-30m">
+          <button class="tf-delete" onclick="clearInstTF(event,'XAGUSD','30m')">✕</button>
+          <input type="file" accept="image/*" onchange="handleInstTF(event,'XAGUSD','30m')">
+          <div class="tf-label tf-req">⚡ 30M *</div>
+          <div class="tf-status" id="ss-XAGUSD-30m-status">Required — entry + order block</div>
+          <img class="tf-preview" id="ss-XAGUSD-30m-preview" alt="30M">
+        </div>
+      </div>
+    </div>
+    <div class="inst-panel" id="inst-panel-US30">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+        <div class="tf-slot" id="ss-US30-1h">
+          <button class="tf-delete" onclick="clearInstTF(event,'US30','1h')">✕</button>
+          <input type="file" accept="image/*" onchange="handleInstTF(event,'US30','1h')">
+          <div class="tf-label tf-opt">🕐 1H</div>
+          <div class="tf-status" id="ss-US30-1h-status">Optional — confirms phase</div>
+          <img class="tf-preview" id="ss-US30-1h-preview" alt="1H">
+        </div>
+        <div class="tf-slot" id="ss-US30-30m">
+          <button class="tf-delete" onclick="clearInstTF(event,'US30','30m')">✕</button>
+          <input type="file" accept="image/*" onchange="handleInstTF(event,'US30','30m')">
+          <div class="tf-label tf-req">⚡ 30M *</div>
+          <div class="tf-status" id="ss-US30-30m-status">Required — entry + order block</div>
+          <img class="tf-preview" id="ss-US30-30m-preview" alt="30M">
+        </div>
+      </div>
     </div>
   </div>
-  <div style="color:var(--dim);font-size:9px;margin-bottom:12px">* 30M required. Others optional but improve accuracy.</div>
 
-  <!-- COT for screenshot mode -->
-  <div class="panel-title" style="margin-bottom:10px">COT Signal — Select Instrument</div>
-  <div class="cot-row" id="screenshot-cot-row">
-    <div class="cot-pill" onclick="selectCOT(this,'XAUUSD','NET LONG','sl2')" data-inst="XAUUSD" data-sig="NET LONG">
-      <div class="cot-inst">XAUUSD</div>
-      <div class="cot-sig sig-sl2">L.SPEC LONG</div>
-    </div>
-    <div class="cot-pill" onclick="selectCOT(this,'XAGUSD','NET LONG','sl2')" data-inst="XAGUSD" data-sig="NET LONG">
-      <div class="cot-inst">XAGUSD</div>
-      <div class="cot-sig sig-sl2">L.SPEC LONG</div>
-    </div>
-    <div class="cot-pill" onclick="selectCOT(this,'EURUSD','STRONG LONG','sl2')" data-inst="EURUSD" data-sig="STRONG LONG">
-      <div class="cot-inst">EURUSD</div>
-      <div class="cot-sig sig-sl2">STRONG LONG</div>
-    </div>
-    <div class="cot-pill" onclick="selectCOT(this,'NAS100','STRONG LONG','sl2')" data-inst="NAS100" data-sig="STRONG LONG">
-      <div class="cot-inst">NAS100</div>
-      <div class="cot-sig sig-sl2">STRONG LONG</div>
-    </div>
-    <div class="cot-pill" onclick="selectCOT(this,'US30','MIXED','mix')" data-inst="US30" data-sig="MIXED">
-      <div class="cot-inst">US30</div>
-      <div class="cot-sig sig-mix">MIXED</div>
-    </div>
-    <div class="cot-pill" onclick="selectCOT(this,'US500','STRONG LONG','sl2')" data-inst="US500" data-sig="STRONG LONG">
-      <div class="cot-inst">US500</div>
-      <div class="cot-sig sig-sl2">STRONG LONG</div>
-    </div>
-  </div>
+  <div style="color:var(--dim);font-size:9px;margin-bottom:12px">* 30M required per instrument. Switch tabs to upload each instrument.</div>
 
   <div class="field" style="margin-bottom:12px">
     <label>News Condition <span style="color:var(--dim);font-weight:400;font-size:9px">(optional — from decoder)</span></label>
@@ -508,6 +596,21 @@ select option{background:var(--bg)}
 <div class="loading" id="loading">
   <div class="loading-lbl">READING INSTITUTIONAL FOOTPRINT</div>
   <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+</div>
+
+<!-- Session Ranking Result -->
+<div class="result" id="multi-result" style="display:none">
+  <div class="rank-banner">
+    <div class="rank-title">SESSION OPPORTUNITY RANKING</div>
+    <div class="rank-winner" id="rank-winner-text"></div>
+  </div>
+  <div id="rank-rows"></div>
+  <div class="reasoning" id="rank-reasoning-box" style="margin-bottom:14px">
+    <div class="reasoning-lbl">TOP PICK REASONING</div>
+    <div class="reasoning-text" id="rank-reasoning"></div>
+  </div>
+  <div id="individual-reads"></div>
+  <button class="btn-reset" onclick="resetMulti()">↺ NEW ANALYSIS</button>
 </div>
 
 <!-- Result -->
@@ -584,8 +687,21 @@ let selectedCOTSig  = "";
 let imageBase64 = "";
 let imageType   = "";
 
-// Timeframe images
+// Single instrument TF images (manual mode)
 const TF_IMAGES = { daily: null, "4h": null, "1h": null, "30m": null };
+
+// Multi-instrument images (screenshot mode)
+const INST_IMAGES = {
+  US500: { "1h": null, "30m": null },
+  EURUSD:{ "1h": null, "30m": null },
+  XAUUSD:{ "1h": null, "30m": null },
+  NAS100:{ "1h": null, "30m": null },
+  XAGUSD:{ "1h": null, "30m": null },
+  US30:  { "1h": null, "30m": null },
+};
+
+let activeInstTab = "US500";
+let multiResults  = [];
 
 // Session history
 let sessionHistory = [];
@@ -739,6 +855,57 @@ function switchTab(tab) {
   checkReady();
 }
 
+// ── Instrument tab switching ──────────────────────────────────────────────────
+function switchInst(inst) {
+  activeInstTab = inst;
+  document.querySelectorAll(".inst-tab").forEach(t => t.classList.toggle("active", t.dataset.inst === inst));
+  document.querySelectorAll(".inst-panel").forEach(p => p.classList.toggle("active", p.id === `inst-panel-${inst}`));
+  checkReady();
+}
+
+// Per-instrument TF upload
+function handleInstTF(e, inst, tf) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    INST_IMAGES[inst][tf] = { data: reader.result.split(",")[1], type: file.type || "image/png" };
+    const preview = document.getElementById(`ss-${inst}-${tf}-preview`);
+    const slot    = document.getElementById(`ss-${inst}-${tf}`);
+    const status  = document.getElementById(`ss-${inst}-${tf}-status`);
+    if (preview) { preview.src = reader.result; preview.style.display = "block"; }
+    if (slot)    slot.classList.add("loaded");
+    if (status)  status.textContent = "✅ " + file.name.slice(0,18);
+    // Mark tab as loaded if 30M is uploaded
+    if (tf === "30m") {
+      const tab = document.querySelector(`.inst-tab[data-inst="${inst}"]`);
+      if (tab) tab.classList.add("loaded");
+    }
+    checkReady();
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearInstTF(e, inst, tf) {
+  e.stopPropagation(); e.preventDefault();
+  INST_IMAGES[inst][tf] = null;
+  const slot    = document.getElementById(`ss-${inst}-${tf}`);
+  const preview = document.getElementById(`ss-${inst}-${tf}-preview`);
+  const status  = document.getElementById(`ss-${inst}-${tf}-status`);
+  const input   = slot?.querySelector("input");
+  if (preview) { preview.style.display="none"; preview.src=""; }
+  if (slot)    slot.classList.remove("loaded");
+  if (input)   { input.style.pointerEvents=""; input.value=""; }
+  const defaults = { "1h":"Optional — confirms phase", "30m":"Required — entry + order block" };
+  if (status) status.textContent = defaults[tf];
+  // Remove loaded from tab if no 30M
+  if (tf === "30m") {
+    const tab = document.querySelector(`.inst-tab[data-inst="${inst}"]`);
+    if (tab) tab.classList.remove("loaded");
+  }
+  checkReady();
+}
+
 // ── COT selection ─────────────────────────────────────────────────────────────
 function selectCOT(el, inst, sig, cls) {
   document.querySelectorAll(".cot-pill").forEach(p => p.classList.remove("selected"));
@@ -857,7 +1024,9 @@ function checkReady() {
     const dir  = document.getElementById("m-direction").value;
     ready = !!(inst && dir && selectedCOTInst);
   } else {
-    ready = !!(TF_IMAGES["30m"] && selectedCOTInst);
+    // At least one instrument needs a 30M loaded
+    const anyLoaded = Object.entries(INST_IMAGES).some(([inst, tfs]) => tfs["30m"] !== null);
+    ready = anyLoaded;
   }
   document.getElementById("analyze-btn").disabled = !ready;
 }
@@ -924,39 +1093,68 @@ Apply this buffer to TP1 (subtract for SHORT, add for LONG).`;
 
     } else {
       const news = document.getElementById("s-news").value;
-      const buf  = BUFFERS[selectedCOTInst] || 12;
-      const tfLabels = { daily:"DAILY", "4h":"4H", "1h":"1H", "30m":"30M" };
-      const tfOrder  = ["daily","4h","1h","30m"];
-      const provided = tfOrder.filter(tf => TF_IMAGES[tf]);
 
+      // Get all instruments with at least 30M loaded
+      const loadedInsts = Object.entries(INST_IMAGES)
+        .filter(([inst, tfs]) => tfs["30m"] !== null)
+        .map(([inst]) => inst);
+
+      if (loadedInsts.length === 0) {
+        throw new Error("Please upload at least one 30M chart");
+      }
+
+      // Build multi-instrument prompt
       userContent = [];
 
-      // Add each timeframe image with label
-      provided.forEach(tf => {
-        userContent.push({ type:"image", source:{ type:"base64", media_type:TF_IMAGES[tf].type, data:TF_IMAGES[tf].data } });
-        userContent.push({ type:"text", text:`The above image is the ${tfLabels[tf]} chart.` });
+      loadedInsts.forEach(inst => {
+        const instCOT  = COT_DATA[inst] || {};
+        const buf      = BUFFERS[inst]  || 12;
+        const tfs      = INST_IMAGES[inst];
+
+        userContent.push({ type:"text", text:`
+═══ INSTRUMENT: ${inst} ═══` });
+
+        if (tfs["1h"]) {
+          userContent.push({ type:"image", source:{ type:"base64", media_type:tfs["1h"].type, data:tfs["1h"].data } });
+          userContent.push({ type:"text", text:`${inst} — 1H chart above.` });
+        }
+        if (tfs["30m"]) {
+          userContent.push({ type:"image", source:{ type:"base64", media_type:tfs["30m"].type, data:tfs["30m"].data } });
+          userContent.push({ type:"text", text:`${inst} — 30M chart above (required timeframe).` });
+        }
+
+        userContent.push({ type:"text", text:`COT for ${inst}: Signal=${instCOT.signal||"Unknown"} | Group=${instCOT.group||"Unknown"} | Net=${instCOT.net||"Unknown"} | Note=${instCOT.note||""}
+Liquidity buffer: ${buf} points` });
       });
 
-      userContent.push({ type:"text", text:`You have been provided ${provided.length} chart timeframe(s): ${provided.map(tf=>tfLabels[tf]).join(", ")}.
-${provided.length < 4 ? "Missing timeframes: " + tfOrder.filter(tf=>!TF_IMAGES[tf]).map(tf=>tfLabels[tf]).join(", ") + " — infer what you can from available charts." : "Full 4-timeframe read available."}
-
-Read ALL provided charts as an institution would. Identify:
-- The institutional destination (where are we taking price?)
-- The liquidity pools to collect (where are the retail stops?)
-- The order block zones (where did we build our position?)
-- The sweep in progress or completed
-- Both trade opportunities
-
-COT DATA (Week of May 5, 2026):
-- Instrument: ${selectedCOTInst}
-- Signal: ${cot.signal}
-- Net Position: ${cot.net}
-- Positioning: ${cot.pct}
-- Key Group: ${cot.group}
-- Note: ${cot.note}
-
+      userContent.push({ type:"text", text:`
 NEWS CONDITION: ${news}
-LIQUIDITY BUFFER FOR ${selectedCOTInst}: ${buf} points` });
+INSTRUMENTS PROVIDED: ${loadedInsts.join(", ")}
+
+INSTRUCTIONS:
+1. For EACH instrument above, provide a complete individual institutional read (same JSON structure as always).
+2. After all individual reads, identify which instruments have VALID SETUPS (phase is NOT "No Setup" and decision is NOT "PASS — NO TRADE").
+3. Rank valid setups by opportunity quality.
+
+Return a JSON array where each element is one instrument's full analysis, PLUS a final "session_ranking" object.
+
+Format:
+{
+  "analyses": [
+    { ...full individual analysis JSON for instrument 1... },
+    { ...full individual analysis JSON for instrument 2... }
+  ],
+  "session_ranking": {
+    "valid_setups": ["US500","EURUSD"],
+    "ranking": [
+      { "rank":1, "instrument":"US500", "phase":"Expansion", "best_rr":"3.2:1", "verdict":"BEST SETUP — clean expansion with institutional backing", "execute":"Trade 2 — Long after sweep at 9:00-9:30 AM CT" },
+      { "rank":2, "instrument":"EURUSD", "phase":"Mitigation", "best_rr":"2.1:1", "verdict":"Secondary — valid but lower conviction", "execute":"Trade 1 — Short into sweep" }
+    ],
+    "top_pick": "US500",
+    "top_pick_reason": "one sentence why this is the best opportunity this session",
+    "instruments_passing": ["XAUUSD"]
+  }
+}` });
     }
 
     const response = await fetch("/api/decode", {
@@ -971,7 +1169,14 @@ LIQUIDITY BUFFER FOR ${selectedCOTInst}: ${buf} points` });
 
     const data = await response.json();
     if (!data.ok || !data.result) throw new Error(data.error || "Bad response");
-    renderResult(data.result);
+
+    if (activeTab === "screenshot" && data.result.analyses) {
+      // Multi-instrument mode
+      renderMultiResult(data.result);
+    } else {
+      // Single instrument mode
+      renderResult(data.result);
+    }
 
   } catch(e) {
     const eb = document.getElementById("err-box");
@@ -1161,6 +1366,104 @@ function viewHistory(id) {
   renderResult(entry.result);
   window.scrollTo({ top:0, behavior:"smooth" });
   setTimeout(() => document.getElementById("result").scrollIntoView({ behavior:"smooth", block:"start" }), 100);
+}
+
+// ── Multi-instrument render ───────────────────────────────────────────────────
+function renderMultiResult(data) {
+  const ranking = data.session_ranking;
+  const analyses = data.analyses || [];
+
+  // Session ranking banner
+  const topPick = ranking?.top_pick || "—";
+  document.getElementById("rank-winner-text").textContent =
+    `#1 — ${topPick} is the best opportunity this session`;
+
+  // Ranking rows
+  const rankRows = document.getElementById("rank-rows");
+  rankRows.innerHTML = "";
+  (ranking?.ranking || []).forEach(r => {
+    const isFirst = r.rank === 1;
+    const row = document.createElement("div");
+    row.className = `rank-row${isFirst ? " rank-1" : ""}`;
+    row.innerHTML = `
+      <span class="rank-num">#${r.rank}</span>
+      <span class="rank-inst">${r.instrument}</span>
+      <span class="rank-phase">${r.phase}</span>
+      <span class="rank-rr">${r.best_rr}</span>
+      <span class="rank-verdict">${r.verdict}</span>`;
+    rankRows.appendChild(row);
+  });
+
+  // Passing instruments note
+  if (ranking?.instruments_passing?.length > 0) {
+    const note = document.createElement("div");
+    note.style.cssText = "font-size:9px;color:var(--dim);margin-bottom:12px;padding:8px 12px;background:var(--bg);border-radius:8px;border:.5px solid var(--border)";
+    note.textContent = `PASS (no valid setup): ${ranking.instruments_passing.join(", ")}`;
+    rankRows.appendChild(note);
+  }
+
+  // Top pick reasoning
+  document.getElementById("rank-reasoning").textContent = ranking?.top_pick_reason || "—";
+
+  // Individual reads
+  const indiv = document.getElementById("individual-reads");
+  indiv.innerHTML = "";
+  analyses.forEach(r => {
+    if (!r || !r.instrument) return;
+    const section = document.createElement("div");
+    section.style.cssText = "margin-bottom:16px";
+    section.innerHTML = `
+      <div style="font-size:10px;font-weight:500;color:var(--cyan);letter-spacing:.12em;
+                  margin-bottom:8px;padding:6px 10px;background:var(--bg);
+                  border-radius:6px;border:.5px solid var(--border2)">
+        ${r.instrument} — INDIVIDUAL READ
+      </div>`;
+    indiv.appendChild(section);
+
+    // Re-use existing renderResult logic by temporarily rendering into a temp div
+    const tempDiv = document.createElement("div");
+    section.appendChild(tempDiv);
+
+    // Mini summary card
+    const isPass = r.phase === "No Setup" || r.mode === "PASS";
+    const ps = PHASE_STYLES[r.phase] || PHASE_STYLES["No Setup"];
+    tempDiv.innerHTML = `
+      <div style="background:${ps.bg};border:1px solid ${ps.border};border-radius:10px;padding:12px 14px;margin-bottom:8px">
+        <div style="font-size:9px;color:${ps.modeC};letter-spacing:.1em;margin-bottom:3px">${r.mode || "—"} — ${r.phase || "—"}</div>
+        <div style="font-size:14px;font-weight:500;color:${ps.titleC}">${r.decision || "—"}</div>
+        <div style="font-size:10px;color:${ps.modeC}cc;margin-top:4px">${r.key_warning || ""}</div>
+      </div>
+      ${!isPass && r.trade_1 ? `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <div style="background:var(--bg);border:.5px solid var(--border);border-radius:8px;padding:10px">
+          <div style="font-size:9px;color:var(--dim);margin-bottom:3px">TRADE 1 ENTRY</div>
+          <div style="font-size:13px;font-weight:500;color:var(--red)">${r.trade_1.entry_price||"—"}</div>
+          <div style="font-size:8px;color:var(--dim);margin-top:2px">Stop: ${r.trade_1.stop||"—"} | TP1: ${r.trade_1.tp1||"—"}</div>
+        </div>
+        <div style="background:var(--bg);border:.5px solid var(--border);border-radius:8px;padding:10px">
+          <div style="font-size:9px;color:var(--dim);margin-bottom:3px">TRADE 2 ENTRY</div>
+          <div style="font-size:13px;font-weight:500;color:var(--green)">${r.trade_2?.entry_price||"—"}</div>
+          <div style="font-size:8px;color:var(--dim);margin-top:2px">Stop: ${r.trade_2?.stop||"—"} | TP1: ${r.trade_2?.tp1||"—"}</div>
+        </div>
+      </div>` : ""}
+      <div style="background:var(--card);border:.5px solid var(--border);border-left:2px solid var(--purple);border-radius:0 8px 8px 0;padding:10px 12px;font-size:10px;color:var(--muted);line-height:1.7">
+        ${r.institutional_read || r.reasoning || "—"}
+      </div>`;
+  });
+
+  document.getElementById("multi-result").style.display = "block";
+  document.getElementById("multi-result").scrollIntoView({ behavior:"smooth", block:"start" });
+
+  // Save to history
+  if (ranking?.top_pick) {
+    const topAnalysis = analyses.find(a => a.instrument === ranking.top_pick);
+    if (topAnalysis) saveHistory(topAnalysis);
+  }
+}
+
+function resetMulti() {
+  document.getElementById("multi-result").style.display = "none";
+  window.scrollTo({ top:0, behavior:"smooth" });
 }
 
 // ── Reset ─────────────────────────────────────────────────────────────────────
