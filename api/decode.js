@@ -192,6 +192,15 @@ ${pastedPosts}`
         system: systemPrompt,
         messages: messages,
       };
+    } else if (mode === "chat") {
+      // OmniIntel Live Chat — Opus 4.7, real-time coaching
+      const systemPrompt = req.body.system_override || ANALYSIS_SYSTEM;
+      body = {
+        model: "claude-opus-4-7",
+        max_tokens: 300,
+        system: systemPrompt,
+        messages: messages,
+      };
     } else if (mode === "analyze") {
       body = {
         model: "claude-sonnet-4-20250514",
@@ -231,6 +240,11 @@ ${pastedPosts}`
 
     console.log("mode:", mode, "| stop_reason:", data.stop_reason);
     console.log("content types:", (data.content||[]).map(b=>b.type).join(", "));
+
+    // Chat mode returns plain text, not JSON
+    if (mode === "chat") {
+      return res.status(200).json({ ok: true, result: { content: allText.trim() } });
+    }
 
     const parsed = extractJSON(allText);
 
