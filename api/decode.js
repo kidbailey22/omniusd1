@@ -184,10 +184,10 @@ ${pastedPosts}`
         }]
       };
     } else if (mode === "omniintel") {
-      // OmniIntel — Opus 4, full institutional thinking
+      // OmniIntel — Opus 4.8, full institutional thinking
       const systemPrompt = req.body.system_override || ANALYSIS_SYSTEM;
       body = {
-        model: "claude-opus-4-5",
+        model: "claude-opus-4-8",
         max_tokens: 4000,
         system: systemPrompt,
         messages: messages,
@@ -196,7 +196,7 @@ ${pastedPosts}`
       // OmniIntel Live Chat — Opus 4.7, real-time coaching
       const systemPrompt = req.body.system_override || ANALYSIS_SYSTEM;
       body = {
-        model: "claude-opus-4-7",
+        model: "claude-opus-4-8",
         max_tokens: 300,
         system: systemPrompt,
         messages: messages,
