@@ -526,6 +526,20 @@ select option{background:var(--bg)}
   <div id="inst-panels">
     <div class="inst-panel active" id="inst-panel-US500">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+        <div class="tf-slot" id="ss-US500-daily">
+          <button class="tf-delete" onclick="clearInstTF(event,'US500','daily')">✕</button>
+          <input type="file" accept="image/*" onchange="handleInstTF(event,'US500','daily')">
+          <div class="tf-label tf-opt">📅 DAILY</div>
+          <div class="tf-status" id="ss-US500-daily-status">Optional — destination + major OBs</div>
+          <img class="tf-preview" id="ss-US500-daily-preview" alt="Daily">
+        </div>
+        <div class="tf-slot" id="ss-US500-4h">
+          <button class="tf-delete" onclick="clearInstTF(event,'US500','4h')">✕</button>
+          <input type="file" accept="image/*" onchange="handleInstTF(event,'US500','4h')">
+          <div class="tf-label tf-opt">⏱ 4H</div>
+          <div class="tf-status" id="ss-US500-4h-status">Optional — accumulation phase</div>
+          <img class="tf-preview" id="ss-US500-4h-preview" alt="4H">
+        </div>
         <div class="tf-slot" id="ss-US500-1h">
           <button class="tf-delete" onclick="clearInstTF(event,'US500','1h')">✕</button>
           <input type="file" accept="image/*" onchange="handleInstTF(event,'US500','1h')">
@@ -544,6 +558,20 @@ select option{background:var(--bg)}
     </div>
     <div class="inst-panel" id="inst-panel-EURUSD">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+        <div class="tf-slot" id="ss-EURUSD-daily">
+          <button class="tf-delete" onclick="clearInstTF(event,'EURUSD','daily')">✕</button>
+          <input type="file" accept="image/*" onchange="handleInstTF(event,'EURUSD','daily')">
+          <div class="tf-label tf-opt">📅 DAILY</div>
+          <div class="tf-status" id="ss-EURUSD-daily-status">Optional — destination + major OBs</div>
+          <img class="tf-preview" id="ss-EURUSD-daily-preview" alt="Daily">
+        </div>
+        <div class="tf-slot" id="ss-EURUSD-4h">
+          <button class="tf-delete" onclick="clearInstTF(event,'EURUSD','4h')">✕</button>
+          <input type="file" accept="image/*" onchange="handleInstTF(event,'EURUSD','4h')">
+          <div class="tf-label tf-opt">⏱ 4H</div>
+          <div class="tf-status" id="ss-EURUSD-4h-status">Optional — accumulation phase</div>
+          <img class="tf-preview" id="ss-EURUSD-4h-preview" alt="4H">
+        </div>
         <div class="tf-slot" id="ss-EURUSD-1h">
           <button class="tf-delete" onclick="clearInstTF(event,'EURUSD','1h')">✕</button>
           <input type="file" accept="image/*" onchange="handleInstTF(event,'EURUSD','1h')">
@@ -562,6 +590,20 @@ select option{background:var(--bg)}
     </div>
     <div class="inst-panel" id="inst-panel-XAUUSD">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+        <div class="tf-slot" id="ss-XAUUSD-daily">
+          <button class="tf-delete" onclick="clearInstTF(event,'XAUUSD','daily')">✕</button>
+          <input type="file" accept="image/*" onchange="handleInstTF(event,'XAUUSD','daily')">
+          <div class="tf-label tf-opt">📅 DAILY</div>
+          <div class="tf-status" id="ss-XAUUSD-daily-status">Optional — destination + major OBs</div>
+          <img class="tf-preview" id="ss-XAUUSD-daily-preview" alt="Daily">
+        </div>
+        <div class="tf-slot" id="ss-XAUUSD-4h">
+          <button class="tf-delete" onclick="clearInstTF(event,'XAUUSD','4h')">✕</button>
+          <input type="file" accept="image/*" onchange="handleInstTF(event,'XAUUSD','4h')">
+          <div class="tf-label tf-opt">⏱ 4H</div>
+          <div class="tf-status" id="ss-XAUUSD-4h-status">Optional — accumulation phase</div>
+          <img class="tf-preview" id="ss-XAUUSD-4h-preview" alt="4H">
+        </div>
         <div class="tf-slot" id="ss-XAUUSD-1h">
           <button class="tf-delete" onclick="clearInstTF(event,'XAUUSD','1h')">✕</button>
           <input type="file" accept="image/*" onchange="handleInstTF(event,'XAUUSD','1h')">
@@ -580,6 +622,20 @@ select option{background:var(--bg)}
     </div>
     <div class="inst-panel" id="inst-panel-NAS100">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+        <div class="tf-slot" id="ss-NAS100-daily">
+          <button class="tf-delete" onclick="clearInstTF(event,'NAS100','daily')">✕</button>
+          <input type="file" accept="image/*" onchange="handleInstTF(event,'NAS100','daily')">
+          <div class="tf-label tf-opt">📅 DAILY</div>
+          <div class="tf-status" id="ss-NAS100-daily-status">Optional — destination + major OBs</div>
+          <img class="tf-preview" id="ss-NAS100-daily-preview" alt="Daily">
+        </div>
+        <div class="tf-slot" id="ss-NAS100-4h">
+          <button class="tf-delete" onclick="clearInstTF(event,'NAS100','4h')">✕</button>
+          <input type="file" accept="image/*" onchange="handleInstTF(event,'NAS100','4h')">
+          <div class="tf-label tf-opt">⏱ 4H</div>
+          <div class="tf-status" id="ss-NAS100-4h-status">Optional — accumulation phase</div>
+          <img class="tf-preview" id="ss-NAS100-4h-preview" alt="4H">
+        </div>
         <div class="tf-slot" id="ss-NAS100-1h">
           <button class="tf-delete" onclick="clearInstTF(event,'NAS100','1h')">✕</button>
           <input type="file" accept="image/*" onchange="handleInstTF(event,'NAS100','1h')">
@@ -598,6 +654,20 @@ select option{background:var(--bg)}
     </div>
     <div class="inst-panel" id="inst-panel-XAGUSD">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+        <div class="tf-slot" id="ss-XAGUSD-daily">
+          <button class="tf-delete" onclick="clearInstTF(event,'XAGUSD','daily')">✕</button>
+          <input type="file" accept="image/*" onchange="handleInstTF(event,'XAGUSD','daily')">
+          <div class="tf-label tf-opt">📅 DAILY</div>
+          <div class="tf-status" id="ss-XAGUSD-daily-status">Optional — destination + major OBs</div>
+          <img class="tf-preview" id="ss-XAGUSD-daily-preview" alt="Daily">
+        </div>
+        <div class="tf-slot" id="ss-XAGUSD-4h">
+          <button class="tf-delete" onclick="clearInstTF(event,'XAGUSD','4h')">✕</button>
+          <input type="file" accept="image/*" onchange="handleInstTF(event,'XAGUSD','4h')">
+          <div class="tf-label tf-opt">⏱ 4H</div>
+          <div class="tf-status" id="ss-XAGUSD-4h-status">Optional — accumulation phase</div>
+          <img class="tf-preview" id="ss-XAGUSD-4h-preview" alt="4H">
+        </div>
         <div class="tf-slot" id="ss-XAGUSD-1h">
           <button class="tf-delete" onclick="clearInstTF(event,'XAGUSD','1h')">✕</button>
           <input type="file" accept="image/*" onchange="handleInstTF(event,'XAGUSD','1h')">
@@ -616,6 +686,20 @@ select option{background:var(--bg)}
     </div>
     <div class="inst-panel" id="inst-panel-US30">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+        <div class="tf-slot" id="ss-US30-daily">
+          <button class="tf-delete" onclick="clearInstTF(event,'US30','daily')">✕</button>
+          <input type="file" accept="image/*" onchange="handleInstTF(event,'US30','daily')">
+          <div class="tf-label tf-opt">📅 DAILY</div>
+          <div class="tf-status" id="ss-US30-daily-status">Optional — destination + major OBs</div>
+          <img class="tf-preview" id="ss-US30-daily-preview" alt="Daily">
+        </div>
+        <div class="tf-slot" id="ss-US30-4h">
+          <button class="tf-delete" onclick="clearInstTF(event,'US30','4h')">✕</button>
+          <input type="file" accept="image/*" onchange="handleInstTF(event,'US30','4h')">
+          <div class="tf-label tf-opt">⏱ 4H</div>
+          <div class="tf-status" id="ss-US30-4h-status">Optional — accumulation phase</div>
+          <img class="tf-preview" id="ss-US30-4h-preview" alt="4H">
+        </div>
         <div class="tf-slot" id="ss-US30-1h">
           <button class="tf-delete" onclick="clearInstTF(event,'US30','1h')">✕</button>
           <input type="file" accept="image/*" onchange="handleInstTF(event,'US30','1h')">
@@ -757,12 +841,12 @@ const TF_IMAGES = { daily: null, "4h": null, "1h": null, "30m": null };
 
 // Multi-instrument images (screenshot mode)
 const INST_IMAGES = {
-  US500: { "1h": null, "30m": null },
-  EURUSD:{ "1h": null, "30m": null },
-  XAUUSD:{ "1h": null, "30m": null },
-  NAS100:{ "1h": null, "30m": null },
-  XAGUSD:{ "1h": null, "30m": null },
-  US30:  { "1h": null, "30m": null },
+  US500: { "daily": null, "4h": null, "1h": null, "30m": null },
+  EURUSD:{ "daily": null, "4h": null, "1h": null, "30m": null },
+  XAUUSD:{ "daily": null, "4h": null, "1h": null, "30m": null },
+  NAS100:{ "daily": null, "4h": null, "1h": null, "30m": null },
+  XAGUSD:{ "daily": null, "4h": null, "1h": null, "30m": null },
+  US30:  { "daily": null, "4h": null, "1h": null, "30m": null },
 };
 
 let activeInstTab = "US500";
@@ -961,7 +1045,7 @@ function clearInstTF(e, inst, tf) {
   if (preview) { preview.style.display="none"; preview.src=""; }
   if (slot)    slot.classList.remove("loaded");
   if (input)   { input.style.pointerEvents=""; input.value=""; }
-  const defaults = { "1h":"Optional — confirms phase", "30m":"Required — entry + order block" };
+  const defaults = { "daily":"Optional — destination + major OBs", "4h":"Optional — accumulation phase", "1h":"Optional — confirms phase", "30m":"Required — entry + order block" };
   if (status) status.textContent = defaults[tf];
   // Remove loaded from tab if no 30M
   if (tf === "30m") {
@@ -1198,18 +1282,18 @@ Apply this buffer to TP1 (subtract for SHORT, add for LONG).`;
         const instCOT  = COT_DATA[inst] || {};
         const buf      = BUFFERS[inst]  || 12;
         const tfs      = INST_IMAGES[inst];
+        const tfOrder  = ["daily","4h","1h","30m"];
+        const tfLabels = { "daily":"Daily", "4h":"4H", "1h":"1H", "30m":"30M" };
 
         userContent.push({ type:"text", text:`
 ═══ INSTRUMENT: ${inst} ═══` });
 
-        if (tfs["1h"]) {
-          userContent.push({ type:"image", source:{ type:"base64", media_type:tfs["1h"].type, data:tfs["1h"].data } });
-          userContent.push({ type:"text", text:`${inst} — 1H chart above.` });
-        }
-        if (tfs["30m"]) {
-          userContent.push({ type:"image", source:{ type:"base64", media_type:tfs["30m"].type, data:tfs["30m"].data } });
-          userContent.push({ type:"text", text:`${inst} — 30M chart above (required timeframe).` });
-        }
+        tfOrder.forEach(tf => {
+          if (tfs[tf]) {
+            userContent.push({ type:"image", source:{ type:"base64", media_type:tfs[tf].type, data:tfs[tf].data } });
+            userContent.push({ type:"text", text:`${inst} — ${tfLabels[tf]} chart above.` });
+          }
+        });
 
         userContent.push({ type:"text", text:`COT for ${inst}: Signal=${instCOT.signal||"Unknown"} | Group=${instCOT.group||"Unknown"} | Net=${instCOT.net||"Unknown"} | Note=${instCOT.note||""}
 Liquidity buffer: ${buf} points` });
@@ -1603,7 +1687,7 @@ function reset() {
   <div class="chat-header">
     <span class="chat-title">⚡ OMNIINTEL LIVE</span>
     <div style="display:flex;align-items:center;gap:8px">
-      <span style="font-size:9px;color:var(--dim)" id="chat-model-label">Opus 4.7</span>
+      <span style="font-size:9px;color:var(--dim)" id="chat-model-label">Opus 4.8</span>
       <button class="chat-close" onclick="toggleChat()">✕</button>
     </div>
   </div>
